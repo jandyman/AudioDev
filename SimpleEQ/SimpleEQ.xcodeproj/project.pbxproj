@@ -1,0 +1,693 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A1217433225835F800D086AA /* CoefGen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A1217432225835F800D086AA /* CoefGen.cpp */; };
+		A12174372258385D00D086AA /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A12174362258385D00D086AA /* AVFoundation.framework */; };
+		A12174382258390C00D086AA /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1217430225835C900D086AA /* AudioToolbox.framework */; };
+		A16E163822544FCE00A759A4 /* EqViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A16E163722544FCE00A759A4 /* EqViewController.swift */; };
+		A16E16412254504B00A759A4 /* ParamCombo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A16E163B2254504A00A759A4 /* ParamCombo.swift */; };
+		A16E16522254571700A759A4 /* CorePlot.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A1EBC676224C66E900BC457F /* CorePlot.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A16E1655225457E000A759A4 /* EqVC.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A16E1654225457DF00A759A4 /* EqVC.storyboard */; };
+		A16E165822553CAB00A759A4 /* AudioUnitBase.mm in Sources */ = {isa = PBXBuildFile; fileRef = A16E165722553CAA00A759A4 /* AudioUnitBase.mm */; };
+		A16E165B22553D3D00A759A4 /* EqAU.mm in Sources */ = {isa = PBXBuildFile; fileRef = A16E165A22553D3D00A759A4 /* EqAU.mm */; };
+		A1EBC642224C65E600BC457F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EBC641224C65E600BC457F /* AppDelegate.swift */; };
+		A1EBC644224C65E600BC457F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EBC643224C65E600BC457F /* ViewController.swift */; };
+		A1EBC647224C65E600BC457F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A1EBC645224C65E600BC457F /* Main.storyboard */; };
+		A1EBC649224C65E700BC457F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1EBC648224C65E700BC457F /* Assets.xcassets */; };
+		A1EBC64C224C65E700BC457F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A1EBC64A224C65E700BC457F /* LaunchScreen.storyboard */; };
+		A1EBC657224C65E700BC457F /* SimpleEQTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EBC656224C65E700BC457F /* SimpleEQTests.swift */; };
+		A1EBC662224C65E700BC457F /* SimpleEQUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EBC661224C65E700BC457F /* SimpleEQUITests.swift */; };
+		A1EBC671224C660500BC457F /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1EBC670224C660500BC457F /* Accelerate.framework */; };
+		A1EBC673224C660F00BC457F /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1EBC672224C660F00BC457F /* QuartzCore.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A1EBC653224C65E700BC457F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1EBC636224C65E500BC457F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A1EBC63D224C65E600BC457F;
+			remoteInfo = SimpleEQ;
+		};
+		A1EBC65E224C65E700BC457F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1EBC636224C65E500BC457F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A1EBC63D224C65E600BC457F;
+			remoteInfo = SimpleEQ;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A16E16532254571700A759A4 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				A16E16522254571700A759A4 /* CorePlot.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		A1217430225835C900D086AA /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		A1217432225835F800D086AA /* CoefGen.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CoefGen.cpp; path = ../../GenericDSP/Common/DSP/CoefGen.cpp; sourceTree = "<group>"; };
+		A12174362258385D00D086AA /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		A121743922583F0E00D086AA /* BiquadChain.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BiquadChain.hpp; path = ../../GenericDSP/Common/GenericDSP/BiquadChain.hpp; sourceTree = "<group>"; };
+		A16E163722544FCE00A759A4 /* EqViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EqViewController.swift; sourceTree = "<group>"; };
+		A16E163A2254504A00A759A4 /* SimpleEQ-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SimpleEQ-Bridging-Header.h"; sourceTree = "<group>"; };
+		A16E163B2254504A00A759A4 /* ParamCombo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ParamCombo.swift; path = ../../../AwvCombined/AwvCommon/UI/ParamCombo.swift; sourceTree = "<group>"; };
+		A16E164B2254559D00A759A4 /* libCorePlot-CocoaTouch.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libCorePlot-CocoaTouch.a"; path = "../../coreplot_2.2/Binaries/iOS/libCorePlot-CocoaTouch.a"; sourceTree = "<group>"; };
+		A16E1654225457DF00A759A4 /* EqVC.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = EqVC.storyboard; sourceTree = "<group>"; };
+		A16E165622553CAA00A759A4 /* AudioUnitBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AudioUnitBase.h; path = ../../GenericDSP/Common/AudioUnit/AudioUnitBase.h; sourceTree = "<group>"; };
+		A16E165722553CAA00A759A4 /* AudioUnitBase.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AudioUnitBase.mm; path = ../../GenericDSP/Common/AudioUnit/AudioUnitBase.mm; sourceTree = "<group>"; };
+		A16E165922553D3D00A759A4 /* EqAU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EqAU.h; sourceTree = "<group>"; };
+		A16E165A22553D3D00A759A4 /* EqAU.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = EqAU.mm; sourceTree = "<group>"; };
+		A16E165C22553E6700A759A4 /* EqDsp.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = EqDsp.hpp; sourceTree = "<group>"; };
+		A1EBC63E224C65E600BC457F /* SimpleEQ.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimpleEQ.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1EBC641224C65E600BC457F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A1EBC643224C65E600BC457F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		A1EBC646224C65E600BC457F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		A1EBC648224C65E700BC457F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1EBC64B224C65E700BC457F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		A1EBC64D224C65E700BC457F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1EBC652224C65E700BC457F /* SimpleEQTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SimpleEQTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1EBC656224C65E700BC457F /* SimpleEQTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleEQTests.swift; sourceTree = "<group>"; };
+		A1EBC658224C65E700BC457F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1EBC65D224C65E700BC457F /* SimpleEQUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SimpleEQUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1EBC661224C65E700BC457F /* SimpleEQUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleEQUITests.swift; sourceTree = "<group>"; };
+		A1EBC663224C65E700BC457F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1EBC670224C660500BC457F /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		A1EBC672224C660F00BC457F /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		A1EBC676224C66E900BC457F /* CorePlot.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CorePlot.framework; path = ../../coreplot_2.2/Binaries/iOS/CorePlot.framework; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A1EBC63B224C65E600BC457F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1EBC671224C660500BC457F /* Accelerate.framework in Frameworks */,
+				A12174372258385D00D086AA /* AVFoundation.framework in Frameworks */,
+				A12174382258390C00D086AA /* AudioToolbox.framework in Frameworks */,
+				A1EBC673224C660F00BC457F /* QuartzCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1EBC64F224C65E700BC457F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1EBC65A224C65E700BC457F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A16E163922544FEB00A759A4 /* UiCommon */ = {
+			isa = PBXGroup;
+			children = (
+				A16E163B2254504A00A759A4 /* ParamCombo.swift */,
+				A16E163A2254504A00A759A4 /* SimpleEQ-Bridging-Header.h */,
+			);
+			path = UiCommon;
+			sourceTree = "<group>";
+		};
+		A16E1646225450ED00A759A4 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				A121743922583F0E00D086AA /* BiquadChain.hpp */,
+				A1217432225835F800D086AA /* CoefGen.cpp */,
+				A16E165622553CAA00A759A4 /* AudioUnitBase.h */,
+				A16E165722553CAA00A759A4 /* AudioUnitBase.mm */,
+				A16E165922553D3D00A759A4 /* EqAU.h */,
+				A16E165A22553D3D00A759A4 /* EqAU.mm */,
+				A16E165C22553E6700A759A4 /* EqDsp.hpp */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		A1EBC635224C65E500BC457F = {
+			isa = PBXGroup;
+			children = (
+				A16E1646225450ED00A759A4 /* Audio */,
+				A16E163922544FEB00A759A4 /* UiCommon */,
+				A1EBC640224C65E600BC457F /* SimpleEQ */,
+				A1EBC655224C65E700BC457F /* SimpleEQTests */,
+				A1EBC660224C65E700BC457F /* SimpleEQUITests */,
+				A1EBC63F224C65E600BC457F /* Products */,
+				A1EBC66F224C660400BC457F /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		A1EBC63F224C65E600BC457F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A1EBC63E224C65E600BC457F /* SimpleEQ.app */,
+				A1EBC652224C65E700BC457F /* SimpleEQTests.xctest */,
+				A1EBC65D224C65E700BC457F /* SimpleEQUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A1EBC640224C65E600BC457F /* SimpleEQ */ = {
+			isa = PBXGroup;
+			children = (
+				A16E1654225457DF00A759A4 /* EqVC.storyboard */,
+				A16E163722544FCE00A759A4 /* EqViewController.swift */,
+				A1EBC641224C65E600BC457F /* AppDelegate.swift */,
+				A1EBC643224C65E600BC457F /* ViewController.swift */,
+				A1EBC645224C65E600BC457F /* Main.storyboard */,
+				A1EBC648224C65E700BC457F /* Assets.xcassets */,
+				A1EBC64A224C65E700BC457F /* LaunchScreen.storyboard */,
+				A1EBC64D224C65E700BC457F /* Info.plist */,
+			);
+			path = SimpleEQ;
+			sourceTree = "<group>";
+		};
+		A1EBC655224C65E700BC457F /* SimpleEQTests */ = {
+			isa = PBXGroup;
+			children = (
+				A1EBC656224C65E700BC457F /* SimpleEQTests.swift */,
+				A1EBC658224C65E700BC457F /* Info.plist */,
+			);
+			path = SimpleEQTests;
+			sourceTree = "<group>";
+		};
+		A1EBC660224C65E700BC457F /* SimpleEQUITests */ = {
+			isa = PBXGroup;
+			children = (
+				A1EBC661224C65E700BC457F /* SimpleEQUITests.swift */,
+				A1EBC663224C65E700BC457F /* Info.plist */,
+			);
+			path = SimpleEQUITests;
+			sourceTree = "<group>";
+		};
+		A1EBC66F224C660400BC457F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A12174362258385D00D086AA /* AVFoundation.framework */,
+				A1217430225835C900D086AA /* AudioToolbox.framework */,
+				A16E164B2254559D00A759A4 /* libCorePlot-CocoaTouch.a */,
+				A1EBC676224C66E900BC457F /* CorePlot.framework */,
+				A1EBC672224C660F00BC457F /* QuartzCore.framework */,
+				A1EBC670224C660500BC457F /* Accelerate.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A1EBC63D224C65E600BC457F /* SimpleEQ */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1EBC666224C65E700BC457F /* Build configuration list for PBXNativeTarget "SimpleEQ" */;
+			buildPhases = (
+				A1EBC63A224C65E600BC457F /* Sources */,
+				A1EBC63B224C65E600BC457F /* Frameworks */,
+				A1EBC63C224C65E600BC457F /* Resources */,
+				A16E16532254571700A759A4 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SimpleEQ;
+			productName = SimpleEQ;
+			productReference = A1EBC63E224C65E600BC457F /* SimpleEQ.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A1EBC651224C65E700BC457F /* SimpleEQTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1EBC669224C65E700BC457F /* Build configuration list for PBXNativeTarget "SimpleEQTests" */;
+			buildPhases = (
+				A1EBC64E224C65E700BC457F /* Sources */,
+				A1EBC64F224C65E700BC457F /* Frameworks */,
+				A1EBC650224C65E700BC457F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A1EBC654224C65E700BC457F /* PBXTargetDependency */,
+			);
+			name = SimpleEQTests;
+			productName = SimpleEQTests;
+			productReference = A1EBC652224C65E700BC457F /* SimpleEQTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		A1EBC65C224C65E700BC457F /* SimpleEQUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1EBC66C224C65E700BC457F /* Build configuration list for PBXNativeTarget "SimpleEQUITests" */;
+			buildPhases = (
+				A1EBC659224C65E700BC457F /* Sources */,
+				A1EBC65A224C65E700BC457F /* Frameworks */,
+				A1EBC65B224C65E700BC457F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A1EBC65F224C65E700BC457F /* PBXTargetDependency */,
+			);
+			name = SimpleEQUITests;
+			productName = SimpleEQUITests;
+			productReference = A1EBC65D224C65E700BC457F /* SimpleEQUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A1EBC636224C65E500BC457F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1010;
+				LastUpgradeCheck = 1010;
+				ORGANIZATIONNAME = "Andrew Voelkel";
+				TargetAttributes = {
+					A1EBC63D224C65E600BC457F = {
+						CreatedOnToolsVersion = 10.1;
+						LastSwiftMigration = 1010;
+					};
+					A1EBC651224C65E700BC457F = {
+						CreatedOnToolsVersion = 10.1;
+						TestTargetID = A1EBC63D224C65E600BC457F;
+					};
+					A1EBC65C224C65E700BC457F = {
+						CreatedOnToolsVersion = 10.1;
+						TestTargetID = A1EBC63D224C65E600BC457F;
+					};
+				};
+			};
+			buildConfigurationList = A1EBC639224C65E500BC457F /* Build configuration list for PBXProject "SimpleEQ" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A1EBC635224C65E500BC457F;
+			productRefGroup = A1EBC63F224C65E600BC457F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A1EBC63D224C65E600BC457F /* SimpleEQ */,
+				A1EBC651224C65E700BC457F /* SimpleEQTests */,
+				A1EBC65C224C65E700BC457F /* SimpleEQUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A1EBC63C224C65E600BC457F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1EBC64C224C65E700BC457F /* LaunchScreen.storyboard in Resources */,
+				A16E1655225457E000A759A4 /* EqVC.storyboard in Resources */,
+				A1EBC649224C65E700BC457F /* Assets.xcassets in Resources */,
+				A1EBC647224C65E600BC457F /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1EBC650224C65E700BC457F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1EBC65B224C65E700BC457F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A1EBC63A224C65E600BC457F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A16E16412254504B00A759A4 /* ParamCombo.swift in Sources */,
+				A1EBC644224C65E600BC457F /* ViewController.swift in Sources */,
+				A1217433225835F800D086AA /* CoefGen.cpp in Sources */,
+				A16E165B22553D3D00A759A4 /* EqAU.mm in Sources */,
+				A1EBC642224C65E600BC457F /* AppDelegate.swift in Sources */,
+				A16E163822544FCE00A759A4 /* EqViewController.swift in Sources */,
+				A16E165822553CAB00A759A4 /* AudioUnitBase.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1EBC64E224C65E700BC457F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1EBC657224C65E700BC457F /* SimpleEQTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1EBC659224C65E700BC457F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1EBC662224C65E700BC457F /* SimpleEQUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A1EBC654224C65E700BC457F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A1EBC63D224C65E600BC457F /* SimpleEQ */;
+			targetProxy = A1EBC653224C65E700BC457F /* PBXContainerItemProxy */;
+		};
+		A1EBC65F224C65E700BC457F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A1EBC63D224C65E600BC457F /* SimpleEQ */;
+			targetProxy = A1EBC65E224C65E700BC457F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		A1EBC645224C65E600BC457F /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				A1EBC646224C65E600BC457F /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		A1EBC64A224C65E700BC457F /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				A1EBC64B224C65E700BC457F /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		A1EBC664224C65E700BC457F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A1EBC665224C65E700BC457F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		A1EBC667224C65E700BC457F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = UUJ7MD9292;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/../GenericDsp/Common/**";
+				INFOPLIST_FILE = SimpleEQ/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = AWV.SimpleEQ;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "UiCommon/SimpleEQ-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Debug;
+		};
+		A1EBC668224C65E700BC457F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = UUJ7MD9292;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/../GenericDsp/Common/**";
+				INFOPLIST_FILE = SimpleEQ/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = AWV.SimpleEQ;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "UiCommon/SimpleEQ-Bridging-Header.h";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Release;
+		};
+		A1EBC66A224C65E700BC457F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = UUJ7MD9292;
+				INFOPLIST_FILE = SimpleEQTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = AWV.SimpleEQTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SimpleEQ.app/SimpleEQ";
+			};
+			name = Debug;
+		};
+		A1EBC66B224C65E700BC457F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = UUJ7MD9292;
+				INFOPLIST_FILE = SimpleEQTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = AWV.SimpleEQTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SimpleEQ.app/SimpleEQ";
+			};
+			name = Release;
+		};
+		A1EBC66D224C65E700BC457F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = UUJ7MD9292;
+				INFOPLIST_FILE = SimpleEQUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = AWV.SimpleEQUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SimpleEQ;
+			};
+			name = Debug;
+		};
+		A1EBC66E224C65E700BC457F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = UUJ7MD9292;
+				INFOPLIST_FILE = SimpleEQUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = AWV.SimpleEQUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SimpleEQ;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A1EBC639224C65E500BC457F /* Build configuration list for PBXProject "SimpleEQ" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1EBC664224C65E700BC457F /* Debug */,
+				A1EBC665224C65E700BC457F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1EBC666224C65E700BC457F /* Build configuration list for PBXNativeTarget "SimpleEQ" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1EBC667224C65E700BC457F /* Debug */,
+				A1EBC668224C65E700BC457F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1EBC669224C65E700BC457F /* Build configuration list for PBXNativeTarget "SimpleEQTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1EBC66A224C65E700BC457F /* Debug */,
+				A1EBC66B224C65E700BC457F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1EBC66C224C65E700BC457F /* Build configuration list for PBXNativeTarget "SimpleEQUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1EBC66D224C65E700BC457F /* Debug */,
+				A1EBC66E224C65E700BC457F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A1EBC636224C65E500BC457F /* Project object */;
+}

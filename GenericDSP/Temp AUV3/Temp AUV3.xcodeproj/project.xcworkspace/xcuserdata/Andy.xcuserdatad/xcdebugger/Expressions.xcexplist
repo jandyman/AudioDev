@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "::-[AudioUnitBase allocateRenderResourcesAndReturnError:](NSError **):AudioUnitBase.mm">
+      </ContextState>
+      <ContextState
+         contextName = "Process(IVars*, AudioBufferList*, int):AudioUnitBase.mm">
+         <PersistentStrings>
+            <PersistentString
+               value = "(float *)$12-&gt;mBuffers[0].mData">
+            </PersistentString>
+            <PersistentString
+               value = "in_buflist">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "::-[AudioUnitBase initWithComponentDescription:options:error:](AudioComponentDescription, AudioComponentInstantiationOptions, NSError **):AudioUnitBase.mm">
+      </ContextState>
+      <ContextState
+         contextName = "std::__1::__wrap_iter&lt;DspBlocks::DspInterface**&gt; std::__1::find&lt;std::__1::__wrap_iter&lt;DspBlocks::DspInterface**&gt;, DspBlocks::DspInterface*&gt;(std::__1::__wrap_iter&lt;DspBlocks::DspInterface**&gt;, std::__1::__wrap_iter&lt;DspBlocks::DspInterface**&gt;, DspBlocks::DspInterface* const&amp;) [inlined]:algorithm">
+      </ContextState>
+      <ContextState
+         contextName = "DspBlocks::GraphBase::GraphBase(DspBlocks::DesignContext&amp;, int, int):GenericDsp.hpp">
+      </ContextState>
+      <ContextState
+         contextName = "::__36-[AudioUnitBase internalRenderBlock]_block_invoke(AudioUnitRenderActionFlags *, const AudioTimeStamp *, AVAudioFrameCount, NSInteger, AudioBufferList *, const AURenderEvent *, AURenderPullInputBlock):AudioUnitBase.mm">
+         <PersistentStrings>
+            <PersistentString
+               value = "(float (*)[10])inAudioBufferList-&gt;mBuffers[0].mData">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "DspBlocks::GainDsp::GainDsp():GainDsp.hpp">
+      </ContextState>
+      <ContextState
+         contextName = "Process(IVars*, AudioBufferList*, AudioBufferList*, int):AudioUnitBase.mm">
+         <PersistentStrings>
+            <PersistentString
+               value = "inPtrs[0]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

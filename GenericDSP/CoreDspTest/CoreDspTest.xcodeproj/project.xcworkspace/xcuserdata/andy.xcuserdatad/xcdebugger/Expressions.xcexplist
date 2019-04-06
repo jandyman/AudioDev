@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "DspBlocks::BiquadChain::process(float*, float*, int):BiquadChain.hpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "(float (*)[10])output">
+            </PersistentString>
+            <PersistentString
+               value = "(float (*)[10])input">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "DspBlocks::WireSpec::AllocateBuffers():GenericDsp.hpp">
+      </ContextState>
+      <ContextState
+         contextName = "WriteTestFile(char const*, float, unsigned int, float**, int):AudioFileIO.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "samps[ch][i]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "DspBlocks::GraphBase::TopLevelSetup(DspBlocks::WireSpec):GenericDsp.hpp">
+      </ContextState>
+      <ContextState
+         contextName = "DspBlocks::BiquadChainBlock::Process():BiquadChain.hpp">
+      </ContextState>
+      <ContextState
+         contextName = "main:main.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "(float(*)[16])*iBufs">
+            </PersistentString>
+            <PersistentString
+               value = "(float (*)[16])*inSamps">
+            </PersistentString>
+            <PersistentString
+               value = "(float(*)[10])*oBufs">
+            </PersistentString>
+            <PersistentString
+               value = "(float (*)[10])*(outSamps)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "DspBlocks::BiquadChainBlock::updateBiquadChains():BiquadChain.hpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "(double (*)[5])((double *)0x10054c600)">
+            </PersistentString>
+            <PersistentString
+               value = "(double (*)[5])coefs">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "DspBlocks::BiquadChainBlock::Init():BiquadChain.hpp">
+      </ContextState>
+      <ContextState
+         contextName = "DspBlocks::TopLevelGraph::SetInputPortBuffers(float**):GenericDsp.hpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "(float(*)[10])(*(inputBuffers))">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>
