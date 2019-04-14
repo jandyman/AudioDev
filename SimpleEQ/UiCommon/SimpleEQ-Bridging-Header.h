@@ -3,3 +3,5 @@
 //
 
 #import "EqAU.h"
+#import "CorePlot-CocoaTouch.h"
+#import "MiscDsp.hpp"

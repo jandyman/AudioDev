@@ -8,7 +8,7 @@
 
 import UIKit
 
-class FooViewController: UIViewController {
+class EqViewController: UIViewController {
   
   @IBOutlet weak var stageIndicator: MultiIndicator!
   @IBOutlet weak var dbCombo: NumericCombo2!

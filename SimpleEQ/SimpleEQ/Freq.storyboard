@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" colorMatched="YES">
+    <device id="ipad9_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Freq Graph Vc-->
+        <scene sceneID="fcf-Hj-GCE">
+            <objects>
+                <viewController storyboardIdentifier="FreqGraph" id="ZxV-a8-Az3" customClass="FreqGraphVc" customModule="SimpleEQ" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="MjX-nS-tsP"/>
+                        <viewControllerLayoutGuide type="bottom" id="jBg-xj-Q5m"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="O7H-72-WNf" customClass="CPTGraphHostingView">
+                        <rect key="frame" x="0.0" y="0.0" width="735" height="400"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                    <nil key="simulatedStatusBarMetrics"/>
+                    <nil key="simulatedTopBarMetrics"/>
+                    <nil key="simulatedBottomBarMetrics"/>
+                    <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+                    <size key="freeformSize" width="735" height="400"/>
+                    <connections>
+                        <outlet property="HostingView" destination="O7H-72-WNf" id="650-Cc-e4d"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="IeG-xV-5F0" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-1768" y="-1441"/>
+        </scene>
+    </scenes>
+</document>
