@@ -111,9 +111,9 @@ namespace CoefGen {
   Coefs HfShelvingCoefs(int order, double fc, double dB, double fs);
 
   struct EqSpec {
-    enum Type { peaking, loShelf, hiShelf };
+    enum Type { loShelf, peaking, hiShelf };
 
-    bool enabled = true;
+    bool enabled = false;
     enum Type type = peaking;
     int order = 2;
     double frequency = 1000;

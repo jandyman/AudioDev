@@ -11,7 +11,7 @@ import UIKit
 class ViewController: UIViewController {
   
   var filtGraphVc : UIViewController!
-  var eqVc : UIViewController!
+  var eqVc : EqViewController!
   let percentHeightToGraph = CGFloat(0.60)
   var audioPath : AudioPath!
 
@@ -20,6 +20,9 @@ class ViewController: UIViewController {
     setupFreqGraphView()
     setupEqControlsView()
     audioPath = AudioPath()
+    while !audioPath.auInstantiated {}
+    eqVc.eqAU = AudioPath.AU
+    eqVc.updateUi()
   }
   
   func setupFreqGraphView() {

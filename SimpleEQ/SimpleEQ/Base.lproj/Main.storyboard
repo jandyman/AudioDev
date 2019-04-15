@@ -72,6 +72,9 @@
                                                             <segment title="5"/>
                                                             <segment title="6"/>
                                                         </segments>
+                                                        <connections>
+                                                            <action selector="selectedStageChanged:" destination="YuL-eQ-I23" eventType="valueChanged" id="Mr7-wf-pMw"/>
+                                                        </connections>
                                                     </segmentedControl>
                                                 </subviews>
                                             </stackView>
@@ -91,6 +94,9 @@
                                                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="OZc-x6-Kx0" userLabel="Enable Switch">
                                                                 <rect key="frame" x="72" y="0.0" width="51" height="31"/>
                                                                 <color key="onTintColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                                <connections>
+                                                                    <action selector="enableSwitchChanged:" destination="YuL-eQ-I23" eventType="valueChanged" id="Yzx-4T-Pcf"/>
+                                                                </connections>
                                                             </switch>
                                                         </subviews>
                                                     </stackView>
@@ -107,13 +113,16 @@
                                                                         <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                                         <nil key="highlightedColor"/>
                                                                     </label>
-                                                                    <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="EFD-wq-aW5">
+                                                                    <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="EFD-wq-aW5" userLabel="Type Selector">
                                                                         <rect key="frame" x="53.5" y="0.0" width="447.5" height="29"/>
                                                                         <segments>
                                                                             <segment title="Lo Shelf"/>
                                                                             <segment title="Peaking"/>
                                                                             <segment title="Hi Shelf"/>
                                                                         </segments>
+                                                                        <connections>
+                                                                            <action selector="typeChanged:" destination="YuL-eQ-I23" eventType="valueChanged" id="Q8p-lD-rey"/>
+                                                                        </connections>
                                                                     </segmentedControl>
                                                                 </subviews>
                                                             </stackView>
@@ -133,6 +142,9 @@
                                                                             <segment title="First Order"/>
                                                                             <segment title="Second Order"/>
                                                                         </segments>
+                                                                        <connections>
+                                                                            <action selector="orderChanged:" destination="YuL-eQ-I23" eventType="valueChanged" id="6ij-Lq-cQQ"/>
+                                                                        </connections>
                                                                     </segmentedControl>
                                                                 </subviews>
                                                             </stackView>
@@ -172,6 +184,9 @@
                                                                 <integer key="value" value="0"/>
                                                             </userDefinedRuntimeAttribute>
                                                         </userDefinedRuntimeAttributes>
+                                                        <connections>
+                                                            <action selector="frequencyChanged:" destination="YuL-eQ-I23" eventType="valueChanged" id="Cy3-eK-wFJ"/>
+                                                        </connections>
                                                     </view>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Hz" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="j4f-Ur-iRG">
                                                         <rect key="frame" x="613.5" y="0.0" width="26.5" height="40"/>
@@ -222,6 +237,9 @@
                                                                                 <color key="value" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                                             </userDefinedRuntimeAttribute>
                                                                         </userDefinedRuntimeAttributes>
+                                                                        <connections>
+                                                                            <action selector="boostChanged:" destination="YuL-eQ-I23" eventType="valueChanged" id="mNr-r7-VDK"/>
+                                                                        </connections>
                                                                     </view>
                                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="dB" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ruv-1F-ojX">
                                                                         <rect key="frame" x="281" y="0.0" width="23.5" height="45"/>
@@ -247,7 +265,7 @@
                                                             <stackView opaque="NO" contentMode="scaleToFill" spacing="11" translatesAutoresizingMaskIntoConstraints="NO" id="8jR-D7-KYL" userLabel="Q Combo Stack View">
                                                                 <rect key="frame" x="0.0" y="49" width="304.5" height="45"/>
                                                                 <subviews>
-                                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="J2k-nn-xNT" userLabel="Boost Combo" customClass="NumericCombo2" customModule="SimpleEQ" customModuleProvider="target">
+                                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="J2k-nn-xNT" userLabel="Q Combo" customClass="NumericCombo2" customModule="SimpleEQ" customModuleProvider="target">
                                                                         <rect key="frame" x="0.0" y="0.0" width="304.5" height="45"/>
                                                                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                                         <color key="tintColor" red="0.50272592589999998" green="0.61903647110000004" blue="0.54875807720000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -271,6 +289,9 @@
                                                                                 <color key="value" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                                             </userDefinedRuntimeAttribute>
                                                                         </userDefinedRuntimeAttributes>
+                                                                        <connections>
+                                                                            <action selector="qChanged:" destination="YuL-eQ-I23" eventType="valueChanged" id="wj7-xO-AX9"/>
+                                                                        </connections>
                                                                     </view>
                                                                 </subviews>
                                                             </stackView>
@@ -304,13 +325,19 @@
                     </view>
                     <size key="freeformSize" width="700" height="400"/>
                     <connections>
-                        <outlet property="dbCombo" destination="3Gp-HY-Khv" id="Ww2-13-jc9"/>
+                        <outlet property="boostCombo" destination="3Gp-HY-Khv" id="acE-Yj-hB0"/>
+                        <outlet property="enableSwitch" destination="OZc-x6-Kx0" id="Lay-h2-RLm"/>
+                        <outlet property="frequencyCombo" destination="hP2-zg-ZDz" id="Ypy-6e-Aaq"/>
+                        <outlet property="orderSelector" destination="bga-Qn-TWq" id="jGb-k3-ClZ"/>
+                        <outlet property="qCombo" destination="J2k-nn-xNT" id="TEV-oo-LfO"/>
                         <outlet property="stageIndicator" destination="4Z0-c4-hSF" id="4bv-Sd-d5k"/>
+                        <outlet property="stageSelector" destination="617-lh-qsE" id="giK-eL-Ar3"/>
+                        <outlet property="typeSelector" destination="EFD-wq-aW5" id="3B9-TK-83b"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="aTe-2W-yUQ" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="938" y="-583"/>
+            <point key="canvasLocation" x="1088" y="-647"/>
         </scene>
         <!--Freq Graph Vc-->
         <scene sceneID="JdW-Uf-mPZ">
