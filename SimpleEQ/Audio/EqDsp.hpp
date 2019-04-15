@@ -18,7 +18,7 @@ namespace DspBlocks {
     BiquadChainBlock eqBlock;
     const string GetClassName() override { return "Eq Subgraph"; }
     
-    EqBlock(DesignContext& dc) : GraphBase(dc,1,1)  {
+    EqBlock(DesignContext& dc) : eqBlock(6), GraphBase(dc,1,1)  {
       Connect(this, &eqBlock);
       Connect(&eqBlock, &gainBlock);
       Connect(&gainBlock, this);

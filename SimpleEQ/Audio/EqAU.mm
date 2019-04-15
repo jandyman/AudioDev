@@ -18,12 +18,17 @@ DspBlocks::EqDsp* _DSP = nil;
 
 - (void*)getDsp:(int*)bufSize {
   *bufSize = 128;
-  return (void*)(new DspBlocks::EqDsp);
+  if (_DSP == nil) {
+    _DSP = new DspBlocks::EqDsp;
+  }
+  return (void*)_DSP;
 }
 
 - (void)dealloc {
   if (_DSP != NULL) delete(_DSP);
 }
+
+-(int)getNStages { return _DSP->masterEq.eqBlock.GetNStages(); }
 
 -(void)setFrequency:(float)frequency atIndex:(int)idx {
   vector<CoefGen::EqSpec> specs = _DSP->masterEq.eqBlock.GetEqSpecs();

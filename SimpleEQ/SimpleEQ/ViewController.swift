@@ -12,12 +12,14 @@ class ViewController: UIViewController {
   
   var filtGraphVc : UIViewController!
   var eqVc : UIViewController!
-  let percentHeightToGraph = CGFloat(0.5)
+  let percentHeightToGraph = CGFloat(0.60)
+  var audioPath : AudioPath!
 
   override func viewDidLoad() {
     super.viewDidLoad()
     setupFreqGraphView()
     setupEqControlsView()
+    audioPath = AudioPath()
   }
   
   func setupFreqGraphView() {

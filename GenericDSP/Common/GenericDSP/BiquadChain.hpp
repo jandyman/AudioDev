@@ -96,7 +96,8 @@ namespace DspBlocks {
     uint nChannels = 0;
     
   public:
-    BiquadChainBlock() : DspBlockSingleWireSpec(1,1) {
+    BiquadChainBlock(int nStages = 1) : DspBlockSingleWireSpec(1,1) {
+      this->nStages = nStages;
       eqSpecs = vector<EqSpec>(nStages, EqSpec());
     }
     
@@ -107,6 +108,8 @@ namespace DspBlocks {
       nStages = eqSpecs.size();
       updateBiquadChains();
     }
+    
+    int GetNStages() { return nStages; }
     
     vector<EqSpec> GetEqSpecs() { return eqSpecs; }
     

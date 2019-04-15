@@ -17,6 +17,8 @@
 
 -(void*)getDsp:(int*)bufSize;
 
+-(int)getNStages;
+
 -(void)setFrequency:(float)frequency atIndex:(int)idx;
 -(float)getFrequencyAtIndex:(int)idx;
 
