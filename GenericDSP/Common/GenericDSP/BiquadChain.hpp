@@ -79,13 +79,26 @@ namespace DspBlocks {
       return response;
     }
     
+    // impulse response for a specific stage
+    
+    vector<float> impulseResponse(int len, int stage) {
+      assert(stage >= 0 && stage < nStages);
+      vector<float> impulse(len); impulse[0] = 1;
+      vector<float> response(len, 0);
+      fill_n(dlyBuf, 4, 0);
+      auto setup = vDSP_biquad_CreateSetup(&coefs[stage * 5], 1);
+      vDSP_biquad(setup, dlyBuf, &impulse[0], 1, &response[0], 1, len);
+      vDSP_biquad_DestroySetup(setup);
+      return response;
+    }
+    
     void process(float *input, float *output, int nSamps) {
       vDSP_biquad(biquadSetup, dlyBuf, input, 1, output, 1, nSamps);
     }
     
   };
   
-  // --- Biquad Chain ---
+  // --- Biquad Chain Block ---
   
   struct BiquadChainBlock : DspBlockSingleWireSpec {
     
@@ -127,6 +140,17 @@ namespace DspBlocks {
       auto coefs = EqSpec::ToCoefs(eqSpecs, sharedWireSpec.sampleRate);
       auto biquadChain = BiquadChain(coefs, nStages);
       biquadChains = vector<BiquadChain>(nChannels, biquadChain);
+    }
+    
+    vector<float> GetImpulseResponse(int len) {
+      BiquadChain bq(eqSpecs, sharedWireSpec.sampleRate);
+      return bq.impulseResponse(len);
+    }
+    
+    vector<float> GetImpulseResponse(int len, int stage) {
+      vector<EqSpec> specs(1, eqSpecs[stage]);
+      BiquadChain bq(eqSpecs, sharedWireSpec.sampleRate);
+      return bq.impulseResponse(len);
     }
     
     void Process() override {

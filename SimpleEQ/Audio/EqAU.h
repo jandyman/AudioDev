@@ -37,6 +37,15 @@
 -(void)setOrder:(int)order atIndex:(int)idx;
 -(int)getOrderAtIndex:(int)idx;
 
+-(float*)getImpulseResponse:(int)len;
+-(float*)getImpulseResponseForStage:(int)len stage:(int)stage;
+
+-(void)setupFftAnalyzerForMin:(float)min max:(float)max
+                  nFreqPoints:(int)nFreqPoints sampleRate:(float)sampleRate;
+
+-(float*)getFreqResponse;
+-(float*)getFreqResponseforStage:(int)stage;
+
 @end
 
 #ifdef __cplusplus

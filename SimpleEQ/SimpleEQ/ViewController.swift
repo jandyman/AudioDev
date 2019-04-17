@@ -25,6 +25,9 @@ class ViewController: UIViewController {
     eqVc.updateUi()
   }
   
+  func updateFrequencyResponseGraph() {
+  }
+  
   func setupFreqGraphView() {
     let sb = UIStoryboard(name: "Main", bundle: nil)
     filtGraphVc = sb.instantiateViewController(withIdentifier: "FreqGraph") as? FreqGraphVc

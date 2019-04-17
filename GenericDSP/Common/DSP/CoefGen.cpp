@@ -46,7 +46,8 @@ namespace CoefGen {
 
   // takes a 1 radian/sec prototype, scales frequency and gain, and converts
 
-  TFunc2ndOrder bilinear(Poly2ndOrder num, Poly2ndOrder den, double fc, double fs, double gain = 1.0) {
+  TFunc2ndOrder bilinear(Poly2ndOrder num, Poly2ndOrder den,
+                         double fc, double fs, double gain = 1.0) {
     num.Scale(gain);
     TFunc2ndOrder stf(num, den);
     double wfc = prewarp(fc, fs);

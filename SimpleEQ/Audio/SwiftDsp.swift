@@ -38,54 +38,6 @@ class GainSpecs : Codable {
   }
 }
 
-/**
- Performs FFT analysis by calling vDSP functions. Assume that the response being analyzed are
- impulse reponses, and therefore applies a half hanning window before performing FFTs. The 
- length of the FFT must be selected when the FftAnalyzer is created.
- */
-
-class FftAnalyzer {
-
-  let log2len : UInt
-  let intLen : UInt
-  var realp : [Float]
-  var imagp : [Float]
-  var fftOut : DSPSplitComplex
-  let fftSetup: FFTSetup
-
-  init(log2len: UInt) {
-    self.log2len = log2len
-    intLen = 1 << log2len
-    realp = [Float](repeating: 0, count: Int(intLen))
-    imagp = [Float](repeating: 0, count: Int(intLen))
-    fftOut = DSPSplitComplex(realp: &realp, imagp: &imagp)
-    fftSetup = vDSP_create_fftsetup(UInt(log2len), Int32(kFFTRadix2))!
-  }
-
-  func DoFft (_ resp : inout [Float]) {
-    resp = SwiftDsp.WindowAndAdjustLength(x: resp, len: Int(intLen))
-    // do the actual FFT
-    RealFFT(fftSetup, Int32(log2len), &resp, &fftOut)
-  }
-
-  func GetDb(freq: Float, SR: Float) -> Float {
-    let idx = Int(freq / (SR / 2.0) * Float(intLen/2+1))
-    var absv : Float = 0
-    switch idx {
-    case 0:
-      absv = abs(fftOut.realp[0])
-    case Int(intLen):
-      absv = abs(fftOut.imagp[0])
-    default:
-      let realp = fftOut.realp[idx]
-      let imagp = fftOut.imagp[idx]
-      absv = sqrt(pow(realp,2) + pow(imagp,2))
-    }
-    let db = 20 * log10(absv);
-    return Float(db);
-  }
-
-}
 
 class SwiftDsp {
 

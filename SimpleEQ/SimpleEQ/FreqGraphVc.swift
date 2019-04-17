@@ -141,10 +141,10 @@ class FreqGraphVc: UIViewController {
   let nPoints : UInt = 500
   let minVal = 10.0
   let maxVal = 10000.0
-  var analyzer : FftAnalyzer?
+  // var analyzer : FftAnalyzer?
   var enable : Bool = true
   
-  init(analyzer: FftAnalyzer) { self.analyzer = analyzer }
+  // init(analyzer: FftAnalyzer) { self.analyzer = analyzer }
   
   // This method is here because this class also functions as datasource for our graph
   // Therefore this class implements the CPTPlotDataSource protocol
@@ -167,7 +167,9 @@ class FreqGraphVc: UIViewController {
   
   func getY(_ idx: Float) -> Float {
     let freq = getX(idx)
-    return analyzer!.GetDb(freq: freq, SR: 44100)
+    return 0.0
+    
+    // return analyzer!.GetDb(freq: freq, SR: 44100)
   }
   
   // This method is here because this class also functions as datasource for our graph

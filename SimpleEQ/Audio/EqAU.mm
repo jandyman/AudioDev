@@ -8,15 +8,16 @@
 
 #import "EqAU.h"
 #include "EqDsp.hpp"
+#include "MiscDsp.hpp"
 #include <algorithm>
 
 using namespace std;
 
 @implementation EqAU
 
-DspBlocks::EqDsp* _DSP = nil;
+DspBlocks::EqDsp* _DSP = nullptr;
 
-- (void*)getDsp:(int*)bufSize {
+-(void*)getDsp:(int*)bufSize {
   *bufSize = 128;
   if (_DSP == nil) {
     _DSP = new DspBlocks::EqDsp;
@@ -24,8 +25,8 @@ DspBlocks::EqDsp* _DSP = nil;
   return (void*)_DSP;
 }
 
-- (void)dealloc {
-  if (_DSP != NULL) delete(_DSP);
+-(void)dealloc {
+  if (_DSP != nullptr) delete(_DSP);
 }
 
 -(int)getNStages { return _DSP->masterEq.eqBlock.GetNStages(); }
@@ -94,6 +95,29 @@ DspBlocks::EqDsp* _DSP = nil;
 
 -(int)getOrderAtIndex:(int)idx {
   return _DSP->masterEq.eqBlock.GetEqSpecs()[idx].order;
+}
+
+-(float*)getImpulseResponse:(int)len {
+  auto ir = _DSP->masterEq.eqBlock.GetImpulseResponse(len);
+  return &ir[0];
+}
+
+-(float*)getImpulseResponseForStage:(int)len stage:(int)stage {
+  auto ir = _DSP->masterEq.eqBlock.GetImpulseResponse(len);
+  return &ir[0];
+}
+
+-(void)setupFftAnalyzerForMin:(float)min max:(float)max
+                  nFreqPoints:(int)nFreqPoints sampleRate:(float)sampleRate {
+  _DSP->analyzer->Setup(min, max, nFreqPoints, sampleRate);
+}
+
+-(float*)getFreqResponse {
+  return &_DSP->GetFrequencyResponse()[0];
+}
+
+-(float*)getFreqResponseforStage:(int)stage {
+  return &_DSP->GetFrequencyResponse(stage)[0];
 }
 
 - (void*)dsp { return (void*)_DSP; }
