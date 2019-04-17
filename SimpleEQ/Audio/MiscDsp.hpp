@@ -113,9 +113,11 @@ namespace AWV {
       fftSetup = vDSP_create_fftsetup(log2len, kFFTRadix2);
     }
     
-    void Setup(float minFreq, float maxFreq, int nFreqPoints, float SR) {
+    void SetSampleRate(float SR) { this->SR = SR; }
+    
+    void SetFrequencies(float minFreq, float maxFreq, int nFreqPoints) {
       this->minFreq = minFreq; this->maxFreq = maxFreq;
-      this->nFreqPoints = nFreqPoints; this->SR = SR;
+      this->nFreqPoints = nFreqPoints;
       frequencies = Math::LogSpacedArray(minFreq, maxFreq, nFreqPoints);
       idxs = vector<int>(nFreqPoints);
       for (int i=0; i<nFreqPoints; i++) {

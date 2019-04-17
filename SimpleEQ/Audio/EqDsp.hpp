@@ -50,6 +50,7 @@ namespace DspBlocks {
     void Init(WireSpec ws) {
       try {
         analyzer = new AWV::FftAnalyzer(16384);
+        analyzer->SetSampleRate(ws.sampleRate);
         PrepareForOperation(ws, true);
         printf("\n");
         dc.Describe();

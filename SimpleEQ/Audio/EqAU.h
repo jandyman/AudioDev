@@ -41,7 +41,7 @@
 -(float*)getImpulseResponseForStage:(int)len stage:(int)stage;
 
 -(void)setupFftAnalyzerForMin:(float)min max:(float)max
-                  nFreqPoints:(int)nFreqPoints sampleRate:(float)sampleRate;
+                  nFreqPoints:(int)nFreqPoints;;
 
 -(float*)getFreqResponse;
 -(float*)getFreqResponseforStage:(int)stage;

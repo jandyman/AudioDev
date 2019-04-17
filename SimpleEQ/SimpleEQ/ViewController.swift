@@ -23,6 +23,7 @@ class ViewController: UIViewController {
     while !audioPath.auInstantiated {}
     eqVc.eqAU = AudioPath.AU
     eqVc.updateUi()
+    AudioPath.AU?.setupFftAnalyzer(forMin: 10, max: 10000, nFreqPoints: 300)
   }
   
   func updateFrequencyResponseGraph() {

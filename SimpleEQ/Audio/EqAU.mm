@@ -108,8 +108,8 @@ DspBlocks::EqDsp* _DSP = nullptr;
 }
 
 -(void)setupFftAnalyzerForMin:(float)min max:(float)max
-                  nFreqPoints:(int)nFreqPoints sampleRate:(float)sampleRate {
-  _DSP->analyzer->Setup(min, max, nFreqPoints, sampleRate);
+                  nFreqPoints:(int)nFreqPoints {
+  _DSP->analyzer->SetFrequencies(min, max, nFreqPoints);
 }
 
 -(float*)getFreqResponse {

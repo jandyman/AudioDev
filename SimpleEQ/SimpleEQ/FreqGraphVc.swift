@@ -138,9 +138,9 @@ class FreqGraphVc: UIViewController {
   var lineColor : CPTColor!
   var lineWidth = CGFloat(2.0)
   
-  let nPoints : UInt = 500
-  let minVal = 10.0
-  let maxVal = 10000.0
+  var x : [Float]?
+  var y : [Float]!
+
   // var analyzer : FftAnalyzer?
   var enable : Bool = true
   
@@ -150,27 +150,11 @@ class FreqGraphVc: UIViewController {
   // Therefore this class implements the CPTPlotDataSource protocol
   
   func numberOfRecords(for plotnumberOfRecords : CPTPlot) -> UInt {
-    return enable ? nPoints : 0
+    return enable && x != nil ? UInt(x!.count) : 0
   }
   
-  func map(_ value: Float) -> Float {
-    let minLog = Float(log10(minVal))
-    let maxLog = Float(log10(maxVal))
-    let exp = minLog + (maxLog - minLog) * value
-    return pow(10, exp);
-  }
-  
-  func getX(_ idx: Float) -> Float {
-    let mapIn = idx / Float(nPoints)
-    return map(mapIn)
-  }
-  
-  func getY(_ idx: Float) -> Float {
-    let freq = getX(idx)
-    return 0.0
-    
-    // return analyzer!.GetDb(freq: freq, SR: 44100)
-  }
+  func getX(_ idx: Float) -> Float { return x![Int(idx)] }
+  func getY(_ idx: Float) -> Float { return y![Int(idx)] }
   
   // This method is here because this class also functions as datasource for our graph
   // Therefore this class implements the CPTPlotDataSource protocol
