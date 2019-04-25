@@ -38,6 +38,13 @@ namespace DspBlocks {
       try {
         Connect(this, &masterEq);
         Connect(&masterEq, this);
+        
+        // this stuff is just to get this working with an inactive AU
+        analyzer = new AWV::FftAnalyzer(13);  // 2 << 13 = 16384
+        analyzer->SetFrequencies(10, 10000, 300);
+        analyzer->SetSampleRate(44100);
+        wireSpec = WireSpec(2, 44100, 128);
+        
       } catch (DspError err) {
         cout << err.msg;
       }
@@ -49,24 +56,22 @@ namespace DspBlocks {
     
     void Init(WireSpec ws) {
       try {
-        analyzer = new AWV::FftAnalyzer(16384);
-        analyzer->SetSampleRate(ws.sampleRate);
         PrepareForOperation(ws, true);
         printf("\n");
         dc.Describe();
         // initialize blocks
         InitBlocks();
+        analyzer->SetSampleRate(ws.sampleRate);
       } catch (DspError err) {
         cout << err.msg;
       }
     }
-    
-    vector<float> GetFrequencyResponse() {
+        
+    vector<float>& GetFrequencyResponse() {
       auto eqSpecs = masterEq.eqBlock.GetEqSpecs();
       BiquadChain bq(eqSpecs, wireSpec.sampleRate);
       vector<float> ir = bq.impulseResponse(16384);
-      vector<float>& response = analyzer->GetFrequencyResponse(ir);
-      return response;
+      return analyzer->GetFrequencyResponse(ir);
     }
     
     vector<float> GetFrequencyResponse(int stage) {

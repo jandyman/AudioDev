@@ -15,11 +15,11 @@ namespace CoefGen {
   using namespace std;
   
   struct Coefs {
-    double c0;
-    double c1;
-    double c2;
-    double c3;
-    double c4;
+    double c0 = 0;
+    double c1 = 0;
+    double c2 = 0;
+    double c3 = 0;
+    double c4 = 0;
 
     void fillArray(double* array) {
       array[0] = c0;
@@ -138,8 +138,8 @@ namespace CoefGen {
       }
     }
 
-    static double* ToCoefs(vector<EqSpec> specs, double sampleRate) {
-      double *retval = new double[specs.size() * 5];
+    static vector<double> ToCoefs(vector<EqSpec> specs, double sampleRate) {
+      auto retval = vector<double>(specs.size() * 5);
       int idx = 0;
       for (auto spec: specs) {
         auto coefs = spec.Coefs(sampleRate);

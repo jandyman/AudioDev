@@ -94,13 +94,23 @@ namespace AWV {
     DSPSplitComplex fftOut;
     FFTSetup fftSetup;
 
-    float minFreq;
-    float maxFreq;
-    float nFreqPoints;
-    float SR;
+    float minFreq = 10;
+    float maxFreq = 20000;
+    float nFreqPoints = 100;
+    float SR = 0;
     vector<float> frequencies;
     vector<int> idxs;
     vector<float> dB;
+    
+    void SetupIdxArray() {
+      dB = vector<float>(nFreqPoints);
+      if (SR != 0 && frequencies.size() > 0) {
+        idxs = vector<int>(nFreqPoints);
+        for (int i=0; i<nFreqPoints; i++) {
+          idxs[i] = frequencies[i] / (SR/2.0) * (intLen/2 + 1);
+        }
+      }
+    }
 
   public:
 
@@ -113,19 +123,19 @@ namespace AWV {
       fftSetup = vDSP_create_fftsetup(log2len, kFFTRadix2);
     }
     
-    void SetSampleRate(float SR) { this->SR = SR; }
+    void SetSampleRate(float SR) {
+      this->SR = SR;
+      SetupIdxArray();
+    }
     
     void SetFrequencies(float minFreq, float maxFreq, int nFreqPoints) {
       this->minFreq = minFreq; this->maxFreq = maxFreq;
       this->nFreqPoints = nFreqPoints;
       frequencies = Math::LogSpacedArray(minFreq, maxFreq, nFreqPoints);
-      idxs = vector<int>(nFreqPoints);
-      for (int i=0; i<nFreqPoints; i++) {
-        idxs[i] = frequencies[i] / (SR/2.0) * (intLen/2 + 1);
-      }
+      SetupIdxArray();
     }
     
-    vector<float> GetFrequencies() { return frequencies; }
+    vector<float>& GetFrequencies() { return frequencies; }
     
     vector<float>& GetFrequencyResponse(vector<float> impulseResponse) {
       Math::RealFFT(fftSetup, log2len, &impulseResponse[0], &fftOut);
@@ -134,7 +144,7 @@ namespace AWV {
         if (idx == 0) {
           dB[i] = abs(fftOut.realp[0]);
         } else if (idx == intLen) {
-          dB[i] = abs(fftOut.realp[1]);
+          dB[i] = abs(fftOut.imagp[0]);
         } else {
           float realp = fftOut.realp[idx];
           float imagp = fftOut.imagp[idx];

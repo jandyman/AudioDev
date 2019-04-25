@@ -43,6 +43,7 @@
 -(void)setupFftAnalyzerForMin:(float)min max:(float)max
                   nFreqPoints:(int)nFreqPoints;;
 
+-(float*)getFrequencyPoints;
 -(float*)getFreqResponse;
 -(float*)getFreqResponseforStage:(int)stage;
 

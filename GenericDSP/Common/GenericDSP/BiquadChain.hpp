@@ -18,16 +18,15 @@ namespace DspBlocks {
 
   class BiquadChain {
     vDSP_biquad_Setup biquadSetup = NULL;
-    double *coefs = NULL;
+    vector<double> coefs;
     float *dlyBuf = NULL;
     int nStages = 0;
     
-    void init(double* coefs, uint nStages) {
+    void init(vector<double> coefs, uint nStages) {
       this->nStages = nStages;
       clearState();
-      this->coefs = new double[5 * nStages];
-      copy(coefs, coefs + (5 * nStages), this->coefs);
-      biquadSetup = vDSP_biquad_CreateSetup(coefs, (vDSP_Length)nStages);
+      this->coefs = coefs;
+      biquadSetup = vDSP_biquad_CreateSetup(&coefs[0], (vDSP_Length)nStages);
       dlyBuf = new float[4 * nStages]();
     }
     
@@ -41,12 +40,12 @@ namespace DspBlocks {
     
   public:
     
-    BiquadChain(double* coefs, int nStages) {
+    BiquadChain(vector<double> coefs, int nStages) {
       init(coefs, nStages);
     }
     
     BiquadChain(vector<EqSpec> specs, double sampleRate) {
-      double allCoefs[specs.size() * 5];
+      vector<double> allCoefs(specs.size() * 5);
       int idx = 0, nStages = 0;
       for (auto spec: specs) {
         if (spec.needsCoefs()) {
@@ -55,15 +54,21 @@ namespace DspBlocks {
           nStages++;
         }
       }
+      if (nStages == 0) { // if no stages, build a dummy one
+        Coefs coefs;
+        coefs.c0 = 1.0;
+        coefs.fillArray(&allCoefs[0]);
+        nStages = 1;
+      }
       init(allCoefs, nStages);
     }
     
     BiquadChain (const BiquadChain &obj) {
       nStages = obj.nStages;
       dlyBuf = new float[4 * nStages]();
-      coefs = new double[5 * nStages];
-      copy(obj.coefs, obj.coefs + (5 * nStages), coefs);
-      biquadSetup = vDSP_biquad_CreateSetup(coefs, nStages);
+      coefs = vector<double>(5 * nStages);
+      coefs = obj.coefs;
+      biquadSetup = vDSP_biquad_CreateSetup(&coefs[0], nStages);
     }
     
     ~BiquadChain() {

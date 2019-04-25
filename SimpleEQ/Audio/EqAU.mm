@@ -112,8 +112,14 @@ DspBlocks::EqDsp* _DSP = nullptr;
   _DSP->analyzer->SetFrequencies(min, max, nFreqPoints);
 }
 
+-(float*)getFrequencyPoints {
+  float* freqs = &_DSP->analyzer->GetFrequencies()[0];
+  return freqs;
+}
+
 -(float*)getFreqResponse {
-  return &_DSP->GetFrequencyResponse()[0];
+  float* resp = &_DSP->GetFrequencyResponse()[0];
+  return resp;
 }
 
 -(float*)getFreqResponseforStage:(int)stage {

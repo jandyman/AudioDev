@@ -6,17 +6,111 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "SimpleEQ/EqViewController.swift"
-            timestampString = "577054816.632001"
+            filePath = "../GenericDSP/Common/GenericDSP/BiquadChain.hpp"
+            timestampString = "577901707.925229"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "49"
-            endingLineNumber = "49"
-            landmarkName = "enableSwitchChanged(_:)"
+            startingLineNumber = "48"
+            endingLineNumber = "48"
+            landmarkName = "BiquadChain(vector&lt;EqSpec&gt; specs, double sampleRate)"
             landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../GenericDSP/Common/GenericDSP/BiquadChain.hpp"
+            timestampString = "577901707.925581"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "64"
+            endingLineNumber = "64"
+            landmarkName = "BiquadChain(vector&lt;EqSpec&gt; specs, double sampleRate)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "DspBlocks::BiquadChain::BiquadChain(std::__1::vector&lt;CoefGen::EqSpec, std::__1::allocator&lt;CoefGen::EqSpec&gt; &gt;, double)"
+                  moduleName = "SimpleEQ"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/andy/Dropbox%20(Personal)/Developer/AudioDev/GenericDSP/Common/GenericDSP/BiquadChain.hpp"
+                  timestampString = "577901708.017993"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "64"
+                  endingLineNumber = "64"
+                  offsetFromSymbolStart = "36">
+               </Location>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "DspBlocks::BiquadChain::BiquadChain(std::__1::vector&lt;CoefGen::EqSpec, std::__1::allocator&lt;CoefGen::EqSpec&gt; &gt;, double)"
+                  moduleName = "SimpleEQ"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/andy/Dropbox%20(Personal)/Developer/AudioDev/GenericDSP/Common/GenericDSP/BiquadChain.hpp"
+                  timestampString = "577901708.019915"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "64"
+                  endingLineNumber = "64"
+                  offsetFromSymbolStart = "324">
+               </Location>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "DspBlocks::BiquadChain::BiquadChain(std::__1::vector&lt;CoefGen::EqSpec, std::__1::allocator&lt;CoefGen::EqSpec&gt; &gt;, double)"
+                  moduleName = "SimpleEQ"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/andy/Dropbox%20(Personal)/Developer/AudioDev/GenericDSP/Common/GenericDSP/BiquadChain.hpp"
+                  timestampString = "577901708.021717"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "64"
+                  endingLineNumber = "64"
+                  offsetFromSymbolStart = "340">
+               </Location>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "DspBlocks::BiquadChain::BiquadChain(std::__1::vector&lt;CoefGen::EqSpec, std::__1::allocator&lt;CoefGen::EqSpec&gt; &gt;, double)"
+                  moduleName = "SimpleEQ"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/andy/Dropbox%20(Personal)/Developer/AudioDev/GenericDSP/Common/GenericDSP/BiquadChain.hpp"
+                  timestampString = "577901708.023724"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "64"
+                  endingLineNumber = "64"
+                  offsetFromSymbolStart = "492">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../GenericDsp/Common/DSP/CoefGen.hpp"
+            timestampString = "577901850.937768"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "128"
+            endingLineNumber = "128"
+            landmarkName = "EqSpec"
+            landmarkType = "14">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

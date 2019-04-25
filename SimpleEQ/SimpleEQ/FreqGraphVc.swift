@@ -134,8 +134,8 @@ class FreqGraphVc: UIViewController {
 
 @objc class FiltDataSource : NSObject, CPTPlotDataSource {
   
-  var lineStyle : CPTMutableLineStyle!
-  var lineColor : CPTColor!
+  var lineStyle = CPTMutableLineStyle()
+  var lineColor = CPTColor(cgColor: UIColor.black.cgColor)
   var lineWidth = CGFloat(2.0)
   
   var x : [Float]?

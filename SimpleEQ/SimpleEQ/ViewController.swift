@@ -8,12 +8,20 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+protocol AuDelegate {
+  func AuUpdated()
+}
+
+class ViewController: UIViewController, AuDelegate {
   
-  var filtGraphVc : UIViewController!
+  var filtGraphVc : FreqGraphVc!
+  var filtGraphDataSource = FiltDataSource()
   var eqVc : EqViewController!
   let percentHeightToGraph = CGFloat(0.60)
   var audioPath : AudioPath!
+  let nFreqPoints = 300
+  
+  var au : EqAU { return AudioPath.AU! }
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -21,12 +29,24 @@ class ViewController: UIViewController {
     setupEqControlsView()
     audioPath = AudioPath()
     while !audioPath.auInstantiated {}
-    eqVc.eqAU = AudioPath.AU
+    eqVc.eqAU = au
+    eqVc.initAu()
     eqVc.updateUi()
-    AudioPath.AU?.setupFftAnalyzer(forMin: 10, max: 10000, nFreqPoints: 300)
+    au.setupFftAnalyzer(forMin: 10, max: 10000, nFreqPoints: Int32(nFreqPoints))
+  }
+  
+  func AuUpdated() {
+    updateFrequencyResponseGraph()
   }
   
   func updateFrequencyResponseGraph() {
+    let x = Array(UnsafeBufferPointer(start: au.getFrequencyPoints(),
+                                      count: nFreqPoints))
+    filtGraphDataSource.x = x
+    let y = Array(UnsafeBufferPointer(start: au.getFreqResponse(),
+                                      count: nFreqPoints))
+    filtGraphDataSource.y = y
+    filtGraphVc.UpdateUi()
   }
   
   func setupFreqGraphView() {
@@ -47,12 +67,14 @@ class ViewController: UIViewController {
     // make the subview height a percentage times the height of
     subview.heightAnchor.constraint(equalTo: margins.heightAnchor,
                                     multiplier: percentHeightToGraph).isActive = true
+    filtGraphVc.addTrace(dataSource: filtGraphDataSource)
   }
 
   func setupEqControlsView() {
     let sb = UIStoryboard(name: "Main", bundle: nil)
     eqVc = sb.instantiateViewController(withIdentifier: "EqControls") as? EqViewController
     addChild(eqVc)
+    eqVc.auDelegate = self
     
     let subview = eqVc.view!
     view.addSubview(subview)
