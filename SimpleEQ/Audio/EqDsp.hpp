@@ -74,13 +74,12 @@ namespace DspBlocks {
       return analyzer->GetFrequencyResponse(ir);
     }
     
-    vector<float> GetFrequencyResponse(int stage) {
+    vector<float>& GetFrequencyResponse(int stage) {
       auto eqSpecs = masterEq.eqBlock.GetEqSpecs();
-      auto stageSpecs = vector<EqSpec>(1, eqSpecs[0]);
+      auto stageSpecs = vector<EqSpec>(1, eqSpecs[stage]);
       BiquadChain bq(stageSpecs, wireSpec.sampleRate);
       vector<float> ir = bq.impulseResponse(16384);
-      vector<float>& response = analyzer->GetFrequencyResponse(ir);
-      return response;
+      return analyzer->GetFrequencyResponse(ir);
     }
     
   };

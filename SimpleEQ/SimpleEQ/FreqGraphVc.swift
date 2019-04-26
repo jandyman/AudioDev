@@ -39,8 +39,6 @@ class FreqGraphVc: UIViewController {
     let plot = CPTScatterPlot(frame: CGRect.zero)
     plot.dataSource = dataSource as CPTPlotDataSource
     let ls1 = CPTMutableLineStyle(style: dataSource.lineStyle)
-    ls1.lineColor = dataSource.lineColor
-    ls1.lineWidth = dataSource.lineWidth
     plot.dataLineStyle = dataSource.lineStyle
     graph!.add(plot, to: graph!.defaultPlotSpace)
     traces.append(dataSource)
@@ -135,8 +133,6 @@ class FreqGraphVc: UIViewController {
 @objc class FiltDataSource : NSObject, CPTPlotDataSource {
   
   var lineStyle = CPTMutableLineStyle()
-  var lineColor = CPTColor(cgColor: UIColor.black.cgColor)
-  var lineWidth = CGFloat(2.0)
   
   var x : [Float]?
   var y : [Float]!

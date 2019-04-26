@@ -15,7 +15,8 @@ protocol AuDelegate {
 class ViewController: UIViewController, AuDelegate {
   
   var filtGraphVc : FreqGraphVc!
-  var filtGraphDataSource = FiltDataSource()
+  var totalResponseDataSource = FiltDataSource()
+  var selectedResponseDataSource = FiltDataSource()
   var eqVc : EqViewController!
   let percentHeightToGraph = CGFloat(0.60)
   var audioPath : AudioPath!
@@ -42,10 +43,13 @@ class ViewController: UIViewController, AuDelegate {
   func updateFrequencyResponseGraph() {
     let x = Array(UnsafeBufferPointer(start: au.getFrequencyPoints(),
                                       count: nFreqPoints))
-    filtGraphDataSource.x = x
-    let y = Array(UnsafeBufferPointer(start: au.getFreqResponse(),
+    totalResponseDataSource.x = x
+    selectedResponseDataSource.x = x
+    totalResponseDataSource.y = Array(UnsafeBufferPointer(start: au.getFreqResponse(),
+                                                          count: nFreqPoints))
+    let y = Array(UnsafeBufferPointer(start: au.getFreqResponseforStage(eqVc.selectedStage),
                                       count: nFreqPoints))
-    filtGraphDataSource.y = y
+    selectedResponseDataSource.y = y
     filtGraphVc.UpdateUi()
   }
   
@@ -67,7 +71,15 @@ class ViewController: UIViewController, AuDelegate {
     // make the subview height a percentage times the height of
     subview.heightAnchor.constraint(equalTo: margins.heightAnchor,
                                     multiplier: percentHeightToGraph).isActive = true
-    filtGraphVc.addTrace(dataSource: filtGraphDataSource)
+    let color = CPTColor(componentRed: 128/256.0, green: 158/256.0, blue: 140/256.0,
+                         alpha: 1)
+    totalResponseDataSource.lineStyle.lineWidth = 3
+    totalResponseDataSource.lineStyle.lineColor = color
+    filtGraphVc.addTrace(dataSource: totalResponseDataSource)
+    selectedResponseDataSource.lineStyle.lineWidth = 5
+    selectedResponseDataSource.lineStyle.dashPattern = [4, 8]
+    selectedResponseDataSource.lineStyle.lineColor = color
+    filtGraphVc.addTrace(dataSource: selectedResponseDataSource)
   }
 
   func setupEqControlsView() {
