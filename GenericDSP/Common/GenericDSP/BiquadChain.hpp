@@ -108,43 +108,44 @@ namespace DspBlocks {
   struct BiquadChainBlock : DspBlockSingleWireSpec {
     
   private:
-    vector<BiquadChain> biquadChains;
+    vector<BiquadChain>* biquadChains;
+    vector<BiquadChain>* newBiquadChains;
     vector<EqSpec> eqSpecs;
-    uint nStages = 1;
     uint nChannels = 0;
     
   public:
     BiquadChainBlock(int nStages = 1) : DspBlockSingleWireSpec(1,1) {
-      this->nStages = nStages;
       eqSpecs = vector<EqSpec>(nStages, EqSpec());
+    }
+    
+    ~BiquadChainBlock() {
+      delete biquadChains;
+      delete newBiquadChains;
     }
     
     const string GetClassName() override { return "Biquad Chain"; }
     
     void SetEqSpecs(vector<EqSpec> eqSpecs) {
       this->eqSpecs = eqSpecs;
-      nStages = eqSpecs.size();
-      updateBiquadChains();
+      auto biquadChain = BiquadChain(eqSpecs, sharedWireSpec.sampleRate);
+      newBiquadChains = new vector<BiquadChain>(nChannels, biquadChain);
+      delete biquadChains;
+      biquadChains = nullptr;
     }
     
-    int GetNStages() { return nStages; }
+    int GetNStages() { return eqSpecs.size(); }
     
     vector<EqSpec> GetEqSpecs() { return eqSpecs; }
     
     void Init() override {
       nChannels = outputPins[0].wire->NChannels();
       assertConnected();
-      updateBiquadChains();
+      auto biquadChain = BiquadChain(eqSpecs, sharedWireSpec.sampleRate);
+      newBiquadChains = biquadChains = new vector<BiquadChain>(nChannels, biquadChain);
     }
     
     void assertConnected() {
       if (nChannels == 0) { throw new DspError("BiquadChainBlock not connected"); }
-    }
-    
-    void updateBiquadChains() {
-      auto coefs = EqSpec::ToCoefs(eqSpecs, sharedWireSpec.sampleRate);
-      auto biquadChain = BiquadChain(coefs, nStages);
-      biquadChains = vector<BiquadChain>(nChannels, biquadChain);
     }
     
     vector<float> GetImpulseResponse(int len) {
@@ -159,12 +160,15 @@ namespace DspBlocks {
     }
     
     void Process() override {
+      if (newBiquadChains != biquadChains) {
+        biquadChains = newBiquadChains;        
+      }
       int nChannels = outputPins[0].wire->NChannels();
       int bufSize = outputPins[0].wire->BufSize();
       float** outbufs = outputPins[0].wire->buffers;
       float** inbufs = inputPins[0].wire->buffers;
       for (int ch=0; ch < nChannels; ch++) {
-        biquadChains[ch].process(inbufs[ch], outbufs[ch], bufSize);
+        (*biquadChains)[ch].process(inbufs[ch], outbufs[ch], bufSize);
       }
     }
     

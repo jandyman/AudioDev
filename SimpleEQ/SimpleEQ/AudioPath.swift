@@ -54,13 +54,10 @@ class AudioPath {
       engine.connect(au!, to: engine.mainMixerNode, format: audioFormat)
       engine.prepare()
       
-      var nStages = AudioPath.AU!.getNStages()
-      nStages = nStages + 1
-      
-//      do { try engine.start() }
-//      catch let error {
-//        print(error.localizedDescription)
-//      }
+      do { try engine.start() }
+      catch let error {
+        print(error.localizedDescription)
+      }
     }
   }
   
