@@ -57,9 +57,11 @@ namespace DspBlocks {
         Connect(&joiner, this);
         auto eqSpecs = vector<EqSpec>(1);
         eqSpecs[0].dB = 6;
-        leftEq.eqBlock.SetEqSpec(eqSpecs);
+        eqSpecs[0].enabled = true;
+        leftEq.eqBlock.SetEqSpecs(eqSpecs);
         eqSpecs[0].frequency = 200;
-        rightEq.eqBlock.SetEqSpec(eqSpecs);
+        eqSpecs[0].enabled = true;
+        rightEq.eqBlock.SetEqSpecs(eqSpecs);
       } catch (DspError err) {
         cout << err.msg;
       }

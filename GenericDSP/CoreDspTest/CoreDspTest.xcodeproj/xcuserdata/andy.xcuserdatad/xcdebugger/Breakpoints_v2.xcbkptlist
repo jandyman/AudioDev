@@ -6,16 +6,32 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Common/GenericDSP/BiquadChain.hpp"
+            timestampString = "578182708.957521"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "166"
+            endingLineNumber = "166"
+            landmarkName = "BiquadChainBlock"
+            landmarkType = "14">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "CoreDspTest/AUBufferingAdapter.hpp"
-            timestampString = "574144094.4055099"
+            filePath = "../Common/GenericDSP/BiquadChain.hpp"
+            timestampString = "578182708.9578429"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "20"
-            endingLineNumber = "20"
-            landmarkName = "AUBufferingAdapter"
+            startingLineNumber = "137"
+            endingLineNumber = "137"
+            landmarkName = "BiquadChainBlock"
             landmarkType = "14">
          </BreakpointContent>
       </BreakpointProxy>

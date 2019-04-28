@@ -108,8 +108,8 @@ namespace DspBlocks {
   struct BiquadChainBlock : DspBlockSingleWireSpec {
     
   private:
-    vector<BiquadChain>* biquadChains;
-    vector<BiquadChain>* newBiquadChains;
+    vector<BiquadChain>* biquadChains = nullptr;
+    vector<BiquadChain>* newBiquadChains = nullptr;
     vector<EqSpec> eqSpecs;
     uint nChannels = 0;
     
@@ -120,29 +120,32 @@ namespace DspBlocks {
     
     ~BiquadChainBlock() {
       delete biquadChains;
-      delete newBiquadChains;
+      if (biquadChains != newBiquadChains) {
+        delete newBiquadChains;
+      }
     }
     
     const string GetClassName() override { return "Biquad Chain"; }
     
+    void Init() override {
+      nChannels = outputPins[0].wire->NChannels();
+      assertConnected();
+      SetEqSpecs(eqSpecs);
+    }
+    
     void SetEqSpecs(vector<EqSpec> eqSpecs) {
       this->eqSpecs = eqSpecs;
+      auto tmp = newBiquadChains;
       auto biquadChain = BiquadChain(eqSpecs, sharedWireSpec.sampleRate);
       newBiquadChains = new vector<BiquadChain>(nChannels, biquadChain);
       delete biquadChains;
       biquadChains = nullptr;
+      delete tmp;
     }
     
     int GetNStages() { return eqSpecs.size(); }
     
     vector<EqSpec> GetEqSpecs() { return eqSpecs; }
-    
-    void Init() override {
-      nChannels = outputPins[0].wire->NChannels();
-      assertConnected();
-      auto biquadChain = BiquadChain(eqSpecs, sharedWireSpec.sampleRate);
-      newBiquadChains = biquadChains = new vector<BiquadChain>(nChannels, biquadChain);
-    }
     
     void assertConnected() {
       if (nChannels == 0) { throw new DspError("BiquadChainBlock not connected"); }

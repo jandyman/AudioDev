@@ -35,11 +35,7 @@ int main() {
     iBufs[1] = &inSamps[1][i];
     eqGraph.SetInputPortBuffers(iBufs);
     eqGraph.SetOutputPortBuffers(outSamps, i);
-//    wire->buffers[0] = &outSamps[0][i];
-//    wire->buffers[1] = &outSamps[1][i];
     eqGraph.Process();
-//    copy(&oBufs[0][0], &oBufs[0][bufSiz], &outSamps[0][i]);
-//    copy(&oBufs[1][0], &oBufs[1][bufSiz], &outSamps[1][i]);
   }
   
   WriteTestFile("testout.wav", SR, nChannels, outSamps, i-1);
