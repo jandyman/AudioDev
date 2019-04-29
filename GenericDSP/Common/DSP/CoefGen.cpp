@@ -83,7 +83,7 @@ namespace CoefGen {
   }
 
   TFunc2ndOrder hfShelving6(double fc, double boost, double fs) {
-    double gain = pow(10,-abs(boost/20));
+    double gain = pow(10,abs(boost/20));
     double gaincomp;
     double snum, sden;
     if (boost >= 0) {
