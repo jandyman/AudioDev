@@ -11,6 +11,7 @@
 #include "GenericDsp.hpp"
 #include "CoefGen.hpp"
 #include <algorithm>
+#include <mutex>
 
 namespace DspBlocks {
   using namespace std;
@@ -108,10 +109,12 @@ namespace DspBlocks {
   struct BiquadChainBlock : DspBlockSingleWireSpec {
     
   private:
-    vector<BiquadChain>* biquadChains = nullptr;
-    vector<BiquadChain>* newBiquadChains = nullptr;
+    vector<BiquadChain>* oldBiquadChains = nullptr;  // for the bg thread to dispose
+    vector<BiquadChain>* biquadChains = nullptr;     // currently in use
+    vector<BiquadChain>* newBiquadChains = nullptr;  // waiting to be switched in
     vector<EqSpec> eqSpecs;
     uint nChannels = 0;
+    mutex mutex_;
     
   public:
     BiquadChainBlock(int nStages = 1) : DspBlockSingleWireSpec(1,1) {
@@ -135,12 +138,16 @@ namespace DspBlocks {
     
     void SetEqSpecs(vector<EqSpec> eqSpecs) {
       this->eqSpecs = eqSpecs;
-      auto tmp = newBiquadChains;
       auto biquadChain = BiquadChain(eqSpecs, sharedWireSpec.sampleRate);
-      newBiquadChains = new vector<BiquadChain>(nChannels, biquadChain);
-      delete biquadChains;
-      biquadChains = nullptr;
-      delete tmp;
+      auto tmpBiquadChains = new vector<BiquadChain>(nChannels, biquadChain);
+      mutex_.lock();
+      if (newBiquadChains != biquadChains) {
+        delete newBiquadChains;
+      }
+      newBiquadChains = tmpBiquadChains;
+      mutex_.unlock();
+      delete oldBiquadChains;
+      oldBiquadChains = nullptr;
     }
     
     int GetNStages() { return eqSpecs.size(); }
@@ -163,15 +170,20 @@ namespace DspBlocks {
     }
     
     void Process() override {
-      if (newBiquadChains != biquadChains) {
-        biquadChains = newBiquadChains;        
-      }
-      int nChannels = outputPins[0].wire->NChannels();
-      int bufSize = outputPins[0].wire->BufSize();
-      float** outbufs = outputPins[0].wire->buffers;
-      float** inbufs = inputPins[0].wire->buffers;
-      for (int ch=0; ch < nChannels; ch++) {
-        (*biquadChains)[ch].process(inbufs[ch], outbufs[ch], bufSize);
+      bool locked = mutex_.try_lock();
+      if (locked) {
+        if (newBiquadChains != biquadChains) {
+          oldBiquadChains = biquadChains;
+          biquadChains = newBiquadChains;
+        }
+        int nChannels = outputPins[0].wire->NChannels();
+        int bufSize = outputPins[0].wire->BufSize();
+        float** outbufs = outputPins[0].wire->buffers;
+        float** inbufs = inputPins[0].wire->buffers;
+        for (int ch=0; ch < nChannels; ch++) {
+          (*biquadChains)[ch].process(inbufs[ch], outbufs[ch], bufSize);
+        }
+        if (locked) { mutex_.unlock(); }
       }
     }
     

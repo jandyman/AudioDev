@@ -103,11 +103,11 @@ class FreqGraphVc: UIViewController {
     axisSet.yAxis!.minorTickLineStyle = lineStyle
     axisSet.yAxis!.minorTicksPerInterval = 3
     axisSet.yAxis!.minorTickLength = 5.0
-    axisSet.xAxis!.orthogonalPosition = -20
+    axisSet.xAxis!.orthogonalPosition = -30
     // Get the (default) plotspace from the graph so we can set its x/y ranges
     let plotSpace = graph.defaultPlotSpace as! CPTXYPlotSpace
     // Note that these CPTPlotRange are defined by START and LENGTH (not START and END) !!
-    plotSpace.yRange = CPTPlotRange(location: -20, length: 40)
+    plotSpace.yRange = CPTPlotRange(location: -30, length: 60)
     plotSpace.xRange = CPTPlotRange(location: 10, length: 10000)
     plotSpace.xScaleType = CPTScaleType.log
     
