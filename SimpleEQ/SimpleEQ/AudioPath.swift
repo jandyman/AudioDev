@@ -54,7 +54,12 @@ class AudioPath {
       engine.connect(au!, to: engine.mainMixerNode, format: audioFormat)
       engine.prepare()
       
-      do { try engine.start() }
+      do {
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(AVAudioSession.Category.playAndRecord)
+        try session.setPreferredIOBufferDuration(0.004)
+        try engine.start()
+      }
       catch let error {
         print(error.localizedDescription)
       }
