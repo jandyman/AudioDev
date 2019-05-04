@@ -100,6 +100,16 @@ namespace DspBlocks {
   struct NullSource : DspBlockSingleWireSpec {
     const string GetClassName() override { return "Null Source"; }
     NullSource() : DspBlockSingleWireSpec(0, 1) {}
+
+    void Process() override {
+      int nChannels = outputPins[0].wire->NChannels();
+      int bufSize = outputPins[0].wire->BufSize();
+      float** outbufs = outputPins[0].wire->buffers;
+      for (int ch=0; ch < nChannels; ch++) {
+        std::fill(outbufs[0], outbufs[0]+bufSize, 0);
+      }
+    }
+
   };
   
 

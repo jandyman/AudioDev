@@ -11,7 +11,7 @@
 #include "BiquadChain.hpp"
 #include "Mixers.hpp"
 #include "MiscDsp.hpp"
-
+#include "MiscBlocks.hpp"
 
 namespace DspBlocks {
   
@@ -30,15 +30,23 @@ namespace DspBlocks {
   struct EqDsp : TopLevelGraph {
     DesignContext dc;
     EqBlock masterEq;
+    Splitter splitter;
+    TwoInputMixer mixer;
+    Joiner joiner;
     WireSpec wireSpec;
     AWV::FftAnalyzer* analyzer = nullptr;
     
     EqDsp() :
-    TopLevelGraph(dc,1,1), masterEq(dc) {
+    TopLevelGraph(dc,1,1), masterEq(dc), splitter(2), joiner(2) {
       try {
         Connect(this, &masterEq);
-        Connect(&masterEq, this);
-        
+        Connect(&masterEq, &splitter);
+        Connect(&splitter, 0, &mixer, 0);
+        Connect(&splitter, 1, &mixer, 1);
+        Connect(&mixer, &joiner, 0);
+        Connect(&mixer, &joiner, 1);
+        Connect(&joiner, this);
+
         // this stuff is just to get this working with an inactive AU
         analyzer = new AWV::FftAnalyzer(13);  // 2 << 13 = 16384
         analyzer->SetFrequencies(10, 10000, 300);

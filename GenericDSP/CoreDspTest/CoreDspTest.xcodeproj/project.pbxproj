@@ -28,7 +28,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		A16A97BB22014F2F0003E87E /* MiscBlocks.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MiscBlocks.hpp; sourceTree = "<group>"; };
+		A16A97BB22014F2F0003E87E /* MiscBlocks.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = MiscBlocks.hpp; path = ../../Common/GenericDSP/MiscBlocks.hpp; sourceTree = "<group>"; };
 		A182D9EC21475B1C0003A0B9 /* CoreDspTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CoreDspTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A182D9EF21475B1C0003A0B9 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		A182D9F621475C700003A0B9 /* TestGraph.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = TestGraph.hpp; sourceTree = "<group>"; };
