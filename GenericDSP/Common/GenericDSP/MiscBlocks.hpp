@@ -10,6 +10,7 @@
 
 #include "GenericDsp.hpp"
 #include <Accelerate/Accelerate.h>
+#include <vector>
 #include "math.h"
 
 namespace DspBlocks {
@@ -112,6 +113,35 @@ namespace DspBlocks {
 
   };
   
+}
 
+#include "Dynamics.hpp"
+
+namespace DspBlocks {
+  
+  using namespace DSP;
+  
+  struct LevelDetect : DspBlockSingleWireSpec {
+    vector<AttRel> attRels;
+    const string GetClassName() override { return "Level Detect"; }
+    LevelDetect() : DspBlockSingleWireSpec(1, 0) {}
+
+    void Init() override {
+      float fs = sharedWireSpec.sampleRate;
+      attRels = vector<AttRel>(sharedWireSpec.nChannels, AttRel(fs, .005, .3));
+    }
+    
+    float GetLevel(int chan) { return attRels[chan].Y; }
+    
+    void Process() override {
+      int nChannels = inputPins[0].wire->NChannels();
+      int bufSize = inputPins[0].wire->BufSize();
+      float** inbufs = inputPins[0].wire->buffers;
+      for (int ch=0; ch < nChannels; ch++) {
+        attRels[ch].Run(inbufs[ch], bufSize);
+      }
+    }
+    
+  };
   
 }

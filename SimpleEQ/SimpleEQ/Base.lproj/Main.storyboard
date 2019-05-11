@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="6eF-k0-jXd">
     <device id="ipad9_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
@@ -10,20 +10,21 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
+        <!--EQ Item-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="SimpleEQ" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" userLabel="EQ Item" customClass="EqViewContainer" customModule="SimpleEQ" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="768" height="1024"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
+                    <tabBarItem key="tabBarItem" title="EQ" id="gmI-9E-2om"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="139" y="-33"/>
+            <point key="canvasLocation" x="-777.34375" y="-731.25"/>
         </scene>
         <!--EQ View Controller-->
         <scene sceneID="wmN-he-L6O">
@@ -337,7 +338,89 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="aTe-2W-yUQ" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1088" y="-647"/>
+            <point key="canvasLocation" x="-89" y="-882"/>
+        </scene>
+        <!--Levels Item-->
+        <scene sceneID="zTL-06-hOt">
+            <objects>
+                <viewController id="sdk-bB-XyZ" userLabel="Levels Item" customClass="LevelsViewController" customModule="SimpleEQ" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="XcK-1Z-KMc">
+                        <rect key="frame" x="0.0" y="0.0" width="768" height="1024"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="RkJ-ED-Gck" userLabel="Input Left Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="114" y="116" width="36" height="190"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="minDb">
+                                        <integer key="value" value="-60"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </view>
+                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KCg-2m-jVH" userLabel="Input Right Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="186" y="116" width="36" height="190"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="minDb">
+                                        <integer key="value" value="-60"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </view>
+                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mMR-1S-6Y9" userLabel="Output Left Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="256" y="116" width="36" height="190"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="minDb">
+                                        <integer key="value" value="-60"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </view>
+                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="XTL-wD-dJ0" userLabel="Output Right Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="324" y="116" width="36" height="190"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="minDb">
+                                        <integer key="value" value="-60"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <viewLayoutGuide key="safeArea" id="MXv-4j-hAp"/>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Levels" id="0Z0-0C-1kd"/>
+                    <connections>
+                        <outlet property="inputLeftLevelMeter" destination="RkJ-ED-Gck" id="St6-AZ-z37"/>
+                        <outlet property="inputRightLevelMeter" destination="KCg-2m-jVH" id="4gI-QN-5pf"/>
+                        <outlet property="outputLeftLevelMeter" destination="mMR-1S-6Y9" id="DAH-Lb-g9J"/>
+                        <outlet property="outputRightLevelMeter" destination="XTL-wD-dJ0" id="5zn-eJ-hsw"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ERE-s8-ETd" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-777" y="-66"/>
+        </scene>
+        <!--Tab Bar Controller-->
+        <scene sceneID="uaV-0W-bOF">
+            <objects>
+                <tabBarController id="6eF-k0-jXd" sceneMemberID="viewController">
+                    <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="CM0-Np-Zf9">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="49"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    </tabBar>
+                    <connections>
+                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="viewControllers" id="eLS-Xx-Xb4"/>
+                        <segue destination="sdk-bB-XyZ" kind="relationship" relationship="viewControllers" id="c1t-1d-0GA"/>
+                    </connections>
+                </tabBarController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="VzV-pY-eaG" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-1548" y="-354"/>
         </scene>
         <!--Freq Graph Vc-->
         <scene sceneID="JdW-Uf-mPZ">
@@ -364,7 +447,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="xvU-XK-lht" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="152" y="-583"/>
+            <point key="canvasLocation" x="-89" y="-580"/>
         </scene>
     </scenes>
 </document>

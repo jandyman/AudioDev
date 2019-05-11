@@ -7,13 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A11F87B1227FB8DC00DEF43C /* Meters.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11F87B0227FB8DC00DEF43C /* Meters.swift */; };
+		A11F87B3227FB99600DEF43C /* ParamCombo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11F87B2227FB99600DEF43C /* ParamCombo.swift */; };
 		A1217433225835F800D086AA /* CoefGen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A1217432225835F800D086AA /* CoefGen.cpp */; };
 		A12174372258385D00D086AA /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A12174362258385D00D086AA /* AVFoundation.framework */; };
 		A12174382258390C00D086AA /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1217430225835C900D086AA /* AudioToolbox.framework */; };
+		A14E55F8228649EA00FBE5DC /* LevelsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A14E55F7228649EA00FBE5DC /* LevelsViewController.swift */; };
 		A15215CB22629BE400548D68 /* libCorePlot-CocoaTouch.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A15215CA22629BE400548D68 /* libCorePlot-CocoaTouch.a */; };
 		A15215CD2262DA7400548D68 /* AudioPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = A15215CC2262DA7400548D68 /* AudioPath.swift */; };
 		A16E163822544FCE00A759A4 /* EqViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A16E163722544FCE00A759A4 /* EqViewController.swift */; };
-		A16E16412254504B00A759A4 /* ParamCombo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A16E163B2254504A00A759A4 /* ParamCombo.swift */; };
 		A16E16522254571700A759A4 /* CorePlot.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A1EBC676224C66E900BC457F /* CorePlot.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A16E165822553CAB00A759A4 /* AudioUnitBase.mm in Sources */ = {isa = PBXBuildFile; fileRef = A16E165722553CAA00A759A4 /* AudioUnitBase.mm */; };
 		A16E165B22553D3D00A759A4 /* EqAU.mm in Sources */ = {isa = PBXBuildFile; fileRef = A16E165A22553D3D00A759A4 /* EqAU.mm */; };
@@ -21,7 +23,7 @@
 		A17EA850225AEC3700E4D4B6 /* SwiftDsp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A17EA84F225AEC3600E4D4B6 /* SwiftDsp.swift */; };
 		A17FF73A225B07EF00FABC64 /* MiscDsp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A17FF738225B07EF00FABC64 /* MiscDsp.cpp */; };
 		A1EBC642224C65E600BC457F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EBC641224C65E600BC457F /* AppDelegate.swift */; };
-		A1EBC644224C65E600BC457F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EBC643224C65E600BC457F /* ViewController.swift */; };
+		A1EBC644224C65E600BC457F /* EqViewContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EBC643224C65E600BC457F /* EqViewContainer.swift */; };
 		A1EBC647224C65E600BC457F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A1EBC645224C65E600BC457F /* Main.storyboard */; };
 		A1EBC649224C65E700BC457F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1EBC648224C65E700BC457F /* Assets.xcassets */; };
 		A1EBC64C224C65E700BC457F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A1EBC64A224C65E700BC457F /* LaunchScreen.storyboard */; };
@@ -63,15 +65,19 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A10B35D9227FDCB20037A873 /* Dynamics.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = Dynamics.hpp; path = ../../GenericDSP/Common/DSP/Dynamics.hpp; sourceTree = "<group>"; };
+		A10B35DA227FDE000037A873 /* MiscBlocks.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = MiscBlocks.hpp; path = ../../GenericDSP/Common/GenericDSP/MiscBlocks.hpp; sourceTree = "<group>"; };
+		A11F87B0227FB8DC00DEF43C /* Meters.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Meters.swift; path = ../UiCommon/Meters.swift; sourceTree = "<group>"; };
+		A11F87B2227FB99600DEF43C /* ParamCombo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ParamCombo.swift; path = ../UiCommon/ParamCombo.swift; sourceTree = "<group>"; };
 		A1217430225835C900D086AA /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		A1217432225835F800D086AA /* CoefGen.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CoefGen.cpp; path = ../../GenericDSP/Common/DSP/CoefGen.cpp; sourceTree = "<group>"; };
 		A12174362258385D00D086AA /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		A121743922583F0E00D086AA /* BiquadChain.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BiquadChain.hpp; path = ../../GenericDSP/Common/GenericDSP/BiquadChain.hpp; sourceTree = "<group>"; };
+		A14E55F7228649EA00FBE5DC /* LevelsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelsViewController.swift; sourceTree = "<group>"; };
 		A15215CA22629BE400548D68 /* libCorePlot-CocoaTouch.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libCorePlot-CocoaTouch.a"; path = "../../coreplot_2.2/Binaries/iOS/libCorePlot-CocoaTouch.a"; sourceTree = "<group>"; };
 		A15215CC2262DA7400548D68 /* AudioPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPath.swift; sourceTree = "<group>"; };
 		A16E163722544FCE00A759A4 /* EqViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EqViewController.swift; sourceTree = "<group>"; };
 		A16E163A2254504A00A759A4 /* SimpleEQ-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SimpleEQ-Bridging-Header.h"; sourceTree = "<group>"; };
-		A16E163B2254504A00A759A4 /* ParamCombo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ParamCombo.swift; path = ../../../AwvCombined/AwvCommon/UI/ParamCombo.swift; sourceTree = "<group>"; };
 		A16E165622553CAA00A759A4 /* AudioUnitBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AudioUnitBase.h; path = ../../GenericDSP/Common/AudioUnit/AudioUnitBase.h; sourceTree = "<group>"; };
 		A16E165722553CAA00A759A4 /* AudioUnitBase.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AudioUnitBase.mm; path = ../../GenericDSP/Common/AudioUnit/AudioUnitBase.mm; sourceTree = "<group>"; };
 		A16E165922553D3D00A759A4 /* EqAU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EqAU.h; sourceTree = "<group>"; };
@@ -83,7 +89,7 @@
 		A17FF739225B07EF00FABC64 /* MiscDsp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = MiscDsp.hpp; sourceTree = "<group>"; };
 		A1EBC63E224C65E600BC457F /* SimpleEQ.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimpleEQ.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1EBC641224C65E600BC457F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		A1EBC643224C65E600BC457F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		A1EBC643224C65E600BC457F /* EqViewContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EqViewContainer.swift; sourceTree = "<group>"; };
 		A1EBC646224C65E600BC457F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		A1EBC648224C65E700BC457F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A1EBC64B224C65E700BC457F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -132,15 +138,17 @@
 		A16E163922544FEB00A759A4 /* UiCommon */ = {
 			isa = PBXGroup;
 			children = (
-				A16E163B2254504A00A759A4 /* ParamCombo.swift */,
-				A16E163A2254504A00A759A4 /* SimpleEQ-Bridging-Header.h */,
+				A11F87B2227FB99600DEF43C /* ParamCombo.swift */,
+				A11F87B0227FB8DC00DEF43C /* Meters.swift */,
 			);
-			path = UiCommon;
+			name = UiCommon;
+			path = ../UiCommon;
 			sourceTree = "<group>";
 		};
 		A16E1646225450ED00A759A4 /* Audio */ = {
 			isa = PBXGroup;
 			children = (
+				A10B35DA227FDE000037A873 /* MiscBlocks.hpp */,
 				A121743922583F0E00D086AA /* BiquadChain.hpp */,
 				A1217432225835F800D086AA /* CoefGen.cpp */,
 				A16E165622553CAA00A759A4 /* AudioUnitBase.h */,
@@ -150,6 +158,7 @@
 				A16E165C22553E6700A759A4 /* EqDsp.hpp */,
 				A17FF738225B07EF00FABC64 /* MiscDsp.cpp */,
 				A17FF739225B07EF00FABC64 /* MiscDsp.hpp */,
+				A10B35D9227FDCB20037A873 /* Dynamics.hpp */,
 				A17EA84F225AEC3600E4D4B6 /* SwiftDsp.swift */,
 			);
 			path = Audio;
@@ -181,12 +190,14 @@
 		A1EBC640224C65E600BC457F /* SimpleEQ */ = {
 			isa = PBXGroup;
 			children = (
+				A1EBC645224C65E600BC457F /* Main.storyboard */,
+				A1EBC641224C65E600BC457F /* AppDelegate.swift */,
 				A17EA84B225A863700E4D4B6 /* FreqGraphVc.swift */,
 				A16E163722544FCE00A759A4 /* EqViewController.swift */,
-				A1EBC641224C65E600BC457F /* AppDelegate.swift */,
-				A1EBC643224C65E600BC457F /* ViewController.swift */,
+				A1EBC643224C65E600BC457F /* EqViewContainer.swift */,
+				A14E55F7228649EA00FBE5DC /* LevelsViewController.swift */,
 				A15215CC2262DA7400548D68 /* AudioPath.swift */,
-				A1EBC645224C65E600BC457F /* Main.storyboard */,
+				A16E163A2254504A00A759A4 /* SimpleEQ-Bridging-Header.h */,
 				A1EBC648224C65E700BC457F /* Assets.xcassets */,
 				A1EBC64A224C65E700BC457F /* LaunchScreen.storyboard */,
 				A1EBC64D224C65E700BC457F /* Info.plist */,
@@ -358,9 +369,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A11F87B3227FB99600DEF43C /* ParamCombo.swift in Sources */,
 				A15215CD2262DA7400548D68 /* AudioPath.swift in Sources */,
-				A16E16412254504B00A759A4 /* ParamCombo.swift in Sources */,
-				A1EBC644224C65E600BC457F /* ViewController.swift in Sources */,
+				A14E55F8228649EA00FBE5DC /* LevelsViewController.swift in Sources */,
+				A11F87B1227FB8DC00DEF43C /* Meters.swift in Sources */,
+				A1EBC644224C65E600BC457F /* EqViewContainer.swift in Sources */,
 				A1217433225835F800D086AA /* CoefGen.cpp in Sources */,
 				A17EA850225AEC3700E4D4B6 /* SwiftDsp.swift in Sources */,
 				A16E165B22553D3D00A759A4 /* EqAU.mm in Sources */,
@@ -460,6 +473,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/../UiTools/UiTools";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -522,6 +536,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/../UiTools/UiTools";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -548,6 +563,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = UUJ7MD9292;
+				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/../GenericDsp/Common/**",
 					"$(PROJECT_DIR)/../../coreplot_2.2/Binaries/iOS/CorePlotHeaders",
@@ -561,7 +577,7 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = AWV.SimpleEQ;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "UiCommon/SimpleEQ-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "SimpleEQ/SimpleEQ-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = 2;
@@ -575,6 +591,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = UUJ7MD9292;
+				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/../GenericDsp/Common/**",
 					"$(PROJECT_DIR)/../../coreplot_2.2/Binaries/iOS/CorePlotHeaders",
@@ -588,7 +605,7 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = AWV.SimpleEQ;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "UiCommon/SimpleEQ-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "SimpleEQ/SimpleEQ-Bridging-Header.h";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = 2;
 			};

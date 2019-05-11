@@ -126,6 +126,15 @@ DspBlocks::EqDsp* _DSP = nullptr;
   return &_DSP->GetFrequencyResponse(stage)[0];
 }
 
+-(float)getInputLevelForChannel:(int)chan {
+  return _DSP->inputLevelDetect.GetLevel(chan);
+}
+
+-(float)getOutputLevelForChannel:(int)chan {
+  return _DSP->outputLevelDetect.GetLevel(chan);
+}
+
+
 - (void*)dsp { return (void*)_DSP; }
 
 @end

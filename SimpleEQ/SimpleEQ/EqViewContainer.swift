@@ -12,7 +12,7 @@ protocol AuDelegate {
   func AuUpdated()
 }
 
-class ViewController: UIViewController, AuDelegate {
+class EqViewContainer: UIViewController, AuDelegate {
   
   var filtGraphVc : FreqGraphVc!
   var totalResponseDataSource = FiltDataSource()
@@ -77,8 +77,8 @@ class ViewController: UIViewController, AuDelegate {
     totalResponseDataSource.lineStyle.lineColor = color
     filtGraphVc.addTrace(dataSource: totalResponseDataSource)
     selectedResponseDataSource.lineStyle.lineWidth = 5
-    selectedResponseDataSource.lineStyle.dashPattern = [4, 8]
-    selectedResponseDataSource.lineStyle.lineColor = color
+    selectedResponseDataSource.lineStyle.dashPattern = [8, 8]
+    selectedResponseDataSource.lineStyle.lineColor = CPTColor(cgColor: UIColor.orange.cgColor)
     filtGraphVc.addTrace(dataSource: selectedResponseDataSource)
   }
 

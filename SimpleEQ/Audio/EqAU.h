@@ -47,6 +47,9 @@
 -(float*)getFreqResponse;
 -(float*)getFreqResponseforStage:(int)stage;
 
+-(float)getInputLevelForChannel:(int)chan;
+-(float)getOutputLevelForChannel:(int)chan;
+
 @end
 
 #ifdef __cplusplus

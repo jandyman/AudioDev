@@ -35,16 +35,21 @@ namespace DspBlocks {
     Joiner joiner;
     WireSpec wireSpec;
     AWV::FftAnalyzer* analyzer = nullptr;
+    LevelDetect inputLevelDetect;
+    LevelDetect outputLevelDetect;
+
     
     EqDsp() :
     TopLevelGraph(dc,1,1), masterEq(dc), splitter(2), joiner(2) {
       try {
         Connect(this, &masterEq);
         Connect(&masterEq, &splitter);
+        Connect(&masterEq, &inputLevelDetect);
         Connect(&splitter, 0, &mixer, 0);
         Connect(&splitter, 1, &mixer, 1);
         Connect(&mixer, &joiner, 0);
         Connect(&mixer, &joiner, 1);
+        Connect(&joiner, &outputLevelDetect);
         Connect(&joiner, this);
 
         // this stuff is just to get this working with an inactive AU
