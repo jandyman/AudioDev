@@ -128,6 +128,15 @@ namespace DspBlocks {
       }
     }
     
+    // need to create explicit copy constructor because mutex_ can't be copied
+    BiquadChainBlock (const BiquadChainBlock& src) : DspBlockSingleWireSpec(1,1) {
+      oldBiquadChains = src.oldBiquadChains;
+      biquadChains = src.biquadChains;
+      newBiquadChains = src.newBiquadChains;
+      eqSpecs = src.eqSpecs;
+      nChannels = src.nChannels;
+    }
+    
     const string GetClassName() override { return "Biquad Chain"; }
     
     void Init() override {

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="6eF-k0-jXd">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="j3H-VP-ZSu">
     <device id="ipad9_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
@@ -10,21 +10,66 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--EQ Item-->
-        <scene sceneID="tne-QT-ifu">
+        <!--Tab Bar Controller-->
+        <scene sceneID="GdG-AH-hUX">
             <objects>
-                <viewController id="BYZ-38-t0r" userLabel="EQ Item" customClass="EqViewContainer" customModule="SimpleEQ" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                <tabBarController id="j3H-VP-ZSu" sceneMemberID="viewController">
+                    <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="KwR-tG-JTP">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="49"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    </tabBar>
+                    <connections>
+                        <segue destination="Rsk-Ho-sYw" kind="relationship" relationship="viewControllers" id="eJe-s8-zbr"/>
+                        <segue destination="549-S6-DX3" kind="relationship" relationship="viewControllers" id="EmL-DP-Njh"/>
+                        <segue destination="sdk-bB-XyZ" kind="relationship" relationship="viewControllers" id="ZSq-gz-590"/>
+                    </connections>
+                </tabBarController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="nn1-m2-yAh" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-1595" y="-1812"/>
+        </scene>
+        <!--Left EQ Item-->
+        <scene sceneID="Tht-vD-tdo">
+            <objects>
+                <viewController id="Rsk-Ho-sYw" userLabel="Left EQ Item" customClass="EqViewContainer" customModule="SimpleEQ" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="dvZ-Zs-10m">
                         <rect key="frame" x="0.0" y="0.0" width="768" height="1024"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                        <viewLayoutGuide key="safeArea" id="bz4-ow-hxM"/>
                     </view>
-                    <tabBarItem key="tabBarItem" title="EQ" id="gmI-9E-2om"/>
+                    <tabBarItem key="tabBarItem" title="Left EQ" id="GEg-JD-u5T"/>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="number" keyPath="EQ_idx">
+                            <integer key="value" value="0"/>
+                        </userDefinedRuntimeAttribute>
+                    </userDefinedRuntimeAttributes>
                 </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="HSq-0d-kcQ" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-777.34375" y="-731.25"/>
+            <point key="canvasLocation" x="-777" y="-1812"/>
+        </scene>
+        <!--Right EQ Item-->
+        <scene sceneID="N7L-rJ-ZLN">
+            <objects>
+                <viewController id="549-S6-DX3" userLabel="Right EQ Item" customClass="EqViewContainer" customModule="SimpleEQ" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="TI9-FI-v75">
+                        <rect key="frame" x="0.0" y="0.0" width="768" height="1024"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <viewLayoutGuide key="safeArea" id="jiM-QL-fY7"/>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Right EQ" id="kPN-7T-mVG"/>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="number" keyPath="EQ_idx">
+                            <integer key="value" value="1"/>
+                        </userDefinedRuntimeAttribute>
+                    </userDefinedRuntimeAttributes>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="fDW-RV-ax2" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-777" y="-1065"/>
         </scene>
         <!--EQ View Controller-->
         <scene sceneID="wmN-he-L6O">
@@ -338,7 +383,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="aTe-2W-yUQ" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-89" y="-882"/>
+            <point key="canvasLocation" x="-113" y="-1995"/>
         </scene>
         <!--Levels Item-->
         <scene sceneID="zTL-06-hOt">
@@ -402,25 +447,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ERE-s8-ETd" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-777" y="-66"/>
-        </scene>
-        <!--Tab Bar Controller-->
-        <scene sceneID="uaV-0W-bOF">
-            <objects>
-                <tabBarController id="6eF-k0-jXd" sceneMemberID="viewController">
-                    <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="CM0-Np-Zf9">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="49"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                    </tabBar>
-                    <connections>
-                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="viewControllers" id="eLS-Xx-Xb4"/>
-                        <segue destination="sdk-bB-XyZ" kind="relationship" relationship="viewControllers" id="c1t-1d-0GA"/>
-                    </connections>
-                </tabBarController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="VzV-pY-eaG" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="-1548" y="-354"/>
+            <point key="canvasLocation" x="-1595" y="-1065"/>
         </scene>
         <!--Freq Graph Vc-->
         <scene sceneID="JdW-Uf-mPZ">
@@ -447,7 +474,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="xvU-XK-lht" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-89" y="-580"/>
+            <point key="canvasLocation" x="-114" y="-1693"/>
         </scene>
     </scenes>
 </document>

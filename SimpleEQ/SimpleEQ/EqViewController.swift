@@ -23,6 +23,7 @@ class EqViewController: UIViewController {
   var selectedStage = Int32(0)
   var eqAU : EqAU!
   var auDelegate : AuDelegate!
+  var unitIdx = Int32(0)
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -30,26 +31,25 @@ class EqViewController: UIViewController {
   
   func updateUi() {
     for i in Int32(0) ..< Int32(nStages) {
-      let enabled = eqAU.getEnabledAt(i)
+      let enabled = eqAU.getEnabled(unitIdx, idx: i)
       stageIndicator.SetEnable(Int(i), enable: enabled)
     }
-    enableSwitch.isOn = eqAU.getEnabledAt(selectedStage)
-    typeSelector.selectedSegmentIndex = Int(eqAU.getTypeAt(selectedStage))
-    orderSelector.selectedSegmentIndex = Int(eqAU.getOrderAt(selectedStage) - 1)
-    frequencyCombo.Value = Double(eqAU.getFrequencyAt(selectedStage))
-    boostCombo.Value = Double(eqAU.getDbAt(selectedStage))
-    qCombo.Value = Double(eqAU.getQAt(selectedStage))
+    enableSwitch.isOn = eqAU.getEnabled(unitIdx, idx: selectedStage)
+    typeSelector.selectedSegmentIndex = Int(eqAU.getType(unitIdx, stage: selectedStage))
+    orderSelector.selectedSegmentIndex = Int(eqAU.getOrder(unitIdx, stage: selectedStage) - 1)
+    frequencyCombo.Value = Double(eqAU.getFrequency(unitIdx, stage: selectedStage))
+    boostCombo.Value = Double(eqAU.getDb(unitIdx, stage: selectedStage))
+    qCombo.Value = Double(eqAU.getQ(unitIdx, stage: selectedStage))
     auDelegate.AuUpdated()
   }
   
   func initAu() {
     for i in 0..<Int32(nStages) {
-      eqAU.setEnabled(false, at: i)
-      eqAU.setType(0, at: i)
-      eqAU.setOrder(1, at: i)
-      eqAU.setFrequency(1000.0, at: i)
-      eqAU.setDb(0.0, at: i)
-      eqAU.setQ(1.0, at: i)
+      eqAU.setEnabled(unitIdx, enable: false, stage: i)
+      eqAU.setType(unitIdx, type: 0, stage: i)
+      eqAU.setOrder(unitIdx, order: 1, stage: i)
+      eqAU.setFrequency(unitIdx, frequency: 1000.0, stage: i)
+      eqAU.setQ(unitIdx, q: 1.0, stage: i)
     }
   }
   
@@ -59,32 +59,32 @@ class EqViewController: UIViewController {
   }
   
   @IBAction func enableSwitchChanged(_ sender: UISwitch) {
-    eqAU.setEnabled(sender.isOn, at: selectedStage)
+    eqAU.setEnabled(unitIdx, enable: sender.isOn, stage: selectedStage)
     updateUi()
   }
   
   @IBAction func typeChanged(_ sender: UISegmentedControl) {
-    eqAU.setType(Int32(sender.selectedSegmentIndex), at: selectedStage)
+    eqAU.setType(unitIdx, type: Int32(sender.selectedSegmentIndex), stage: selectedStage)
     updateUi()
   }
   
   @IBAction func orderChanged(_ sender: UISegmentedControl) {
-    eqAU.setOrder(Int32(sender.selectedSegmentIndex + 1), at: selectedStage)
+    eqAU.setOrder(unitIdx, order: Int32(sender.selectedSegmentIndex + 1), stage: selectedStage)
     updateUi()
   }
   
   @IBAction func frequencyChanged(_ sender: LogParamCombo) {
-    eqAU.setFrequency(Float(sender.Value), at: selectedStage)
+    eqAU.setFrequency(unitIdx, frequency: Float(sender.Value), stage: selectedStage)
     updateUi()
   }
   
   @IBAction func boostChanged(_ sender: NumericCombo2) {
-    eqAU.setDb(Float(sender.Value), at: selectedStage)
+    eqAU.setDb(unitIdx, dB: Float(sender.Value), stage: selectedStage)
     updateUi()
   }
   
   @IBAction func qChanged(_ sender: NumericCombo2) {
-    eqAU.setQ(Float(sender.Value), at: selectedStage)
+    eqAU.setQ(unitIdx, q: Float(sender.Value), stage: selectedStage)
     updateUi()
   }
   

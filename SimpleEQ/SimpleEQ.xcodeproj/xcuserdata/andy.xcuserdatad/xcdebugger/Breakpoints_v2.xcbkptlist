@@ -6,17 +6,49 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "No"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "../GenericDSP/Common/AudioUnit/AudioUnitBase.mm"
-            timestampString = "578528321.051558"
+            filePath = "Audio/EqAU.mm"
+            timestampString = "579733186.894708"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "174"
-            endingLineNumber = "174"
-            landmarkName = "-internalRenderBlock"
+            startingLineNumber = "63"
+            endingLineNumber = "63"
+            landmarkName = "-setType:type:stage:"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[EqAU setType:type:stage:]"
+                  moduleName = "SimpleEQ"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/andy/Dropbox%20(Personal)/Developer/AudioDev/SimpleEQ/Audio/EqAU.mm"
+                  timestampString = "579733186.941798"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "63"
+                  endingLineNumber = "63"
+                  offsetFromSymbolStart = "48">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[EqAU setType:type:stage:]::$_2::operator()(CoefGen::EqSpec&amp;) const"
+                  moduleName = "SimpleEQ"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/andy/Dropbox%20(Personal)/Developer/AudioDev/SimpleEQ/Audio/EqAU.mm"
+                  timestampString = "579733186.943884"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "63"
+                  endingLineNumber = "63"
+                  offsetFromSymbolStart = "16">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

@@ -23,9 +23,13 @@ class EqViewContainer: UIViewController, AuDelegate {
   let nFreqPoints = 300
   
   var au : EqAU { return AudioPath.AU! }
-
+  
+  @objc var EQ_idx: NSNumber!
+  var unitIdx : Int32!
+  
   override func viewDidLoad() {
     super.viewDidLoad()
+    unitIdx = Int32(truncating: EQ_idx)
     setupFreqGraphView()
     setupEqControlsView()
     audioPath = AudioPath()
@@ -33,7 +37,7 @@ class EqViewContainer: UIViewController, AuDelegate {
     eqVc.eqAU = au
     eqVc.initAu()
     eqVc.updateUi()
-    au.setupFftAnalyzer(forMin: 10, max: 10000, nFreqPoints: Int32(nFreqPoints))
+    au.setupFftAnalyzer(unitIdx, min: 10, max: 10000, nFreqPoints: Int32(nFreqPoints))
   }
   
   func AuUpdated() {
@@ -41,13 +45,14 @@ class EqViewContainer: UIViewController, AuDelegate {
   }
   
   func updateFrequencyResponseGraph() {
-    let x = Array(UnsafeBufferPointer(start: au.getFrequencyPoints(),
+    let x = Array(UnsafeBufferPointer(start: au.getFrequencyPoints(unitIdx),
                                       count: nFreqPoints))
     totalResponseDataSource.x = x
     selectedResponseDataSource.x = x
-    totalResponseDataSource.y = Array(UnsafeBufferPointer(start: au.getFreqResponse(),
+    totalResponseDataSource.y = Array(UnsafeBufferPointer(start: au.getFreqResponse(unitIdx),
                                                           count: nFreqPoints))
-    let y = Array(UnsafeBufferPointer(start: au.getFreqResponseforStage(eqVc.selectedStage),
+    let y = Array(UnsafeBufferPointer(start: au.getFreqResponse(unitIdx,
+                                                                stage: eqVc.selectedStage),
                                       count: nFreqPoints))
     selectedResponseDataSource.y = y
     filtGraphVc.UpdateUi()

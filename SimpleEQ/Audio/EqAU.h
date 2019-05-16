@@ -17,38 +17,38 @@
 
 -(void*)getDsp:(int*)bufSize;
 
--(int)getNStages;
+-(int)getNStages:(int)unit;
 
--(void)setEnabled:(bool)enable atIndex:(int)idx;
--(bool)getEnabledAtIndex:(int)idx;
+-(void)setEnabled:(int)unit enable:(bool)enable stage:(int)idx;
+-(bool)getEnabled:(int)unit idx:(int)idx;
 
--(void)setType:(int)frequency atIndex:(int)idx;
--(int)getTypeAtIndex:(int)idx;
+-(void)setType:unitIdx type:(int)type stage:(int)idx;
+-(int)getType:unitIdx stage:(int)idx;
 
--(void)setFrequency:(float)frequency atIndex:(int)idx;
--(float)getFrequencyAtIndex:(int)idx;
+-(void)setFrequency:(int)unit frequency:(float)frequency stage:(int)idx;
+-(float)getFrequency:unitIdx stage:(int)idx;
 
--(void)setDb:(float)dB atIndex:(int)idx;
--(float)getDbAtIndex:(int)idx;
+-(void)setDb:(int)unit dB:(float)dB stage:(int)idx;
+-(float)getDb:(int)unit stage:(int)idx;
 
--(void)setQ:(float)Q atIndex:(int)idx;
--(float)getQAtIndex:(int)idx;
+-(void)setQ:(int)unit Q:(float)Q stage:(int)idx;
+-(float)getQ:(int)unit stage:(int)idx;
 
--(void)setOrder:(int)order atIndex:(int)idx;
--(int)getOrderAtIndex:(int)idx;
+-(void)setOrder:(int)unit order:(int)order stage:(int)idx;
+-(int)getOrder:(int)unit stage:(int)idx;
 
--(float*)getImpulseResponse:(int)len;
--(float*)getImpulseResponseForStage:(int)len stage:(int)stage;
+-(float*)getImpulseResponse:(int)unit len:(int)len;
+-(float*)getImpulseResponse:(int)unit len:(int)len stage:(int)stage;
 
--(void)setupFftAnalyzerForMin:(float)min max:(float)max
+-(void)setupFftAnalyzer:(int)unit min:(float)min max:(float)max
                   nFreqPoints:(int)nFreqPoints;;
 
--(float*)getFrequencyPoints;
--(float*)getFreqResponse;
--(float*)getFreqResponseforStage:(int)stage;
+-(float*)getFrequencyPoints:(int)unit;
+-(float*)getFreqResponse:(int)unit;
+-(float*)getFreqResponse:(int)unit stage:(int)stage;
 
--(float)getInputLevelForChannel:(int)chan;
--(float)getOutputLevelForChannel:(int)chan;
+-(float)getInputLevelForChannel:(int)unit;
+-(float)getOutputLevelForChannel:(int)unit;
 
 @end
 

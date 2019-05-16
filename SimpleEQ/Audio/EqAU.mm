@@ -10,6 +10,7 @@
 #include "EqDsp.hpp"
 #include "MiscDsp.hpp"
 #include <algorithm>
+#include <functional>
 
 using namespace std;
 
@@ -29,111 +30,113 @@ DspBlocks::EqDsp* _DSP = nullptr;
   if (_DSP != nullptr) delete(_DSP);
 }
 
--(int)getNStages { return _DSP->masterEq.eqBlock.GetNStages(); }
+-(int)getNStages:(int)unit {
+  return _DSP->EQs[unit].eqBlock.GetNStages();
+}
 
--(void)setEnabled:(bool)enable atIndex:(int)idx {
-  vector<CoefGen::EqSpec> specs = _DSP->masterEq.eqBlock.GetEqSpecs();
+using CoefGen::EqSpec;
+
+void setEqParam(int unit, int idx, function<void(EqSpec&)> func) {
+  auto& block = _DSP->EQs[unit].eqBlock;
+  vector<CoefGen::EqSpec> specs = block.GetEqSpecs();
   assert(idx >= 0 && idx < specs.size());
-  specs[idx].enabled = enable;
-  _DSP->masterEq.eqBlock.SetEqSpecs(specs);
+  func(specs[idx]);
+  block.SetEqSpecs(specs);
 }
 
--(bool)getEnabledAtIndex:(int)idx {
-  return _DSP->masterEq.eqBlock.GetEqSpecs()[idx].enabled;
-}
-
--(void)setType:(int)type atIndex:(int)idx {
-  vector<CoefGen::EqSpec> specs = _DSP->masterEq.eqBlock.GetEqSpecs();
+template <typename T> T getEqParam(int unit, int idx, function<T(EqSpec&)> func) {
+  auto& block = _DSP->EQs[unit].eqBlock;
+  vector<CoefGen::EqSpec> specs = block.GetEqSpecs();
   assert(idx >= 0 && idx < specs.size());
-  specs[idx].type = (CoefGen::EqSpec::Type)type;
-  _DSP->masterEq.eqBlock.SetEqSpecs(specs);
+  return func(specs[idx]);
 }
 
--(int)getTypeAtIndex:(int)idx {
-  return _DSP->masterEq.eqBlock.GetEqSpecs()[idx].type;
+-(void)setEnabled:(int)unit enable:(bool)enable stage:(int)idx {
+  setEqParam(unit, idx, [&](EqSpec& spec) { spec.enabled = enable; } );
 }
 
--(void)setFrequency:(float)frequency atIndex:(int)idx {
-  vector<CoefGen::EqSpec> specs = _DSP->masterEq.eqBlock.GetEqSpecs();
-  assert(idx >= 0 && idx < specs.size());
-  specs[idx].frequency = frequency;
-  _DSP->masterEq.eqBlock.SetEqSpecs(specs);
+-(bool)getEnabled:(int)unit stage:(int)idx {
+  return getEqParam<bool>(unit, idx, [](EqSpec spec) { return spec.enabled; } );
 }
 
--(float)getFrequencyAtIndex:(int)idx {
-  return _DSP->masterEq.eqBlock.GetEqSpecs()[idx].frequency;
+-(void)setType:(int)unit type:(int)type stage:(int)idx {
+  setEqParam(unit, idx, [&](EqSpec& spec) { spec.type = (CoefGen::EqSpec::Type)type; } );
 }
 
--(void)setDb:(float)dB atIndex:(int)idx {
-  vector<CoefGen::EqSpec> specs = _DSP->masterEq.eqBlock.GetEqSpecs();
-  assert(idx >= 0 && idx < specs.size());
-  specs[idx].dB = dB;
-  _DSP->masterEq.eqBlock.SetEqSpecs(specs);
+-(int)getType:(int)unit stage:(int)idx {
+  return getEqParam<int>(unit, idx, [](EqSpec spec) { return spec.type; } );
 }
 
--(float)getDbAtIndex:(int)idx {
-  return _DSP->masterEq.eqBlock.GetEqSpecs()[idx].dB;
+-(void)setFrequency:(int)unit frequency:(float)freq stage:(int)idx {
+  setEqParam(unit, idx, [&](EqSpec& spec) { spec.frequency = freq; });
 }
 
--(void)setQ:(float)Q atIndex:(int)idx {
-  vector<CoefGen::EqSpec> specs = _DSP->masterEq.eqBlock.GetEqSpecs();
-  assert(idx >= 0 && idx < specs.size());
-  specs[idx].Q = Q;
-  _DSP->masterEq.eqBlock.SetEqSpecs(specs);
+-(float)getFrequency:(int)unit stage:(int)idx {
+  return getEqParam<float>(unit, idx, [](EqSpec spec) { return spec.frequency; });
 }
 
--(float)getQAtIndex:(int)idx {
-  return _DSP->masterEq.eqBlock.GetEqSpecs()[idx].Q;
+-(void)setDb:(int)unit dB:(float)dB stage:(int)idx {
+  setEqParam(unit, idx, [&](EqSpec& spec) { spec.dB = dB; });
 }
 
--(void)setOrder:(int)order atIndex:(int)idx {
-  vector<CoefGen::EqSpec> specs = _DSP->masterEq.eqBlock.GetEqSpecs();
-  assert(idx >= 0 && idx < specs.size());
-  specs[idx].order = order;
-  _DSP->masterEq.eqBlock.SetEqSpecs(specs);
+-(float)getDb:(int)unit stage:(int)idx {
+  return getEqParam<float>(unit, idx, [](EqSpec spec) { return spec.dB; });
 }
 
--(int)getOrderAtIndex:(int)idx {
-  return _DSP->masterEq.eqBlock.GetEqSpecs()[idx].order;
+-(void)setQ:(int)unit Q:(float)Q stage:(int)idx {
+  setEqParam(unit, idx, [&](EqSpec& spec) { spec.Q = Q; });
 }
 
--(float*)getImpulseResponse:(int)len {
-  auto ir = _DSP->masterEq.eqBlock.GetImpulseResponse(len);
+-(float)getQ:(int)unit stage:(int)idx {
+  return getEqParam<float>(unit, idx, [](EqSpec spec) { return spec.Q; });
+}
+
+-(void)setOrder:(int)unit order:(int)order stage:(int)idx {
+  setEqParam(unit, idx, [&](EqSpec& spec) { spec.order = order; });
+}
+
+-(float)getOrder:(int)unit stage:(int)idx {
+  return getEqParam<int>(unit, idx, [](EqSpec spec) { return spec.order; });
+}
+
+-(float*)getImpulseResponse:(int)unit len:(int)len {
+  auto ir = _DSP->EQs[unit].eqBlock.GetImpulseResponse(len);
   return &ir[0];
 }
 
--(float*)getImpulseResponseForStage:(int)len stage:(int)stage {
-  auto ir = _DSP->masterEq.eqBlock.GetImpulseResponse(len);
+-(float*)getImpulseResponse:(int)unit len:(int)len stage:(int)stage {
+  auto ir = _DSP->EQs[unit].eqBlock.GetImpulseResponse(len);
   return &ir[0];
 }
 
--(void)setupFftAnalyzerForMin:(float)min max:(float)max
+-(void)setupFftAnalyzer:(int)unit min:(float)min max:(float)max
                   nFreqPoints:(int)nFreqPoints {
-  _DSP->analyzer->SetFrequencies(min, max, nFreqPoints);
+  _DSP->analyzers[unit]->SetFrequencies(min, max, nFreqPoints);
 }
 
--(float*)getFrequencyPoints {
-  float* freqs = &_DSP->analyzer->GetFrequencies()[0];
+-(float*)getFrequencyPoints:(int)unit {
+  float* freqs = &_DSP->analyzers[unit]->GetFrequencies()[0];
   return freqs;
 }
 
--(float*)getFreqResponse {
-  float* resp = &_DSP->GetFrequencyResponse()[0];
+-(float*)getFreqResponse:(int)unit {
+  float* resp = &_DSP->GetFrequencyResponse(unit)[0];
   return resp;
 }
 
--(float*)getFreqResponseforStage:(int)stage {
+-(float*)getFreqResponse:(int)unit stage:(int)stage {
   return &_DSP->GetFrequencyResponse(stage)[0];
 }
 
 -(float)getInputLevelForChannel:(int)chan {
-  return _DSP->inputLevelDetect.GetLevel(chan);
+  auto detector = (chan == 0) ? _DSP->detectors[0] : _DSP->detectors[1];
+  return detector.GetLevel(chan);
 }
 
 -(float)getOutputLevelForChannel:(int)chan {
-  return _DSP->outputLevelDetect.GetLevel(chan);
+  auto detector = (chan == 0) ? _DSP->detectors[2] : _DSP->detectors[3];
+  return detector.GetLevel(chan);
 }
-
 
 - (void*)dsp { return (void*)_DSP; }
 
