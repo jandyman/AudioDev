@@ -87,6 +87,8 @@
 		A17EA84F225AEC3600E4D4B6 /* SwiftDsp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftDsp.swift; sourceTree = "<group>"; };
 		A17FF738225B07EF00FABC64 /* MiscDsp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MiscDsp.cpp; sourceTree = "<group>"; };
 		A17FF739225B07EF00FABC64 /* MiscDsp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = MiscDsp.hpp; sourceTree = "<group>"; };
+		A19E6F7A228F8565007BCEE1 /* GenericDsp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = GenericDsp.hpp; path = ../../GenericDSP/Common/GenericDSP/GenericDsp.hpp; sourceTree = "<group>"; };
+		A19E6F7B228F8565007BCEE1 /* Mixers.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Mixers.hpp; path = ../../GenericDSP/Common/GenericDSP/Mixers.hpp; sourceTree = "<group>"; };
 		A1EBC63E224C65E600BC457F /* SimpleEQ.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimpleEQ.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1EBC641224C65E600BC457F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A1EBC643224C65E600BC457F /* EqViewContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EqViewContainer.swift; sourceTree = "<group>"; };
@@ -148,6 +150,8 @@
 		A16E1646225450ED00A759A4 /* Audio */ = {
 			isa = PBXGroup;
 			children = (
+				A19E6F7A228F8565007BCEE1 /* GenericDsp.hpp */,
+				A19E6F7B228F8565007BCEE1 /* Mixers.hpp */,
 				A10B35DA227FDE000037A873 /* MiscBlocks.hpp */,
 				A121743922583F0E00D086AA /* BiquadChain.hpp */,
 				A1217432225835F800D086AA /* CoefGen.cpp */,
@@ -160,6 +164,7 @@
 				A17FF739225B07EF00FABC64 /* MiscDsp.hpp */,
 				A10B35D9227FDCB20037A873 /* Dynamics.hpp */,
 				A17EA84F225AEC3600E4D4B6 /* SwiftDsp.swift */,
+				A15215CC2262DA7400548D68 /* AudioPath.swift */,
 			);
 			path = Audio;
 			sourceTree = "<group>";
@@ -196,7 +201,6 @@
 				A16E163722544FCE00A759A4 /* EqViewController.swift */,
 				A1EBC643224C65E600BC457F /* EqViewContainer.swift */,
 				A14E55F7228649EA00FBE5DC /* LevelsViewController.swift */,
-				A15215CC2262DA7400548D68 /* AudioPath.swift */,
 				A16E163A2254504A00A759A4 /* SimpleEQ-Bridging-Header.h */,
 				A1EBC648224C65E700BC457F /* Assets.xcassets */,
 				A1EBC64A224C65E700BC457F /* LaunchScreen.storyboard */,

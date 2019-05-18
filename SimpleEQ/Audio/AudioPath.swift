@@ -23,31 +23,40 @@ extension OSType {
 }
 
 class AudioPath {
+  
+  enum AuState {
+    case uninitialized
+    case initializing
+    case initialized
+  }
 
   static var audioFormat : AVAudioFormat!
   static var engine = AVAudioEngine()
   static var AU : EqAU?
+  private static var state = AuState.uninitialized
+  
+  static var ready : Bool { return state == .initialized }
   
   init() {
-    let type = OSType("aufx")
-    let subtype = OSType("gain")
-    let manufacturer = OSType("Demo")
-    let desc = AudioComponentDescription(componentType: type,
-                                         componentSubType: subtype,
-                                         componentManufacturer: manufacturer,
-                                         componentFlags: 0, componentFlagsMask: 0)
-    AUAudioUnit.registerSubclass(EqAU.self, as: desc, name: "EQ AU", version: UInt32.max)
-    AVAudioUnit.instantiate(with: desc, options: .loadOutOfProcess, completionHandler: auInstantiated)
+    if AudioPath.state == .uninitialized {
+      let type = OSType("aufx")
+      let subtype = OSType("gain")
+      let manufacturer = OSType("Demo")
+      let desc = AudioComponentDescription(componentType: type,
+                                           componentSubType: subtype,
+                                           componentManufacturer: manufacturer,
+                                           componentFlags: 0, componentFlagsMask: 0)
+      AUAudioUnit.registerSubclass(EqAU.self, as: desc, name: "EQ AU", version: UInt32.max)
+      AudioPath.state = .initializing
+      AVAudioUnit.instantiate(with: desc, options: .loadOutOfProcess, completionHandler: auInstantiated)
+    }
   }
-  
-  private(set) var auInstantiated = false
-  
+    
   private func auInstantiated(au: AVAudioUnit?, err: Error?) {
     var audioFormat = AudioPath.audioFormat
-    auInstantiated = true
     audioFormat = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)
     if (au != nil) {
-      AudioPath.AU = au?.auAudioUnit as? EqAU
+      AudioPath.AU = (au!.auAudioUnit as! EqAU)
       let engine = AudioPath.engine
       engine.attach(au!)
       engine.connect(engine.inputNode, to: au!, format: audioFormat)
@@ -64,6 +73,7 @@ class AudioPath {
         print(error.localizedDescription)
       }
     }
+    AudioPath.state = .initialized
   }
   
 }

@@ -3,15 +3,53 @@
    version = "1.0">
    <ContextStates>
       <ContextState
-         contextName = "AudioPath.auInstantiated(au:err:):AudioPath.swift">
+         contextName = "DspBlocks::TopLevelGraph::AllocateOutputBuffers(DspBlocks::DspInterface*):GenericDsp.hpp">
+      </ContextState>
+      <ContextState
+         contextName = "DspBlocks::TopLevelGraph::DetermineProcessingOrder():GenericDsp.hpp">
+      </ContextState>
+      <ContextState
+         contextName = "::-[EqAU getNStages]():EqAU.mm">
+      </ContextState>
+      <ContextState
+         contextName = "DspBlocks::TopLevelGraph::PrepareForOperation(DspBlocks::WireSpec, bool):GenericDsp.hpp">
+      </ContextState>
+      <ContextState
+         contextName = "::-[AudioUnitBase allocateRenderResourcesAndReturnError:](NSError **):AudioUnitBase.mm">
+      </ContextState>
+      <ContextState
+         contextName = "ViewController.updateFrequencyResponseGraph():ViewController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "CoefGen::EqSpec::needsCoefs():CoefGen.hpp">
+      </ContextState>
+      <ContextState
+         contextName = "EqViewContainer.viewDidLoad():EqViewContainer.swift">
          <PersistentStrings>
             <PersistentString
-               value = "AudioPath">
+               value = "AudioPath.state">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "DspBlocks::TopLevelGraph::DetermineProcessingOrder(DspBlocks::DspInterface*):GenericDsp.hpp">
+      </ContextState>
+      <ContextState
+         contextName = "DspBlocks::BiquadChain::BiquadChain(std::__1::vector&lt;CoefGen::EqSpec, std::__1::allocator&lt;CoefGen::EqSpec&gt; &gt;, double):BiquadChain.hpp">
+      </ContextState>
+      <ContextState
+         contextName = "DspBlocks::EqDsp::GetFrequencyResponse():EqDsp.hpp">
+      </ContextState>
+      <ContextState
          contextName = "DspBlocks::BiquadChain::process(float*, float*, int):BiquadChain.hpp">
+      </ContextState>
+      <ContextState
+         contextName = "AudioPath.auInstantiated(au:err:):AudioPath.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "AudioPath.state">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "::-[EqAU getFreqResponse]():EqAU.mm">
@@ -22,25 +60,10 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "::-[EqAU getNStages]():EqAU.mm">
-      </ContextState>
-      <ContextState
-         contextName = "CoefGen::EqSpec::needsCoefs():CoefGen.hpp">
-      </ContextState>
-      <ContextState
-         contextName = "DspBlocks::EqDsp::GetFrequencyResponse():EqDsp.hpp">
-      </ContextState>
-      <ContextState
-         contextName = "DspBlocks::BiquadChain::BiquadChain(std::__1::vector&lt;CoefGen::EqSpec, std::__1::allocator&lt;CoefGen::EqSpec&gt; &gt;, double):BiquadChain.hpp">
-      </ContextState>
-      <ContextState
          contextName = "IVars::GetInputBuffers(int):AudioUnitBase.mm">
       </ContextState>
       <ContextState
          contextName = "AWV::FftAnalyzer::GetFrequencyResponse(std::__1::vector&lt;float, std::__1::allocator&lt;float&gt; &gt;):MiscDsp.hpp">
-      </ContextState>
-      <ContextState
-         contextName = "ViewController.updateFrequencyResponseGraph():ViewController.swift">
       </ContextState>
       <ContextState
          contextName = "Process(IVars*, AudioBufferList*, AudioBufferList*, int):AudioUnitBase.mm">

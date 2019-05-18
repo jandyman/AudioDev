@@ -20,13 +20,13 @@
 -(int)getNStages:(int)unit;
 
 -(void)setEnabled:(int)unit enable:(bool)enable stage:(int)idx;
--(bool)getEnabled:(int)unit idx:(int)idx;
+-(bool)getEnabled:(int)unit stage:(int)idx;
 
--(void)setType:unitIdx type:(int)type stage:(int)idx;
--(int)getType:unitIdx stage:(int)idx;
+-(void)setType:(int)unitIdx type:(int)type stage:(int)idx;
+-(int)getType:(int)unitIdx stage:(int)idx;
 
 -(void)setFrequency:(int)unit frequency:(float)frequency stage:(int)idx;
--(float)getFrequency:unitIdx stage:(int)idx;
+-(float)getFrequency:(int)unitIdx stage:(int)idx;
 
 -(void)setDb:(int)unit dB:(float)dB stage:(int)idx;
 -(float)getDb:(int)unit stage:(int)idx;

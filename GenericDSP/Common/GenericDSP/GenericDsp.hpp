@@ -735,7 +735,6 @@ namespace DspBlocks {
 
     void PrepareForOperation(WireSpec ws, bool topLevel) {
      if (topLevel) { TopLevelSetup(ws); }
-      Describe();
       UpdateWireSpecs();
       FlattenNets();
       DetermineProcessingOrder();

@@ -31,10 +31,10 @@ class EqViewController: UIViewController {
   
   func updateUi() {
     for i in Int32(0) ..< Int32(nStages) {
-      let enabled = eqAU.getEnabled(unitIdx, idx: i)
+      let enabled = eqAU.getEnabled(unitIdx, stage: i)
       stageIndicator.SetEnable(Int(i), enable: enabled)
     }
-    enableSwitch.isOn = eqAU.getEnabled(unitIdx, idx: selectedStage)
+    enableSwitch.isOn = eqAU.getEnabled(unitIdx, stage: selectedStage)
     typeSelector.selectedSegmentIndex = Int(eqAU.getType(unitIdx, stage: selectedStage))
     orderSelector.selectedSegmentIndex = Int(eqAU.getOrder(unitIdx, stage: selectedStage) - 1)
     frequencyCombo.Value = Double(eqAU.getFrequency(unitIdx, stage: selectedStage))

@@ -33,7 +33,7 @@ class EqViewContainer: UIViewController, AuDelegate {
     setupFreqGraphView()
     setupEqControlsView()
     audioPath = AudioPath()
-    while !audioPath.auInstantiated {}
+    while !AudioPath.ready {}
     eqVc.eqAU = au
     eqVc.initAu()
     eqVc.updateUi()
