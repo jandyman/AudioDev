@@ -125,17 +125,17 @@ template <typename T> T getEqParam(int unit, int idx, function<T(EqSpec&)> func)
 }
 
 -(float*)getFreqResponse:(int)unit stage:(int)stage {
-  return &_DSP->GetFrequencyResponse(stage)[0];
+  return &_DSP->GetFrequencyResponse(unit, stage)[0];
 }
 
 -(float)getInputLevelForChannel:(int)chan {
   auto detector = (chan == 0) ? _DSP->detectors[0] : _DSP->detectors[1];
-  return detector.GetLevel(chan);
+  return detector.GetLevel(0);
 }
 
 -(float)getOutputLevelForChannel:(int)chan {
   auto detector = (chan == 0) ? _DSP->detectors[2] : _DSP->detectors[3];
-  return detector.GetLevel(chan);
+  return detector.GetLevel(0);
 }
 
 - (void*)dsp { return (void*)_DSP; }

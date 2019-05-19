@@ -89,7 +89,8 @@ class EqViewContainer: UIViewController, AuDelegate {
 
   func setupEqControlsView() {
     let sb = UIStoryboard(name: "Main", bundle: nil)
-    eqVc = sb.instantiateViewController(withIdentifier: "EqControls") as? EqViewController
+    eqVc = sb.instantiateViewController(withIdentifier: "EqControls") as! EqViewController
+    eqVc.unitIdx = unitIdx
     addChild(eqVc)
     eqVc.auDelegate = self
     

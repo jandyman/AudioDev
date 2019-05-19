@@ -47,8 +47,8 @@
 -(float*)getFreqResponse:(int)unit;
 -(float*)getFreqResponse:(int)unit stage:(int)stage;
 
--(float)getInputLevelForChannel:(int)unit;
--(float)getOutputLevelForChannel:(int)unit;
+-(float)getInputLevelForChannel:(int)chan;
+-(float)getOutputLevelForChannel:(int)chan;
 
 @end
 
