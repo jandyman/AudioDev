@@ -394,7 +394,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="RkJ-ED-Gck" userLabel="Input Left Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
-                                <rect key="frame" x="114" y="116" width="36" height="190"/>
+                                <rect key="frame" x="114" y="116" width="36" height="381"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <userDefinedRuntimeAttributes>
@@ -404,7 +404,7 @@
                                 </userDefinedRuntimeAttributes>
                             </view>
                             <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KCg-2m-jVH" userLabel="Input Right Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
-                                <rect key="frame" x="186" y="116" width="36" height="190"/>
+                                <rect key="frame" x="186" y="116" width="36" height="381"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <userDefinedRuntimeAttributes>
@@ -414,7 +414,7 @@
                                 </userDefinedRuntimeAttributes>
                             </view>
                             <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mMR-1S-6Y9" userLabel="Output Left Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
-                                <rect key="frame" x="256" y="116" width="36" height="190"/>
+                                <rect key="frame" x="286" y="116" width="36" height="381"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <userDefinedRuntimeAttributes>
@@ -424,7 +424,17 @@
                                 </userDefinedRuntimeAttributes>
                             </view>
                             <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="XTL-wD-dJ0" userLabel="Output Right Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
-                                <rect key="frame" x="324" y="116" width="36" height="190"/>
+                                <rect key="frame" x="354" y="116" width="36" height="381"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="minDb">
+                                        <integer key="value" value="-60"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </view>
+                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="r1q-Gu-cfY" userLabel="Output Right Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="464" y="116" width="36" height="381"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <userDefinedRuntimeAttributes>
@@ -447,7 +457,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ERE-s8-ETd" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-1595" y="-1065"/>
+            <point key="canvasLocation" x="-1595.3125" y="-1065.234375"/>
         </scene>
         <!--Freq Graph Vc-->
         <scene sceneID="JdW-Uf-mPZ">

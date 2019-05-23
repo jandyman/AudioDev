@@ -50,6 +50,8 @@
 -(float)getInputLevelForChannel:(int)chan;
 -(float)getOutputLevelForChannel:(int)chan;
 
+-(NSString*)getSettings;
+
 @end
 
 #ifdef __cplusplus

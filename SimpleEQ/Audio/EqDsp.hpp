@@ -12,6 +12,7 @@
 #include "Mixers.hpp"
 #include "MiscDsp.hpp"
 #include "MiscBlocks.hpp"
+#include "json.hpp"
 
 namespace DspBlocks {
   
@@ -110,4 +111,5 @@ namespace DspBlocks {
     }
     
   };
+  
 }

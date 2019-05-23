@@ -9,6 +9,7 @@
 #import "EqAU.h"
 #include "EqDsp.hpp"
 #include "MiscDsp.hpp"
+#include "DspJson.hpp"
 #include <algorithm>
 #include <functional>
 
@@ -136,6 +137,12 @@ template <typename T> T getEqParam(int unit, int idx, function<T(EqSpec&)> func)
 -(float)getOutputLevelForChannel:(int)chan {
   auto detector = (chan == 0) ? _DSP->detectors[2] : _DSP->detectors[3];
   return detector.GetLevel(0);
+}
+
+-(NSString*)getSettings {
+  json j = _DSP->EQs[0].eqBlock;
+  string jstring = j.dump(2);
+  return [NSString stringWithUTF8String:jstring.c_str()];
 }
 
 - (void*)dsp { return (void*)_DSP; }

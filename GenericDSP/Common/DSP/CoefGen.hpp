@@ -112,7 +112,6 @@ namespace CoefGen {
 
   struct EqSpec {
     enum Type { loShelf, peaking, hiShelf };
-
     bool enabled = false;
     enum Type type = peaking;
     int order = 2;

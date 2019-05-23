@@ -161,7 +161,7 @@ namespace DspBlocks {
     
     int GetNStages() { return eqSpecs.size(); }
     
-    vector<EqSpec> GetEqSpecs() { return eqSpecs; }
+    vector<EqSpec> GetEqSpecs() const { return eqSpecs; }
     
     void assertConnected() {
       if (nChannels == 0) { throw new DspError("BiquadChainBlock not connected"); }
