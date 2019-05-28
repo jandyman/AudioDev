@@ -139,9 +139,17 @@ template <typename T> T getEqParam(int unit, int idx, function<T(EqSpec&)> func)
   return detector.GetLevel(0);
 }
 
+namespace DspBlocks {
+  void to_json(nlohmann::json& j, const EqDsp &o) {
+    j["Left EQ"] = o.EQs[0].eqBlock;
+    j["Right EQ"] = o.EQs[1].eqBlock;
+  }
+}
+
 -(NSString*)getSettings {
-  json j = _DSP->EQs[0].eqBlock;
+  json j = *_DSP;
   string jstring = j.dump(2);
+  std::cout << jstring;
   return [NSString stringWithUTF8String:jstring.c_str()];
 }
 

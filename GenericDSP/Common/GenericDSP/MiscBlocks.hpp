@@ -49,7 +49,7 @@ namespace DspBlocks {
       for (int ch=0; ch < nChannels; ch++) {
         float* inbuf = inbufs[ch];
         float* outbuf = outputPins[ch].wire->buffers[0];
-        copy(inbuf, inbuf + bufSize, outbuf);
+        std::copy(inbuf, inbuf + bufSize, outbuf);
       }
     }
       
@@ -87,7 +87,7 @@ namespace DspBlocks {
       for (int ch=0; ch < nChannels; ch++) {
         float* inbuf = inputPins[ch].wire->buffers[0];
         float* outbuf = outbufs[ch];
-        copy(inbuf, inbuf + bufSize, outbuf);
+        std::copy(inbuf, inbuf + bufSize, outbuf);
       }
     }
 
@@ -119,9 +119,10 @@ namespace DspBlocks {
 
 namespace DspBlocks {
   
-  using namespace DSP;
-  
   struct LevelDetect : DspBlockSingleWireSpec {
+    template<typename T> using vector = std::vector<T>;
+    using AttRel = DSP::AttRel;
+
     vector<AttRel> attRels;
     const string GetClassName() override { return "Level Detect"; }
     LevelDetect() : DspBlockSingleWireSpec(1, 0) {}

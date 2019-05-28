@@ -7,15 +7,18 @@
 //
 
 #include <iostream>
+#include <vector>
 #include "json.hpp"
 
 using namespace nlohmann;
-using namespace std;
+// using namespace std;
 
 namespace outer {
   
   namespace inner {
     
+    typedef std::string string;
+
     struct innerS {
       int x;
       string str = "inner";
@@ -35,6 +38,8 @@ namespace outer {
   }
   
   using namespace inner;
+  template<typename T> using vector = std::vector<T>;
+  typedef ::std::string string;
   
   struct outerS {
     vector<innerS> s;

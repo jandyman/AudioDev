@@ -14,10 +14,10 @@
 #include <mutex>
 
 namespace DspBlocks {
-  using namespace std;
-  using namespace CoefGen;
 
   class BiquadChain {
+    template<typename T> using vector = std::vector<T>;
+
     vDSP_biquad_Setup biquadSetup = NULL;
     vector<double> coefs;
     float *dlyBuf = NULL;
@@ -45,7 +45,7 @@ namespace DspBlocks {
       init(coefs, nStages);
     }
     
-    BiquadChain(vector<EqSpec> specs, double sampleRate) {
+    BiquadChain(vector<CoefGen::EqSpec> specs, double sampleRate) {
       vector<double> allCoefs(specs.size() * 5);
       int idx = 0, nStages = 0;
       for (auto spec: specs) {
@@ -56,7 +56,7 @@ namespace DspBlocks {
         }
       }
       if (nStages == 0) { // if no stages, build a dummy one
-        Coefs coefs;
+        CoefGen::Coefs coefs;
         coefs.c0 = 1.0;
         coefs.fillArray(&allCoefs[0]);
         nStages = 1;
@@ -80,7 +80,7 @@ namespace DspBlocks {
     vector<float> impulseResponse(int len) {
       vector<float> impulse(len); impulse[0] = 1;
       vector<float> response(len, 0); 
-      fill_n(dlyBuf, nStages * 4, 0);
+      std::fill_n(dlyBuf, nStages * 4, 0);
       vDSP_biquad(biquadSetup, dlyBuf, &impulse[0], 1, &response[0], 1, len);
       return response;
     }
@@ -91,7 +91,7 @@ namespace DspBlocks {
       assert(stage >= 0 && stage < nStages);
       vector<float> impulse(len); impulse[0] = 1;
       vector<float> response(len, 0);
-      fill_n(dlyBuf, 4, 0);
+      std::fill_n(dlyBuf, 4, 0);
       auto setup = vDSP_biquad_CreateSetup(&coefs[stage * 5], 1);
       vDSP_biquad(setup, dlyBuf, &impulse[0], 1, &response[0], 1, len);
       vDSP_biquad_DestroySetup(setup);
@@ -107,6 +107,8 @@ namespace DspBlocks {
   // --- Biquad Chain Block ---
   
   struct BiquadChainBlock : DspBlockSingleWireSpec {
+    template<typename T> using vector = std::vector<T>;
+    using EqSpec = CoefGen::EqSpec;
     
   private:
     vector<BiquadChain>* oldBiquadChains = nullptr;  // for the bg thread to dispose
@@ -114,7 +116,7 @@ namespace DspBlocks {
     vector<BiquadChain>* newBiquadChains = nullptr;  // waiting to be switched in
     vector<EqSpec> eqSpecs;
     uint nChannels = 0;
-    mutex mutex_;
+    std::mutex mutex_;
     
   public:
     BiquadChainBlock(int nStages = 1) : DspBlockSingleWireSpec(1,1) {

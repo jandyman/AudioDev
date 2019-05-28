@@ -17,7 +17,6 @@
 #define uint unsigned int
 
 namespace DspBlocks {
-  using namespace std;
 
   struct DspError {
     const char *msg;
@@ -77,8 +76,8 @@ namespace DspBlocks {
       return (nChannels != ws.nChannels || bufSize != ws.bufSize || sampleRate != ws.sampleRate);
     }
 
-    const string Description() const {
-      ostringstream strm;
+    const std::string Description() const {
+      std::ostringstream strm;
       strm << "nChannels: " << nChannels << " ";
       strm << "SR: " << sampleRate << " ";
       strm << "bufSize: " << bufSize;
@@ -131,7 +130,7 @@ namespace DspBlocks {
     float** buffers;
     int bufferId = -1;
     PinSpec src;
-    vector<PinSpec> dst;
+    std::vector<PinSpec> dst;
     
     void AddConnection(PinSpec src, PinSpec dst) {
       if (!src.IsEmpty() && src != src) {
@@ -141,8 +140,8 @@ namespace DspBlocks {
       this->dst.push_back(dst);
     }
     
-    const string Description() const {
-      ostringstream strm;
+    const std::string Description() const {
+      std::ostringstream strm;
       strm << "bufId: " << bufferId << " ";
       return strm.str();
     }
@@ -161,6 +160,7 @@ namespace DspBlocks {
   /// Interface specification which all DSP block must implement
 
   struct DspInterface {
+    using string = std::string;
     virtual int nInputPins() = 0;
     virtual Pin& InputPin(int idx) = 0;
     virtual int nOutputPins() = 0;
@@ -195,6 +195,9 @@ namespace DspBlocks {
   /// A base class for DSP blocks, where reusable functionality can be put
   
   struct DspBase: DspInterface {
+    template<typename T> using vector = std::vector<T>;
+    using string = std::string;
+    
     vector<Pin> inputPins;
     vector<Pin> outputPins;
     Pin& InputPin(int idx) override { return inputPins[idx]; }
@@ -311,6 +314,9 @@ namespace DspBlocks {
   };
 
   struct DesignContext {
+    template<typename T> using vector = std::vector<T>;
+    using string = std::string;
+    std::ostream& cout = std::cout;
     
     struct BufferSpec {
       int Id;
@@ -365,7 +371,7 @@ namespace DspBlocks {
     }
     
     string DescribePinSpec(PinSpec& ps) {
-      ostringstream ss;
+      std::ostringstream ss;
       string type = ps.isPort ? " Port " : " Pin ";
       ss << "{Blk " << GetId(ps.block) << type << ps.pinIdx << "}";
       return ss.str();
@@ -442,6 +448,7 @@ namespace DspBlocks {
   //  graph, it can be used standalone by a host
 
   struct GraphBase: DspInterface {
+    template<typename T> using vector = std::vector<T>;
 
     DesignContext& designContext;
 

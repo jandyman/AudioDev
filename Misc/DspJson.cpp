@@ -34,7 +34,8 @@ namespace CoefGen {
 }
 
 namespace DspBlocks {
-  
+  template<typename T> using vector = std::vector<T>;
+
   void to_json(json& j, const BiquadChainBlock& b) {
     j["stages"] = b.GetEqSpecs()[0];
   }

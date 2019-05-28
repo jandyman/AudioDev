@@ -35,6 +35,9 @@ namespace DspBlocks {
   };
   
   struct EqDsp : TopLevelGraph {
+    template<typename T> using vector = std::vector<T>;
+    std::ostream& cout = std::cout;
+    
     DesignContext dc;
     vector<EqBlock> EQs;
     Splitter splitter;
@@ -104,7 +107,7 @@ namespace DspBlocks {
     
     vector<float>& GetFrequencyResponse(int idx, int stage) {
       auto eqSpecs = EQs[idx].eqBlock.GetEqSpecs();
-      auto stageSpecs = vector<EqSpec>(1, eqSpecs[stage]);
+      auto stageSpecs = vector<CoefGen::EqSpec>(1, eqSpecs[stage]);
       BiquadChain bq(stageSpecs, wireSpec.sampleRate);
       vector<float> ir = bq.impulseResponse(16384);
       return analyzers[idx]->GetFrequencyResponse(ir);
