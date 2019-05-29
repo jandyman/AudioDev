@@ -40,7 +40,6 @@ class EqViewController: UIViewController {
     frequencyCombo.Value = Double(eqAU.getFrequency(unitIdx, stage: selectedStage))
     boostCombo.Value = Double(eqAU.getDb(unitIdx, stage: selectedStage))
     qCombo.Value = Double(eqAU.getQ(unitIdx, stage: selectedStage))
-    let testStr = eqAU.getSettings()
     auDelegate.AuUpdated()
   }
   

@@ -14,7 +14,8 @@ class LevelsViewController: UIViewController {
   @IBOutlet weak var inputRightLevelMeter: BasicVuMeter!
   @IBOutlet weak var outputLeftLevelMeter: BasicVuMeter!
   @IBOutlet weak var outputRightLevelMeter: BasicVuMeter!
-  
+  @IBOutlet weak var btnSave: UIButton!
+
   var levelTimer : Timer?
   
   override func viewDidLoad() {
@@ -33,4 +34,16 @@ class LevelsViewController: UIViewController {
     }
   }
   
+  @IBAction func SaveButtonPressed(_ sender: UIButton) {
+    let eqAU = AudioPath.AU!
+    let testStr = eqAU.getSettings()!
+    let path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    let filename = path.appendingPathComponent("settings.txt")
+    do {
+      try testStr.write(to: filename, atomically: true, encoding: String.Encoding.utf8)
+    } catch {
+      print(error)
+    }
+  }
+
 }

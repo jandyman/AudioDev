@@ -15,16 +15,13 @@
 using namespace nlohmann;
 
 namespace CoefGen {
-
   void to_json(json& j, const EqSpec& s);
   void from_json(const json& j, EqSpec& s);
-  
 }
 
 namespace DspBlocks {
-
   void to_json(json& j, const BiquadChainBlock& b);
-  
+  void from_json(const json& j, BiquadChainBlock& b);
 }
   
 

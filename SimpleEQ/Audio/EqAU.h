@@ -51,6 +51,7 @@
 -(float)getOutputLevelForChannel:(int)chan;
 
 -(NSString*)getSettings;
+-(void)initFromJson:(NSString*)str;
 
 @end
 

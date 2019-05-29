@@ -139,11 +139,20 @@ template <typename T> T getEqParam(int unit, int idx, function<T(EqSpec&)> func)
   return detector.GetLevel(0);
 }
 
+// JSON dump and load stuff for top level graph
+
 namespace DspBlocks {
+  
   void to_json(nlohmann::json& j, const EqDsp &o) {
     j["Left EQ"] = o.EQs[0].eqBlock;
     j["Right EQ"] = o.EQs[1].eqBlock;
   }
+  
+  void from_json(const json& j, EqDsp& o) {
+    j.at("Left EQ").get_to(o.EQs[0].eqBlock);
+    j.at("Right EQ").get_to(o.EQs[1].eqBlock);
+  }
+  
 }
 
 -(NSString*)getSettings {
@@ -151,6 +160,12 @@ namespace DspBlocks {
   string jstring = j.dump(2);
   std::cout << jstring;
   return [NSString stringWithUTF8String:jstring.c_str()];
+}
+
+-(void)initFromJson:(NSString*)str {
+  string jstring = string([str UTF8String]);
+  json j = jstring;
+  from_json(j, *_DSP);
 }
 
 - (void*)dsp { return (void*)_DSP; }

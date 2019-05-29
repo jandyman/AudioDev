@@ -433,22 +433,22 @@
                                     </userDefinedRuntimeAttribute>
                                 </userDefinedRuntimeAttributes>
                             </view>
-                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="r1q-Gu-cfY" userLabel="Output Right Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
-                                <rect key="frame" x="464" y="116" width="36" height="381"/>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="eNn-M3-u00">
+                                <rect key="frame" x="555" y="147" width="60" height="46"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="number" keyPath="minDb">
-                                        <integer key="value" value="-60"/>
-                                    </userDefinedRuntimeAttribute>
-                                </userDefinedRuntimeAttributes>
-                            </view>
+                                <fontDescription key="fontDescription" type="system" pointSize="28"/>
+                                <state key="normal" title="Save"/>
+                                <connections>
+                                    <action selector="SaveButtonPressed:" destination="sdk-bB-XyZ" eventType="touchUpInside" id="54X-48-Nkx"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <viewLayoutGuide key="safeArea" id="MXv-4j-hAp"/>
                     </view>
                     <tabBarItem key="tabBarItem" title="Levels" id="0Z0-0C-1kd"/>
                     <connections>
+                        <outlet property="btnSave" destination="eNn-M3-u00" id="x7i-6m-iGl"/>
                         <outlet property="inputLeftLevelMeter" destination="RkJ-ED-Gck" id="St6-AZ-z37"/>
                         <outlet property="inputRightLevelMeter" destination="KCg-2m-jVH" id="4gI-QN-5pf"/>
                         <outlet property="outputLeftLevelMeter" destination="mMR-1S-6Y9" id="DAH-Lb-g9J"/>

@@ -50,8 +50,10 @@ namespace DspBlocks {
     EqDsp() :
     TopLevelGraph(dc,1,1), splitter(2), joiner(2) {
       try {
+        // EQ[0] = left Eq, EQ[1] = right Eq
         EQs = vector<EqBlock>(2, EqBlock(dc));
         for (auto& eq : EQs) { eq.ConnectSubBlocks(); }
+        // 0 = left in, 1 = right in, 2 = left out, 3 = right out
         detectors = vector<LevelDetect>(4);
         Connect(this, &splitter);
         Connect(&splitter, 0, &EQs[0]);
@@ -79,11 +81,7 @@ namespace DspBlocks {
       }
     }
     
-    ~EqDsp() {
-      for (auto a: analyzers) {
-        if (a != nullptr) delete(a);
-      }
-    }
+    ~EqDsp() { for (auto a: analyzers) { delete(a); }}
     
     void Init(WireSpec ws) {
       try {
