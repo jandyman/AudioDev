@@ -100,6 +100,25 @@ template <typename T> T getEqParam(int unit, int idx, function<T(EqSpec&)> func)
   return getEqParam<int>(unit, idx, [](EqSpec spec) { return spec.order; });
 }
 
+-(void)setInPhase:(bool)inPhase {
+  _DSP->inPhase = inPhase; _DSP->UpdateGains();
+}
+
+-(bool)getInPhase { return _DSP->inPhase; }
+
+-(void)setRightGainDb:(float)gainDb {
+  _DSP->rightGainDb = gainDb; _DSP->UpdateGains();
+}
+
+-(float)getRightGainDb { return _DSP->rightGainDb; }
+
+-(void)setMasterGainDb:(float)gainDb {
+  _DSP->masterGainDb = gainDb; _DSP->UpdateGains();
+}
+
+-(float)getMasterGainDb { return _DSP->masterGainDb; }
+
+
 -(float*)getImpulseResponse:(int)unit len:(int)len {
   auto ir = _DSP->EQs[unit].eqBlock.GetImpulseResponse(len);
   return &ir[0];

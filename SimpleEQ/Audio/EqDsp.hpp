@@ -47,6 +47,10 @@ namespace DspBlocks {
     vector<AWV::FftAnalyzer*> analyzers;
     vector<LevelDetect> detectors;
     
+    bool inPhase = true;
+    float rightGainDb = 0;
+    float masterGainDb = 0;
+    
     EqDsp() :
     TopLevelGraph(dc,1,1), splitter(2), joiner(2) {
       try {
@@ -78,10 +82,17 @@ namespace DspBlocks {
         
       } catch (DspError err) {
         cout << err.msg;
+        throw err;
       }
     }
     
     ~EqDsp() { for (auto a: analyzers) { delete(a); }}
+    
+    void UpdateGains() {
+      EQs[1].gainBlock.SetInPhase(inPhase);
+      EQs[1].gainBlock.SetGainDb(rightGainDb + masterGainDb);
+      EQs[0].gainBlock.SetGainDb(masterGainDb);
+    }
     
     void Init(WireSpec ws) {
       try {
@@ -90,9 +101,11 @@ namespace DspBlocks {
         dc.Describe();
         // initialize blocks
         InitBlocks();
+        UpdateGains();
         for (auto a : analyzers) { a->SetSampleRate(ws.sampleRate); }
       } catch (DspError err) {
         cout << err.msg;
+        throw err;
       }
     }
         

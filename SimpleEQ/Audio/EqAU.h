@@ -37,6 +37,15 @@
 -(void)setOrder:(int)unit order:(int)order stage:(int)idx;
 -(int)getOrder:(int)unit stage:(int)idx;
 
+-(void)setInPhase:(bool)inPhase;
+-(bool)getInPhase;
+
+-(void)setRightGainDb:(float)gainDb;
+-(float)getRightGainDb;
+
+-(void)setMasterGainDb:(float)gainDb;
+-(float)getMasterGainDb;
+
 -(float*)getImpulseResponse:(int)unit len:(int)len;
 -(float*)getImpulseResponse:(int)unit len:(int)len stage:(int)stage;
 

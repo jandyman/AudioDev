@@ -36,9 +36,11 @@ namespace DspBlocks {
     float gain;
     float gainDb = 0;
     bool enable = true;
+    bool inPhase = true;
     
     void UpdateGain() {
       gain = enable ? pow(10, gainDb / 20) : 0;
+      if (!inPhase) gain = -gain;
     }
     
     void Init() override {
@@ -48,6 +50,7 @@ namespace DspBlocks {
   public:
     void SetGainDb(float gainDb) { this->gainDb = gainDb; UpdateGain(); }
     void SetEnable(bool enable) { this->enable = enable; UpdateGain(); }
+    void SetInPhase(bool inPhase) { this->inPhase = inPhase; UpdateGain(); }
     
     void Process() override {
       int nChannels = outputPins[0].wire->wireSpec.nChannels;
