@@ -158,13 +158,12 @@ namespace DspBlocks {
 -(NSString*)getSettings {
   json j = *_DSP;
   string jstring = j.dump(2);
-  std::cout << jstring;
   return [NSString stringWithUTF8String:jstring.c_str()];
 }
 
 -(void)initFromJson:(NSString*)str {
   string jstring = string([str UTF8String]);
-  json j = jstring;
+  json j = json::parse(jstring);
   from_json(j, *_DSP);
 }
 

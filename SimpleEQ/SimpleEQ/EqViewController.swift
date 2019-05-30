@@ -43,15 +43,15 @@ class EqViewController: UIViewController {
     auDelegate.AuUpdated()
   }
   
-  func initAu() {
-    for i in 0..<Int32(nStages) {
-      eqAU.setEnabled(unitIdx, enable: false, stage: i)
-      eqAU.setType(unitIdx, type: 0, stage: i)
-      eqAU.setOrder(unitIdx, order: 1, stage: i)
-      eqAU.setFrequency(unitIdx, frequency: 1000.0, stage: i)
-      eqAU.setQ(unitIdx, q: 1.0, stage: i)
-    }
-  }
+//  func initAu() {
+//    for i in 0..<Int32(nStages) {
+//      eqAU.setEnabled(unitIdx, enable: false, stage: i)
+//      eqAU.setType(unitIdx, type: 0, stage: i)
+//      eqAU.setOrder(unitIdx, order: 1, stage: i)
+//      eqAU.setFrequency(unitIdx, frequency: 1000.0, stage: i)
+//      eqAU.setQ(unitIdx, q: 1.0, stage: i)
+//    }
+//  }
   
   @IBAction func selectedStageChanged(_ sender: UISegmentedControl) {
     selectedStage = Int32(sender.selectedSegmentIndex)

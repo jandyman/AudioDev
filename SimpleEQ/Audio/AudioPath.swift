@@ -74,6 +74,32 @@ class AudioPath {
       }
     }
     AudioPath.state = .initialized
+    AudioPath.loadSettings(filename: "settings.txt")
+  }
+  
+  private static func getDocUrl(filename: String) -> URL {
+    let path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    let url = path.appendingPathComponent(filename)
+    return url
+  }
+  
+  static func saveSettings(filename: String) {
+    let url = AudioPath.getDocUrl(filename: filename)
+    let eqAU = AudioPath.AU!
+    let testStr = eqAU.getSettings()!
+    do {
+      try testStr.write(to: url, atomically: true, encoding: String.Encoding.utf8)
+    } catch {
+      print(error)
+    }
+  }
+  
+  static func loadSettings(filename: String) {
+    let url = AudioPath.getDocUrl(filename: filename)
+    do {
+      let jstring = try String(contentsOf: url, encoding: .utf8)
+      AudioPath.AU!.initFromJson(jstring)
+    } catch { print("can't read from settings.txt") }
   }
   
 }

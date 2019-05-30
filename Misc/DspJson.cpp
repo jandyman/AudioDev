@@ -7,6 +7,7 @@
 //
 
 #include "DspJson.hpp"
+#include <cmath>
 
 // json support
 using namespace nlohmann;
@@ -17,7 +18,7 @@ namespace CoefGen {
     j["enabled"] = s.enabled;
     j["type"] = s.type;
     j["order"] = s.order;
-    j["frequency"] = s.frequency;
+    j["frequency"] = round(s.frequency * 100)/100.0;
     j["dB"] = s.dB;
     j["Q"] = s.Q;
   }
@@ -37,11 +38,11 @@ namespace DspBlocks {
   template<typename T> using vector = std::vector<T>;
 
   void to_json(json& j, const BiquadChainBlock& b) {
-    j["stages"] = b.GetEqSpecs()[0];
+    j["stages"] = b.GetEqSpecs();
   }
   
   void from_json(const json& j, BiquadChainBlock& b) {
-    auto specs = j.get<vector<::CoefGen::EqSpec>>();
+    auto specs = j.at("stages").get<vector<::CoefGen::EqSpec>>();
     b.SetEqSpecs(specs);
   }
   

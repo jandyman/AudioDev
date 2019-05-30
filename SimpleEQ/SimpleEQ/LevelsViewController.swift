@@ -35,15 +35,7 @@ class LevelsViewController: UIViewController {
   }
   
   @IBAction func SaveButtonPressed(_ sender: UIButton) {
-    let eqAU = AudioPath.AU!
-    let testStr = eqAU.getSettings()!
-    let path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-    let filename = path.appendingPathComponent("settings.txt")
-    do {
-      try testStr.write(to: filename, atomically: true, encoding: String.Encoding.utf8)
-    } catch {
-      print(error)
-    }
+    AudioPath.saveSettings(filename: "settings.txt")
   }
 
 }
