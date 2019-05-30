@@ -165,11 +165,17 @@ namespace DspBlocks {
   void to_json(nlohmann::json& j, const EqDsp &o) {
     j["Left EQ"] = o.EQs[0].eqBlock;
     j["Right EQ"] = o.EQs[1].eqBlock;
+    j["In Phase"] = o.inPhase;
+    j["Right Gain dB"] = o.rightGainDb;
+    j["Master Gain dB"] = o.masterGainDb;
   }
   
   void from_json(const json& j, EqDsp& o) {
     j.at("Left EQ").get_to(o.EQs[0].eqBlock);
     j.at("Right EQ").get_to(o.EQs[1].eqBlock);
+    j.at("In Phase").get_to(o.inPhase);
+    j.at("Right Gain dB").get_to(o.rightGainDb);
+    j.at("Master Gain dB").get_to(o.masterGainDb);
   }
   
 }
