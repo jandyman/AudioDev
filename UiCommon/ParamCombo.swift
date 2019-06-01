@@ -248,6 +248,7 @@ import UIKit
 class CustomButton : UIButton {
   
   var IsPlus = false
+  
   var Color : UIColor = UIColor.blue {
     didSet { setNeedsDisplay() }
   }
