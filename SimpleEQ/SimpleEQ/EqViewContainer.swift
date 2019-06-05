@@ -35,7 +35,6 @@ class EqViewContainer: UIViewController, AuDelegate {
     audioPath = AudioPath()
     while !AudioPath.ready {}
     eqVc.eqAU = au
-    // eqVc.initAu()
     eqVc.updateUi()
     au.setupFftAnalyzer(unitIdx, min: 10, max: 10000, nFreqPoints: Int32(nFreqPoints))
   }

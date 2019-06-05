@@ -50,6 +50,8 @@ namespace DspBlocks {
     bool inPhase = true;
     float rightGainDb = 0;
     float masterGainDb = 0;
+    bool leftEnable = true;
+    bool rightEnable = true;
     
     EqDsp() :
     TopLevelGraph(dc,1,1), splitter(2), joiner(2) {
@@ -57,8 +59,8 @@ namespace DspBlocks {
         // EQ[0] = left Eq, EQ[1] = right Eq
         EQs = vector<EqBlock>(2, EqBlock(dc));
         for (auto& eq : EQs) { eq.ConnectSubBlocks(); }
-        // 0 = left in, 1 = right in, 2 = left out, 3 = right out
-        detectors = vector<LevelDetect>(4);
+        // 0 = left in, 1 = right in, 2 = left EQ, 3 = right EQ, 4 = master
+        detectors = vector<LevelDetect>(5);
         Connect(this, &splitter);
         Connect(&splitter, 0, &EQs[0]);
         Connect(&splitter, 1, &EQs[1]);
@@ -70,6 +72,7 @@ namespace DspBlocks {
         Connect(&EQs[1], &detectors[3]);
         Connect(&mixer, &joiner, 0);
         Connect(&mixer, &joiner, 1);
+        Connect(&mixer, &detectors[4]);
         Connect(&joiner, this);
 
         // this stuff is just to get this working with an inactive AU
@@ -89,6 +92,8 @@ namespace DspBlocks {
     ~EqDsp() { for (auto a: analyzers) { delete(a); }}
     
     void UpdateGains() {
+      EQs[0].gainBlock.SetEnable(leftEnable);
+      EQs[1].gainBlock.SetEnable(rightEnable);
       EQs[1].gainBlock.SetInPhase(inPhase);
       EQs[1].gainBlock.SetGainDb(rightGainDb + masterGainDb);
       EQs[0].gainBlock.SetGainDb(masterGainDb);

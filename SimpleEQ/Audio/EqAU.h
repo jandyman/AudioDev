@@ -46,6 +46,12 @@
 -(void)setMasterGainDb:(float)gainDb;
 -(float)getMasterGainDb;
 
+-(void)setLeftEnable:(bool)gainDb;
+-(bool)getLeftEnable;
+
+-(void)setRightEnable:(bool)gainDb;
+-(bool)getRightEnable;
+
 -(float*)getImpulseResponse:(int)unit len:(int)len;
 -(float*)getImpulseResponse:(int)unit len:(int)len stage:(int)stage;
 
@@ -56,8 +62,7 @@
 -(float*)getFreqResponse:(int)unit;
 -(float*)getFreqResponse:(int)unit stage:(int)stage;
 
--(float)getInputLevelForChannel:(int)chan;
--(float)getOutputLevelForChannel:(int)chan;
+-(float)getLevelForIdx:(int)idx;
 
 -(NSString*)getSettings;
 -(void)initFromJson:(NSString*)str;

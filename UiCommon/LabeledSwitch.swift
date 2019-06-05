@@ -22,8 +22,17 @@ import UIKit
   
   private var offColor : UIColor?
   private var label = UILabel()
-  private(set) var isOn = false
+
+  var isOn : Bool = false {
+    didSet {
+      if oldValue != isOn {
+        sendActions(for: UIControl.Event.valueChanged)
+      }
+      setNeedsLayout()
+    }
+  }
   
+
   override init(frame: CGRect) {
     super.init(frame: frame)
     commonInit()
@@ -50,7 +59,6 @@ import UIKit
   
   @objc private func buttonPressed(_ sender: AnyObject?) {
     isOn = !isOn
-    setNeedsLayout()
   }
   
   override func layoutSubviews() {
@@ -60,6 +68,7 @@ import UIKit
     label.layer.borderWidth = 1
     label.textAlignment = .center
     label.layer.borderColor = UIColor.black.cgColor
+    label.layer.cornerRadius = 5
     label.backgroundColor = isOn ? onColor : offColor!
     let font = UIFont.systemFont(ofSize: 12)
     let size = UIFont.bestFittingFontSize(for: text, in: frame,
@@ -67,13 +76,6 @@ import UIKit
     let newFont = UIFont.systemFont(ofSize: size * 0.85)
     label.font = newFont
   }
-  
-//  override func draw(_ rect: CGRect) {
-//    let path = UIBezierPath(rect: rect)
-//    let color = isOn ? onColor : offColor!
-////    color.setFill()
-////    path.fill()
-//  }
 
   
 }

@@ -118,6 +118,22 @@ template <typename T> T getEqParam(int unit, int idx, function<T(EqSpec&)> func)
 
 -(float)getMasterGainDb { return _DSP->masterGainDb; }
 
+-(void)setLeftEnable:(bool)enable {
+  _DSP->leftEnable = enable; _DSP->UpdateGains();
+}
+
+-(bool)getLeftEnable {
+  return _DSP->leftEnable;
+}
+
+-(void)setRightEnable:(bool)enable {
+  _DSP->rightEnable = enable; _DSP->UpdateGains();
+}
+
+-(bool)getRightEnable {
+  return _DSP->rightEnable;
+}
+
 
 -(float*)getImpulseResponse:(int)unit len:(int)len {
   auto ir = _DSP->EQs[unit].eqBlock.GetImpulseResponse(len);
@@ -148,9 +164,8 @@ template <typename T> T getEqParam(int unit, int idx, function<T(EqSpec&)> func)
   return &_DSP->GetFrequencyResponse(unit, stage)[0];
 }
 
--(float)getInputLevelForChannel:(int)chan {
-  auto detector = (chan == 0) ? _DSP->detectors[0] : _DSP->detectors[1];
-  return detector.GetLevel(0);
+-(float)getLevelForIdx:(int)idx {
+  return _DSP->detectors[idx].GetLevel(0);
 }
 
 -(float)getOutputLevelForChannel:(int)chan {
@@ -168,6 +183,8 @@ namespace DspBlocks {
     j["In Phase"] = o.inPhase;
     j["Right Gain dB"] = o.rightGainDb;
     j["Master Gain dB"] = o.masterGainDb;
+    j["Left Enabled"] = o.leftEnable;
+    j["Right Enabled"] = o.rightEnable;
   }
   
   void from_json(const json& j, EqDsp& o) {
@@ -176,6 +193,8 @@ namespace DspBlocks {
     j.at("In Phase").get_to(o.inPhase);
     j.at("Right Gain dB").get_to(o.rightGainDb);
     j.at("Master Gain dB").get_to(o.masterGainDb);
+    j.at("Left Enabled").get_to(o.leftEnable);
+    j.at("Right Enabled").get_to(o.rightEnable);
   }
   
 }
