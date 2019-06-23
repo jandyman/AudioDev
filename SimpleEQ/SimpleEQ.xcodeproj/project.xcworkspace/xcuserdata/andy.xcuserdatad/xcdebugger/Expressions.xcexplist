@@ -29,7 +29,7 @@
          contextName = "DspBlocks::TopLevelGraph::DetermineProcessingOrder(DspBlocks::DspInterface*):GenericDsp.hpp">
       </ContextState>
       <ContextState
-         contextName = "DspBlocks::from_json(nlohmann::basic_json&lt;std::__1::map, std::__1::vector, std::__1::basic_string&lt;char, std::__1::char_traits&lt;char&gt;, std::__1::allocator&lt;char&gt; &gt;, bool, long long, unsigned long long, double, std::__1::allocator, nlohmann::adl_serializer&gt; const&amp;, DspBlocks::EqDsp&amp;):EqAU.mm">
+         contextName = "DspBlocks::BiquadChainBlock::SetEqSpecs(std::__1::vector&lt;CoefGen::EqSpec, std::__1::allocator&lt;CoefGen::EqSpec&gt; &gt;):BiquadChain.hpp">
       </ContextState>
       <ContextState
          contextName = "DspBlocks::BiquadChain::BiquadChain(std::__1::vector&lt;CoefGen::EqSpec, std::__1::allocator&lt;CoefGen::EqSpec&gt; &gt;, double):BiquadChain.hpp">
@@ -38,27 +38,16 @@
          contextName = "DspBlocks::EqDsp::GetFrequencyResponse():EqDsp.hpp">
       </ContextState>
       <ContextState
+         contextName = "DspBlocks::from_json(nlohmann::basic_json&lt;std::__1::map, std::__1::vector, std::__1::basic_string&lt;char, std::__1::char_traits&lt;char&gt;, std::__1::allocator&lt;char&gt; &gt;, bool, long long, unsigned long long, double, std::__1::allocator, nlohmann::adl_serializer&gt; const&amp;, DspBlocks::EqDsp&amp;):EqAU.mm">
+      </ContextState>
+      <ContextState
          contextName = "DspBlocks::BiquadChain::process(float*, float*, int):BiquadChain.hpp">
       </ContextState>
       <ContextState
          contextName = "AWV::FftAnalyzer::GetFrequencyResponse(std::__1::vector&lt;float, std::__1::allocator&lt;float&gt; &gt;):MiscDsp.hpp">
       </ContextState>
       <ContextState
-         contextName = "DspBlocks::BiquadChainBlock::SetEqSpecs(std::__1::vector&lt;CoefGen::EqSpec, std::__1::allocator&lt;CoefGen::EqSpec&gt; &gt;):BiquadChain.hpp">
-      </ContextState>
-      <ContextState
          contextName = "bool getEqParam&lt;bool&gt;(int, int, std::__1::function&lt;bool (CoefGen::EqSpec&amp;)&gt;):EqAU.mm">
-      </ContextState>
-      <ContextState
-         contextName = "ViewController.updateFrequencyResponseGraph():ViewController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "EqViewContainer.viewDidLoad():EqViewContainer.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "AudioPath.AU">
-            </PersistentString>
-         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "::-[EqAU getFreqResponse]():EqAU.mm">
@@ -69,7 +58,18 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "ViewController.updateFrequencyResponseGraph():ViewController.swift">
+      </ContextState>
+      <ContextState
          contextName = "::-[EqAU initFromJson:](NSString *):EqAU.mm">
+      </ContextState>
+      <ContextState
+         contextName = "EqViewContainer.viewDidLoad():EqViewContainer.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "AudioPath.AU">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "DspBlocks::TopLevelGraph::DetermineProcessingOrder():GenericDsp.hpp">
@@ -90,6 +90,11 @@
       </ContextState>
       <ContextState
          contextName = "::-[AudioUnitBase allocateRenderResourcesAndReturnError:](NSError **):AudioUnitBase.mm">
+         <PersistentStrings>
+            <PersistentString
+               value = "_outputBus.format.channelCount">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
    </ContextStates>
 </VariablesViewState>

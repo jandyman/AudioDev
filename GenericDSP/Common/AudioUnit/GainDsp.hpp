@@ -34,7 +34,7 @@ public:
       PrepareForOperation(wireSpec, true);
       InitBlocks();
     } catch (DspError err) {
-      cout << err.msg;
+      std::cout << err.msg;
     }
   }
     

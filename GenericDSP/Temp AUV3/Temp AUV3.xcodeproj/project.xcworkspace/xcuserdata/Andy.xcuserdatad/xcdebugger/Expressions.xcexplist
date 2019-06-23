@@ -4,15 +4,20 @@
    <ContextStates>
       <ContextState
          contextName = "::-[AudioUnitBase allocateRenderResourcesAndReturnError:](NSError **):AudioUnitBase.mm">
+         <PersistentStrings>
+            <PersistentString
+               value = "_outputBus.format.channelCount">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "Process(IVars*, AudioBufferList*, int):AudioUnitBase.mm">
          <PersistentStrings>
             <PersistentString
-               value = "(float *)$12-&gt;mBuffers[0].mData">
+               value = "in_buflist">
             </PersistentString>
             <PersistentString
-               value = "in_buflist">
+               value = "(float *)$12-&gt;mBuffers[0].mData">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

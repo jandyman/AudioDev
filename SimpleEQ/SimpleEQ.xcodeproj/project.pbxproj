@@ -328,6 +328,11 @@
 					A1EBC63D224C65E600BC457F = {
 						CreatedOnToolsVersion = 10.1;
 						LastSwiftMigration = 1010;
+						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+						};
 					};
 					A1EBC651224C65E700BC457F = {
 						CreatedOnToolsVersion = 10.1;
