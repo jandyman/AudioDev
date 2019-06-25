@@ -74,7 +74,7 @@ class AudioPath {
       }
     }
     AudioPath.state = .initialized
-    AudioPath.loadSettings(filename: "settings.txt")
+    // AudioPath.loadSettings(filename: "settings.txt")
   }
   
   private static func getDocUrl(filename: String) -> URL {

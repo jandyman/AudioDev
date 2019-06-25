@@ -113,21 +113,6 @@ class FreqGraphVc: UIViewController {
     
   }
   
-//  func addAsSubView(parent: UIView, topMargin: Int = 30, percentScreen: Float = 0.4) {
-//    parent.addSubview(view)
-//    view.translatesAutoresizingMaskIntoConstraints = false
-//
-//    // Get the superview's layout
-//    let margins = parent.layoutMarginsGuide
-//    // Pin the leading edge of myView to the margin's leading edge
-//    view.leadingAnchor.constraint(equalTo: margins.leadingAnchor).isActive = true
-//    // Pin the trailing edge of myView to the margin's trailing edge
-//    view.trailingAnchor.constraint(equalTo: margins.trailingAnchor).isActive = true
-//    view.topAnchor.constraint(equalTo: margins.topAnchor, constant:30).isActive = true
-//    view.heightAnchor.constraint(equalTo: parent.heightAnchor, multiplier: 0.4).isActive = true;
-//    UpdateFiltPlots()
-//  }
-  
 }
 
 @objc class FiltDataSource : NSObject, CPTPlotDataSource {

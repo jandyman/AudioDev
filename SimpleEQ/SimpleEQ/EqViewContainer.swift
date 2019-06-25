@@ -61,10 +61,11 @@ class EqViewContainer: UIViewController, AuDelegate {
     let sb = UIStoryboard(name: "Main", bundle: nil)
     filtGraphVc = sb.instantiateViewController(withIdentifier: "FreqGraph") as? FreqGraphVc
     addChild(filtGraphVc)
+    filtGraphVc.didMove(toParent: self)
 
     let subview = filtGraphVc.view!
-    view.addSubview(subview)
     subview.translatesAutoresizingMaskIntoConstraints = false
+    view.addSubview(subview)
     let margins = view.layoutMarginsGuide
     // Pin the leading edge of the subview to the margin's leading edge
     subview.leadingAnchor.constraint(equalTo: margins.leadingAnchor).isActive = true
@@ -94,8 +95,8 @@ class EqViewContainer: UIViewController, AuDelegate {
     eqVc.auDelegate = self
     
     let subview = eqVc.view!
-    view.addSubview(subview)
     subview.translatesAutoresizingMaskIntoConstraints = false
+    view.addSubview(subview)
     let margins = view.layoutMarginsGuide
     // Pin the leading edge of the subview to the margin's leading edge
     subview.leadingAnchor.constraint(equalTo: margins.leadingAnchor).isActive = true
