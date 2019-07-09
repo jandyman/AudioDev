@@ -11,68 +11,47 @@ import AVFoundation
 
 class ViewController: UIViewController {
   
-  @IBOutlet weak var btnStart: UIButton!
-  @IBOutlet weak var btnStop: UIButton!
-  
   var session = AVAudioSession.sharedInstance()
   var engine = AVAudioEngine()
-  
-  var player = AVAudioPlayerNode()
-  
-  var audioFormat: AVAudioFormat?
-  
-  var audioFile: AVAudioFile? {
-    didSet {
-      if let audioFile = audioFile {
-        audioFormat = audioFile.processingFormat
-      }
-    }
-  }
-    
-  var audioFileURL: URL? {
-    didSet {
-      if let audioFileURL = audioFileURL {
-        audioFile = try? AVAudioFile(forReading: audioFileURL)
-      }
-    }
-  }
   
   override func viewDidLoad() {
     super.viewDidLoad()
     
-    //        do {
-    //        try session.setCategory(.playback, mode: .default)
-    //        try session.setActive(true)
-    //        } catch {
-    //            print("error in viewDidLoad")
-    //        }
-    
-    audioFileURL  = Bundle.main.url(forResource: "Intro", withExtension: "mp4")
-    
-    engine.attach(player)
-    engine.connect(player, to: engine.mainMixerNode, format: audioFormat)
-    //audioFormat = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)
-    //engine.connect(engine.inputNode, to: engine.mainMixerNode, format: audioFormat)
-
-    engine.prepare()
+    let nc = NotificationCenter.default
+    nc.addObserver(self,
+                   selector: #selector(handleRouteChange),
+                   name: AVAudioSession.routeChangeNotification,
+                   object: nil)
     
     do {
-      try engine.start()
+      try session.setCategory(.playAndRecord, mode: .default)
+      try session.setActive(true)
     } catch let error {
       print(error.localizedDescription)
     }
     
   }
   
-  @IBAction func startBtnPressed(_ sender: Any) {
-    guard let audioFile = audioFile else { return }
-    player.scheduleFile(audioFile, at: nil)
-    player.play()
+  @objc func handleRouteChange(notification: Notification) {
+    let inputs = session.currentRoute.inputs
+    assert(inputs.count == 1)
+    let nChannels = inputs[0].channels?.count
+    
+    do {
+      if nChannels == 4 {
+        print("starting engine")
+        // create 4 channel layout
+        let layout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Unknown | 4)!
+        let audioFormat = AVAudioFormat(standardFormatWithSampleRate: 44100, channelLayout: layout)
+        engine.connect(engine.inputNode, to: engine.outputNode, format: audioFormat)
+        try engine.start()
+      } else {
+        engine.stop()
+        print("stopping engine")
+      }
+    } catch let error {
+      print(error.localizedDescription)
+    }
   }
-  
-  @IBAction func stopBtnPressed(_ sender: Any) {
-    engine.stop()
-  }
-  
 }
 

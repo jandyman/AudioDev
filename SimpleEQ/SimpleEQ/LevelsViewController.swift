@@ -26,8 +26,7 @@ class LevelsViewController: UIViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    levelTimer = Timer.scheduledTimer(withTimeInterval: 0.05
-      ,
+    levelTimer = Timer.scheduledTimer(withTimeInterval: 0.05,
                                       repeats: true, block: updateMeters)
     updateUi()
   }
