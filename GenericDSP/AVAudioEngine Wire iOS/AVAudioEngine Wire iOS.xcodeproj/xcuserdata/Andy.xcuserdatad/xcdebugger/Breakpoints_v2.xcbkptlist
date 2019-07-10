@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "AVAudioEngine Wire iOS/ViewController.swift"
-            timestampString = "584391887.468913"
+            timestampString = "584470803.696679"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "40"
-            endingLineNumber = "40"
+            startingLineNumber = "82"
+            endingLineNumber = "82"
             landmarkName = "handleRouteChange(notification:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -25,13 +25,13 @@
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "AVAudioEngine Wire iOS/ViewController.swift"
-            timestampString = "584391887.469293"
+            filePath = "AVAudioEngine Wire iOS/AudioUnitBase.mm"
+            timestampString = "584470831.719067"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "47"
-            endingLineNumber = "47"
-            landmarkName = "handleRouteChange(notification:)"
+            startingLineNumber = "109"
+            endingLineNumber = "109"
+            landmarkName = "-allocateRenderResourcesAndReturnError:"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -41,14 +41,14 @@
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "AVAudioEngine Wire iOS/ViewController.swift"
-            timestampString = "584391887.469535"
+            filePath = "AVAudioEngine Wire iOS/AudioUnitBase.mm"
+            timestampString = "584470840.414887"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "49"
-            endingLineNumber = "49"
-            landmarkName = "handleRouteChange(notification:)"
-            landmarkType = "7">
+            startingLineNumber = "167"
+            endingLineNumber = "167"
+            landmarkName = "Process(IVars* _iVars, AudioBufferList* in_buflist, AudioBufferList* out_buflist, int nFrames)"
+            landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
