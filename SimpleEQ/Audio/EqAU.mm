@@ -62,6 +62,7 @@ template <typename T> T getEqParam(int unit, int idx, function<T(EqSpec&)> func)
 
 -(void)setType:(int)unit type:(int)type stage:(int)idx {
   setEqParam(unit, idx, [&](EqSpec& spec) { spec.type = (CoefGen::EqSpec::Type)type; } );
+  setEqParam(unit, idx, [&](EqSpec& spec) { spec.order = 2; } );
 }
 
 -(int)getType:(int)unit stage:(int)idx {

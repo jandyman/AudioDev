@@ -74,7 +74,47 @@ class AudioPath {
       }
     }
     AudioPath.state = .initialized
+    setAuDefaults()
     // AudioPath.loadSettings(filename: "settings.txt")
+  }
+  
+  func setAuDefaults() {
+    let au = AudioPath.AU!
+    for unitIdx in 0..<Int32(2) {
+      for i in 0..<Int32(6) {
+        au.setEnabled(unitIdx, enable: false, stage: i)
+      }
+      // filter 0
+      au.setType(unitIdx, type: 0, stage: 0)
+      au.setOrder(unitIdx, order: 1, stage: 0)
+      au.setFrequency(unitIdx, frequency: 70, stage: 0)
+      au.setDb(unitIdx, dB: 0, stage: 0)
+      // filter 1
+      au.setType(unitIdx, type: 1, stage: 1)
+      au.setFrequency(unitIdx, frequency: 70, stage: 1)
+      au.setQ(unitIdx, q: 2, stage: 1)
+      au.setDb(unitIdx, dB: 0, stage: 1)
+      // filter 2
+      au.setType(unitIdx, type: 1, stage: 2)
+      au.setFrequency(unitIdx, frequency: 130, stage: 2)
+      au.setQ(unitIdx, q: 2, stage: 2)
+      au.setDb(unitIdx, dB: 0, stage: 2)
+      // filter 3
+      au.setType(unitIdx, type: 1, stage: 3)
+      au.setOrder(unitIdx, order: 1, stage: 3)
+      au.setFrequency(unitIdx, frequency: 500, stage: 3)
+      au.setDb(unitIdx, dB: 0, stage: 3)
+      // filter 4
+      au.setType(unitIdx, type: 1, stage: 4)
+      au.setFrequency(unitIdx, frequency: 900, stage: 4)
+      au.setQ(unitIdx, q: 2, stage: 4)
+      au.setDb(unitIdx, dB: 0, stage: 4)
+      // filter 4
+      au.setType(unitIdx, type: 2, stage: 5)
+      au.setFrequency(unitIdx, frequency: 3000, stage: 5)
+      au.setOrder(unitIdx, order: 1, stage: 5)
+      au.setDb(unitIdx, dB: 0, stage: 5)
+    }
   }
   
   private static func getDocUrl(filename: String) -> URL {

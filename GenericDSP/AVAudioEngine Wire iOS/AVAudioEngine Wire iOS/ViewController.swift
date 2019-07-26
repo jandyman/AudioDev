@@ -75,9 +75,7 @@ class ViewController: UIViewController {
         print("starting engine")
         // create 4 channel layout
         let layout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Unknown | 4)!
-//        let layout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Stereo)!
         let audioFormat = AVAudioFormat(standardFormatWithSampleRate: 44100, channelLayout: layout)
-//        let audioFormat = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)
         engine.attach(audioUnit!)
         engine.connect(engine.inputNode, to: audioUnit!, format: audioFormat)
         engine.connect(audioUnit!, to: engine.outputNode, format: audioFormat)

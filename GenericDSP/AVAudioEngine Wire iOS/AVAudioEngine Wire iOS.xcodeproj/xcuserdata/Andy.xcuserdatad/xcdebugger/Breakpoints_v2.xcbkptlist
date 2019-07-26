@@ -6,16 +6,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "AVAudioEngine Wire iOS/AudioUnitBase.mm"
-            timestampString = "584473668.253341"
+            timestampString = "584552698.5500081"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "113"
-            endingLineNumber = "113"
-            landmarkName = "-allocateRenderResourcesAndReturnError:"
+            startingLineNumber = "69"
+            endingLineNumber = "69"
+            landmarkName = "-initWithComponentDescription:options:error:"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

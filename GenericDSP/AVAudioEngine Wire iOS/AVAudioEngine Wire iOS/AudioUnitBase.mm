@@ -63,10 +63,6 @@ struct IVars {
   if (self == nil) { return nil; }
   
   // Initialize a default format for the busses.
-  AVAudioChannelLayout *layout = [[AVAudioChannelLayout alloc]
-                                  initWithLayoutTag:(kAudioChannelLayoutTag_Unknown | 4)];
-//  AVAudioChannelLayout *layout = [[AVAudioChannelLayout alloc]
-//                                  initWithLayoutTag:kAudioChannelLayoutTag_Stereo];
   AVAudioFormat *defaultFormat = [[AVAudioFormat alloc]
                                   initStandardFormatWithSampleRate:44100 channels:2];
   
