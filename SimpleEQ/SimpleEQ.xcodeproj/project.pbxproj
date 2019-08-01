@@ -24,6 +24,7 @@
 		A17EA84D225A863700E4D4B6 /* FreqGraphVc.swift in Sources */ = {isa = PBXBuildFile; fileRef = A17EA84B225A863700E4D4B6 /* FreqGraphVc.swift */; };
 		A17EA850225AEC3700E4D4B6 /* SwiftDsp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A17EA84F225AEC3600E4D4B6 /* SwiftDsp.swift */; };
 		A17FF73A225B07EF00FABC64 /* MiscDsp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A17FF738225B07EF00FABC64 /* MiscDsp.cpp */; };
+		A1B2741D22EB2BBB000D590A /* PatchesVc.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2741C22EB2BBB000D590A /* PatchesVc.swift */; };
 		A1B6BBEB22971CE10048AC96 /* DspJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A1B6BBE922971CE10048AC96 /* DspJson.cpp */; };
 		A1EBC642224C65E600BC457F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EBC641224C65E600BC457F /* AppDelegate.swift */; };
 		A1EBC644224C65E600BC457F /* EqViewContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EBC643224C65E600BC457F /* EqViewContainer.swift */; };
@@ -97,6 +98,7 @@
 		A17FF739225B07EF00FABC64 /* MiscDsp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = MiscDsp.hpp; sourceTree = "<group>"; };
 		A19E6F7A228F8565007BCEE1 /* GenericDsp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = GenericDsp.hpp; path = ../../GenericDSP/Common/GenericDSP/GenericDsp.hpp; sourceTree = "<group>"; };
 		A19E6F7B228F8565007BCEE1 /* Mixers.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Mixers.hpp; path = ../../GenericDSP/Common/GenericDSP/Mixers.hpp; sourceTree = "<group>"; };
+		A1B2741C22EB2BBB000D590A /* PatchesVc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatchesVc.swift; sourceTree = "<group>"; };
 		A1B6BBE922971CE10048AC96 /* DspJson.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = DspJson.cpp; path = ../../Misc/DspJson.cpp; sourceTree = "<group>"; };
 		A1B6BBEA22971CE10048AC96 /* DspJson.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = DspJson.hpp; path = ../../Misc/DspJson.hpp; sourceTree = "<group>"; };
 		A1EBC63E224C65E600BC457F /* SimpleEQ.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimpleEQ.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -223,6 +225,7 @@
 				A1EBC64D224C65E700BC457F /* Info.plist */,
 				A1B6BBE922971CE10048AC96 /* DspJson.cpp */,
 				A1B6BBEA22971CE10048AC96 /* DspJson.hpp */,
+				A1B2741C22EB2BBB000D590A /* PatchesVc.swift */,
 			);
 			path = SimpleEQ;
 			sourceTree = "<group>";
@@ -327,7 +330,7 @@
 				TargetAttributes = {
 					A1EBC63D224C65E600BC457F = {
 						CreatedOnToolsVersion = 10.1;
-						LastSwiftMigration = 1010;
+						LastSwiftMigration = 1030;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
 								enabled = 1;
@@ -336,10 +339,12 @@
 					};
 					A1EBC651224C65E700BC457F = {
 						CreatedOnToolsVersion = 10.1;
+						LastSwiftMigration = 1030;
 						TestTargetID = A1EBC63D224C65E600BC457F;
 					};
 					A1EBC65C224C65E700BC457F = {
 						CreatedOnToolsVersion = 10.1;
+						LastSwiftMigration = 1030;
 						TestTargetID = A1EBC63D224C65E600BC457F;
 					};
 				};
@@ -401,6 +406,7 @@
 				A15215CD2262DA7400548D68 /* AudioPath.swift in Sources */,
 				A14E55F8228649EA00FBE5DC /* LevelsViewController.swift in Sources */,
 				A11F87B1227FB8DC00DEF43C /* Meters.swift in Sources */,
+				A1B2741D22EB2BBB000D590A /* PatchesVc.swift in Sources */,
 				A1EBC644224C65E600BC457F /* EqViewContainer.swift in Sources */,
 				A1217433225835F800D086AA /* CoefGen.cpp in Sources */,
 				A17EA850225AEC3700E4D4B6 /* SwiftDsp.swift in Sources */,
@@ -615,7 +621,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "SimpleEQ/SimpleEQ-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Debug;
@@ -639,7 +645,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = AWV.SimpleEQ;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "SimpleEQ/SimpleEQ-Bridging-Header.h";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Release;
@@ -659,7 +665,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = AWV.SimpleEQTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SimpleEQ.app/SimpleEQ";
 			};
@@ -680,7 +686,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = AWV.SimpleEQTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SimpleEQ.app/SimpleEQ";
 			};
@@ -700,7 +706,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = AWV.SimpleEQUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = SimpleEQ;
 			};
@@ -720,7 +726,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = AWV.SimpleEQUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = SimpleEQ;
 			};

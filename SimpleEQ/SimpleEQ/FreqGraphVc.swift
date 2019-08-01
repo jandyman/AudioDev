@@ -38,7 +38,6 @@ class FreqGraphVc: UIViewController {
     let graph = HostingView.hostedGraph
     let plot = CPTScatterPlot(frame: CGRect.zero)
     plot.dataSource = dataSource as CPTPlotDataSource
-    let ls1 = CPTMutableLineStyle(style: dataSource.lineStyle)
     plot.dataLineStyle = dataSource.lineStyle
     graph!.add(plot, to: graph!.defaultPlotSpace)
     traces.append(dataSource)

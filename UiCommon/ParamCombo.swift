@@ -105,7 +105,6 @@ import UIKit
     valueBox.borderStyle = UITextField.BorderStyle.roundedRect
     valueBox.backgroundColor = UIColor.white
     valueBox.frame = CGRect(x: 10, y:10, width: 60, height: 30)
-    valueBox.canBecomeFirstResponder
     valueBox.clearsOnBeginEditing = true
     valueBox.reloadInputViews()
     paramLabel.textAlignment = NSTextAlignment.center
@@ -215,7 +214,6 @@ import UIKit
     valueBox.borderStyle = UITextField.BorderStyle.roundedRect
     valueBox.backgroundColor = UIColor.white
     valueBox.frame = CGRect(x: 10, y:10, width: 60, height: 30)
-    valueBox.canBecomeFirstResponder
     valueBox.clearsOnBeginEditing = true
     valueBox.reloadInputViews()
     paramLabel.textAlignment = NSTextAlignment.center

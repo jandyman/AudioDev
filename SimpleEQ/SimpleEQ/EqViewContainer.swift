@@ -19,10 +19,10 @@ class EqViewContainer: UIViewController, AuDelegate {
   var selectedResponseDataSource = FiltDataSource()
   var eqVc : EqViewController!
   let percentHeightToGraph = CGFloat(0.60)
-  var audioPath : AudioPath!
   let nFreqPoints = 300
-  
-  var au : EqAU { return AudioPath.AU! }
+
+  let au = AudioPath.shared.au
+  let audioPath = AudioPath.shared
   
   @objc var EQ_idx: NSNumber!
   var unitIdx : Int32!
@@ -32,11 +32,15 @@ class EqViewContainer: UIViewController, AuDelegate {
     unitIdx = Int32(truncating: EQ_idx)
     setupFreqGraphView()
     setupEqControlsView()
-    audioPath = AudioPath()
-    while !AudioPath.ready {}
+    while !audioPath.ready {}
     eqVc.eqAU = au
     eqVc.updateUi()
-    au.setupFftAnalyzer(unitIdx, min: 10, max: 10000, nFreqPoints: Int32(nFreqPoints))
+    au!.setupFftAnalyzer(unitIdx, min: 10, max: 10000, nFreqPoints: Int32(nFreqPoints))
+  }
+
+  override func viewDidAppear(_ animated: Bool) {
+    super.viewDidAppear(animated)
+    eqVc.updateUi()
   }
   
   func AuUpdated() {
@@ -44,13 +48,13 @@ class EqViewContainer: UIViewController, AuDelegate {
   }
   
   func updateFrequencyResponseGraph() {
-    let x = Array(UnsafeBufferPointer(start: au.getFrequencyPoints(unitIdx),
+    let x = Array(UnsafeBufferPointer(start: au!.getFrequencyPoints(unitIdx),
                                       count: nFreqPoints))
     totalResponseDataSource.x = x
     selectedResponseDataSource.x = x
-    totalResponseDataSource.y = Array(UnsafeBufferPointer(start: au.getFreqResponse(unitIdx),
+    totalResponseDataSource.y = Array(UnsafeBufferPointer(start: au!.getFreqResponse(unitIdx),
                                                           count: nFreqPoints))
-    let y = Array(UnsafeBufferPointer(start: au.getFreqResponse(unitIdx,
+    let y = Array(UnsafeBufferPointer(start: au!.getFreqResponse(unitIdx,
                                                                 stage: eqVc.selectedStage),
                                       count: nFreqPoints))
     selectedResponseDataSource.y = y

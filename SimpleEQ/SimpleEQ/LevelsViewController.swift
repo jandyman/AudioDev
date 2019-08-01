@@ -20,9 +20,10 @@ class LevelsViewController: UIViewController {
   @IBOutlet weak var rightDbSlider: VerticalSlider!
   @IBOutlet weak var masterDbSlider: VerticalSlider!
   @IBOutlet weak var phaseInvertSwitch: LabeledSwitch!
-  @IBOutlet weak var btnSave: UIButton!
 
   var levelTimer : Timer?
+  let audioPath = AudioPath.shared
+  let au = AudioPath.shared.au
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -32,7 +33,7 @@ class LevelsViewController: UIViewController {
   }
   
   func updateUi() {
-    if let au = AudioPath.AU {
+    if let au = audioPath.au {
       leftMuteSwitch.isOn = !au.getLeftEnable()
       rightMuteSwitch.isOn = !au.getRightEnable()
       phaseInvertSwitch.isOn = !au.getInPhase()
@@ -42,7 +43,7 @@ class LevelsViewController: UIViewController {
   }
   
   @objc func updateMeters(_ timer: Timer) {
-    if let au = AudioPath.AU {
+    if let au = audioPath.au {
       inputLeftLevelMeter.SetEnvelope(au.getLevelForIdx(0))
       inputRightLevelMeter.SetEnvelope(au.getLevelForIdx(1))
       outputLeftLevelMeter.SetEnvelope(au.getLevelForIdx(2))
@@ -52,27 +53,23 @@ class LevelsViewController: UIViewController {
   }
   
   @IBAction func leftMuteButtonPressed(_ sender: LabeledSwitch) {
-    AudioPath.AU!.setLeftEnable(!sender.isOn)
+    au!.setLeftEnable(!sender.isOn)
   }
   
   @IBAction func rightMuteButtonPressed(_ sender: LabeledSwitch) {
-    AudioPath.AU!.setRightEnable(!sender.isOn)
+    au!.setRightEnable(!sender.isOn)
   }
   
   @IBAction func phaseInvertSwitchPressed(_ sender: LabeledSwitch) {
-    AudioPath.AU!.setInPhase(!sender.isOn)
+    au!.setInPhase(!sender.isOn)
   }
   
   @IBAction func rightDbSliderChanged(_ sender: VerticalSlider) {
-    AudioPath.AU!.setRightGainDb(Float(sender.value))
+    au!.setRightGainDb(Float(sender.value))
   }
   
   @IBAction func masterDbSliderChanged(_ sender: VerticalSlider) {
-    AudioPath.AU!.setMasterGainDb(Float(sender.value))
-  }
-  
-  @IBAction func SaveButtonPressed(_ sender: UIButton) {
-    AudioPath.saveSettings(filename: "settings.txt")
+    au!.setMasterGainDb(Float(sender.value))
   }
 
 }

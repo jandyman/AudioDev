@@ -10,6 +10,10 @@ import UIKit
 
 let logger = OSLog(subsystem: "AWV.SimpleEQ", category: "General")
 
+extension Notification.Name {
+  static let didUpdateParameters = Notification.Name("didUpdateParameters")
+}
+
 func Log(_ msg: StaticString) { os_log(msg, log:logger) }
 
 @UIApplicationMain
@@ -45,7 +49,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
   func applicationWillTerminate(_ application: UIApplication) {
     Log("Will Terminate")
-    AudioPath.saveSettings(filename: "settings.txt")
+    AudioPath.shared.saveSettings(baseName: "settings.txt")
   }
 
 
