@@ -28,6 +28,7 @@ class AudioPath {
     case uninitialized
     case initializing
     case initialized
+    case running
   }
 
   static let shared = AudioPath()
@@ -39,6 +40,7 @@ class AudioPath {
   var au : EqAU?
   private var state = AuState.uninitialized
   var ready : Bool { return state == .initialized }
+  var running : Bool { return state == .running }
   
   private init() {
     let type = OSType("aufx")
@@ -56,30 +58,37 @@ class AudioPath {
 
     let nc = NotificationCenter.default
     nc.addObserver(self,
-                   selector: #selector(handleRouteChange),
+                   selector: #selector(handleRouteChangeNotification),
                    name: AVAudioSession.routeChangeNotification,
                    object: nil)
 
     try! session.setCategory(.playAndRecord, mode: .default)
     try! session.setActive(true)
     try! session.setPreferredIOBufferDuration(0.004)
+    // handleRouteChange()
   }
 
-  @objc func handleRouteChange(notification: Notification) {
+  @objc func handleRouteChangeNotification(notification: Notification) {
+    handleRouteChange()
+  }
+
+  func handleRouteChange() {
     let inputs = session.currentRoute.inputs
     assert(inputs.count == 1)
-    let nChannels = inputs[0].channels?.count
+    let nChannels = inputs[0].channels!.count
+    let isUsbAudio = inputs[0].portType == AVAudioSession.Port.usbAudio
 
     do {
-      if let avAudioUnit = self.avAudioUnit {
+      if isUsbAudio, let avAudioUnit = self.avAudioUnit {
         print("starting engine")
-        // create 4 channel layout
-        let layout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Unknown | 4)!
+        // create 2 channel layout
+        let layout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Unknown | UInt32(nChannels))!
         let audioFormat = AVAudioFormat(standardFormatWithSampleRate: 44100, channelLayout: layout)
         engine.attach(avAudioUnit)
         engine.connect(engine.inputNode, to: avAudioUnit, format: audioFormat)
         engine.connect(avAudioUnit, to: engine.outputNode, format: audioFormat)
         try engine.start()
+        state = .running
       } else {
         engine.stop()
         print("stopping engine")
@@ -92,9 +101,9 @@ class AudioPath {
   private func auInstantiated(_avAudioUnit: AVAudioUnit?, err: Error?) {
     avAudioUnit = _avAudioUnit
     au = (avAudioUnit!.auAudioUnit as! EqAU)
-    state = .initialized
     setAuDefaults()
     loadSettings(baseName: "settings")
+    state = .initialized
   }
   
   func setAuDefaults() {

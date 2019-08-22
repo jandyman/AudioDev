@@ -443,7 +443,7 @@ namespace DspBlocks {
     
   };
   
-  //  Base class a graph. A graph is itself a block, to support heirarchy. It can
+  //  Base class of a graph. A graph is itself a block, to support heirarchy. It can
   //  organize and prepare all the blocks within itself. But if it is a "top level"
   //  graph, it can be used standalone by a host
 
@@ -605,7 +605,7 @@ namespace DspBlocks {
     
   };
   
-  struct TopLevelGraph : GraphBase {
+struct TopLevelGraph : GraphBase {
     
     // used for determining processing order
     vector<DspInterface*> sources;

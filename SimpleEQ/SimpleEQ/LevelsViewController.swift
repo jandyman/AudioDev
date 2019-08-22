@@ -43,7 +43,7 @@ class LevelsViewController: UIViewController {
   }
   
   @objc func updateMeters(_ timer: Timer) {
-    if let au = audioPath.au {
+    if let au = AudioPath.shared.au, AudioPath.shared.running {
       inputLeftLevelMeter.SetEnvelope(au.getLevelForIdx(0))
       inputRightLevelMeter.SetEnvelope(au.getLevelForIdx(1))
       outputLeftLevelMeter.SetEnvelope(au.getLevelForIdx(2))

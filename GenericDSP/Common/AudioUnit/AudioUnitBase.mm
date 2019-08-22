@@ -19,6 +19,7 @@ struct IVars {
   int bufSize;
   int maxFrames;
   int nChannels;
+  bool prepared = false;
   AVAudioPCMBuffer* in_pcmbuffer = nullptr;
   AudioBufferList* in_buffer_list;
   AudioBufferList* out_buffer_list;
@@ -128,17 +129,25 @@ struct IVars {
     return NO;
   }
   
-  // allocate space for input and output buffers for buffering adapter
-  iVars.AllocateBuffers(_inputBus.format);
-  
   // Initialize the graph
-  DspBlocks::WireSpec ws;
-  ws.nChannels = _inputBus.format.channelCount;
-  ws.sampleRate = _inputBus.format.sampleRate;
-  ws.bufSize = iVars.bufSize;
-  iVars.graph->PrepareForOperation(ws, true);
-  iVars.graph->InitBlocks();
-  iVars.graph->Describe();
+  if (!iVars.prepared) {
+    // allocate space for input and output buffers for buffering adapter
+    iVars.AllocateBuffers(_inputBus.format);
+    DspBlocks::WireSpec ws;
+    ws.nChannels = 2;  // _inputBus.format.channelCount;
+    ws.sampleRate = _inputBus.format.sampleRate;
+    ws.bufSize = iVars.bufSize;
+    iVars.graph->PrepareForOperation(ws, true);
+    iVars.graph->InitBlocks();
+    iVars.graph->Describe();
+    iVars.prepared = true;
+  } else {
+    auto& ws = iVars.graph->wireSpec;
+    auto fmt = _inputBus.format;
+    if (ws.sampleRate != fmt.sampleRate) {
+      return NO;
+    }
+  }
   
   return YES;
 }

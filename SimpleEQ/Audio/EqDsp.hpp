@@ -43,7 +43,6 @@ namespace DspBlocks {
     Splitter splitter;
     TwoInputMixer mixer;
     Joiner joiner;
-    WireSpec wireSpec;
     vector<AWV::FftAnalyzer*> analyzers;
     vector<LevelDetect> detectors;
     
