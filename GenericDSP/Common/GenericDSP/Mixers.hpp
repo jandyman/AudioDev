@@ -4,6 +4,7 @@
 #include "GenericDsp.hpp"
 #include <Accelerate/Accelerate.h>
 #include "math.h"
+#include "MiscDsp.hpp"
 
 namespace DspBlocks {
 
@@ -26,6 +27,35 @@ namespace DspBlocks {
 
   };
   
+  struct NInputMixer : DspBlockSingleWireSpec {
+    int nInputs = 0;
+
+    NInputMixer(int nInputs) : DspBlockSingleWireSpec(nInputs,1) { this->nInputs = nInputs; }
+
+    const string GetClassName() override { return "Two Input Mixer"; }
+
+    void Process() override {
+      int nChannels = outputPins[0].wire->wireSpec.nChannels;
+      int bufSize = outputPins[0].wire->wireSpec.bufSize;
+      float** inBufs[nChannels];
+      for (int i=0; i < nChannels; i++) {
+        inBufs[i] = inputPins[i].wire->buffers;
+      }
+      float** outBufs = outputPins[0].wire->buffers;
+      for (int ch = 0; ch < nChannels; ch++) {
+        if (nInputs >= 2) {
+          vDSP_vadd(inBufs[0][ch], 1, inBufs[1][ch], 1, outBufs[ch], 1, bufSize);
+        } else {
+          std::copy(inBufs[0][ch], inBufs[0][ch] + bufSize, outBufs[ch]);
+        }
+        for (int in = 2; in < nInputs; in++) {
+          vDSP_vadd(inBufs[in][ch], 1, outBufs[ch], 1, outBufs[ch], 1, bufSize);
+        }
+      }
+    }
+
+  };
+
   struct GainMute : DspBlockSingleWireSpec {
   
     GainMute() : DspBlockSingleWireSpec(1,1) { }
@@ -34,13 +64,13 @@ namespace DspBlocks {
     
   private:
     float gain;
-    float gainDb = 0;
+    float _gain;
     bool enable = true;
     bool inPhase = true;
     
     void UpdateGain() {
-      gain = enable ? pow(10, gainDb / 20) : 0;
-      if (!inPhase) gain = -gain;
+      _gain = enable ? gain : 0;
+      if (!inPhase) _gain = -_gain;
     }
     
     void Init() override {
@@ -48,9 +78,14 @@ namespace DspBlocks {
     }
     
   public:
-    void SetGainDb(float gainDb) { this->gainDb = gainDb; UpdateGain(); }
+    void SetGain(float gain) { this->gain = gain; UpdateGain(); }
+    void SetGainDb(float gainDb) { this->gain = AWV::Math::DbToLin(gainDb); UpdateGain(); }
     void SetEnable(bool enable) { this->enable = enable; UpdateGain(); }
     void SetInPhase(bool inPhase) { this->inPhase = inPhase; UpdateGain(); }
+    float GetGain() { return gain; }
+    float GetGainDb() { return AWV::Math::LinToDb(gain); }
+    bool GetEnable() { return enable; }
+    bool GetInPhase() { return inPhase; }
     
     void Process() override {
       int nChannels = outputPins[0].wire->wireSpec.nChannels;
@@ -58,7 +93,7 @@ namespace DspBlocks {
       float** inBufs = inputPins[0].wire->buffers;
       float** outBufs = outputPins[0].wire->buffers;
       for (int ch = 0; ch < nChannels; ch++) {
-        vDSP_vsmul(inBufs[ch], 1, &gain, outBufs[ch], 1, bufSize);
+        vDSP_vsmul(inBufs[ch], 1, &_gain, outBufs[ch], 1, bufSize);
       }
     }
 

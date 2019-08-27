@@ -10,7 +10,7 @@ import UIKit
 
 @IBDesignable class LabeledSwitch : UIControl {
   
-  @IBInspectable var onColor : UIColor = UIColor.blue {
+  @IBInspectable var onColor : UIColor = UIColor.lightGray {
     didSet { setNeedsDisplay() }
   }
   

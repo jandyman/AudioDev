@@ -472,8 +472,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="768" height="1024"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="RkJ-ED-Gck" userLabel="Input Left Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
-                                <rect key="frame" x="114" y="116" width="36" height="481"/>
+                            <view contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="RkJ-ED-Gck" userLabel="Input Left Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="68" y="116" width="36" height="481"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <userDefinedRuntimeAttributes>
                                     <userDefinedRuntimeAttribute type="number" keyPath="minDb">
@@ -481,8 +481,8 @@
                                     </userDefinedRuntimeAttribute>
                                 </userDefinedRuntimeAttributes>
                             </view>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="KCg-2m-jVH" userLabel="Input Right Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
-                                <rect key="frame" x="186" y="116" width="36" height="481"/>
+                            <view contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KCg-2m-jVH" userLabel="Input Right Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="130" y="116" width="36" height="481"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <userDefinedRuntimeAttributes>
                                     <userDefinedRuntimeAttribute type="number" keyPath="minDb">
@@ -490,8 +490,8 @@
                                     </userDefinedRuntimeAttribute>
                                 </userDefinedRuntimeAttributes>
                             </view>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="XTL-wD-dJ0" userLabel="Output Right Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
-                                <rect key="frame" x="349" y="116" width="36" height="481"/>
+                            <view contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="XTL-wD-dJ0" userLabel="Output Right Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="273" y="116" width="36" height="481"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <userDefinedRuntimeAttributes>
                                     <userDefinedRuntimeAttribute type="number" keyPath="minDb">
@@ -499,17 +499,8 @@
                                     </userDefinedRuntimeAttribute>
                                 </userDefinedRuntimeAttributes>
                             </view>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="6nN-8b-4GV" userLabel="Output Right Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
-                                <rect key="frame" x="504" y="116" width="36" height="481"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="number" keyPath="minDb">
-                                        <integer key="value" value="-60"/>
-                                    </userDefinedRuntimeAttribute>
-                                </userDefinedRuntimeAttributes>
-                            </view>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="oa9-wS-qN8" customClass="LabeledSwitch" customModule="SimpleEQ" customModuleProvider="target">
-                                <rect key="frame" x="349" y="613" width="36" height="36"/>
+                            <view contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="oa9-wS-qN8" customClass="LabeledSwitch" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="273" y="613" width="36" height="36"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <userDefinedRuntimeAttributes>
                                     <userDefinedRuntimeAttribute type="color" keyPath="onColor">
@@ -521,8 +512,44 @@
                                     <action selector="rightMuteButtonPressed:" destination="sdk-bB-XyZ" eventType="valueChanged" id="Mrp-kf-vDv"/>
                                 </connections>
                             </view>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="A7D-eS-FuP" customClass="VerticalSlider" customModule="SimpleEQ" customModuleProvider="target">
-                                <rect key="frame" x="563" y="116" width="34" height="481"/>
+                            <view contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="zHx-0Q-zHp" customClass="LabeledSwitch" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="205" y="613" width="36" height="36"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="onColor">
+                                        <color key="value" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="string" keyPath="text" value="M"/>
+                                </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <action selector="leftMuteButtonPressed:" destination="sdk-bB-XyZ" eventType="valueChanged" id="AB2-7k-E5g"/>
+                                </connections>
+                            </view>
+                            <view contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mMR-1S-6Y9" userLabel="Output Left Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="205" y="116" width="36" height="481"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="minDb">
+                                        <integer key="value" value="-60"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </view>
+                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rng-bu-eNQ" customClass="ChannelStrip" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="628" y="42" width="52" height="914"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                            <view contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6nN-8b-4GV" userLabel="Output Right Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="436" y="116" width="36" height="481"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="minDb">
+                                        <integer key="value" value="-60"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </view>
+                            <view contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="A7D-eS-FuP" customClass="VerticalSlider" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="495" y="116" width="34" height="481"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <userDefinedRuntimeAttributes>
                                     <userDefinedRuntimeAttribute type="number" keyPath="minValue">
@@ -542,21 +569,8 @@
                                     <action selector="masterDbSliderChanged:" destination="sdk-bB-XyZ" eventType="valueChanged" id="xYY-MA-otI"/>
                                 </connections>
                             </view>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="zHx-0Q-zHp" customClass="LabeledSwitch" customModule="SimpleEQ" customModuleProvider="target">
-                                <rect key="frame" x="281" y="613" width="36" height="36"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="color" keyPath="onColor">
-                                        <color key="value" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                    </userDefinedRuntimeAttribute>
-                                    <userDefinedRuntimeAttribute type="string" keyPath="text" value="M"/>
-                                </userDefinedRuntimeAttributes>
-                                <connections>
-                                    <action selector="leftMuteButtonPressed:" destination="sdk-bB-XyZ" eventType="valueChanged" id="AB2-7k-E5g"/>
-                                </connections>
-                            </view>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Md8-6b-1cv" customClass="VerticalSlider" customModule="SimpleEQ" customModuleProvider="target">
-                                <rect key="frame" x="417" y="116" width="34" height="481"/>
+                            <view contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Md8-6b-1cv" customClass="VerticalSlider" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="349" y="116" width="34" height="481"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <userDefinedRuntimeAttributes>
                                     <userDefinedRuntimeAttribute type="number" keyPath="minValue">
@@ -576,8 +590,8 @@
                                     <action selector="rightDbSliderChanged:" destination="sdk-bB-XyZ" eventType="valueChanged" id="wx8-Dj-kMM"/>
                                 </connections>
                             </view>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="dqZ-8y-X02" customClass="LabeledSwitch" customModule="SimpleEQ" customModuleProvider="target">
-                                <rect key="frame" x="415" y="613" width="36" height="36"/>
+                            <view contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dqZ-8y-X02" customClass="LabeledSwitch" customModule="SimpleEQ" customModuleProvider="target">
+                                <rect key="frame" x="347" y="613" width="36" height="36"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <userDefinedRuntimeAttributes>
                                     <userDefinedRuntimeAttribute type="color" keyPath="onColor">
@@ -588,15 +602,6 @@
                                 <connections>
                                     <action selector="phaseInvertSwitchPressed:" destination="sdk-bB-XyZ" eventType="valueChanged" id="3oB-Lp-sBJ"/>
                                 </connections>
-                            </view>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="mMR-1S-6Y9" userLabel="Output Left Vu Meter" customClass="BasicVuMeter" customModule="SimpleEQ" customModuleProvider="target">
-                                <rect key="frame" x="281" y="116" width="36" height="481"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="number" keyPath="minDb">
-                                        <integer key="value" value="-60"/>
-                                    </userDefinedRuntimeAttribute>
-                                </userDefinedRuntimeAttributes>
                             </view>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -660,7 +665,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ERE-s8-ETd" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-620" y="-1073"/>
+            <point key="canvasLocation" x="-620.3125" y="-1073.4375"/>
         </scene>
         <!--Freq Graph Vc-->
         <scene sceneID="JdW-Uf-mPZ">

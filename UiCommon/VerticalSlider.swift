@@ -62,8 +62,9 @@ class VerticalSlider: UIControl {
 		updateThumbRect()
 	}
 	
-	override func draw(_ rect: CGRect) {
+    override func draw(_ rect: CGRect) {
 		let context = UIGraphicsGetCurrentContext()
+        if thumbRect == nil { updateThumbRect() }
 		
 		/// draw the max track
 		let x = bounds.width / 2 - trackWidth / 2
