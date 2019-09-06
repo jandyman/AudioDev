@@ -39,7 +39,7 @@ class AudioPath {
   var avAudioUnit : AVAudioUnit?
   var au : EqAU?
   private var state = AuState.uninitialized
-  var ready : Bool { return state == .initialized }
+  var ready : Bool { return state == .initialized && state == .running}
   var running : Bool { return state == .running }
   
   private init() {
