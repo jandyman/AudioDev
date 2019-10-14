@@ -26,7 +26,6 @@ class AudioPath {
 
   enum AuState {
     case uninitialized
-    case initializing
     case initialized
     case running
   }
@@ -51,7 +50,6 @@ class AudioPath {
                                          componentManufacturer: manufacturer,
                                          componentFlags: 0, componentFlagsMask: 0)
     AUAudioUnit.registerSubclass(EqAU.self, as: desc, name: "EQ AU", version: UInt32.max)
-    state = .initializing
     AVAudioUnit.instantiate(with: desc,
                             options: .loadOutOfProcess,
                             completionHandler: auInstantiated)
@@ -65,7 +63,6 @@ class AudioPath {
     try! session.setCategory(.playAndRecord, mode: .default)
     try! session.setActive(true)
     try! session.setPreferredIOBufferDuration(0.004)
-    // handleRouteChange()
   }
 
   @objc func handleRouteChangeNotification(notification: Notification) {
@@ -81,7 +78,7 @@ class AudioPath {
     do {
       if isUsbAudio, let avAudioUnit = self.avAudioUnit {
         print("starting engine")
-        // create 2 channel layout
+        // create n channel layout
         let layout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Unknown | UInt32(nChannels))!
         let audioFormat = AVAudioFormat(standardFormatWithSampleRate: 44100, channelLayout: layout)
         engine.attach(avAudioUnit)

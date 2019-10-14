@@ -184,7 +184,8 @@ namespace DspBlocks {
         Connect(&mixer, &detectors[4]);
         Connect(&joiner, this);
 
-        // this stuff is just to get this working with an inactive AU
+        // This stuff is just to get this working with an inactive AU. The UI may still want to
+        // display a frequency graph with HW disconnected.
         analyzers = vector<AWV::FftAnalyzer*>(nChannels, new AWV::FftAnalyzer(13)); // 2 << 13 = 16384
         for (auto a : analyzers) {
           a->SetFrequencies(10, 10000, 300);

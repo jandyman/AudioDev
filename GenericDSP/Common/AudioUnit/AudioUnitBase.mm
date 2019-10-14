@@ -48,16 +48,14 @@ struct IVars {
 @end
 
 @implementation AudioUnitBase {
-  // C++ members need to be ivars; they would be copied on access if they were properties.
+  /// C++ members need to be ivars; they would be copied on access if they were properties.
   IVars iVars;
 }
 
 @synthesize parameterTree = _parameterTree;
 
-/**
- This should be overridden. All the base class does is make sure that the pointer to the
- DSP is invalid.
- */
+/// This should be overridden. All the base class does is make sure that the pointer to the
+/// DSP is invalid.
 
 - (void*)getDspWithBufSize:(int*)bufSize {
   // should cause fatal error
@@ -66,10 +64,8 @@ struct IVars {
 }
 
 
-/*************************************************************************************
- Much simpler than the Apple example code version. We don't deal with presets, we don't set up
- a specific parameterTree, etc. The block set for parameterTree is moved to setParameterTree
- *************************************************************************************/
+/// Much simpler than the Apple example code version. We don't deal with presets, we don't set up
+/// a specific parameterTree, etc. The block set for parameterTree is moved to setParameterTree
 
 - (instancetype)initWithComponentDescription:(AudioComponentDescription)componentDescription
                                      options:(AudioComponentInstantiationOptions)options
@@ -98,7 +94,7 @@ struct IVars {
                                                            busType:AUAudioUnitBusTypeOutput
                                                             busses: @[self.outputBus]];
   
-  // Create a default empty parameter tree.
+ /// Create a default empty parameter tree.
   _parameterTree = [AUParameterTree createTreeWithChildren:@[]];
   
   return self;
@@ -108,10 +104,8 @@ struct IVars {
 - (AUAudioUnitBusArray *)outputBusses { return _outputBusArray; }
 
 
-/*******************************************************************************
- Allocate resources required to render.
- Hosts must call this to initialize the AU before beginning to render.
-********************************************************************************/
+/// Allocate resources required to render.
+/// Hosts must call this to initialize the AU before beginning to render.
 
 - (BOOL)allocateRenderResourcesAndReturnError:(NSError **)outError {
   if (![super allocateRenderResourcesAndReturnError:outError]) {
@@ -124,12 +118,12 @@ struct IVars {
                                       code:kAudioUnitErr_FailedInitialization
                                   userInfo:nil];
     }
-    // Notify superclass that initialization was not successful
+    /// Notify superclass that initialization was not successful
     self.renderResourcesAllocated = NO;
     return NO;
   }
   
-  // Initialize the graph
+  /// Initialize the graph
   if (!iVars.prepared) {
     // allocate space for input and output buffers for buffering adapter
     iVars.AllocateBuffers(_inputBus.format);
@@ -152,8 +146,8 @@ struct IVars {
   return YES;
 }
 
-// Deallocate resources allocated by allocateRenderResourcesAndReturnError:
-// Hosts should call this after finishing rendering.
+/// Deallocate resources allocated by allocateRenderResourcesAndReturnError:
+/// Hosts should call this after finishing rendering.
 
 - (void)deallocateRenderResources {
   // iVars.graph->deinit();
@@ -161,9 +155,7 @@ struct IVars {
 }
 
 
-/********************************************************************************
- Subclassers must provide a AUInternalRenderBlock (via a getter) to implement rendering.
-********************************************************************************/
+/// Subclassers must provide a AUInternalRenderBlock (via a getter) to implement rendering.
 
 - (AUInternalRenderBlock)internalRenderBlock {
   
@@ -191,13 +183,13 @@ struct IVars {
 
 void Process(IVars* _iVars, AudioBufferList* in_buflist, AudioBufferList* out_buflist, int nFrames) {
   auto& iVars = *_iVars;
-  // only the happy case for now. nFrames must be integer multiple of bufSiz
+  /// only the happy case for now. nFrames must be integer multiple of bufSiz
   auto quot = nFrames / iVars.bufSize;
   auto rem = nFrames % iVars.bufSize;
   assert(nFrames >= iVars.bufSize && rem == 0);
   
-  // first deal with the nonsense where the host may or may not supply output buffers
-  // at completion, auOutPtrs holds the float** we need for the GenericDsp API
+  /// first deal with the nonsense where the host may or may not supply output buffers
+  /// at completion, auOutPtrs holds the float** we need for the GenericDsp API
   float* auOutPtrs[iVars.nChannels];
   for (int ch=0; ch < iVars.nChannels; ch++) {
     float* auOutPtr = (float*)out_buflist->mBuffers[ch].mData;
@@ -208,7 +200,7 @@ void Process(IVars* _iVars, AudioBufferList* in_buflist, AudioBufferList* out_bu
     }
   }
   
-  // Now we process subframe by subframe, to match buffer sizes with the graph
+  /// Now we process subframe by subframe, to match buffer sizes with the graph
   float* inPtrs[iVars.nChannels];
   float* outPtrs[iVars.nChannels];
   for (int subFrame=0; subFrame < quot; subFrame++) {
@@ -221,7 +213,7 @@ void Process(IVars* _iVars, AudioBufferList* in_buflist, AudioBufferList* out_bu
     iVars.graph->SetInputPortBuffers(inPtrs);
     iVars.graph->SetOutputPortBuffers(outPtrs, 0);
     
-    // run the graph
+    /// run the graph
     iVars.graph->Process();
     
   }

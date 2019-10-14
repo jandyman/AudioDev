@@ -661,9 +661,9 @@ struct TopLevelGraph : GraphBase {
         auto gb = dynamic_cast<GraphBase*>(dst.block);
         if (gb == nullptr) {
           dsts.push_back(dst);
-        } else { // step over the port, regardless of direction
+        } else {
           vector<PinSpec> nextDsts;
-          if (dst.isPort) {
+          if (dst.isPort) { // step over the port, regardless of direction
             if (dst.block == this) { // end of the line
               dsts.push_back(PinSpec(this, dst.pinIdx, true));
             } else {
