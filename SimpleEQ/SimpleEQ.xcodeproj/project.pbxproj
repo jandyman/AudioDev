@@ -14,6 +14,7 @@
 		A12174382258390C00D086AA /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1217430225835C900D086AA /* AudioToolbox.framework */; };
 		A12EA6A922A1FCBA0020AFDC /* MiscUi.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12EA6A822A1FCBA0020AFDC /* MiscUi.swift */; };
 		A12EA6AB22A1FDE00020AFDC /* LabeledSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12EA6AA22A1FDE00020AFDC /* LabeledSwitch.swift */; };
+		A145B21C236B9D98006F85A7 /* GenericDsp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A145B21B236B9D98006F85A7 /* GenericDsp.cpp */; };
 		A14E55F8228649EA00FBE5DC /* LevelsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A14E55F7228649EA00FBE5DC /* LevelsViewController.swift */; };
 		A15215CB22629BE400548D68 /* libCorePlot-CocoaTouch.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A15215CA22629BE400548D68 /* libCorePlot-CocoaTouch.a */; };
 		A15215CD2262DA7400548D68 /* AudioPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = A15215CC2262DA7400548D68 /* AudioPath.swift */; };
@@ -81,6 +82,7 @@
 		A121743922583F0E00D086AA /* BiquadChain.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BiquadChain.hpp; path = ../../GenericDSP/Common/GenericDSP/BiquadChain.hpp; sourceTree = "<group>"; };
 		A12EA6A822A1FCBA0020AFDC /* MiscUi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiscUi.swift; sourceTree = "<group>"; };
 		A12EA6AA22A1FDE00020AFDC /* LabeledSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabeledSwitch.swift; sourceTree = "<group>"; };
+		A145B21B236B9D98006F85A7 /* GenericDsp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = GenericDsp.cpp; path = ../../GenericDSP/Common/GenericDSP/GenericDsp.cpp; sourceTree = "<group>"; };
 		A14E55F7228649EA00FBE5DC /* LevelsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelsViewController.swift; sourceTree = "<group>"; };
 		A15215CA22629BE400548D68 /* libCorePlot-CocoaTouch.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libCorePlot-CocoaTouch.a"; path = "../coreplot_2.2/Binaries/iOS/libCorePlot-CocoaTouch.a"; sourceTree = "<group>"; };
 		A15215CC2262DA7400548D68 /* AudioPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPath.swift; sourceTree = "<group>"; };
@@ -169,6 +171,7 @@
 			isa = PBXGroup;
 			children = (
 				A19E6F7A228F8565007BCEE1 /* GenericDsp.hpp */,
+				A145B21B236B9D98006F85A7 /* GenericDsp.cpp */,
 				A19E6F7B228F8565007BCEE1 /* Mixers.hpp */,
 				A10B35DA227FDE000037A873 /* MiscBlocks.hpp */,
 				A121743922583F0E00D086AA /* BiquadChain.hpp */,
@@ -411,6 +414,7 @@
 				A14E55F8228649EA00FBE5DC /* LevelsViewController.swift in Sources */,
 				A11F87B1227FB8DC00DEF43C /* Meters.swift in Sources */,
 				A1B2741D22EB2BBB000D590A /* PatchesVc.swift in Sources */,
+				A145B21C236B9D98006F85A7 /* GenericDsp.cpp in Sources */,
 				A1EBC644224C65E600BC457F /* EqViewContainer.swift in Sources */,
 				A1217433225835F800D086AA /* CoefGen.cpp in Sources */,
 				A17EA850225AEC3700E4D4B6 /* SwiftDsp.swift in Sources */,
@@ -517,6 +521,7 @@
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/../UiTools/UiTools";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -583,6 +588,7 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/../UiTools/UiTools";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -620,6 +626,7 @@
 					"@executable_path/Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../coreplot_2.2/Binaries/iOS";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = AWV.SimpleEQ;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -645,6 +652,7 @@
 					"@executable_path/Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../coreplot_2.2/Binaries/iOS";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = AWV.SimpleEQ;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -746,7 +754,7 @@
 				A1EBC665224C65E700BC457F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		A1EBC666224C65E700BC457F /* Build configuration list for PBXNativeTarget "SimpleEQ" */ = {
 			isa = XCConfigurationList;
@@ -755,7 +763,7 @@
 				A1EBC668224C65E700BC457F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		A1EBC669224C65E700BC457F /* Build configuration list for PBXNativeTarget "SimpleEQTests" */ = {
 			isa = XCConfigurationList;
@@ -764,7 +772,7 @@
 				A1EBC66B224C65E700BC457F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		A1EBC66C224C65E700BC457F /* Build configuration list for PBXNativeTarget "SimpleEQUITests" */ = {
 			isa = XCConfigurationList;
@@ -773,7 +781,7 @@
 				A1EBC66E224C65E700BC457F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};

@@ -13,7 +13,7 @@
 #define MaxBufSize 512
 
 struct IVars {
-  DspBlocks::TopLevelGraph* graph;
+  DspBlocks::TopLevelGraph* graph = nullptr;
   float** out_buffers;
   float** in_buffers;
   int bufSize;
@@ -63,7 +63,6 @@ struct IVars {
   return (void*)nullptr;
 }
 
-
 /// Much simpler than the Apple example code version. We don't deal with presets, we don't set up
 /// a specific parameterTree, etc. The block set for parameterTree is moved to setParameterTree
 
@@ -77,7 +76,7 @@ struct IVars {
   // Initialize a default format for the busses.
   AVAudioFormat *defaultFormat = [[AVAudioFormat alloc]
                                   initStandardFormatWithSampleRate:44100 channels:2];
-  
+
   iVars.graph = (DspBlocks::TopLevelGraph*)[self getDsp:&iVars.bufSize];
   iVars.maxFrames = self.maximumFramesToRender = iVars.bufSize * 8;
   
@@ -131,9 +130,7 @@ struct IVars {
     ws.nChannels = 2;  // _inputBus.format.channelCount;
     ws.sampleRate = _inputBus.format.sampleRate;
     ws.bufSize = iVars.bufSize;
-    iVars.graph->PrepareForOperation(ws, true);
-    iVars.graph->InitBlocks();
-    iVars.graph->Describe();
+    iVars.graph->Init(ws);
     iVars.prepared = true;
   } else {
     auto& ws = iVars.graph->wireSpec;
@@ -150,7 +147,6 @@ struct IVars {
 /// Hosts should call this after finishing rendering.
 
 - (void)deallocateRenderResources {
-  // iVars.graph->deinit();
   [super deallocateRenderResources];
 }
 

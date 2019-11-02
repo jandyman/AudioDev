@@ -81,6 +81,9 @@ namespace DspBlocks {
           a->SetSampleRate(44100);
         }
         wireSpec = WireSpec(2, 44100, 128);
+
+        designContext.Describe(false);
+        CompleteComposition();
         
       } catch (DspError err) {
         cout << err.msg;
@@ -100,9 +103,9 @@ namespace DspBlocks {
     
     void Init(WireSpec ws) {
       try {
-        PrepareForOperation(ws, true);
+        PrepareForOperation(ws);
         printf("\n");
-        dc.Describe();
+        dc.Describe(true);
         // initialize blocks
         InitBlocks();
         UpdateGains();
@@ -193,6 +196,8 @@ namespace DspBlocks {
         }
         wireSpec = WireSpec(nChannels, 44100, 128);
 
+        CompleteComposition();
+
       } catch (DspError err) {
         cout << err.msg;
         throw err;
@@ -201,12 +206,9 @@ namespace DspBlocks {
 
     ~nEqDsp() { for (auto a: analyzers) { delete(a); }}
 
-    void Init(WireSpec ws) {
+    void Init(WireSpec ws) override {
       try {
-        PrepareForOperation(ws, true);
-        printf("\n");
-        dc.Describe();
-        // initialize blocks
+        PrepareForOperation(ws);
         InitBlocks();
         for (auto a : analyzers) { a->SetSampleRate(ws.sampleRate); }
       } catch (DspError err) {
