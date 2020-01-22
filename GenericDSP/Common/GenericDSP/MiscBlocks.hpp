@@ -24,7 +24,7 @@ namespace DspBlocks {
     bool UpdateWireSpecs() override {
       bool did_something = false;
       auto& inputPin = inputPins[0];
-      if (inputPin.NChannels() != outputPins.size()) {
+      if (inputPin.wire->wireSpec.nChannels != outputPins.size()) {
         throw new DspError("Splitter: n Input Channels != n Output Ports");
       }
       auto ws = inputPin.wire->wireSpec;
@@ -35,8 +35,8 @@ namespace DspBlocks {
         auto ws = GetFirstWireSpec(outputPins);
         if (!ws.IsEmpty()) {
           SetWireSpec(outputPins, ws);
-          ws.nChannels = inputPin.NChannels();
-          inputPin.SetWireSpec(ws);
+          ws.nChannels = inputPin.wire->wireSpec.nChannels;
+          inputPin.wire->wireSpec.nChannels = ws.nChannels;
         }
       }
       return did_something;
@@ -62,7 +62,7 @@ namespace DspBlocks {
     bool UpdateWireSpecs() override {
       bool did_something = false;
       auto& outputPin = outputPins[0];
-      if (outputPin.NChannels() != inputPins.size()) {
+      if (outputPin.wire->wireSpec.nChannels != inputPins.size()) {
         throw new DspError("Splitter: n Output Channels != n Input Ports");
       }
       auto ws = outputPin.wire->wireSpec;
@@ -73,8 +73,8 @@ namespace DspBlocks {
         auto ws = GetFirstWireSpec(inputPins);
         if (!ws.IsEmpty()) {
           SetWireSpec(inputPins, ws);
-          ws.nChannels = outputPin.NChannels();
-          outputPin.SetWireSpec(ws);
+          ws.nChannels = outputPin.wire->wireSpec.nChannels;
+          outputPin.wire->wireSpec.nChannels = ws.nChannels;
         }
       }
       return did_something;
