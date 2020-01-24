@@ -84,6 +84,7 @@ namespace DspBlocks {
 
         designContext.Describe(false);
         CompleteComposition();
+        designContext.Describe(true);
         
       } catch (DspError err) {
         cout << err.msg;

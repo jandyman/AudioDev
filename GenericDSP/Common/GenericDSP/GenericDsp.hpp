@@ -361,10 +361,14 @@ namespace DspBlocks {
     vector<DspInterface*> processing_order;
     vector<BufferSpec> bufferPool;
     vector<Wire> designWires;
-    vector<Wire> connectionWires;
+    vector<ConnectionWire> connectionWires;
     vector<DspInterface*> blocks;
     int bufSpecCnt = 0;
     int IdCounter = 0;
+
+    DesignContext() {
+      connectionWires.reserve(200);  // TODO TMP KLUDGE
+    }
 
     void AddBlock(DspInterface* block) {
       if (find(blocks.begin(), blocks.end(), block) == blocks.end()) {
@@ -404,8 +408,8 @@ namespace DspBlocks {
       return nullptr;
     }
 
-    Wire* AddWire(vector<Wire>& wires) {
-      Wire wire;
+    template <class T> T* AddWire(vector<T>& wires) {
+      T wire;
       wire.Id = IdCounter++;
       wires.push_back(wire);
       return &wires[wires.size() - 1];
@@ -413,7 +417,7 @@ namespace DspBlocks {
 
     Wire* AddDesignWire() { return AddWire(designWires); }
     ConnectionWire* AddConnectionWire() {
-      return dynamic_cast<ConnectionWire*>(AddWire(connectionWires));
+      return AddWire(connectionWires);
     }
 
     int GetId(DspInterface* block) {
@@ -465,13 +469,16 @@ namespace DspBlocks {
     }
 
     void Describe(bool connectionMode) {
-      auto wires = connectionMode ? connectionWires : designWires;
       cout << "Blocks:" << "\n";
       for (auto& blk : blocks) {
         cout << "ID: " << GetId(blk) << " Type: " << GetInstanceName(blk) << "\n";
       }
       cout << "Wires:" << "\n";
-      for (Wire& wire : wires) { DescribeWire(wire); }
+      if (connectionMode) {
+        for (auto& wire : connectionWires) { DescribeWire(wire); }
+      } else {
+        for (auto& wire : designWires) { DescribeWire(wire); }
+      }
       if (processing_order.size() > 0) {
         cout << "Processing Order: \n";
         for (auto& blk : processing_order) {
@@ -515,7 +522,6 @@ namespace DspBlocks {
         }
       }
     }
-
 
   };
 
@@ -795,7 +801,6 @@ namespace DspBlocks {
         auto wire = designContext.AddConnectionWire();
         wire->dst = dst;
         wire->src = src;
-        wire->wireSpec = src.block->OutputPin(src.pinIdx).wire->wireSpec;
 
         // now patch the blocks to use the wire
         GetSourcePin(wire->src).wire = wire;
@@ -810,7 +815,7 @@ namespace DspBlocks {
         addWire(src, dsts);
       }
       // flatten destination for all blocks in designContext
-      for (auto& block : designContext.blocks) {
+      for (auto block : designContext.blocks) {
         if (dynamic_cast<GraphBase*>(block) == nullptr) { // ignore subgraphs
           for (int i=0; i < block->nOutputPins(); i++) {
             auto outPin = block->OutputPin(i);
@@ -820,6 +825,8 @@ namespace DspBlocks {
           }
         }
       }
+      // determine processing order
+      DetermineProcessingOrder();
     }
 
     // ------------------ Graph Preparation ---------------------
@@ -827,7 +834,6 @@ namespace DspBlocks {
     void PrepareForOperation(WireSpec ws) {
       TopLevelSetup(ws);
       UpdateWireSpecs();
-      DetermineProcessingOrder();
       InitBlocks();
     }
 
@@ -906,9 +912,7 @@ namespace DspBlocks {
     void DetermineProcessingOrder(DspInterface* block) {
       if (!HasBeenProcessed(block)) {
         if (CanProcessBlock(block)) {
-          AllocateOutputBuffers(block);
           MarkAsProcessed(block);
-          FreeInputBuffers(block);
           for (int i=0; i < block->nOutputPins(); i++) {
             auto& pin = block->OutputPin(i);
             for (auto& sink : pin.wire->dst) {
@@ -926,6 +930,13 @@ namespace DspBlocks {
         DetermineProcessingOrder(block);
       }
       // ConnectOutputPorts();
+    }
+
+    void AllocateOutputBuffers() {
+      for (auto& block: designContext.processing_order) {
+        AllocateOutputBuffers(block);
+        FreeInputBuffers(block);
+      }
     }
 
     void AllocateOutputBuffers(DspInterface* block) {
