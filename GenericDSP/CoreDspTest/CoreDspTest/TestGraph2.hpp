@@ -46,7 +46,7 @@ namespace DspBlocks {
     EqMasterGraph() :
     TopLevelGraph(dc,1,1), leftEq(dc), rightEq(dc), masterEq(dc), splitter(2), joiner(2) {
       try {
-        Connect(this, &splitter);
+        Connect((GraphBase*)this, &splitter);
         Connect(&splitter, 0, &leftEq);
         Connect(&splitter, 1, &rightEq);
         Connect(&leftEq, &mixer, 0);
@@ -66,6 +66,8 @@ namespace DspBlocks {
         eqSpecs[0].frequency = 200;
         eqSpecs[0].enabled = true;
         rightEq.eqBlock.SetEqSpecs(eqSpecs);
+        CompleteComposition();
+        dc.Describe(true);
       } catch (DspError err) {
         cout << err.msg;
       }
@@ -73,9 +75,9 @@ namespace DspBlocks {
     
     void Init(WireSpec ws) {
       try {
-        PrepareForOperation(ws, true);
+        PrepareForOperation(ws);
         printf("\n");
-        dc.Describe();
+        dc.Describe(true);
         // initialize blocks
         InitBlocks();
       } catch (DspError err) {

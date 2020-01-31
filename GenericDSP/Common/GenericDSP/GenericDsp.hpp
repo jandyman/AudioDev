@@ -23,6 +23,31 @@ namespace DspBlocks {
     DspError(const char *msg) : msg(msg) {}
   };
 
+  struct nPinSpec {
+    int blockId = -1;
+    int pinIdx = -1;
+    bool isPort = false;
+
+    nPinSpec(int id, int idx, bool isPort) : blockId(id), pinIdx(idx), isPort(isPort) {}
+    nPinSpec() {}
+    bool operator==(const nPinSpec &ps) const {
+      return (blockId == ps.blockId && pinIdx == ps.pinIdx && isPort == ps.isPort);
+    }
+    bool operator!=(const nPinSpec &ps) const { return !(*this == ps); }
+  };
+
+  struct DspNode {
+    using string = std::string;
+    virtual int NInputPins() = 0;
+    virtual int NOutputPins() = 0;
+    virtual const string GetClassName() = 0;
+    virtual const string GetInstanceName() = 0;
+    virtual void SetInstanceName(const string name) = 0;
+    virtual const int GetId() = 0;
+    virtual void SetId(const int id) = 0;
+    virtual bool IsGraph() = 0;
+  };
+
   struct DspInterface;
   struct PinSpec;
   struct GraphBase;
@@ -127,11 +152,11 @@ namespace DspBlocks {
 
   struct Wire {
     int Id = 0;
-    PinSpec src;
-    std::vector<PinSpec> dst;
+    nPinSpec src;
+    std::vector<nPinSpec> dst;
 
-    void AddConnection(PinSpec src, PinSpec dst) {
-      if (!this->src.IsEmpty() && this->src != src) {
+    void AddConnection(nPinSpec src, nPinSpec dst) {
+      if (this->src != src) {
         throw new DspError("Attempt to set source of a wire twice");
       }
       this->src = src;
@@ -180,26 +205,14 @@ namespace DspBlocks {
 
   /// Interface specification which all DSP block must implement
 
-  struct DspInterface {
+  struct DspInterface : DspNode {
     using string = std::string;
-    virtual int nInputPins() = 0;
     virtual Pin& InputPin(int idx) = 0;
-    virtual int nOutputPins() = 0;
     virtual Pin& OutputPin(int idx) = 0;
     virtual bool UpdateWireSpecs() = 0;
     virtual bool AllWireSpecsReady() = 0;
     virtual void Init() = 0;
     virtual void Process() = 0;
-    virtual const string GetClassName() = 0;
-    virtual const string GetInstanceName() = 0;
-    virtual void SetInstanceName(const string name) = 0;
-    virtual const int GetId() = 0;
-    virtual void SetId(const int id) = 0;
-    // these are to support heirarchy without forward reference issues
-    //virtual int nInputPorts() = 0;
-    virtual Pin* InputPort(int idx) = 0;
-    //virtual int nOutputPorts() = 0;
-    virtual Pin* OutputPort(int idx) = 0;
   };
 
   /// The pin structure. Encapsulates the WireSpec, buffer pointers, a bufferId for
@@ -220,14 +233,12 @@ namespace DspBlocks {
     vector<Pin> outputPins;
     Pin& InputPin(int idx) override { return inputPins[idx]; }
     Pin& OutputPin(int idx) override { return outputPins[idx]; }
-    Pin* InputPort(int idx) override { return nullptr; }
-    Pin* OutputPort(int idx) override { return nullptr; }
 
     int id;
     string instanceName = {""};
 
-    int nInputPins() override { return (int)inputPins.size(); }
-    int nOutputPins() override { return (int)outputPins.size(); }
+    int NInputPins() override { return (int)inputPins.size(); }
+    int NOutputPins() override { return (int)outputPins.size(); }
 
     void Init() override {};
     void Process() override {};
@@ -362,24 +373,26 @@ namespace DspBlocks {
     vector<BufferSpec> bufferPool;
     vector<Wire> designWires;
     vector<ConnectionWire> connectionWires;
-    vector<DspInterface*> blocks;
+    vector<DspNode*> blocks;
     int bufSpecCnt = 0;
-    int IdCounter = 0;
+    int WireIdCounter = 0;
 
     DesignContext() {
       connectionWires.reserve(200);  // TODO TMP KLUDGE
     }
 
-    void AddBlock(DspInterface* block) {
+    void AddBlock(DspNode* block) {
       if (find(blocks.begin(), blocks.end(), block) == blocks.end()) {
         blocks.push_back(block);
       }
     }
 
-    Wire* DesignWireForOutput(PinSpec& outPinSpec) {
+    DspNode* GetBlock(int id) { return blocks[id]; }
+
+    Wire* DesignWireForOutput(nPinSpec& outPinSpec) {
       for (auto& wire : designWires) {
         auto pinSpec = wire.src;
-        auto blk = pinSpec.block;
+        auto blk = GetBlock(pinSpec.blockId);
         if (blk == nullptr) continue;
 //        Pin* wpin;
 //        if (pinSpec.isPort) {
@@ -396,11 +409,11 @@ namespace DspBlocks {
       return nullptr;
     }
 
-    Wire* DesignWireForInput(PinSpec& dstPinSpec) {
+    Wire* DesignWireForInput(nPinSpec& dstPinSpec) {
       for (auto& wire : designWires) {
         auto pinSpecs = wire.dst;
         for (auto& pinSpec : pinSpecs) {
-          auto blk = pinSpec.block;
+          auto blk = GetBlock(pinSpec.blockId);
           if (blk == nullptr) continue;
           if (dstPinSpec == pinSpec) { return &wire; }
         }
@@ -410,7 +423,7 @@ namespace DspBlocks {
 
     template <class T> T* AddWire(vector<T>& wires) {
       T wire;
-      wire.Id = IdCounter++;
+      wire.Id = WireIdCounter++;
       wires.push_back(wire);
       return &wires[wires.size() - 1];
     }
@@ -420,7 +433,7 @@ namespace DspBlocks {
       return AddWire(connectionWires);
     }
 
-    int GetId(DspInterface* block) {
+    int GetId(DspNode* block) {
       auto it = find(blocks.begin(), blocks.end(), block);
       if (it == blocks.end()) {
         throw DspError("Attempt to get ID of block not in DesignContext");
@@ -428,7 +441,7 @@ namespace DspBlocks {
       return it - blocks.begin();
     }
 
-    int GetInstanceId(DspInterface* block) {
+    int GetInstanceId(DspNode* block) {
       auto className = block->GetClassName();
       int instanceCount = 0;
       for (auto thisBlock : blocks) {
@@ -441,20 +454,16 @@ namespace DspBlocks {
       return -1;
     }
 
-    string GetInstanceName(DspInterface* block) {
+    string GetInstanceName(DspNode* block) {
       return block->GetClassName() + " " + std::to_string(GetInstanceId(block));
     }
 
-    string DescribePinSpec(PinSpec& ps) {
+    string DescribePinSpec(nPinSpec& ps) {
       std::ostringstream ss;
-      auto& block = ps.block;
-      if (block == NULL) {
-        ss << "{No Connection}";
-      } else {
-        string type = ps.isPort ? "Port " : "Pin ";
-        auto name = GetInstanceName(block);
-        ss << "{Blk " << name << " " << type << ps.pinIdx << "}";
-      }
+      auto* block = GetBlock(ps.blockId);
+      string type = ps.isPort ? "Port " : "Pin ";
+      auto name = GetInstanceName(block);
+      ss << "{Blk " << name << " " << type << ps.pinIdx << "}";
       return ss.str();
     }
 
@@ -486,7 +495,7 @@ namespace DspBlocks {
         }
         cout << "Wires by Processing Order: \n";
         for (auto& blk : processing_order) {
-          for (int i=0; i < blk->nOutputPins(); i++) {
+          for (int i=0; i < blk->NOutputPins(); i++) {
             auto& pin = blk->OutputPin(i);
             DescribeWire(*pin.wire);
           }
@@ -529,29 +538,18 @@ namespace DspBlocks {
   //  organize and prepare all the blocks within itself. But if it is a "top level"
   //  graph, it can be used standalone by a host
 
-  struct GraphBase: DspInterface {
+  struct GraphBase: DspNode {
     template<typename T> using vector = std::vector<T>;
 
     DesignContext& designContext;
-
-    vector<DspInterface*> blocks;
-    vector<Pin> inputPins;
-    vector<Pin> outputPins;
-    vector<Pin> inputPorts;
-    vector<Pin> outputPorts;
+    vector<DspNode*> blocks;
+    int nInputPins;
+    int nOutputPins;
 
     // GraphBase() {}
 
-    GraphBase(DesignContext& dc, int nInputPins, int nOutputPins) : designContext(dc) {
-      for (int i=0; i < nInputPins; i++) {
-        inputPorts.push_back(Pin());
-        inputPins.push_back(Pin());
-      }
-      for (int i=0; i < nOutputPins; i++) {
-        outputPorts.push_back(Pin());
-        outputPins.push_back(Pin());
-      }
-    }
+    GraphBase(DesignContext& dc, int nInputPins, int nOutputPins) : 
+    designContext(dc), nInputPins(nInputPins), nOutputPins(nOutputPins) { }
 
     const string GetClassName() override { return "Graph"; }
 
@@ -560,18 +558,12 @@ namespace DspBlocks {
     const int GetId() override { return 0; }
     void SetId(const int id) override {}
 
-    int nInputPins() override { return (int)inputPins.size(); }
-    int nOutputPins() override { return (int)outputPins.size(); }
-
-    Pin& InputPin(int idx) override { return inputPins[idx]; }
-    Pin& OutputPin(int idx) override { return outputPins[idx]; }
-    Pin* InputPort(int idx) override { return &inputPorts[idx]; }
-    Pin* OutputPort(int idx) override { return &outputPorts[idx]; }
-
-    void Init() override {};
+    int NInputPins() override { return nInputPins; }
+    int NOutputPins() override { return nOutputPins; }
+    bool IsGraph() override { return true; }
 
     // only adds the block if the block wasn't there before
-    void AddBlock(DspInterface* block) {
+    void AddBlock(DspNode* block) {
       designContext.AddBlock(block);
       if (block != this) {
         auto it = find(blocks.begin(), blocks.end(), block);
@@ -581,11 +573,11 @@ namespace DspBlocks {
       }
     }
 
-    void Connect(DspInterface* src, int srcPinIdx, DspInterface* dst, int dstPinIdx) {
+    void Connect(DspNode* src, int srcPinIdx, DspNode* dst, int dstPinIdx) {
       AddBlock(src);
       AddBlock(dst);
-      auto srcPin = PinSpec(src, srcPinIdx, src == this);
-      auto dstPin = PinSpec(dst, dstPinIdx, dst == this);
+      auto srcPin = nPinSpec(src->GetId(), srcPinIdx, src == this);
+      auto dstPin = nPinSpec(dst->GetId(), dstPinIdx, dst == this);
       // if the srcPin has no associated wire, create one
       auto srcWire = designContext.DesignWireForOutput(srcPin);
       if (designContext.DesignWireForInput(dstPin) != nullptr) {
@@ -594,8 +586,8 @@ namespace DspBlocks {
       if (srcWire == nullptr) {
         srcWire = designContext.AddDesignWire();
       }
-      auto srcPinSpec = PinSpec(src, srcPinIdx, src == this);
-      auto dstPinSpec = PinSpec(dst, dstPinIdx, dst == this);
+      auto srcPinSpec = nPinSpec(src->GetId(), srcPinIdx, src == this);
+      auto dstPinSpec = nPinSpec(dst->GetId(), dstPinIdx, dst == this);
       srcWire->AddConnection(srcPinSpec, dstPinSpec);
     }
 
@@ -609,81 +601,6 @@ namespace DspBlocks {
       Connect(src, 0, dst, dstPinIdx);
     }
 
-    void SyncWireSpec(Pin& port, Pin& pin, bool& did_something) {
-      if (port.wire == nullptr || pin.wire == nullptr) {
-        throw new DspError("unconnected pin while syncing port wire specs");
-      }
-      WireSpec& ws1 = port.wire->wireSpec;
-      WireSpec& ws2 = pin.wire->wireSpec;
-      if (ws1.IsEmpty() && !ws2.IsEmpty()) { ws1 = ws2; did_something = true; }
-      if (ws2.IsEmpty() && !ws1.IsEmpty()) { ws2 = ws1; did_something = true; }
-      else if (ws1 != ws2) {
-        throw new DspError("conflicting types while syncing wire specs");
-      }
-    }
-
-    void SyncPortAndPins() {
-      auto func = [&](vector<Pin>& ports, vector<Pin>& pins) {
-        for (int i=0; i < pins.size(); i++) {
-          bool dummy;
-          SyncWireSpec(ports[i], pins[i], dummy);
-        }
-      };
-      func(inputPorts, inputPins);
-      func(outputPorts, outputPins);
-    }
-
-    /* ------------------ Signal Propagation --------------------
-
-     For each block,
-
-     1. If the wirespec of any pins can be set based on any of the input pins, set it.
-
-     2. If the wirespec of any pins can be set based on any of the output pins, set them.
-
-     3. For each pin, follow through to any other pins, For each pin, if the
-     wire spec is blank, set it. If not, check to make sure there is no conflict
-     and signal an error if there is one.
-
-     Lather rinse repeat until nothing more can be propagated or we encounter an error
-     */
-
-    bool UpdateWireSpecs() override {
-      bool did_something = false;
-      auto func = [&](vector<Pin>& ports, vector<Pin>& pins) {
-        for (int i=0; i < ports.size(); i++) {
-          SyncWireSpec(ports[i], pins[i], did_something);
-        }
-      };
-      func(inputPorts, inputPins);
-      func(outputPorts, outputPins);
-      bool did_something_this_time = false;
-      do {
-        did_something_this_time = false;
-        for (auto& block : blocks) {
-          if (block->UpdateWireSpecs()) {
-            did_something = true;
-            did_something_this_time = true; }
-        }
-      } while (did_something_this_time);
-      func(inputPorts, inputPins);
-      func(outputPorts, outputPins);
-      if (!AllWireSpecsReady()) {
-        throw DspError("can't resolve all WireSpecs for graph");
-      }
-      return did_something;
-    }
-
-    virtual bool AllWireSpecsReady() override {
-      // check all contained blocks
-      for (auto& block : blocks) {
-        if (!block->AllWireSpecsReady()) { return false; }
-      }
-      return true;
-    }
-
-    void Process() override {}  // should never be called
-
     void Describe(bool connectionMode) { designContext.Describe(connectionMode); }
 
   };
@@ -694,12 +611,23 @@ namespace DspBlocks {
     vector<DspInterface*> sources;
     // master WireSpec
     WireSpec wireSpec;
+    vector<Pin> inputPins;
+    vector<Pin> outputPins;
+    vector<Pin> inputPorts;
+    vector<Pin> outputPorts;
 
-    TopLevelGraph(DesignContext& dc, WireSpec ws, int nInputPins, int nOutputPins) : wireSpec(ws),
-    GraphBase(dc, nInputPins, nOutputPins) {}
+    TopLevelGraph(DesignContext& dc, WireSpec ws, int nInputPins, int nOutputPins) :
+    TopLevelGraph(dc, nInputPins, nOutputPins) {
+      wireSpec = ws;
+    }
 
     TopLevelGraph(DesignContext& dc, int nInputPins, int nOutputPins) :
-    GraphBase(dc, nInputPins, nOutputPins) {}
+    GraphBase(dc, nInputPins, nOutputPins) {
+      inputPins = vector<Pin>(nInputPins);
+      outputPins = vector<Pin>(nOutputPins);
+      inputPorts = vector<Pin>(nInputPins);
+      outputPorts = vector<Pin>(nOutputPins);
+    }
 
     virtual void Init(WireSpec wiresSpec) {}
 
@@ -740,25 +668,27 @@ namespace DspBlocks {
       return outputPorts[0].wire;
     }
 
-    vector<PinSpec> FlattenDestinationNet(PinSpec& source) {
-      vector<PinSpec> dsts;
+    DspNode* GetBlock(int id) { return designContext.GetBlock(id); }
+
+    vector<nPinSpec> FlattenDestinationNet(nPinSpec& source) {
+      vector<nPinSpec> dsts;
       auto sourceWire = designContext.DesignWireForOutput(source);
       for (auto& dst : sourceWire->dst) {
         // if destination block is a simple block, just add to dsts
-        auto gb = dynamic_cast<GraphBase*>(dst.block);
+        auto gb = dynamic_cast<GraphBase*>(GetBlock(dst.blockId));
         if (gb == nullptr) {
           dsts.push_back(dst);
         } else {  // destination block is a subgraph
-          vector<PinSpec> nextDsts;
+          vector<nPinSpec> nextDsts;
           if (dst.isPort) { // step over the port
-            if (dst.block == this) { // end of the line
-              dsts.push_back(PinSpec(this, dst.pinIdx, true));
+            if (GetBlock(dst.blockId) == this) { // end of the line
+              dsts.push_back(nPinSpec(dst.blockId, dst.pinIdx, true));
             } else {
-              auto nextDstPinSpec = PinSpec(dst.block, dst.pinIdx, false);
+              auto nextDstPinSpec = nPinSpec(dst.blockId, dst.pinIdx, false);
               nextDsts = FlattenDestinationNet(nextDstPinSpec);
             }
           } else {
-            auto nextDstPinSpec = PinSpec(dst.block, dst.pinIdx, true);
+            auto nextDstPinSpec = nPinSpec(dst.blockId, dst.pinIdx, true);
             nextDsts = FlattenDestinationNet(nextDstPinSpec);
           }
           dsts.insert(dsts.end(), nextDsts.begin(), nextDsts.end());
@@ -830,6 +760,83 @@ namespace DspBlocks {
     }
 
     // ------------------ Graph Preparation ---------------------
+
+    /* ------------------ Signal Propagation --------------------
+
+     For each block,
+
+     1. If the wirespec of any pins can be set based on any of the input pins, set it.
+
+     2. If the wirespec of any pins can be set based on any of the output pins, set them.
+
+     3. For each pin, follow through to any other pins, For each pin, if the
+     wire spec is blank, set it. If not, check to make sure there is no conflict
+     and signal an error if there is one.
+
+     Lather rinse repeat until nothing more can be propagated or we encounter an error
+     */
+
+    void SyncPortAndPins() {
+      auto func = [&](vector<Pin>& ports, vector<Pin>& pins) {
+        for (int i=0; i < pins.size(); i++) {
+          bool dummy;
+          SyncWireSpec(ports[i], pins[i], dummy);
+        }
+      };
+      func(inputPorts, inputPins);
+      func(outputPorts, outputPins);
+    }
+
+    void SyncWireSpec(Pin& port, Pin& pin, bool& did_something) {
+      if (port.wire == nullptr || pin.wire == nullptr) {
+        throw new DspError("unconnected pin while syncing port wire specs");
+      }
+      WireSpec& ws1 = port.wire->wireSpec;
+      WireSpec& ws2 = pin.wire->wireSpec;
+      if (ws1.IsEmpty() && !ws2.IsEmpty()) { ws1 = ws2; did_something = true; }
+      if (ws2.IsEmpty() && !ws1.IsEmpty()) { ws2 = ws1; did_something = true; }
+      else if (ws1 != ws2) {
+        throw new DspError("conflicting types while syncing wire specs");
+      }
+    }
+
+    bool UpdateWireSpecs() {
+      bool did_something = false;
+      auto func = [&](vector<Pin>& ports, vector<Pin>& pins) {
+        for (int i=0; i < ports.size(); i++) {
+          SyncWireSpec(ports[i], pins[i], did_something);
+        }
+      };
+      func(inputPorts, inputPins);
+      func(outputPorts, outputPins);
+      bool did_something_this_time = false;
+      do {
+        did_something_this_time = false;
+        for (auto& block : blocks) {
+          if (dynamic_cast<GraphBase*>(block) == nullptr) { // ignore subgraphs
+            throw DspError("found a graph while syncing wirespecs");
+          }
+          if (block->UpdateWireSpecs()) {
+            did_something = true;
+            did_something_this_time = true; }
+        }
+      } while (did_something_this_time);
+      func(inputPorts, inputPins);
+      func(outputPorts, outputPins);
+      if (!AllWireSpecsReady()) {
+        throw DspError("can't resolve all WireSpecs for graph");
+      }
+      return did_something;
+    }
+
+    virtual bool AllWireSpecsReady() {
+      // check all contained blocks
+      for (auto& block : blocks) {
+        if (!block->AllWireSpecsReady()) { return false; }
+      }
+      return true;
+    }
+
 
     void PrepareForOperation(WireSpec ws) {
       TopLevelSetup(ws);
@@ -950,7 +957,7 @@ namespace DspBlocks {
       for (auto& block: designContext.blocks) { block->Init(); }
     }
 
-    void Process() override {
+    void Process() {
       for (auto& block: designContext.processing_order) { block->Process(); }
     }
 

@@ -97,7 +97,7 @@
 		A178C1772295ED4D006E5135 /* json.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = json.hpp; path = ../../Misc/json.hpp; sourceTree = "<group>"; };
 		A17EA84B225A863700E4D4B6 /* FreqGraphVc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FreqGraphVc.swift; sourceTree = "<group>"; };
 		A17EA84F225AEC3600E4D4B6 /* SwiftDsp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftDsp.swift; sourceTree = "<group>"; };
-		A17FF738225B07EF00FABC64 /* MiscDsp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MiscDsp.cpp; sourceTree = "<group>"; };
+		A17FF738225B07EF00FABC64 /* MiscDsp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MiscDsp.cpp; path = ../../GenericDSP/Common/DSP/MiscDsp.cpp; sourceTree = "<group>"; };
 		A17FF739225B07EF00FABC64 /* MiscDsp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = MiscDsp.hpp; sourceTree = "<group>"; };
 		A19E6F7A228F8565007BCEE1 /* GenericDsp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = GenericDsp.hpp; path = ../../GenericDSP/Common/GenericDSP/GenericDsp.hpp; sourceTree = "<group>"; };
 		A19E6F7B228F8565007BCEE1 /* Mixers.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Mixers.hpp; path = ../../GenericDSP/Common/GenericDSP/Mixers.hpp; sourceTree = "<group>"; };
@@ -516,6 +516,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEFINES_MODULE = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/../UiTools/UiTools";
@@ -538,6 +539,7 @@
 					"$(PROJECT_DIR)/../GenericDsp/Common/**",
 					"$(PROJECT_DIR)/../coreplot_2.2/Binaries/iOS/CorePlotHeaders",
 					"$(PROJECT_DIR)/../Misc",
+					"$(PROJECT_DIR)/SimpleEQ",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -584,6 +586,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEFINES_MODULE = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/../UiTools/UiTools";
@@ -600,6 +603,7 @@
 					"$(PROJECT_DIR)/../GenericDsp/Common/**",
 					"$(PROJECT_DIR)/../coreplot_2.2/Binaries/iOS/CorePlotHeaders",
 					"$(PROJECT_DIR)/../Misc",
+					"$(PROJECT_DIR)/SimpleEQ",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				MTL_ENABLE_DEBUG_INFO = NO;

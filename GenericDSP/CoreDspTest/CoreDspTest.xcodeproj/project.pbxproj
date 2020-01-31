@@ -43,7 +43,6 @@
 		A18E65B821FFE36500D9A005 /* TestGraph2.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = TestGraph2.hpp; sourceTree = "<group>"; };
 		A18E65B921FFE4D300D9A005 /* BiquadChain.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BiquadChain.hpp; path = ../../Common/GenericDSP/BiquadChain.hpp; sourceTree = "<group>"; };
 		A18E65BA22001FC700D9A005 /* CoefGen.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = CoefGen.hpp; path = ../../Common/DSP/CoefGen.hpp; sourceTree = "<group>"; };
-		A1F22E3C2238B7E300FCFF81 /* AUBufferingAdapter.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AUBufferingAdapter.hpp; sourceTree = "<group>"; };
 		A1F9F22E2203D77D008CC101 /* CoefGen.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CoefGen.cpp; path = ../../Common/DSP/CoefGen.cpp; sourceTree = "<group>"; };
 		A1F9F23022050963008CC101 /* TestGraph3.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = TestGraph3.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -95,7 +94,6 @@
 				A18E65B821FFE36500D9A005 /* TestGraph2.hpp */,
 				A16A97BB22014F2F0003E87E /* MiscBlocks.hpp */,
 				A1F9F23022050963008CC101 /* TestGraph3.hpp */,
-				A1F22E3C2238B7E300FCFF81 /* AUBufferingAdapter.hpp */,
 			);
 			path = CoreDspTest;
 			sourceTree = "<group>";
@@ -298,6 +296,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = UUJ7MD9292;
 				FRAMEWORK_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = (
+					"${PROJECT_DIR}/../Common/DSP",
+					"${PROJECT_DIR}/../GenericDSP",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -308,6 +310,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = UUJ7MD9292;
 				FRAMEWORK_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = (
+					"${PROJECT_DIR}/../Common/DSP",
+					"${PROJECT_DIR}/../GenericDSP",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
