@@ -66,6 +66,7 @@ namespace DspBlocks {
         eqSpecs[0].frequency = 200;
         eqSpecs[0].enabled = true;
         rightEq.eqBlock.SetEqSpecs(eqSpecs);
+        dc.Describe(false);
         CompleteComposition();
         dc.Describe(true);
       } catch (DspError err) {
