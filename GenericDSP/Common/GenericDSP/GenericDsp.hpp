@@ -697,19 +697,27 @@ namespace DspBlocks {
     Pin& GetSourcePin(nPinSpec ps) {
       auto* block = GetBlock(ps.blockId);
       int idx = ps.pinIdx;
-      if (ps.isPort) { throw new DspError("can't get Source Pin for a graph"); }
-      auto gb = dynamic_cast<DspInterface*>(block);
-      if (gb == nullptr) { throw new DspError("GetSourcePin: Expecting a Block"); }
-      return gb->OutputPin(ps.pinIdx);
+      if (block == this) {
+        return inputPorts[idx];
+      } else {
+        if (ps.isPort) { throw new DspError("can't get Source Pin for a graph"); }
+        auto gb = dynamic_cast<DspInterface*>(block);
+        if (gb == nullptr) { throw new DspError("GetSourcePin: Expecting a Block"); }
+        return gb->OutputPin(ps.pinIdx);
+      }
     }
 
     Pin& GetDestPin(nPinSpec ps) {
       auto* block = GetBlock(ps.blockId);
       int idx = ps.pinIdx;
-      if (ps.isPort) { throw new DspError("can't get Destination Pin for a graph"); }
-      auto gb = dynamic_cast<DspInterface*>(block);
-      if (gb == nullptr) { throw new DspError("GetDestPin: Expecting a Block"); }
-      return gb->InputPin(ps.pinIdx);
+      if (block == this) {
+        return outputPorts[idx];
+      } else {
+        if (ps.isPort) { throw new DspError("can't get Destination Pin for a graph"); }
+        auto gb = dynamic_cast<DspInterface*>(block);
+        if (gb == nullptr) { throw new DspError("GetDestPin: Expecting a Block"); }
+        return gb->InputPin(ps.pinIdx);
+      }
     }
 
     // This function creates a second set of wires which bypass the ports of internal
@@ -840,7 +848,8 @@ namespace DspBlocks {
       InitBlocks();
     }
 
-    bool HasBeenProcessed(DspInterface* block) {
+    bool HasBeenProcessed(DspNode* block) {
+      if (block == this) { return true; }
       auto bptr = AssertIsBlock(block);
       // the outermost ports don't need processing
       auto &po = designContext.processing_order;
@@ -849,13 +858,25 @@ namespace DspBlocks {
     }
 
     // Look for blocks which are either pure sources by nature (they have no input pins), 
-    // or are the top level graph.
+    // or have all inputs connected to the top level graph ports.
 
     void FindSources() {
       sources.clear();
-      for (DspNode* blk : designContext.blocks) {
-        auto bptr = AssertIsBlock(blk);
-          if (blk->NInputPins() == 0) { sources.push_back(blk); }
+      for (DspNode* node : designContext.blocks) {
+        auto blk = dynamic_cast<DspInterface*>(node);
+        if (blk) {  // ignore subgraphs
+          bool addToSources = true;
+          for (int i=0; i < blk->NInputPins(); i++) {
+            auto pin = blk->InputPin(i);
+            if (GetBlock(pin.wire->src.blockId) != this) {
+              addToSources = false;
+              break;
+            }
+          }
+          if (addToSources) {
+            sources.push_back(blk);
+          }
+        }
       }
     }
 
@@ -865,15 +886,17 @@ namespace DspBlocks {
     // OutputPorts are also not processed, since they merely forward buffer pointers and
     // don't copy data.
 
-    bool CanProcessBlock(DspInterface* block) {
+    bool CanProcessBlock(DspInterface* node) {
+      auto block = AssertIsBlock(node);
       for (int i=0; i < block->NInputPins(); i++) {
         auto& pin = block->InputPin(i);
-        if (!HasBeenProcessed(AssertIsBlock(GetBlock(pin.wire->src.blockId)))) { return false; }
+        if (!HasBeenProcessed(GetBlock(pin.wire->src.blockId))) { return false; }
       }
       return true;
     }
 
-    void MarkAsProcessed(DspInterface* block) {
+    void MarkAsProcessed(DspInterface* node) {
+      auto block = AssertIsBlock(node);
       designContext.processing_order.push_back(block);
     }
 
@@ -909,8 +932,9 @@ namespace DspBlocks {
           for (int i=0; i < block->NOutputPins(); i++) {
             auto& pin = block->OutputPin(i);
             for (auto& sink : pin.wire->dst) {
-              auto* nextBlock = AssertIsBlock(GetBlock(sink.blockId));
-              DetermineProcessingOrder(nextBlock);
+              auto* nextBlock = GetBlock(sink.blockId);
+              if (nextBlock == this) continue;
+              DetermineProcessingOrder(AssertIsBlock(nextBlock));
             }
           }
         }
