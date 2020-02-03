@@ -629,7 +629,7 @@ namespace DspBlocks {
     virtual void Init(WireSpec wiresSpec) {}
 
     // When used by a host, it is assumed all WireSpecs are the same. So this setup
-    // function set the WireSpecs of all input and output ports of the graph.
+    // function sets the WireSpecs of all input and output ports of the graph.
 
     void TopLevelSetup(WireSpec wireSpec) {
       auto func = [&](vector<Pin>& pins) {
@@ -819,11 +819,12 @@ namespace DspBlocks {
       bool did_something_this_time = false;
       do {
         did_something_this_time = false;
-        for (auto& block : blocks) {
-          auto bptr = AssertIsBlock(block);
-          if (bptr->UpdateWireSpecs()) {
+        for (auto& node : designContext.processing_order) {
+          auto block = AssertIsBlock(node);
+          if (block->UpdateWireSpecs()) {
             did_something = true;
-            did_something_this_time = true; }
+            did_something_this_time = true;
+          }
         }
       } while (did_something_this_time);
       func(inputPorts, inputPins);
@@ -835,9 +836,15 @@ namespace DspBlocks {
     }
 
     virtual bool AllWireSpecsReady() {
+      bool allReady = true;
       // check all contained blocks
-      for (auto& block : blocks) {
-          auto bptr = AssertIsBlock(block);
+      for (auto& node : designContext.blocks) {
+        auto block = dynamic_cast<DspInterface*>(node);
+        if (block) {
+          if (!block->AllWireSpecsReady()) {
+            return false;
+          }
+        }
       }
       return true;
     }
@@ -964,7 +971,9 @@ namespace DspBlocks {
     }
 
     void InitBlocks() {
-      for (auto& block: designContext.blocks) { AssertIsBlock(block)->Init(); }
+      for (auto& block : designContext.processing_order) {
+        AssertIsBlock(block)->Init();
+      }
     }
 
     void Process() {
