@@ -10,7 +10,7 @@ using namespace DspBlocks;
 
 int main() {
   float SR;
-  int nChannels;
+  int nChannels = 0;
   int nSamples;
   int bufSiz = 128;
   

@@ -8,7 +8,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug",
-            "program": "${workspaceFolder}/../CoreDspTest/DerivedData/CoreDspTest/Build/Products/Debug/CoreDspTest",
+            "program": "${workspaceFolder}/DerivedData/CoreDspTest/Build/Products/Debug/CoreDspTest",
             "args": [],
             "cwd": "${workspaceFolder}"
         }

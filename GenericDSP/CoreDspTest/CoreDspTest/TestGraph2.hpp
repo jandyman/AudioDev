@@ -66,9 +66,7 @@ namespace DspBlocks {
         eqSpecs[0].frequency = 200;
         eqSpecs[0].enabled = true;
         rightEq.eqBlock.SetEqSpecs(eqSpecs);
-        Describe(false);
         CompleteComposition();
-        Describe(true);
       } catch (DspError err) {
         cout << err.msg;
       }
@@ -78,7 +76,7 @@ namespace DspBlocks {
       try {
         PrepareForOperation(ws);
         printf("\n");
-        Describe(true);
+        Describe(true, true);
         // initialize blocks
         InitBlocks();
       } catch (DspError err) {

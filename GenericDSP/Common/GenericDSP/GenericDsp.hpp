@@ -94,6 +94,13 @@ namespace DspBlocks {
       return retval;
     }
 
+    void FreeBuffers(float** buffers) {
+      for (int i = 0; i < nChannels; i++) {
+        delete buffers[i];
+      }
+      delete buffers;
+    }
+
     bool operator==(const WireSpec &ws) const {
       return (nChannels == ws.nChannels && bufSize == ws.bufSize && sampleRate == ws.sampleRate);
     }
@@ -156,15 +163,6 @@ namespace DspBlocks {
       strm << "bufId: " << bufferId << " ";
       strm << wireSpec.Description() << " ";
       return strm.str();
-    }
-
-    ~ConnectionWire() {
-      if (buffers != nullptr) {
-        for (int i=0; i < wireSpec.nChannels; i++) {
-          delete buffers[i];
-        }
-        delete buffers;
-      }
     }
 
     float **Buffers() { return buffers; }
@@ -355,6 +353,10 @@ namespace DspBlocks {
       connectionWires.reserve(200);  // TODO TMP KLUDGE
     }
 
+    ~DesignContext() {
+      // FreeBufferPool();
+    }
+
     void AddBlock(DspNode* block) {
       if (find(blocks.begin(), blocks.end(), block) == blocks.end()) {
         block->SetId(blockCounter++);
@@ -452,6 +454,12 @@ namespace DspBlocks {
       }
     }
 
+    void FreeBufferPool() {
+      for (auto& bufSpec : bufferPool) {
+        bufSpec.wireSpec.FreeBuffers(bufSpec.buffers); 
+      }
+    }
+
   };
 
   //  Base class of a graph. A graph is itself a block, to support heirarchy. It can
@@ -518,11 +526,9 @@ namespace DspBlocks {
 
   struct TopLevelGraph : GraphBase {
     std::ostream& cout = std::cout;
-
-    // used for determining processing order
-    vector<DspNode*> sources;
-    // master WireSpec
-    WireSpec wireSpec;
+    
+    vector<DspNode*> sources;  // used for determining processing order  
+    WireSpec wireSpec;         // master WireSpec
     vector<Pin> inputPins;
     vector<Pin> outputPins;
     vector<Pin> inputPorts;
@@ -906,44 +912,47 @@ namespace DspBlocks {
       return ss.str();
     }
 
-    void DescribeWire(Wire& wire) {
+    void DescribeWire(Wire& wire, bool bufferId = false, bool wireSpec = false) {
       string wDesc = wire.Description();
       string psDesc = DescribePinSpec(wire.src);
-      cout << "ID: " << wire.Id << " Src: " << psDesc << " Dst:";
+      auto* cWire = dynamic_cast<ConnectionWire*>(&wire);
+      cout << "ID: " << wire.Id;
+      if (cWire != nullptr) {
+        if (bufferId) { cout << " BufId: " << cWire->bufferId; }
+        if (wireSpec) { cout << " " << cWire->wireSpec.Description(); }
+      }
+      cout << " Src: " << psDesc << " Dst:";
       for (auto& pinSpec : wire.dst) {
         cout << " " << DescribePinSpec(pinSpec);
       }
       cout << "\n";
     }
 
-    void Describe(bool connectionMode) {
-      cout << "Blocks:" << "\n";
+    void Describe(bool bufferIds = false, bool wireSpecs = false) {
+      cout << "\nBlocks:" << "\n";
       auto& dc = designContext;
-      for (auto& blk : blocks) {
+      for (auto& blk : dc.blocks) {
         cout << "ID: " << dc.GetId(blk) << " Type: " << dc.GetInstanceName(blk) << "\n";
       }
-      cout << "Wires:" << "\n";
-      if (connectionMode) {
-        for (auto& wire : dc.connectionWires) { DescribeWire(wire); }
-      } else {
-        for (auto& wire : dc.designWires) { DescribeWire(wire); }
-      }
       if (dc.processing_order.size() > 0) {
-        cout << "Processing Order: \n";
+        cout << "\nProcessing Order: \n";
         for (auto& blk : dc.processing_order) {
           cout << "ID: " << dc.GetId(blk) << " Type: " << blk->GetClassName() << "\n";
         }
-        cout << "Wires by Processing Order: \n";
+        cout << "\nWires by Processing Order: \n";
         for (auto& blk : dc.processing_order) {
-          for (int i=0; i < blk->NOutputPins(); i++) {
+          for (int i = 0; i < blk->NOutputPins(); i++) {
             auto& pin = blk->OutputPin(i);
-            DescribeWire(*pin.wire);
+            DescribeWire(*pin.wire, bufferIds, wireSpecs);
           }
+        }
+      } else {
+        cout << "\nWires:" << "\n";
+        for (auto& wire : dc.designWires) {
+          DescribeWire(wire);
         }
       }
     }
-
-
 
   };
 

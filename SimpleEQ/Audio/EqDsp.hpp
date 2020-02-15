@@ -82,9 +82,9 @@ namespace DspBlocks {
         }
         wireSpec = WireSpec(2, 44100, 128);
 
-        designContext.Describe(false);
+        Describe(false);
         CompleteComposition();
-        designContext.Describe(true);
+        Describe(true);
         
       } catch (DspError err) {
         cout << err.msg;
@@ -106,7 +106,7 @@ namespace DspBlocks {
       try {
         PrepareForOperation(ws);
         printf("\n");
-        dc.Describe(true);
+        Describe(true);
         // initialize blocks
         InitBlocks();
         UpdateGains();
