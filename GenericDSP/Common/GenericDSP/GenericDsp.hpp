@@ -774,7 +774,7 @@ namespace DspBlocks {
     void PrepareForOperation(WireSpec ws) {
       TopLevelSetup(ws);
       UpdateWireSpecs();
-      AllocateOutputBuffers();
+      AllocateBuffers();
       InitBlocks();
     }
 
@@ -876,10 +876,9 @@ namespace DspBlocks {
       for (auto& block : sources) {
         DetermineProcessingOrder(AssertIsBlock(block));
       }
-      // ConnectOutputPorts();
     }
 
-    void AllocateOutputBuffers() {
+    void AllocateBuffers() {
       for (auto& block: designContext.processing_order) {
         AllocateOutputBuffers(block);
         FreeInputBuffers(block);
@@ -900,7 +899,9 @@ namespace DspBlocks {
     }
 
     void Process() {
-      for (auto& block: designContext.processing_order) { block->Process(); }
+      for (auto& block : designContext.processing_order) {
+        block->Process();
+      }
     }
 
     string DescribePinSpec(PinSpec& ps) {

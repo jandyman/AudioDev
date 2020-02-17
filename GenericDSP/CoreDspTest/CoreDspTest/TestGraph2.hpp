@@ -30,6 +30,7 @@ namespace DspBlocks {
       Connect(this, &eqBlock);
       Connect(&eqBlock, &gainBlock);
       Connect(&gainBlock, this);
+      gainBlock.SetGainDb(0);
     }
   };
   

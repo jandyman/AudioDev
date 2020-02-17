@@ -34,16 +34,7 @@
          contextName = "main:main.cpp">
          <PersistentStrings>
             <PersistentString
-               value = "(float(*)[16])*iBufs">
-            </PersistentString>
-            <PersistentString
-               value = "(float (*)[16])*inSamps">
-            </PersistentString>
-            <PersistentString
-               value = "(float(*)[10])*oBufs">
-            </PersistentString>
-            <PersistentString
-               value = "(float (*)[10])*(outSamps)">
+               value = "p eqGraph.dc.bufferPool[0]">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

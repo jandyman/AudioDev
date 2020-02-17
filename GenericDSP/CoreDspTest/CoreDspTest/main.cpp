@@ -23,6 +23,7 @@ int main() {
   WireSpec ws(nChannels, SR, bufSiz);
 
   EqMasterGraph eqGraph;
+  eqGraph.Describe();
   eqGraph.Init(ws);
 
   float* iBufs[2];
