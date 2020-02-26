@@ -1,0 +1,1 @@
+clang -std=gnu++14 -shared -fpic ../CoefGen.cpp -o coefgen.dylib

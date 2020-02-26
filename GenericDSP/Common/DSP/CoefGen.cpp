@@ -71,28 +71,28 @@ namespace CoefGen {
   
   TFunc2ndOrder lfShelving6(double fc, double boost, double fs) {
     double gain = pow(10,abs(boost/20));
-    double snum, sden;
+    double zero, pole;
     if (boost <= 0) {
-      snum = -1; sden = -gain;
+      zero = -1; pole = -gain;
     } else {
-      snum = -gain; sden = -1;
+      zero = -gain; pole = -1;
     }
-    Poly2ndOrder polyNum(snum, 0);
-    Poly2ndOrder polyDen(sden, 0);
+    Poly2ndOrder polyNum(zero, 0);
+    Poly2ndOrder polyDen(pole, 0);
     return bilinear(polyNum, polyDen, fc, fs);
   }
 
   TFunc2ndOrder hfShelving6(double fc, double boost, double fs) {
-    double gain = pow(10,abs(boost/20));
+    double gain = pow(10,-abs(boost/20));
     double gaincomp;
-    double snum, sden;
+    double zero, pole;
     if (boost >= 0) {
-      snum = -1; sden = -gain; gaincomp = gain;
+      pole = -1; zero = -gain; gaincomp = 1/gain;
     } else {
-      snum = -gain; sden = -1; gaincomp = 1/gain;
+      zero = -gain; pole = -1; gaincomp = gain;
     }
-    Poly2ndOrder polyNum(snum, 0);
-    Poly2ndOrder polyDen(sden, 0);
+    Poly2ndOrder polyNum(zero, 0);
+    Poly2ndOrder polyDen(pole, 0);
     return bilinear(polyNum, polyDen, fc, fs, gaincomp);
   }
 
@@ -161,12 +161,39 @@ namespace CoefGen {
     }
   }
 
-  vector<float> BiquadChainImpResp(vDSP_biquad_Setup setup, int nStages, int len) {
-    vector<float> impulse(len, 0); impulse[0] = 1;
-    vector<float> response(len);
-    vector<float> dlyBuf(4 * nStages);
-    vDSP_biquad(setup, &dlyBuf[0], &impulse[0], 1, &response[0], 1, len);
-    return response;
+  int EqCoefs(double *coefs, uint32_t type, uint32_t order,
+              double fc, double boost, double q, double fs) {
+    if (order > 2 || order == 0) { return -1; }
+    TFunc2ndOrder tf;
+    switch(type) {
+      case 0:
+        tf = (order == 1) ? lfShelving6(fc, boost, fs) : lfShelving12(fc, boost, fs);
+        break;
+      case 1:
+        tf = (order == 1) ? hfShelving6(fc, boost, fs) : lfShelving12(fc, boost, fs);
+        break;
+      case 2:
+        if (order == 1) { return -1; }
+        tf = peaking(fc, boost, q, fs);
+        break;
+      default:
+        return -1;
+    }
+    tf.FillCoefs(coefs);
+    return 0;
   }
+
+  extern "C" void AddTwo(double in, double* out) {
+    out[0] = in;
+    out[1] = in + 2.5;
+  }
+
+//  vector<float> BiquadChainImpResp(vDSP_biquad_Setup setup, int nStages, int len) {
+//    vector<float> impulse(len, 0); impulse[0] = 1;
+//    vector<float> response(len);
+//    vector<float> dlyBuf(4 * nStages);
+//    vDSP_biquad(setup, &dlyBuf[0], &impulse[0], 1, &response[0], 1, len);
+//    return response;
+//  }
 
 }

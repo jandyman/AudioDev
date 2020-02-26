@@ -54,7 +54,7 @@ namespace DspBlocks {
         Connect(&rightEq, &mixer, 1);
         Connect(&mixer, &masterEq);
         Connect(&masterEq, &joiner, 0);
-        Connect(&nullSrc, &joiner, 1);
+        Connect(&masterEq, &joiner, 1);
         Connect(&joiner, this);
         auto eqSpecs = vector<EqSpec>(1);
         eqSpecs[0].dB = 12;
@@ -67,6 +67,7 @@ namespace DspBlocks {
         eqSpecs[0].frequency = 200;
         eqSpecs[0].enabled = true;
         rightEq.eqBlock.SetEqSpecs(eqSpecs);
+        leftEq.gainBlock.SetGain(0);
         CompleteComposition();
       } catch (DspError err) {
         cout << err.msg;

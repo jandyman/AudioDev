@@ -9,7 +9,7 @@
 
 #include <complex>
 #include <vector>
-#include <Accelerate/Accelerate.h>
+// #include <Accelerate/Accelerate.h>
 
 namespace CoefGen {
   using namespace std;
@@ -76,13 +76,12 @@ namespace CoefGen {
   struct TFunc2ndOrder {
     Poly2ndOrder xCoefs;
     Poly2ndOrder yCoefs;
-    
-    TFunc2ndOrder() { }
 
+    TFunc2ndOrder() { }
     TFunc2ndOrder(Poly2ndOrder xPoly, Poly2ndOrder yPoly) {
       xCoefs = xPoly; yCoefs = yPoly;
     }
-    
+
     void normalizeGain(double xNormFreq) {
       double scalar = 1.0 / yCoefs.c0;
       xCoefs.Scale(scalar);
@@ -90,7 +89,7 @@ namespace CoefGen {
       scalar = yCoefs.Eval(xNormFreq)/xCoefs.Eval(xNormFreq);
       xCoefs.Scale(scalar);
     }
-    
+
     void FillCoefs(double *coefs) {
       coefs[0] = xCoefs.c0;
       coefs[1] = xCoefs.c1;
@@ -103,7 +102,7 @@ namespace CoefGen {
       xCoefs.ScaleFrequency(scalar);
       yCoefs.ScaleFrequency(scalar);
     }
-    
+
   };
 
   Coefs PeakingCoefs(double fc, double dB, double q, double fs);
@@ -155,9 +154,10 @@ namespace CoefGen {
   TFunc2ndOrder hfShelving12(double fc, double boost, double fs);
   TFunc2ndOrder hfShelving6(double fc, double boost, double fs);
   Coefs tf2Coefs(TFunc2ndOrder tf);
-
-  vector<float> BiquadChainImpResp(vDSP_biquad_Setup setup, int nStages, int len);
-
+  extern "C" int EqCoefs(double *coefs, uint32_t type, uint32_t order,
+                         double fc, double boost, double q, double fs);
+  
+  //  vector<float> BiquadChainImpResp(vDSP_biquad_Setup setup, int nStages, int len);
 
 }
 
