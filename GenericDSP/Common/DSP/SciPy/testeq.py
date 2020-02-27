@@ -18,8 +18,11 @@ import EQ
 x = EQ.hf_shelf_6(3000, 12, 44100)
 
 from ctypes import *
+import numpy as np
 coeflib = cdll.LoadLibrary('coefgen.dylib')
 coeflib.AddTwo.argtypes = [c_double, c_double * 2]
 result_type = c_double * 2
 result = result_type(0, 0)
 npresult = np.ctypeslib.as_array(result)
+coeflib.EqCoefs.argtypes = [c_double*5, c_int32, c_int32, c_double, c_double, c_double, c_double]
+coeflib.EqCoefs.restype = c_int32
