@@ -2,11 +2,11 @@
 #include <vector>
 #include <algorithm>
 #include "AudioFileIO.hpp"
-// #include "TestGraph.hpp"
-#include "TestGraph2.hpp"
+#include "EqDsp.hpp"
 
 using namespace std;
 using namespace DspBlocks;
+using namespace CoefGen;
 
 int main() {
   float SR;
@@ -22,7 +22,20 @@ int main() {
 
   WireSpec ws(nChannels, SR, bufSiz);
 
-  EqMasterGraph eqGraph;
+  EqDsp eqGraph;
+  // initialize parameters
+  auto eqSpecs = vector<EqSpec>(1);
+  eqSpecs[0].dB = 12;
+  eqSpecs[0].enabled = true;
+  eqSpecs[0].type = EqSpec::hiShelf;
+  eqSpecs[0].frequency = 3000;
+  eqSpecs[0].order = 1;
+  eqGraph.EQs[0].eqBlock.SetEqSpecs(eqSpecs);
+  eqSpecs[0].type = EqSpec::loShelf;
+  eqSpecs[0].frequency = 200;
+  eqSpecs[0].enabled = true;
+  eqGraph.EQs[1].eqBlock.SetEqSpecs(eqSpecs);
+
   eqGraph.Describe();
   eqGraph.Init(ws);
 

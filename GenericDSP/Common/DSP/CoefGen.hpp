@@ -9,7 +9,6 @@
 
 #include <complex>
 #include <vector>
-// #include <Accelerate/Accelerate.h>
 
 namespace CoefGen {
   using namespace std;

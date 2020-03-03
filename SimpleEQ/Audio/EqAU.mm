@@ -7,6 +7,7 @@
 //
 
 #import "EqAU.h"
+#define _LIBCPP_DEBUG
 #include "EqDsp.hpp"
 #include "MiscDsp.hpp"
 #include "DspJson.hpp"

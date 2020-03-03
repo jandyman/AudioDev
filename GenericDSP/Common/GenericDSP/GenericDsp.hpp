@@ -349,9 +349,11 @@ namespace DspBlocks {
     int WireIdCounter = 0;
     int blockCounter = 0;
 
-    DesignContext() {
-      connectionWires.reserve(200);  // TODO TMP KLUDGE
-    }
+    DesignContext();
+//    DesignContext() {
+//      connectionWires.reserve(200);  // TODO TMP KLUDGE
+//      blocks.reserve(200);           // TODO TMP KLUDGE
+//    }
 
     ~DesignContext() {
       // FreeBufferPool();
@@ -460,6 +462,11 @@ namespace DspBlocks {
       }
     }
 
+    int ProcessingOrderPosition(DspBlock* block) {
+      auto it = std::find(processing_order.begin(), processing_order.end(), block);
+      return std::distance(processing_order.begin(), it);
+    }
+
   };
 
   //  Base class of a graph. A graph is itself a block, to support heirarchy. It can
@@ -469,13 +476,13 @@ namespace DspBlocks {
   struct GraphBase: DspNode {
     template<typename T> using vector = std::vector<T>;
 
-    DesignContext& designContext;
+    DesignContext* dc;
     vector<DspNode*> blocks;
     int nInputPins;
     int nOutputPins;
 
-    GraphBase(DesignContext& dc, int nInputPins, int nOutputPins) : 
-    designContext(dc), nInputPins(nInputPins), nOutputPins(nOutputPins) { }
+    GraphBase(DesignContext* dc, int nInputPins, int nOutputPins) :
+    dc(dc), nInputPins(nInputPins), nOutputPins(nOutputPins) { }
 
     const string GetClassName() override { return "Graph"; }
     const string GetInstanceName() override { return ""; }
@@ -487,7 +494,7 @@ namespace DspBlocks {
 
     // only adds the block if the block wasn't there before
     void AddBlock(DspNode* block) {
-      designContext.AddBlock(block);
+      dc->AddBlock(block);
       if (block != this) {
         auto it = find(blocks.begin(), blocks.end(), block);
         if (it == blocks.end()) {
@@ -502,12 +509,12 @@ namespace DspBlocks {
       auto srcPinSpec = PinSpec(src->GetId(), srcPinIdx, src == this);
       auto dstPinSpec = PinSpec(dst->GetId(), dstPinIdx, dst == this);
       // if the srcPin has no associated wire, create one
-      auto srcWire = designContext.DesignWireForOutput(srcPinSpec);
-      if (designContext.DesignWireForInput(dstPinSpec) != nullptr) {
+      auto srcWire = dc->DesignWireForOutput(srcPinSpec);
+      if (dc->DesignWireForInput(dstPinSpec) != nullptr) {
         throw new DspError("attempt to connect output which is already connected");
       }
       if (srcWire == nullptr) {
-        srcWire = designContext.AddDesignWire();
+        srcWire = dc->AddDesignWire();
       }
       srcWire->AddConnection(srcPinSpec, dstPinSpec);
     }
@@ -527,25 +534,30 @@ namespace DspBlocks {
   struct TopLevelGraph : GraphBase {
     std::ostream& cout = std::cout;
     
-    vector<DspNode*> sources;  // used for determining processing order  
+    vector<DspNode*> sources;  // used for determining processing order
     WireSpec wireSpec;         // master WireSpec
     vector<Pin> inputPins;
     vector<Pin> outputPins;
     vector<Pin> inputPorts;
     vector<Pin> outputPorts;
 
-    TopLevelGraph(DesignContext& dc, WireSpec ws, int nInputPins, int nOutputPins) :
-    TopLevelGraph(dc, nInputPins, nOutputPins) {
+    TopLevelGraph(WireSpec ws, int nInputPins, int nOutputPins) :
+    TopLevelGraph(nInputPins, nOutputPins) {
       wireSpec = ws;
     }
 
-    TopLevelGraph(DesignContext& dc, int nInputPins, int nOutputPins) :
+    TopLevelGraph(int nInputPins, int nOutputPins) :
     GraphBase(dc, nInputPins, nOutputPins) {
       inputPins = vector<Pin>(nInputPins);
       outputPins = vector<Pin>(nOutputPins);
       inputPorts = vector<Pin>(nInputPins);
       outputPorts = vector<Pin>(nOutputPins);
-      designContext.AddBlock(this);
+      dc = new DesignContext();
+      dc->AddBlock(this);
+    }
+
+    ~TopLevelGraph() {
+      delete dc;
     }
 
     virtual void Init(WireSpec wiresSpec) {}
@@ -587,11 +599,11 @@ namespace DspBlocks {
       return outputPorts[0].wire;
     }
 
-    DspNode* GetBlock(int id) { return designContext.GetBlock(id); }
+    DspNode* GetBlock(int id) { return dc->GetBlock(id); }
 
     vector<PinSpec> FlattenDestinationNet(PinSpec& source) {
       vector<PinSpec> dsts;
-      auto sourceWire = designContext.DesignWireForOutput(source);
+      auto sourceWire = dc->DesignWireForOutput(source);
       for (auto& dst : sourceWire->dst) {
         // if destination block is a simple block, just add to dsts
         auto gb = dynamic_cast<GraphBase*>(GetBlock(dst.blockId));
@@ -646,10 +658,10 @@ namespace DspBlocks {
     // graphs, essentially flattening the graph, which make subsequent operations simpler
 
     void CompleteComposition() {
-      designContext.connectionWires.clear();
+      dc->connectionWires.clear();
       // utility function to create and add wire
       auto addWire = [&](PinSpec src, vector<PinSpec> dst) {
-        auto wire = designContext.AddConnectionWire();
+        auto wire = dc->AddConnectionWire();
         wire->dst = dst;
         wire->src = src;
         // now patch the blocks to use the wire
@@ -665,7 +677,7 @@ namespace DspBlocks {
         addWire(src, dsts);
       }
       // flatten destination for all blocks in designContext
-      for (auto block : designContext.blocks) {
+      for (auto block : dc->blocks) {
         auto bptr = dynamic_cast<DspBlock*>(block);
         if (bptr != nullptr) { // ignore subgraphs
           for (int i=0; i < block->NOutputPins(); i++) {
@@ -741,7 +753,7 @@ namespace DspBlocks {
       bool did_something_this_time = false;
       do {
         did_something_this_time = false;
-        for (auto& node : designContext.processing_order) {
+        for (auto& node : dc->processing_order) {
           auto block = AssertIsBlock(node);
           if (block->UpdateWireSpecs()) {
             did_something = true;
@@ -760,7 +772,7 @@ namespace DspBlocks {
     virtual bool AllWireSpecsReady() {
       bool allReady = true;
       // check all contained blocks
-      for (auto& node : designContext.blocks) {
+      for (auto& node : dc->blocks) {
         auto block = dynamic_cast<DspBlock*>(node);
         if (block) {
           if (!block->AllWireSpecsReady()) {
@@ -782,7 +794,7 @@ namespace DspBlocks {
       if (block == this) { return true; }
       auto bptr = AssertIsBlock(block);
       // the outermost ports don't need processing
-      auto &po = designContext.processing_order;
+      auto &po = dc->processing_order;
       return (find(po.begin(), po.end(), block) != po.end());
       return false;
     }
@@ -792,7 +804,7 @@ namespace DspBlocks {
 
     void FindSources() {
       sources.clear();
-      for (DspNode* node : designContext.blocks) {
+      for (DspNode* node : dc->blocks) {
         auto blk = dynamic_cast<DspBlock*>(node);
         if (blk) {  // ignore subgraphs
           bool addToSources = true;
@@ -827,7 +839,7 @@ namespace DspBlocks {
 
     void MarkAsProcessed(DspBlock* node) {
       auto block = AssertIsBlock(node);
-      designContext.processing_order.push_back(block);
+      dc->processing_order.push_back(block);
     }
 
     // After a block has been processed, we usually will be able to reuse the input
@@ -837,14 +849,19 @@ namespace DspBlocks {
     // and we are at "top level", meaning the buffer was supplied by the host.
 
     void FreeInputBuffers(DspBlock* block) {
+      int proc_position = dc->ProcessingOrderPosition(block);
       for (int i=0; i < block->NInputPins(); i++) {
         auto& wire = block->InputPin(i).wire;
-        bool canFree = true;
         for (auto& dst : wire->dst) {
-          if (HasBeenProcessed(AssertIsBlock(GetBlock(dst.blockId)))) continue;
-          canFree = false;
+          auto dst_ptr = AssertIsBlock(GetBlock(dst.blockId));
+          int dst_position = dc->ProcessingOrderPosition(dst_ptr);
+          if (dst_position <= proc_position) continue;
+          return;
         }
-        if (canFree) { designContext.FreeBuffer(wire); }
+        if (dc->GetBlock(wire->src.blockId) == this) {
+          return;
+        }
+        dc->FreeBuffer(wire);
       }
     }
 
@@ -879,27 +896,28 @@ namespace DspBlocks {
     }
 
     void AllocateBuffers() {
-      for (auto& block: designContext.processing_order) {
+      for (auto& block: dc->processing_order) {
         AllocateOutputBuffers(block);
         FreeInputBuffers(block);
+        Describe(true);   // tmp
       }
     }
 
     void AllocateOutputBuffers(DspBlock* block) {
       for (int i=0; i < block->NOutputPins(); i++) {
         auto& pin = block->OutputPin(i);
-        designContext.AllocateOutputBuffer(pin);
+        dc->AllocateOutputBuffer(pin);
       }
     }
 
     void InitBlocks() {
-      for (auto& block : designContext.processing_order) {
+      for (auto& block : dc->processing_order) {
         AssertIsBlock(block)->Init();
       }
     }
 
     void Process() {
-      for (auto& block : designContext.processing_order) {
+      for (auto& block : dc->processing_order) {
         block->Process();
       }
     }
@@ -908,7 +926,7 @@ namespace DspBlocks {
       std::ostringstream ss;
       auto* block = GetBlock(ps.blockId);
       string type = ps.isPort ? "Port " : "Pin ";
-      auto name = designContext.GetInstanceName(block);
+      auto name = dc->GetInstanceName(block);
       ss << "{Blk " << name << " " << type << ps.pinIdx << "}";
       return ss.str();
     }
@@ -931,7 +949,7 @@ namespace DspBlocks {
 
     void Describe(bool bufferIds = false, bool wireSpecs = false) {
       cout << "\nBlocks:" << "\n";
-      auto& dc = designContext;
+      auto& dc = *this->dc;
       for (auto& blk : dc.blocks) {
         cout << "ID: " << dc.GetId(blk) << " Type: " << dc.GetInstanceName(blk) << "\n";
       }

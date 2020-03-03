@@ -9,6 +9,7 @@
 #pragma once
 
 #include "GenericDsp.hpp"
+#include <Accelerate/Accelerate.h>
 #include "CoefGen.hpp"
 #include <algorithm>
 #include <mutex>
