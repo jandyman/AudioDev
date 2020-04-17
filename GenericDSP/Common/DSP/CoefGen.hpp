@@ -9,29 +9,15 @@
 
 #include <complex>
 #include <vector>
+#include <array>
 
 namespace CoefGen {
-  using namespace std;
-  
-  struct Coefs {
-    double c0 = 0;
-    double c1 = 0;
-    double c2 = 0;
-    double c3 = 0;
-    double c4 = 0;
 
-    void fillArray(double* array) {
-      array[0] = c0;
-      array[1] = c1;
-      array[2] = c2;
-      array[3] = c3;
-      array[4] = c4;
-    }
-  };
+  typedef std::array<double,5> Coefs;
   
   double prewarp(double sfreq, double Fs);
   
-  complex<double> s2z(complex<double> s, double T);
+  std::complex<double> s2z(std::complex<double> s, double T);
 
   struct Roots2ndOrder;
   
@@ -57,7 +43,7 @@ namespace CoefGen {
     }
     
     // Args must be real roots or complex conjugates!!
-    Poly2ndOrder(complex<double> root1, complex<double> root2) {
+    Poly2ndOrder(std::complex<double> root1, std::complex<double> root2) {
       c0 = 1;
       c1 = -((root1 + root2)).real();
       c2 = (root1 * root2).real();
@@ -121,7 +107,7 @@ namespace CoefGen {
       return ((enabled == false) || (dB == 0)) ? false : true;
     }
 
-    Coefs Coefs(double sampleRate) {
+    Coefs GetCoefs(double sampleRate) {
       switch (type) {
         case loShelf:
           return LfShelvingCoefs(order, frequency, dB, sampleRate);
@@ -130,17 +116,18 @@ namespace CoefGen {
         case peaking:
           return PeakingCoefs(frequency, dB, Q, sampleRate);
         default:
-          struct Coefs coefs = { 0,0,0,0,0 };
+          Coefs coefs = { 0,0,0,0,0 };
           return coefs;
       }
     }
 
-    static vector<double> ToCoefs(vector<EqSpec> specs, double sampleRate) {
+    static std::vector<double> ToCoefs(std::vector<EqSpec> specs, double sampleRate) {
+      using namespace std;
       auto retval = vector<double>(specs.size() * 5);
       int idx = 0;
       for (auto spec: specs) {
-        auto coefs = spec.Coefs(sampleRate);
-        coefs.fillArray(&retval[idx]); idx += 5;
+        auto coefs = spec.GetCoefs(sampleRate);
+        retval.insert(retval.begin() + (5*idx++), begin(coefs), end(coefs));
       }
       return retval;
     }

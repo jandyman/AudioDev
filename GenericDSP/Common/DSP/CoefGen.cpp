@@ -15,7 +15,7 @@ namespace CoefGen {
     return (2/T) * tan(sfreq * c * (T/2)) / c;
   }
   
-  complex<double> s2z(complex<double> s, double T) {
+  std::complex<double> s2z(std::complex<double> s, double T) {
     return (1.0+s*T/2.0)/(1.0-s*T/2.0);
   }
 
@@ -97,6 +97,7 @@ namespace CoefGen {
   }
 
   TFunc2ndOrder lfShelving12(double fc, double boost, double fs) {
+    using namespace std;
     complex<double> r1, r2, rz, rp;
     complex<double> x(-1,1);
     complex<double> y(1/sqrt(2.0), 0);
@@ -117,6 +118,7 @@ namespace CoefGen {
   }
   
   TFunc2ndOrder hfShelving12(double fc, double boost, double fs) {
+    using namespace std;
     complex<double> r1, r2, rz, rp;
     complex<double> x(-1,1);
     r1 = (1/sqrt(2.0)) * x;

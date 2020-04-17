@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A123EF89240DACA3002DB3A0 /* GenericDsp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A123EF88240DACA3002DB3A0 /* GenericDsp.cpp */; };
 		A182D9F021475B1C0003A0B9 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A182D9EF21475B1C0003A0B9 /* main.cpp */; };
 		A182D9FB21475CD60003A0B9 /* AudioFileIO.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A182D9F921475CD60003A0B9 /* AudioFileIO.cpp */; };
 		A182DA0021475D890003A0B9 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A182D9FD21475D880003A0B9 /* Accelerate.framework */; };
@@ -29,7 +28,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		A123EF88240DACA3002DB3A0 /* GenericDsp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GenericDsp.cpp; sourceTree = "<group>"; };
 		A123EF8A240DB0B7002DB3A0 /* EqDsp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = EqDsp.hpp; sourceTree = "<group>"; };
 		A16A97BB22014F2F0003E87E /* MiscBlocks.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = MiscBlocks.hpp; path = ../../Common/GenericDSP/MiscBlocks.hpp; sourceTree = "<group>"; };
 		A182D9EC21475B1C0003A0B9 /* CoreDspTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CoreDspTest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -85,7 +83,6 @@
 			isa = PBXGroup;
 			children = (
 				A123EF8A240DB0B7002DB3A0 /* EqDsp.hpp */,
-				A123EF88240DACA3002DB3A0 /* GenericDsp.cpp */,
 				A182DA0A21476B340003A0B9 /* GenericDsp.hpp */,
 				A1F9F22E2203D77D008CC101 /* CoefGen.cpp */,
 				A18E65BA22001FC700D9A005 /* CoefGen.hpp */,
@@ -172,7 +169,6 @@
 				A1F9F22F2203D77D008CC101 /* CoefGen.cpp in Sources */,
 				A182D9FB21475CD60003A0B9 /* AudioFileIO.cpp in Sources */,
 				A182D9F021475B1C0003A0B9 /* main.cpp in Sources */,
-				A123EF89240DACA3002DB3A0 /* GenericDsp.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

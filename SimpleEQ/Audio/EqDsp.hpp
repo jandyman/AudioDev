@@ -12,7 +12,6 @@
 #include "Mixers.hpp"
 #include "MiscDsp.hpp"
 #include "MiscBlocks.hpp"
-#include "json.hpp"
 
 namespace DspBlocks {
   
@@ -30,7 +29,7 @@ namespace DspBlocks {
       Connect(&gainBlock, this);
     }
     
-    EqBlock(DesignContext& dc) : eqBlock(6), GraphBase(dc,1,1) {}
+    EqBlock(DesignContext* dc) : eqBlock(6), GraphBase(dc,1,1) {}
     
   };
   
@@ -38,7 +37,6 @@ namespace DspBlocks {
     template<typename T> using vector = std::vector<T>;
     std::ostream& cout = std::cout;
     
-    DesignContext dc;
     vector<EqBlock> EQs;
     Splitter splitter;
     TwoInputMixer mixer;
@@ -53,7 +51,7 @@ namespace DspBlocks {
     bool rightEnable = true;
     
     EqDsp() :
-    TopLevelGraph(dc,1,1), splitter(2), joiner(2) {
+    TopLevelGraph(1,1), splitter(2), joiner(2) {
       try {
         // EQ[0] = left Eq, EQ[1] = right Eq
         EQs = vector<EqBlock>(2, EqBlock(dc));
@@ -73,6 +71,7 @@ namespace DspBlocks {
         Connect(&mixer, &joiner, 1);
         Connect(&mixer, &detectors[4]);
         Connect(&joiner, this);
+        CompleteComposition();
 
         // this stuff is just to get this working with an inactive AU
         analyzers = vector<AWV::FftAnalyzer*>(2, new AWV::FftAnalyzer(13)); // 2 << 13 = 16384
@@ -82,17 +81,11 @@ namespace DspBlocks {
         }
         wireSpec = WireSpec(2, 44100, 128);
 
-        Describe(false);
-        CompleteComposition();
-        Describe(true);
-        
       } catch (DspError err) {
         cout << err.msg;
         throw err;
       }
     }
-    
-    ~EqDsp() { for (auto a: analyzers) { delete(a); }}
     
     void UpdateGains() {
       EQs[0].gainBlock.SetEnable(leftEnable);
@@ -106,9 +99,9 @@ namespace DspBlocks {
       try {
         PrepareForOperation(ws);
         printf("\n");
-        Describe(true);
         // initialize blocks
         InitBlocks();
+        Describe(true);
         UpdateGains();
         for (auto a : analyzers) { a->SetSampleRate(ws.sampleRate); }
       } catch (DspError err) {
@@ -149,7 +142,7 @@ namespace DspBlocks {
       Connect(&gainBlock, this);
     }
 
-    nEqBlock(DesignContext& dc) : eqBlock(6), GraphBase(dc,1,1) {}
+    nEqBlock(DesignContext* dc) : eqBlock(6), GraphBase(dc,1,1) {}
 
   };
 
@@ -157,7 +150,6 @@ namespace DspBlocks {
     template<typename T> using vector = std::vector<T>;
     std::ostream& cout = std::cout;
 
-    DesignContext dc;
     vector<EqBlock> EQs;
     Splitter splitter;
     NInputMixer mixer;
@@ -167,7 +159,7 @@ namespace DspBlocks {
     int nChannels;
 
     nEqDsp(int nChannels) :
-    TopLevelGraph(dc,1,1), splitter(2), joiner(2), mixer(nChannels) { }
+    TopLevelGraph(1,1), splitter(2), joiner(2), mixer(nChannels) { }
 
     void Compose(int nChannels) {
       try {

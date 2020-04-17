@@ -49,7 +49,7 @@ class AudioPath {
                                          componentSubType: subtype,
                                          componentManufacturer: manufacturer,
                                          componentFlags: 0, componentFlagsMask: 0)
-    AUAudioUnit.registerSubclass(EqAU.self, as: desc, name: "EQ AU", version: UInt32.max)
+    AUAudioUnit.registerSubclass(EqAU.self, as: desc, name: "AWV: EQ AU", version: UInt32.max)
     AVAudioUnit.instantiate(with: desc,
                             options: .loadOutOfProcess,
                             completionHandler: auInstantiated)

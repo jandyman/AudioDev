@@ -47,22 +47,25 @@ namespace DspBlocks {
     }
     
     BiquadChain(vector<CoefGen::EqSpec> specs, double sampleRate) {
-      vector<double> allCoefs(specs.size() * 5);
-      int idx = 0, nStages = 0;
-      for (auto spec: specs) {
-        if (spec.needsCoefs()) {
-          auto coefs = spec.Coefs(sampleRate);
-          coefs.fillArray(&allCoefs[idx]); idx += 5;
-          nStages++;
-        }
-      }
-      if (nStages == 0) { // if no stages, build a dummy one
-        CoefGen::Coefs coefs;
-        coefs.c0 = 1.0;
-        coefs.fillArray(&allCoefs[0]);
+      using namespace std;
+      if (specs.size() == 0) {
+        // if no specs, create dummy coefs for one stage
+        auto allCoefs = vector<double>(5,0);
+        allCoefs[0] = 1;
         nStages = 1;
+        init(allCoefs, nStages);
+      } else {
+        vector<double> allCoefs(specs.size() * 5);
+        int idx = 0, nStages = 0;
+        for (auto spec: specs) {
+          if (spec.needsCoefs()) {
+            auto coefs = spec.GetCoefs(sampleRate);
+            allCoefs.insert(allCoefs.begin() + idx, coefs.begin(), coefs.end()); idx += 5;
+            nStages++;
+          }
+        }
+        init(allCoefs, nStages);
       }
-      init(allCoefs, nStages);
     }
     
     BiquadChain (const BiquadChain &obj) {

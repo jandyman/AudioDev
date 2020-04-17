@@ -349,11 +349,11 @@ namespace DspBlocks {
     int WireIdCounter = 0;
     int blockCounter = 0;
 
-    DesignContext();
-//    DesignContext() {
-//      connectionWires.reserve(200);  // TODO TMP KLUDGE
-//      blocks.reserve(200);           // TODO TMP KLUDGE
-//    }
+//    DesignContext();
+    DesignContext() {
+      connectionWires.reserve(200);  // TODO TMP KLUDGE
+      blocks.reserve(200);           // TODO TMP KLUDGE
+    }
 
     ~DesignContext() {
       // FreeBufferPool();

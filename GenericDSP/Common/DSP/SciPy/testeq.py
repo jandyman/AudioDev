@@ -7,6 +7,18 @@ def write_wavfile(filename, data):
   sf.write(data.astype(np.float32))
   sf.close()
   
+# =============================================================================
+# def write_wavfile(filename, data, length = 10.0):
+#   SR = 44100
+#   file = sf.SoundFile(filename, mode='w', format = 'WAV',
+#                            samplerate=SR, channels=1)
+#   nsamps = length * SR
+#   nreps = int(nsamps / data.size)
+#   for x in range(nreps):
+#     file.write(data.astype(np.float32))
+#   file.close()
+#   
+# =============================================================================
   
 # tf = EQ.lf_shelf_12(1000,18,44100)
 # tf2 = EQ.peaking(2000,18,10,44100)

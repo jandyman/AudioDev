@@ -12,10 +12,5 @@ namespace DspBlocks {
 
   // This file is just for debug, since Xcode/Clang make debugging header-only miserable.
 
-  DesignContext::DesignContext() {
-    connectionWires.reserve(200);  // TODO TMP KLUDGE
-    blocks.reserve(200);           // TODO TMP KLUDGE
-  }
-
 }
 
