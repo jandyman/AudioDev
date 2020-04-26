@@ -137,9 +137,12 @@ def freqs_plot_db(tf, minDb=-20, maxDb=20):
   grid(True, which='minor', linestyle="--")
   ylim(minDb, maxDb)
   
+def impulse(n):
+  return append(array(1.0), zeros(n-1))
+  
 def imp_resp(tf, n):
   """Compute impulse response of transfer function in the form (num, den"""
-  imp = append(array(1.0), zeros(n-1))
+  imp = impulse(n)
   return lfilter(tf[0], tf[1], imp)
 
   
