@@ -157,6 +157,8 @@ namespace DspBlocks {
     uint32_t NChannels() { return wireSpec.nChannels; }
     uint32_t BufSize() { return wireSpec.bufSize; }
     float SampleRate() { return wireSpec.sampleRate; }
+    WireSpec GetWireSpec() { return wireSpec; }
+    void SetWireSpec(WireSpec wireSpec) { this->wireSpec = wireSpec; }
 
     virtual const std::string Description() const {
       std::ostringstream strm;

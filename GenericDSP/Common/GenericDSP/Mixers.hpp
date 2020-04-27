@@ -73,19 +73,19 @@ namespace DspBlocks {
       if (!inPhase) _gain = -_gain;
     }
     
-    void Init() override {
-      UpdateGain();
-    }
-    
   public:
     void SetGain(float gain) { this->gain = gain; UpdateGain(); }
     void SetGainDb(float gainDb) { this->gain = AWV::Math::DbToLin(gainDb); UpdateGain(); }
     void SetEnable(bool enable) { this->enable = enable; UpdateGain(); }
     void SetInPhase(bool inPhase) { this->inPhase = inPhase; UpdateGain(); }
-    float GetGain() { return gain; }
-    float GetGainDb() { return AWV::Math::LinToDb(gain); }
-    bool GetEnable() { return enable; }
-    bool GetInPhase() { return inPhase; }
+    float Gain() { return gain; }
+    float GainDb() { return AWV::Math::LinToDb(gain); }
+    bool Enable() { return enable; }
+    bool InPhase() { return inPhase; }
+    
+    void Init() override {
+      UpdateGain();
+    }
     
     void Process() override {
       int nChannels = outputPins[0].wire->wireSpec.nChannels;
