@@ -1,49 +1,58 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+#include <stdexcept>
 #include "GenericDsp.hpp"
 #include "Mixers.hpp"
 
 namespace py = pybind11;
 using namespace DspBlocks;
+using namespace std;
 
 struct TestFixture {
   GainMute gm;
   ConnectionWire inputWire;
   ConnectionWire outputWire;
+  WireSpec ws;
 
-  TestFixture(WireSpec ws) {
+  TestFixture(WireSpec ws) : ws(ws) {
     inputWire.wireSpec = ws;
     outputWire.wireSpec = ws;
-    inputWire.buffers = ws.AllocateBuffers();
-    outputWire.buffers = ws.AllocateBuffers();
+    inputWire.buffers = new float*[ws.nChannels];
+    outputWire.buffers = new float*[ws.nChannels];
     gm.inputPins[0].wire = &inputWire;
-    gm.inputPins[1].wire = &outputWire;
+    gm.outputPins[0].wire = &outputWire;
     gm.SetGainDb(3);
     gm.SetEnable(true);
     gm.Init();
   }
 
+  ~TestFixture() {
+    delete inputWire.buffers;
+    delete outputWire.buffers;
+  }
+
   py::array_t<float, py::array::c_style | py::array::forcecast>
   Process(py::array_t<float, py::array::c_style | py::array::forcecast> input) {
-    auto buf = input.request();
     auto ndim = input.ndim();
+    if (ndim > 2) { throw invalid_argument("too many dimensions"); }
+    int nChans, bufsiz;
     auto shape = input.shape();
-    auto stride = input.strides();
-    py::print("ndim =", ndim);
-    for (int i=0; i<ndim; i++) {
-      py::print("dim", i, "=", shape[i]);
-      py::print("stride", i, "=", stride[i]);
+    if (ndim == 1) { nChans = 1; bufsiz = shape[0]; } 
+    else { 
+      bufsiz = shape[0]; nChans = shape[1]; 
     }
-    float* bufs[2];
-    float* base_ptr = reinterpret_cast<float*>(input.request().ptr);
-    inputWire.buffers[0] = base_ptr;
-    inputWire.buffers[1] = &base_ptr[shape[1]];
+    if (nChans != ws.nChannels) { throw invalid_argument("nchannels mismatch"); }
+    if (bufsiz != ws.bufSize) { throw invalid_argument("bufsize mismatch"); }
+    auto strides = input.strides();
     auto output = py::array_t<float>(input.size());
     output.resize({shape[0], shape[1]});
+    float* ibase_ptr = reinterpret_cast<float*>(input.request().ptr);
     float* obase_ptr = reinterpret_cast<float*>(output.request().ptr);
-    outputWire.buffers[0] = obase_ptr;
-    outputWire.buffers[1] = &obase_ptr[shape[1]]; 
+    for (int i=0; i < nChans; i++) {
+      inputWire.buffers[i] = &ibase_ptr[i * bufsiz];
+      outputWire.buffers[i] = &obase_ptr[i * bufsiz];
+    }
     gm.Process();
     return output;
   }

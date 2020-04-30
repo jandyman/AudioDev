@@ -3,7 +3,7 @@ project(block_test)
 
 set(COMMON ${PROJECT_SOURCE_DIR}/../..)
 find_package(pybind11 CONFIG REQUIRED)
+find_library(ACCEL Accelerate)
 pybind11_add_module(${PROJECT_NAME} wrapper.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC ${COMMON}/DSP ${COMMON}/GenericDSP)
-
-
+target_link_libraries(${PROJECT_NAME} PRIVATE ${ACCEL})

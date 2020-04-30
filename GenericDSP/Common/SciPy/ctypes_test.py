@@ -1,33 +1,10 @@
-import numpy as np
-import soundfile as sf
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Apr 28 18:58:00 2020
 
-def write_wavfile(filename, data):
-  sf = soundfile.SoundFile(filename, mode='w', format = 'WAV',
-                           samplerate=44100, channels=2, subtype='FLOAT')
-  sf.write(data.astype(np.float32))
-  sf.close()
-  
-# =============================================================================
-# def write_wavfile(filename, data, length = 10.0):
-#   SR = 44100
-#   file = sf.SoundFile(filename, mode='w', format = 'WAV',
-#                            samplerate=SR, channels=1)
-#   nsamps = length * SR
-#   nreps = int(nsamps / data.size)
-#   for x in range(nreps):
-#     file.write(data.astype(np.float32))
-#   file.close()
-#   
-# =============================================================================
-  
-# tf = EQ.lf_shelf_12(1000,18,44100)
-# tf2 = EQ.peaking(2000,18,10,44100)
-
-# EQ.freq_plot_db(tf,44100)
-# EQ.freq_plot_db(tf2,44100)
-
-import EQ
-x = EQ.hf_shelf_6(3000, 12, 44100)
+@author: andy
+"""
 
 # Test of using ctypes to access a C library
 

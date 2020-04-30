@@ -1,4 +1,9 @@
 {
   "cmake.configureOnOpen": true,
-  "python.pythonPath": "/Users/andy/anaconda3/envs/SciPy37/bin/python"
+  "python.pythonPath": "/Users/andy/anaconda3/envs/SciPy37/bin/python",
+  "files.associations": {
+    "stdexcept": "cpp",
+    "vector": "cpp"
+  },
+  "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools"
 }
