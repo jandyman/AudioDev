@@ -14,7 +14,7 @@ def test_block(data, bufsiz):
   n_chans = data.shape[1]
   ws = bt.WireSpec(n_chans, 44100, bufsiz)
   tf = bt.TestFixture(ws)
-  output = np.empty(data.shape)
+  output = np.empty((0,n_chans))
   for buf in buffer_list:
     y = tf.Process(buf)
     output = np.append(output, y, axis=0)

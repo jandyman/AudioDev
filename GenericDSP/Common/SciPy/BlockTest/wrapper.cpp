@@ -4,13 +4,14 @@
 #include <stdexcept>
 #include "GenericDsp.hpp"
 #include "Mixers.hpp"
+#include "FddlConvolver.hpp"
 
 namespace py = pybind11;
 using namespace DspBlocks;
 using namespace std;
 
-struct TestFixture {
-  GainMute gm;
+template <class T> struct TestFixture {
+  T blk;
   ConnectionWire inputWire;
   ConnectionWire outputWire;
   WireSpec ws;
@@ -20,11 +21,11 @@ struct TestFixture {
     outputWire.wireSpec = ws;
     inputWire.buffers = new float*[ws.nChannels];
     outputWire.buffers = new float*[ws.nChannels];
-    gm.inputPins[0].wire = &inputWire;
-    gm.outputPins[0].wire = &outputWire;
-    gm.SetGainDb(3);
-    gm.SetEnable(true);
-    gm.Init();
+    blk.inputPins[0].wire = &inputWire;
+    blk.outputPins[0].wire = &outputWire;
+    blk.SetGainDb(3);
+    blk.SetEnable(true);
+    blk.Init();
   }
 
   ~TestFixture() {
@@ -53,43 +54,46 @@ struct TestFixture {
       inputWire.buffers[i] = &ibase_ptr[i * bufsiz];
       outputWire.buffers[i] = &obase_ptr[i * bufsiz];
     }
-    gm.Process();
+    blk.Process();
     return output;
   }
 
 };
 
-
 PYBIND11_MODULE(block_test, m) {
   m.doc() = "Test Module for DSP blocks"; // optional module docstring
 
-  py::class_<DspBlocks::GainMute>(m, "GainMute")
+  py::class_<GainMute>(m, "GainMute")
   .def(py::init<>())
-  .def("SetGainDb", &DspBlocks::GainMute::SetGainDb)
-  .def("GainDb", &DspBlocks::GainMute::GainDb)
-  .def("SetGain", &DspBlocks::GainMute::SetGain)
-  .def("Gain", &DspBlocks::GainMute::Gain)
-  .def("SetInPhase", &DspBlocks::GainMute::SetInPhase)
-  .def("InPhase", &DspBlocks::GainMute::InPhase)
+  .def("SetGainDb", &GainMute::SetGainDb)
+  .def("GainDb", &GainMute::GainDb)
+  .def("SetGain", &GainMute::SetGain)
+  .def("Gain", &GainMute::Gain)
+  .def("SetInPhase", &GainMute::SetInPhase)
+  .def("InPhase", &GainMute::InPhase)
   ;
 
-  py::class_<DspBlocks::WireSpec>(m, "WireSpec")
+  py::class_<WireSpec>(m, "WireSpec")
     .def(py::init<const int, const float, const int>(),
       py::arg("n_channels"), py::arg("sample_rate"), py::arg("buf_size"))
-    .def_readwrite("nChannels", &DspBlocks::WireSpec::nChannels)
-    .def_readwrite("SampleRate", &DspBlocks::WireSpec::sampleRate)
-    .def_readwrite("BufSize", &DspBlocks::WireSpec::bufSize)
+    .def_readwrite("nChannels", &WireSpec::nChannels)
+    .def_readwrite("SampleRate", &WireSpec::sampleRate)
+    .def_readwrite("BufSize", &WireSpec::bufSize)
   ;
   
-  py::class_<DspBlocks::ConnectionWire>(m, "ConnectionWire")
+  py::class_<ConnectionWire>(m, "ConnectionWire")
     .def(py::init<>())
-    .def("WireSpec", &DspBlocks::ConnectionWire::GetWireSpec)
-    .def("SetWirespec", &DspBlocks::ConnectionWire::SetWireSpec)
+    .def("WireSpec", &ConnectionWire::GetWireSpec)
+    .def("SetWirespec", &ConnectionWire::SetWireSpec)
   ;
   
-  py::class_<TestFixture>(m, "TestFixture")
+  py::class_<TestFixture<GainMute>>(m, "TestFixture")
     .def(py::init<const WireSpec>())
-    .def("Process", &TestFixture::Process)
+    .def("Init", [](GainMute& gm, float gainDb) {
+      gm.SetEnable(true);
+      gm.SetGainDb(gainDb);
+    })
+    .def("Process", &TestFixture<GainMute>::Process)
   ;
 
 }
