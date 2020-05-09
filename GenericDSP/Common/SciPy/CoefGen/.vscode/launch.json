@@ -11,6 +11,14 @@
       "program": "/Users/andy/anaconda3/envs/SciPy37/bin/python",
       "args": [],
       "cwd": "${workspaceFolder}/build",
+    },
+    {
+      "name": "(lldb) Attach",
+      "type": "lldb",
+      "request": "attach",
+      "pid": "3930",
+      "args": [],
+      "cwd": "${workspaceFolder}/build",
     }
   ]
 }

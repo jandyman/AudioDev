@@ -10,8 +10,9 @@ namespace py = pybind11;
 using namespace DspBlocks;
 using namespace std;
 
-template <class T> struct TestFixture {
-  T blk;
+// This class tests a DSP block which has one input and one output at a single sample rate
+
+template <class T> struct TestFixture : T {
   ConnectionWire inputWire;
   ConnectionWire outputWire;
   WireSpec ws;
@@ -21,20 +22,19 @@ template <class T> struct TestFixture {
     outputWire.wireSpec = ws;
     inputWire.buffers = new float*[ws.nChannels];
     outputWire.buffers = new float*[ws.nChannels];
-    blk.inputPins[0].wire = &inputWire;
-    blk.outputPins[0].wire = &outputWire;
-    blk.SetGainDb(3);
-    blk.SetEnable(true);
-    blk.Init();
+    T::inputPins[0].wire = &inputWire;
+    T::outputPins[0].wire = &outputWire;
+    T::Init();
   }
 
   ~TestFixture() {
     delete inputWire.buffers;
     delete outputWire.buffers;
   }
+  
+  typedef py::array_t<float, py::array::c_style | py::array::forcecast> c_pyarray;
 
-  py::array_t<float, py::array::c_style | py::array::forcecast>
-  Process(py::array_t<float, py::array::c_style | py::array::forcecast> input) {
+  c_pyarray Process(c_pyarray input) {
     auto ndim = input.ndim();
     if (ndim > 2) { throw invalid_argument("too many dimensions"); }
     int nChans, bufsiz;
@@ -54,7 +54,7 @@ template <class T> struct TestFixture {
       inputWire.buffers[i] = &ibase_ptr[i * bufsiz];
       outputWire.buffers[i] = &obase_ptr[i * bufsiz];
     }
-    blk.Process();
+    T::Process();
     return output;
   }
 
@@ -87,13 +87,17 @@ PYBIND11_MODULE(block_test, m) {
     .def("SetWirespec", &ConnectionWire::SetWireSpec)
   ;
   
-  py::class_<TestFixture<GainMute>>(m, "TestFixture")
+  py::class_<TestFixture<GainMute>>(m, "GainMuteTestFixture")
     .def(py::init<const WireSpec>())
-    .def("Init", [](GainMute& gm, float gainDb) {
-      gm.SetEnable(true);
-      gm.SetGainDb(gainDb);
-    })
+    .def("Init", &TestFixture<GainMute>::Init)
+    .def("SetGainDb", &TestFixture<GainMute>::SetGainDb)
     .def("Process", &TestFixture<GainMute>::Process)
+  ;
+
+  py::class_<TestFixture<FddlBlock>>(m, "FddlConvolverTestFixture")
+    .def(py::init<const WireSpec>())
+    .def("Init", &TestFixture<FddlBlock>::Init)
+    .def("Process", &TestFixture<FddlBlock>::Process)
   ;
 
 }

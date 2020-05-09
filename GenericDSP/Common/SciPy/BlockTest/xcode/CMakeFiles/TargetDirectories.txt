@@ -1,0 +1,3 @@
+/Users/andy/Dropbox/Developer/AudioDev/GenericDsp/Common/SciPy/BlockTest/xcode/CMakeFiles/block_test.dir
+/Users/andy/Dropbox/Developer/AudioDev/GenericDsp/Common/SciPy/BlockTest/xcode/CMakeFiles/ALL_BUILD.dir
+/Users/andy/Dropbox/Developer/AudioDev/GenericDsp/Common/SciPy/BlockTest/xcode/CMakeFiles/ZERO_CHECK.dir

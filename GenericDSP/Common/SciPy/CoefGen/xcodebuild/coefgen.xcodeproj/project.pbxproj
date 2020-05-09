@@ -1,0 +1,651 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXAggregateTarget section */
+		3915F74FB3B74650AB4AB6BF /* ZERO_CHECK */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 3B6CED1E858144CB8FF9A038 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */;
+			buildPhases = (
+				43B8AAB90EC147F78F916386 /* CMake Rules */,
+			);
+			dependencies = (
+			);
+			name = ZERO_CHECK;
+			productName = ZERO_CHECK;
+		};
+		735D99B175D94A9E8CA4E5F7 /* ALL_BUILD */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 89F4AC418F9F4A3C87A8EE3B /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */;
+			buildPhases = (
+				AED2DB99D56A45949DA41824 /* CMake Rules */,
+			);
+			dependencies = (
+				13AE4B635715488C802FDAB4 /* PBXTargetDependency */,
+				7CFB582D831F42B0BDA932E0 /* PBXTargetDependency */,
+			);
+			name = ALL_BUILD;
+			productName = ALL_BUILD;
+		};
+/* End PBXAggregateTarget section */
+
+/* Begin PBXBuildFile section */
+		502F261F18E5418481EEF97E /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/wrapper.cpp */ = {isa = PBXBuildFile; fileRef = 0A13F4DBFC5342A8A5D87AEB /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/wrapper.cpp */; };
+		8D7D54494FD44D5CB9AEAB21 /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = 5A15288D5A9E45D98CBAD7F8 /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/CMakeLists.txt */; };
+		8F042E69289D421CA34EA160 /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/DSP/CoefGen.cpp */ = {isa = PBXBuildFile; fileRef = 0DF31B2107D441138F087201 /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/DSP/CoefGen.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXBuildStyle section */
+		4E44B77B881D40F48E07B9F7 /* Release */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Release;
+		};
+		74031D27BBB84527868664E6 /* Debug */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Debug;
+		};
+		CD85CCFCDC06422C848EC28F /* MinSizeRel */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = MinSizeRel;
+		};
+		E9CB73FC9CFB44F99CD5DBAE /* RelWithDebInfo */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = RelWithDebInfo;
+		};
+/* End PBXBuildStyle section */
+
+/* Begin PBXContainerItemProxy section */
+		5F9D532485A34967A11F8E2C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 80E679B0FB1B41CFA57E9EAC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3915F74FB3B74650AB4AB6BF;
+			remoteInfo = ZERO_CHECK;
+		};
+		A5A8D6AF19D14817907CD372 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 80E679B0FB1B41CFA57E9EAC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5D01AD79C9E846738947C920;
+			remoteInfo = coefgen;
+		};
+		C390D0DBBFFC4EA6B2AF8BFF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 80E679B0FB1B41CFA57E9EAC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3915F74FB3B74650AB4AB6BF;
+			remoteInfo = ZERO_CHECK;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0A13F4DBFC5342A8A5D87AEB /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/wrapper.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = wrapper.cpp; path = wrapper.cpp; sourceTree = SOURCE_ROOT; };
+		0DF31B2107D441138F087201 /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/DSP/CoefGen.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = CoefGen.cpp; path = ../../DSP/CoefGen.cpp; sourceTree = SOURCE_ROOT; };
+		5A15288D5A9E45D98CBAD7F8 /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		B41481CD7609408F873A78F1 /* coefgen */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = "coefgen.cpython-37m-darwin.so"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D587A52E5D0641018A9DCED2 /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		013D882959E6448A8B21E341 = {
+			isa = PBXGroup;
+			children = (
+				C7D8715498E44CA6A9945FD3 /* coefgen */,
+				431DEB2343E74FD2AF0835F8 /* ALL_BUILD */,
+				B8FCC1CD9587462E85A020FF /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		431DEB2343E74FD2AF0835F8 /* ALL_BUILD */ = {
+			isa = PBXGroup;
+			children = (
+				B7453E3750A545B889B3026D /* CMake Rules */,
+				D587A52E5D0641018A9DCED2 /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/CMakeLists.txt */,
+			);
+			name = ALL_BUILD;
+			sourceTree = "<group>";
+		};
+		B7453E3750A545B889B3026D /* CMake Rules */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "CMake Rules";
+			sourceTree = "<group>";
+		};
+		B8FCC1CD9587462E85A020FF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B41481CD7609408F873A78F1 /* coefgen */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C7D8715498E44CA6A9945FD3 /* coefgen */ = {
+			isa = PBXGroup;
+			children = (
+				EE8EEFD157174E24B87ECD32 /* Source Files */,
+				5A15288D5A9E45D98CBAD7F8 /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/CMakeLists.txt */,
+			);
+			name = coefgen;
+			sourceTree = "<group>";
+		};
+		EE8EEFD157174E24B87ECD32 /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				0DF31B2107D441138F087201 /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/DSP/CoefGen.cpp */,
+				0A13F4DBFC5342A8A5D87AEB /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/wrapper.cpp */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5D01AD79C9E846738947C920 /* coefgen */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 88C6566207D946D79719EE25 /* Build configuration list for PBXNativeTarget "coefgen" */;
+			buildPhases = (
+				D90F6911D34F4026B10F1254 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				EE0726C5529341C9B234F9FD /* PBXTargetDependency */,
+			);
+			name = coefgen;
+			productName = coefgen;
+			productReference = B41481CD7609408F873A78F1 /* coefgen */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		80E679B0FB1B41CFA57E9EAC /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1140;
+			};
+			buildConfigurationList = E0054E39B0164208A3CB03DF /* Build configuration list for PBXProject "coefgen" */;
+			buildSettings = {
+			};
+			buildStyles = (
+				74031D27BBB84527868664E6 /* Debug */,
+				4E44B77B881D40F48E07B9F7 /* Release */,
+				CD85CCFCDC06422C848EC28F /* MinSizeRel */,
+				E9CB73FC9CFB44F99CD5DBAE /* RelWithDebInfo */,
+			);
+			compatibilityVersion = "Xcode 3.2";
+			hasScannedForEncodings = 0;
+			mainGroup = 013D882959E6448A8B21E341;
+			projectDirPath = ../;
+			projectRoot = "";
+			targets = (
+				735D99B175D94A9E8CA4E5F7 /* ALL_BUILD */,
+				3915F74FB3B74650AB4AB6BF /* ZERO_CHECK */,
+				5D01AD79C9E846738947C920 /* coefgen */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		43B8AAB90EC147F78F916386 /* CMake Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild -f /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild/CMakeScripts/ZERO_CHECK_cmakeRulesBuildPhase.make$CONFIGURATION OBJDIR=$(basename \"$OBJECT_FILE_DIR_normal\") all";
+			showEnvVarsInLog = 0;
+		};
+		AED2DB99D56A45949DA41824 /* CMake Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild -f /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild/CMakeScripts/ALL_BUILD_cmakeRulesBuildPhase.make$CONFIGURATION OBJDIR=$(basename \"$OBJECT_FILE_DIR_normal\") all";
+			showEnvVarsInLog = 0;
+		};
+		AF98CF25CB6E401184B3BB48 = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		DA505DB7DA324F11AF0428C0 = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D90F6911D34F4026B10F1254 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8F042E69289D421CA34EA160 /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/DSP/CoefGen.cpp */,
+				502F261F18E5418481EEF97E /* /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/wrapper.cpp */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		13AE4B635715488C802FDAB4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5D01AD79C9E846738947C920 /* coefgen */;
+			targetProxy = A5A8D6AF19D14817907CD372 /* PBXContainerItemProxy */;
+		};
+		7CFB582D831F42B0BDA932E0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3915F74FB3B74650AB4AB6BF /* ZERO_CHECK */;
+			targetProxy = 5F9D532485A34967A11F8E2C /* PBXContainerItemProxy */;
+		};
+		EE0726C5529341C9B234F9FD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3915F74FB3B74650AB4AB6BF /* ZERO_CHECK */;
+			targetProxy = C390D0DBBFFC4EA6B2AF8BFF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		00EC6CBFEEBD43F4A90F9058 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		2223B17688F0494BBA0ADCB4 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = ".cpython-37m-darwin.so";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",coefgen_EXPORTS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/andy/anaconda3/envs/SciPy37/include,/Users/andy/anaconda3/envs/SciPy37/include/python3.7m,/Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/../../DSP);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				LIBRARY_STYLE = BUNDLE;
+				MACH_O_TYPE = mh_bundle;
+				OTHER_CPLUSPLUSFLAGS = "    -DNDEBUG -fPIC -fvisibility=hidden '-std=c++14' -flto  ";
+				OTHER_LDFLAGS = " -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -undefined dynamic_lookup -flto";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = coefgen;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		30C0CF6A0FE04D4793DEEBD2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		4D4ECF7551484AF4847198FC /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk;
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild/build;
+			};
+			name = RelWithDebInfo;
+		};
+		522A4B0E4550457C9501573C /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		592BABDB03DB41D0B4D3C2AA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = ".cpython-37m-darwin.so";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",coefgen_EXPORTS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/andy/anaconda3/envs/SciPy37/include,/Users/andy/anaconda3/envs/SciPy37/include/python3.7m,/Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/../../DSP);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				LIBRARY_STYLE = BUNDLE;
+				MACH_O_TYPE = mh_bundle;
+				OTHER_CPLUSPLUSFLAGS = "    -DNDEBUG -fPIC -fvisibility=hidden '-std=c++14' -flto  ";
+				OTHER_LDFLAGS = " -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -undefined dynamic_lookup -flto";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = coefgen;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		5B6E6B913C484CDEBB60DEC3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		712C5A4127204FBB842B2583 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		8EB82A344C954098BCF7B42E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk;
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild/build;
+			};
+			name = Release;
+		};
+		9C4AF11CDFB0438BA7AF4C4A /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		A2DBB532A02544C292A6534F /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		AB950F63E9C0432692AD7618 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk;
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild/build;
+			};
+			name = Debug;
+		};
+		AE3C74031DC94DE5991D4996 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = ".cpython-37m-darwin.so";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",coefgen_EXPORTS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/andy/anaconda3/envs/SciPy37/include,/Users/andy/anaconda3/envs/SciPy37/include/python3.7m,/Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/../../DSP);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				LIBRARY_STYLE = BUNDLE;
+				MACH_O_TYPE = mh_bundle;
+				OTHER_CPLUSPLUSFLAGS = "       -DNDEBUG -fPIC -fvisibility=hidden '-std=c++14' -flto  ";
+				OTHER_LDFLAGS = " -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -undefined dynamic_lookup -flto";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = coefgen;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		C047472A31454F618FB9AAD7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = ".cpython-37m-darwin.so";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",coefgen_EXPORTS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/andy/anaconda3/envs/SciPy37/include,/Users/andy/anaconda3/envs/SciPy37/include/python3.7m,/Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/../../DSP);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				LIBRARY_STYLE = BUNDLE;
+				MACH_O_TYPE = mh_bundle;
+				OTHER_CPLUSPLUSFLAGS = "   -fPIC -fvisibility=hidden '-std=c++14'  ";
+				OTHER_LDFLAGS = " -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -undefined dynamic_lookup";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = coefgen;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		D90638D46D2E48FBACBC040E /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk;
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild/build;
+			};
+			name = MinSizeRel;
+		};
+		DF43879AD6BC4CA9B4C7F5F8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/andy/Dropbox/Developer/AudioDev/GenericDSP/Common/SciPy/CoefGen/xcodebuild;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3B6CED1E858144CB8FF9A038 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5B6E6B913C484CDEBB60DEC3 /* Debug */,
+				30C0CF6A0FE04D4793DEEBD2 /* Release */,
+				522A4B0E4550457C9501573C /* MinSizeRel */,
+				A2DBB532A02544C292A6534F /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		88C6566207D946D79719EE25 /* Build configuration list for PBXNativeTarget "coefgen" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C047472A31454F618FB9AAD7 /* Debug */,
+				592BABDB03DB41D0B4D3C2AA /* Release */,
+				2223B17688F0494BBA0ADCB4 /* MinSizeRel */,
+				AE3C74031DC94DE5991D4996 /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		89F4AC418F9F4A3C87A8EE3B /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00EC6CBFEEBD43F4A90F9058 /* Debug */,
+				DF43879AD6BC4CA9B4C7F5F8 /* Release */,
+				712C5A4127204FBB842B2583 /* MinSizeRel */,
+				9C4AF11CDFB0438BA7AF4C4A /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E0054E39B0164208A3CB03DF /* Build configuration list for PBXProject "coefgen" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB950F63E9C0432692AD7618 /* Debug */,
+				8EB82A344C954098BCF7B42E /* Release */,
+				D90638D46D2E48FBACBC040E /* MinSizeRel */,
+				4D4ECF7551484AF4847198FC /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 80E679B0FB1B41CFA57E9EAC /* Project object */;
+}
