@@ -555,7 +555,7 @@ namespace DspBlocks {
       }
     }
     
-    void setImpulse(vector<float> impulse) {
+    void SetImpulse(vector<float> impulse) {
       this->impulse = impulse;
       for (auto& convolver : convolvers) { convolver.setImpulse(impulse); }
     }
@@ -566,7 +566,7 @@ namespace DspBlocks {
       }
     }
     
-    void checkBufferSize(int bufferSize) {
+    void CheckBufferSize(int bufferSize) {
       float logBufSize = log2(bufferSize);
       if (floor(logBufSize) != logBufSize) {
         throw "buffer size must be power of two";

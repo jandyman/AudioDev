@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../GenericDSP"
+		}
+	],
+  "settings": {
+    "files.associations": {
+      "stdexcept": "cpp",
+      "vector": "cpp"
+    }
+  }
+}

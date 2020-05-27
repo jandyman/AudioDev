@@ -10,6 +10,8 @@ namespace py = pybind11;
 using namespace DspBlocks;
 using namespace std;
 
+typedef py::array_t<float, py::array::c_style | py::array::forcecast> c_pyarray;
+
 // This class tests a DSP block which has one input and one output at a single sample rate
 
 template <class T> struct TestFixture : T {
@@ -22,19 +24,29 @@ template <class T> struct TestFixture : T {
     outputWire.wireSpec = ws;
     inputWire.buffers = new float*[ws.nChannels];
     outputWire.buffers = new float*[ws.nChannels];
+    for (int i=0; i < ws.nChannels; i++) {
+      inputWire.buffers[i] = new float[ws.bufSize];
+      outputWire.buffers[i] = new float[ws.bufSize];
+    }
     T::inputPins[0].wire = &inputWire;
     T::outputPins[0].wire = &outputWire;
     T::Init();
   }
 
   ~TestFixture() {
+    for (int i=0; i < ws.nChannels; i++) {
+      delete inputWire.buffers[i];
+      delete outputWire.buffers[i];
+    }
     delete inputWire.buffers;
     delete outputWire.buffers;
   }
-  
-  typedef py::array_t<float, py::array::c_style | py::array::forcecast> c_pyarray;
+
+  // This method performs the necessary translation/copy of numpy arrays and then calls the 
+  // internal Process function of the inherited class 
 
   c_pyarray Process(c_pyarray input) {
+    using namespace std;
     auto ndim = input.ndim();
     if (ndim > 2) { throw invalid_argument("too many dimensions"); }
     int nChans, bufsiz;
@@ -51,14 +63,29 @@ template <class T> struct TestFixture : T {
     float* ibase_ptr = reinterpret_cast<float*>(input.request().ptr);
     float* obase_ptr = reinterpret_cast<float*>(output.request().ptr);
     for (int i=0; i < nChans; i++) {
-      inputWire.buffers[i] = &ibase_ptr[i * bufsiz];
+      auto src = &ibase_ptr[i * bufsiz];
+      copy(src, src + bufsiz, inputWire.buffers[i]);
       outputWire.buffers[i] = &obase_ptr[i * bufsiz];
     }
     T::Process();
+    for (int i=0; i < nChans; i++) {
+      auto src = inputWire.buffers[i];
+      copy(src, src + bufsiz, &obase_ptr[i * bufsiz]);
+    }
     return output;
   }
 
 };
+
+vector<float> FloatVector(c_pyarray input) {
+  auto ndim = input.ndim();
+  if (ndim > 2) { throw invalid_argument("too many dimensions"); }
+  auto shape = input.shape();
+  if (ndim == 2 && shape[1] != 1) { throw invalid_argument("must be vector not matrix"); }
+  int size = shape[0];
+  float* storage = reinterpret_cast<float*>(input.request().ptr);
+  return vector<float>(storage, storage + size);
+}
 
 PYBIND11_MODULE(block_test, m) {
   m.doc() = "Test Module for DSP blocks"; // optional module docstring
@@ -97,6 +124,9 @@ PYBIND11_MODULE(block_test, m) {
   py::class_<TestFixture<FddlBlock>>(m, "FddlConvolverTestFixture")
     .def(py::init<const WireSpec>())
     .def("Init", &TestFixture<FddlBlock>::Init)
+    .def("SetImpulse", [](TestFixture<FddlBlock>& o, c_pyarray data) {
+      o.SetImpulse(FloatVector(data));
+    })
     .def("Process", &TestFixture<FddlBlock>::Process)
   ;
 

@@ -11,6 +11,14 @@
       "program": "/Users/andy/anaconda3/envs/SciPy37/bin/python",
       "args": [],
       "cwd": "${workspaceFolder}/build"
-    }
+    },
+    { 
+      "name": "Debug Attach",
+      "type": "lldb",
+      "request": "attach",
+      "program": "/Users/andy/anaconda3/envs/SciPy37/bin/python",
+      "processId": "${command:pickProcess}",
+      "MIMode": "gdb"
+  },
   ]
 }

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8.12)
 project(block_test)
 
 set(COMMON ${PROJECT_SOURCE_DIR}/../..)
+set(CMAKE_BUILD_TYPE Debug)
 find_package(pybind11 CONFIG REQUIRED)
 find_library(ACCEL Accelerate)
 pybind11_add_module(${PROJECT_NAME} wrapper.cpp)
