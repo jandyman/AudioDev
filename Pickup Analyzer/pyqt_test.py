@@ -11,7 +11,7 @@ from matplotlib.figure import Figure
 from flat_response_sequence import test_level, get_response
 
 import sounddevice as sd
-sd.default.device = 1
+sd.default.device = 2
 
 class MplCanvas(FigureCanvas):
 
@@ -52,7 +52,7 @@ class MainWindow(QtWidgets.QMainWindow):
     response = get_response(16384, plot=False)
     sc = self.canvas
     sc.axes.cla()
-    sc.axes.semilogx(response)
+    sc.axes.semilogx(response[0], response[1])
     sc.axes.grid(True, which='major')
     sc.axes.grid(True, which='minor', linestyle="--")
     

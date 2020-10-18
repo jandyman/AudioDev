@@ -47,11 +47,12 @@ template <class T> struct TestFixture : T {
 
   c_pyarray Process(c_pyarray input) {
     using namespace std;
+    bool inputIsVector = false;
     auto ndim = input.ndim();
     if (ndim > 2) { throw invalid_argument("too many dimensions"); }
     int nChans, bufsiz;
     auto shape = input.shape();
-    if (ndim == 1) { nChans = 1; bufsiz = shape[0]; } 
+    if (ndim == 1) { nChans = 1; bufsiz = shape[0]; inputIsVector = true ;} 
     else { 
       bufsiz = shape[0]; nChans = shape[1]; 
     }
@@ -59,7 +60,11 @@ template <class T> struct TestFixture : T {
     if (bufsiz != ws.bufSize) { throw invalid_argument("bufsize mismatch"); }
     auto strides = input.strides();
     auto output = py::array_t<float>(input.size());
-    output.resize({shape[0], shape[1]});
+    if (inputIsVector) {
+      output = output.squeeze();
+    } else {
+      output.resize({bufsiz, nChans});
+    }
     float* ibase_ptr = reinterpret_cast<float*>(input.request().ptr);
     float* obase_ptr = reinterpret_cast<float*>(output.request().ptr);
     for (int i=0; i < nChans; i++) {

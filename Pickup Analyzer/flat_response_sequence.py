@@ -78,7 +78,8 @@ import matplotlib.pyplot as plt
 
 def get_response(fft_length, plot = True, keep_plot = False):
   playsamps = flat_response_sequence(fft_length, repeats=2)
-  playsamps = integrate(playsamps)
+  #playsamps = integrate(playsamps)
+  #playsamps = playsamps / max(abs(playsamps)) * .75
   recsamps = sd.playrec(playsamps, channels=1, blocking=True)
   recsamps = second_half(recsamps)
   response = 20 * np.log10(abs(np.fft.rfft(recsamps)))
@@ -92,7 +93,7 @@ def get_response(fft_length, plot = True, keep_plot = False):
     plt.grid(True, which='minor', linestyle="--")
   return (freqs, response)
 
-  
+
   
   
 

@@ -28,6 +28,7 @@ namespace DspBlocks {
     int pinIdx = -1;
     bool isPort = false;
 
+
     PinSpec(int id, int idx, bool isPort) : blockId(id), pinIdx(idx), isPort(isPort) {}
     PinSpec() {}
     bool operator==(const PinSpec &ps) const {
