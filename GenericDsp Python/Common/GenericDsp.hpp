@@ -3,48 +3,25 @@
 
 namespace DspBlocks {
 
-  struct BaseClass {};
-  typedef void (BaseClass::*BaseMethod)(void *arg);
-
-  struct DerivedClass : BaseClass {
-    void Action1(void* param) {  /* do something */ }
-    void Action2(void* param) {  /* do something */ }
-    void Action3(void* param) {  /* do something */ }
-  };
-
-  void SetupMethodPointers(BaseMethod& m1, BaseMethod& m2) { 
-    m1 = (BaseMethod)&DerivedClass::Action3;
-    m2 = (BaseMethod)&DerivedClass::Action1;
-  }
-
-  void Caller() {
-    DerivedClass* obj1;  // these need to be initialized somehow, of course
-    DerivedClass* obj2;
-    BaseMethod method1;
-    BaseMethod method2;
-    SetupMethodPointers(method1, method2);
-    // now the caller doesn't know the names of the methods being invoked
-    (obj1->*method1)(nullptr);
-    (obj2->*method2)(nullptr);
-  }
-
   struct DspError {
     const char *msg;
     DspError(const char *msg) : msg(msg) {}
   };
 
-  struct WireSpec {
+  struct Wire {
+    std::string name = "";
     uint nChannels = 0;
     uint bufSize = 0;
     float sampleRate = 0;
-    float **buffers;
+    float **buffers = nullptr;
 
-    WireSpec(uint nChannels, float SR, uint bufSize) {
+    Wire(uint nChannels, float SR, uint bufSize) {
       this->nChannels = nChannels;
       this->sampleRate = SR;
       this->bufSize = bufSize;
     }
 
+    Wire() {}
     bool IsEmpty() { return (nChannels == 0); }
   };
 
@@ -59,25 +36,39 @@ namespace DspBlocks {
   };
 
   struct Parameter {
+    std::string name;
     uint16_t size = 4;  // size of float
     Units type = Units::none;  
     ParamSetter param_setter;
-    void SetCallbacks(ParamSetter setter) {
+    void set_callbacks(ParamSetter setter) {
       param_setter = setter;
     }
   };
 
+  struct Pin {
+    std::string name;
+    Wire* wire = nullptr;
+    Pin(std::string name) : name(name) {}
+  };
+
   struct DspBlock {
-    std::vector<WireSpec> wireSpecs;
+    using str = std::string;
+    char* name;
+    std::vector<Pin> input_pins;
+    std::vector<Pin> output_pins;
     std::vector<Parameter> parameters;
     
-    DspBlock() {
-      wireSpecs.push_back(WireSpec(2, 44100, 128));
-      wireSpecs.push_back(WireSpec(4, 44100, 64));
-    }
-    
-    void SetParam(Parameter& p, float param) {
+    void set_param(Parameter& p, float param) {
       (this->*p.param_setter)(&param);
+    }
+
+    void setup_pins(std::vector<str> in_pin_names, std::vector<str> out_pin_names) {
+      for (auto pin_name : in_pin_names) {
+        input_pins.push_back(Pin(pin_name));
+      }
+      for (auto pin_name : out_pin_names) {
+        output_pins.push_back(Pin(pin_name));
+      }
     }
 
   };
@@ -85,19 +76,22 @@ namespace DspBlocks {
   struct MyDspBlock : DspBlock {
     float param1, param2;
 
-    void SetParam1(void* param) {
+    void set_param1(void* param) {
       param1 = *((float*)param);
     }
 
-    void SetParam2(void* param) {
+    void set_param2(void* param) {
       param2 = *((float*)param);
     }
 
     MyDspBlock() {
+      std::vector<std::string> in_pin_names= { "in1", "in2" };
+      std::vector<std::string> out_pin_names = { "out1", "out2" };
+      setup_pins(in_pin_names, out_pin_names);
       using c = MyDspBlock;
       parameters = std::vector<Parameter>(2);
-      parameters[0].SetCallbacks((ParamSetter)&c::SetParam1);
-      parameters[1].SetCallbacks((ParamSetter)&c::SetParam2);
+      parameters[0].set_callbacks((ParamSetter)&c::set_param1);
+      parameters[1].set_callbacks((ParamSetter)&c::set_param2);
     }
   };
 
