@@ -1,0 +1,28 @@
+digraph SignalFlow {
+    // Graph attributes
+    rankdir=LR;
+    bgcolor="white";
+
+    // Node defaults
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=14];
+    edge [fontname="Helvetica", fontsize=10, color="#333333"];
+
+    // Nodes
+    Input [label="Audio Input\n48kHz, Mono", fillcolor="#e1f5ff"];
+    Filter [label="Low Pass Filter\nCutoff: 1kHz\nQ: 0.707", fillcolor="#fff4e1"];
+    Gain [label="Gain\n-6 dB", fillcolor="#ffe1f5"];
+    Output [label="Audio Output\n48kHz, Mono", fillcolor="#e1ffe1"];
+
+    // Edges
+    Input -> Filter [label="audio"];
+    Filter -> Gain [label="filtered"];
+    Gain -> Output [label="output"];
+
+    // Title (as separate node)
+    Title [label="Simple DSP Signal Flow", shape=plaintext, fontsize=18];
+    Legend [label="Processing Order: Input → Filter → Gain → Output", shape=plaintext, fontsize=12, fontcolor="#666666"];
+
+    // Invisible edges to position title and legend
+    {rank=source; Title}
+    {rank=sink; Legend}
+}

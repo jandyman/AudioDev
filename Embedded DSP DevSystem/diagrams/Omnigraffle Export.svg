@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" viewBox="0 0 800 300" width="800" height="300">
+  <defs/>
+  <g id="Canvas_1" stroke-dasharray="none" fill="none" fill-opacity="1" stroke="none" stroke-opacity="1">
+    <title>Canvas 1</title>
+    <rect fill="white" x="0" y="0" width="800" height="300"/>
+    <g id="Canvas_1_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_2">
+        <title>Text</title>
+        <text transform="translate(292.61963 -31.86035)" fill="#333">
+          <tspan font-family="Helvetica" font-size="18" fill="#333" x="0" y="40" xml:space="preserve">    Simple DSP Signal Flow</tspan>
+          <tspan font-family="Helvetica" font-size="18" fill="#333" x="0" y="62" xml:space="preserve">  </tspan>
+        </text>
+      </g>
+      <g id="Graphic_3">
+        <path d="M 60 100 L 160 100 C 165.52285 100 170 104.47715 170 110 L 170 170 C 170 175.52285 165.52285 180 160 180 L 60 180 C 54.47715 180 50 175.52285 50 170 L 50 110 C 50 104.47715 54.47715 100 60 100 Z" fill="#e1f5ff"/>
+        <path d="M 60 100 L 160 100 C 165.52285 100 170 104.47715 170 110 L 170 170 C 170 175.52285 165.52285 180 160 180 L 60 180 C 54.47715 180 50 175.52285 50 170 L 50 110 C 50 104.47715 54.47715 100 60 100 Z" stroke="#333" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_4">
+        <title>Text</title>
+        <text transform="translate(74.58301 121.21973)" fill="#333">
+          <tspan font-family="Helvetica" font-size="14" fill="#333" x="0" y="14" xml:space="preserve">Audio Input</tspan>
+        </text>
+      </g>
+      <g id="Graphic_5">
+        <title>Text</title>
+        <text transform="translate(77.59619 144.52979)" fill="#666">
+          <tspan font-family="Helvetica" font-size="11" fill="#666" x="0" y="10" xml:space="preserve">48kHz, Mono</tspan>
+        </text>
+      </g>
+      <g id="Graphic_6">
+        <path d="M 240 100 L 340 100 C 345.52285 100 350 104.47715 350 110 L 350 170 C 350 175.52285 345.52285 180 340 180 L 240 180 C 234.47715 180 230 175.52285 230 170 L 230 110 C 230 104.47715 234.47715 100 240 100 Z" fill="#fff4e1"/>
+        <path d="M 240 100 L 340 100 C 345.52285 100 350 104.47715 350 110 L 350 170 C 350 175.52285 345.52285 180 340 180 L 240 180 C 234.47715 180 230 175.52285 230 170 L 230 110 C 230 104.47715 234.47715 100 240 100 Z" stroke="#333" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_7">
+        <title>Text</title>
+        <text transform="translate(242.15186 116.21973)" fill="#333">
+          <tspan font-family="Helvetica" font-size="14" fill="#333" x="0" y="14" xml:space="preserve">Low Pass Filter</tspan>
+        </text>
+      </g>
+      <g id="Graphic_8">
+        <title>Text</title>
+        <text transform="translate(259.83594 139.52979)" fill="#666">
+          <tspan font-family="Helvetica" font-size="11" fill="#666" x="0" y="10" xml:space="preserve">Cutoff: 1kHz</tspan>
+        </text>
+      </g>
+      <g id="Graphic_9">
+        <title>Text</title>
+        <text transform="translate(268.90234 154.52979)" fill="#666">
+          <tspan font-family="Helvetica" font-size="11" fill="#666" x="0" y="10" xml:space="preserve">Q: 0.707</tspan>
+        </text>
+      </g>
+      <g id="Graphic_10">
+        <path d="M 420 154.52979 L 520 154.52979 C 525.52285 154.52979 530 159.00694 530 164.52979 L 530 224.52979 C 530 230.05263 525.52285 234.52979 520 234.52979 L 420 234.52979 C 414.47715 234.52979 410 230.05263 410 224.52979 L 410 164.52979 C 410 159.00694 414.47715 154.52979 420 154.52979 Z" fill="#ffe1f5"/>
+        <path d="M 420 154.52979 L 520 154.52979 C 525.52285 154.52979 530 159.00694 530 164.52979 L 530 224.52979 C 530 230.05263 525.52285 234.52979 520 234.52979 L 420 234.52979 C 414.47715 234.52979 410 230.05263 410 224.52979 L 410 164.52979 C 410 159.00694 414.47715 154.52979 420 154.52979 Z" stroke="#333" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_11">
+        <title>Text</title>
+        <text transform="translate(455.21387 171.16406)" fill="#333">
+          <tspan font-family="Helvetica" font-size="14" fill="#333" x="0" y="14" xml:space="preserve">Gain</tspan>
+        </text>
+      </g>
+      <g id="Graphic_12">
+        <title>Text</title>
+        <text transform="translate(453.7954 199.1665)" fill="#666">
+          <tspan font-family="Helvetica" font-size="11" fill="#666" x="0" y="10" xml:space="preserve">-26 dB</tspan>
+        </text>
+      </g>
+      <g id="Graphic_13">
+        <path d="M 600 100 L 700 100 C 705.52285 100 710 104.47715 710 110 L 710 170 C 710 175.52285 705.52285 180 700 180 L 600 180 C 594.47715 180 590 175.52285 590 170 L 590 110 C 590 104.47715 594.47715 100 600 100 Z" fill="#e1ffe1"/>
+        <path d="M 600 100 L 700 100 C 705.52285 100 710 104.47715 710 110 L 710 170 C 710 175.52285 705.52285 180 700 180 L 600 180 C 594.47715 180 590 175.52285 590 170 L 590 110 C 590 104.47715 594.47715 100 600 100 Z" stroke="#333" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_14">
+        <title>Text</title>
+        <text transform="translate(609.1382 121.21973)" fill="#333">
+          <tspan font-family="Helvetica" font-size="14" fill="#333" x="0" y="14" xml:space="preserve">Audio Output</tspan>
+        </text>
+      </g>
+      <g id="Graphic_15">
+        <title>Text</title>
+        <text transform="translate(617.5962 144.52979)" fill="#666">
+          <tspan font-family="Helvetica" font-size="11" fill="#666" x="0" y="10" xml:space="preserve">48kHz, Mono</tspan>
+        </text>
+      </g>
+      <g id="Line_16">
+        <line x1="170" y1="140" x2="230" y2="140" stroke="#333" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_17">
+        <title>Text</title>
+        <text transform="translate(187.76611 120.2998)" fill="#666">
+          <tspan font-family="Helvetica" font-size="10" fill="#666" x="0" y="10" xml:space="preserve">audio</tspan>
+        </text>
+      </g>
+      <g id="Line_18">
+        <line x1="350" y1="140" x2="409" y2="166.81048" stroke="#333" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_19">
+        <title>Text</title>
+        <text transform="translate(364.99268 120.2998)" fill="#666">
+          <tspan font-family="Helvetica" font-size="10" fill="#666" x="0" y="10" xml:space="preserve">filtered</tspan>
+        </text>
+      </g>
+      <g id="Line_20">
+        <line x1="531" y1="166.81048" x2="590" y2="140" stroke="#333" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_21">
+        <title>Text</title>
+        <text transform="translate(546.09863 120.2998)" fill="#666">
+          <tspan font-family="Helvetica" font-size="10" fill="#666" x="0" y="10" xml:space="preserve">output</tspan>
+        </text>
+      </g>
+      <g id="Graphic_22">
+        <title>Text</title>
+        <text transform="translate(50 238.25977)" fill="#666">
+          <tspan font-family="Helvetica" font-size="12" fill="#666" x="0" y="12" xml:space="preserve">Processing Order: Input </tspan>
+          <tspan font-family="Lucida Grande" font-size="12" fill="#666" y="12" xml:space="preserve">→</tspan>
+          <tspan font-family="Helvetica" font-size="12" fill="#666" y="12" xml:space="preserve"> Filter </tspan>
+          <tspan font-family="Lucida Grande" font-size="12" fill="#666" y="12" xml:space="preserve">→</tspan>
+          <tspan font-family="Helvetica" font-size="12" fill="#666" y="12" xml:space="preserve"> Gain </tspan>
+          <tspan font-family="Lucida Grande" font-size="12" fill="#666" y="12" xml:space="preserve">→</tspan>
+          <tspan font-family="Helvetica" font-size="12" fill="#666" y="12" xml:space="preserve"> Output</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>

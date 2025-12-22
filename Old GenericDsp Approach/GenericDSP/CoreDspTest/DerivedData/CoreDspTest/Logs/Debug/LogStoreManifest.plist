@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>logFormatVersion</key>
+	<integer>10</integer>
+	<key>logs</key>
+	<dict>
+		<key>20C24BF6-32C6-4816-8B09-7735A32BA47B</key>
+		<dict>
+			<key>className</key>
+			<string>DBGConsoleLog</string>
+			<key>documentTypeString</key>
+			<string>com.apple.dt.IDE.DebuggerLogContentType</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.DebugLog</string>
+			<key>fileName</key>
+			<string>20C24BF6-32C6-4816-8B09-7735A32BA47B.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>CoreDspTest project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>CoreDspTest</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>0</integer>
+			<key>signature</key>
+			<string>Debug CoreDspTest</string>
+			<key>timeStartedRecording</key>
+			<real>604903427.37389898</real>
+			<key>timeStoppedRecording</key>
+			<real>604903515.72022104</real>
+			<key>title</key>
+			<string>Debug CoreDspTest</string>
+			<key>uniqueIdentifier</key>
+			<string>20C24BF6-32C6-4816-8B09-7735A32BA47B</string>
+		</dict>
+		<key>92E96175-7CCE-495D-A3B2-79D0FEF5DFE3</key>
+		<dict>
+			<key>className</key>
+			<string>DBGConsoleLog</string>
+			<key>documentTypeString</key>
+			<string>com.apple.dt.IDE.DebuggerLogContentType</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.DebugLog</string>
+			<key>fileName</key>
+			<string>92E96175-7CCE-495D-A3B2-79D0FEF5DFE3.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>CoreDspTest project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>CoreDspTest</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>0</integer>
+			<key>signature</key>
+			<string>Debug CoreDspTest</string>
+			<key>timeStartedRecording</key>
+			<real>604937310.50106597</real>
+			<key>timeStoppedRecording</key>
+			<real>604937372.29209304</real>
+			<key>title</key>
+			<string>Debug CoreDspTest</string>
+			<key>uniqueIdentifier</key>
+			<string>92E96175-7CCE-495D-A3B2-79D0FEF5DFE3</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

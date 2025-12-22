@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Read(//Users/andy/Dropbox/Developer/**)",
+      "Edit(//Users/andy/Dropbox/Developer/AudioDev/Max Experiments/**)",
+      "Write(//Users/andy/Dropbox/Developer/AudioDev/Max Experiments/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
