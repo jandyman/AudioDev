@@ -66,14 +66,14 @@ xcodebuild -configuration Debug
 # OR: open andy.YOURNAME_tilde.xcodeproj and press Cmd+B
 
 # 5. Verify universal binary
-lipo -info build/externals/andy.YOURNAME~.mxo/Contents/MacOS/andy.YOURNAME~
+lipo -info ../objects/andy.YOURNAME~.mxo/Contents/MacOS/andy.YOURNAME~
 # Should show: x86_64 arm64
 ```
 
 ### Add to Max
 Max → Options → File Preferences → Add search path:
 ```
-/Users/andy/Dropbox/Developer/AudioDev/Max Experiments/andy.YOURNAME_tilde/build/externals
+/Users/andy/Dropbox/Developer/AudioDev/Max Experiments/objects
 ```
 
 Restart Max, then create: `andy.YOURNAME~`
@@ -84,7 +84,7 @@ Restart Max, then create: `andy.YOURNAME~`
 - **Location Independent**: Projects can exist anywhere, not tied to SDK location
 - **Universal Binary**: MUST build for both x86_64 and arm64 on modern Macs
 - **Folder Naming**: Use `_tilde` suffix → SDK converts to `~` in output
-- **Output Location**: All builds go to `build/externals/` within each project
+- **Output Location**: All builds go to shared `objects/` folder at project root
 
 ### Architecture Support
 **Critical:** SDK defaults to Intel-only (x86_64). This causes "incorrect architecture" errors on Apple Silicon Macs.
@@ -123,7 +123,7 @@ andy.YOURNAME_tilde/
 ## Common Issues
 
 ### "no such object"
-- Check Max search path includes `build/externals/`
+- Check Max search path includes `objects/`
 - Restart Max
 - Check Max Console for load errors
 

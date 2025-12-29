@@ -238,8 +238,10 @@ post("Global message");  // To Max console (no object)
 
 andy.gain_tilde/
 ├── gain_tilde.cpp                   ← Simple attribute example
-├── CMakeLists.txt                   ← Build config (copy this)
-└── build/externals/andy.gain~.mxo   ← Built external
+└── CMakeLists.txt                   ← Build config (copy this)
+
+objects/
+└── andy.gain~.mxo                   ← Built external (shared location)
 ```
 
 ## Checklist for New External

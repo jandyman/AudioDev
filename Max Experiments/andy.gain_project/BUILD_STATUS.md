@@ -13,7 +13,7 @@ All components of the andy.gain~ remote control project have been created and **
 
 **Verified:**
 ```bash
-lipo -info build/externals/andy.gain~.mxo/Contents/MacOS/andy.gain~
+lipo -info ../../../objects/andy.gain~.mxo/Contents/MacOS/andy.gain~
 # Output: Architectures in the fat file: x86_64 arm64
 ```
 
@@ -151,7 +151,7 @@ xcodebuild -project GainControl.xcodeproj -scheme GainControl -configuration Deb
 ## Runtime Requirements
 
 ### To Run Max External:
-1. Add `external/andy.gain_tilde/build/externals/` to Max search path
+1. Add `/Users/andy/Dropbox/Developer/AudioDev/Max Experiments/objects` to Max search path
 2. Restart Max
 3. Open `max_patcher/andy.gain_osc.maxpat`
 

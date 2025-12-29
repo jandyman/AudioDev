@@ -20,7 +20,7 @@ set(C74_MAX_SDK_PATH "/Users/andy/Dropbox/Developer/AudioDev/max-sdk")
 
 # Override SDK defaults to make build location-independent
 set(C74_SUPPORT_DIR "${C74_MAX_SDK_PATH}/source/max-sdk-base/c74support")
-set(C74_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/externals")
+set(C74_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../../../objects")
 
 # Build universal binary (Intel + Apple Silicon) - CRITICAL!
 set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64")
@@ -61,11 +61,11 @@ set(C74_SUPPORT_DIR "${C74_MAX_SDK_PATH}/source/max-sdk-base/c74support")
 
 ### 2. C74_LIBRARY_OUTPUT_DIRECTORY
 ```cmake
-set(C74_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/externals")
+set(C74_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../../../objects")
 ```
-- **Why**: Keeps builds self-contained
+- **Why**: Centralizes all Max objects (externals + abstractions) in one location
 - **Default**: `${CMAKE_CURRENT_SOURCE_DIR}/../../../externals`
-- **Result**: `.mxo` files go in project's `build/externals/`
+- **Result**: `.mxo` files go to shared `objects/` folder at project root
 
 ### 3. CMAKE_OSX_ARCHITECTURES ⚠️ CRITICAL
 ```cmake
@@ -122,7 +122,7 @@ xcodebuild -configuration Debug
 
 ### Verify Universal Binary
 ```bash
-lipo -info build/externals/your.external~.mxo/Contents/MacOS/your.external~
+lipo -info ../../../objects/your.external~.mxo/Contents/MacOS/your.external~
 # Should show: Architectures in the fat file: ... are: x86_64 arm64
 ```
 
@@ -167,7 +167,7 @@ your_external_tilde/
 
 **Fix:**
 1. Add to Max search path: Options → File Preferences
-2. Add folder: `/path/to/your_external_tilde/build/externals`
+2. Add folder: `/Users/andy/Dropbox/Developer/AudioDev/Max Experiments/objects`
 3. Restart Max
 
 ### Build succeeds but old version loads

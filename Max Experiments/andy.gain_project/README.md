@@ -54,9 +54,9 @@ andy.gain_project/
 │   └── andy.gain_tilde/              ← Max external source
 │       ├── gain_tilde.cpp            ← C++ implementation
 │       ├── CMakeLists.txt            ← Build configuration
-│       ├── CUSTOM_UI_GUIDE.md        ← Max UI integration
-│       └── build/externals/
-│           └── andy.gain~.mxo        ← Built external (universal)
+│       └── CUSTOM_UI_GUIDE.md        ← Max UI integration
+├── ../objects/
+│   └── andy.gain~.mxo                ← Built external (universal)
 ├── max_patcher/
 │   ├── andy.gain_osc.maxpat          ← OSC integration patcher
 │   └── README.md                      ← Setup instructions
@@ -86,7 +86,7 @@ lipo -info externals/andy.gain~.mxo/Contents/MacOS/andy.gain~
 ### 2. Configure Max
 
 1. Open Max → Options → File Preferences
-2. Add path: `external/andy.gain_tilde/build/externals/`
+2. Add path: `/Users/andy/Dropbox/Developer/AudioDev/Max Experiments/objects`
 3. **Restart Max** (critical!)
 
 ### 3. Open Max Patcher
@@ -231,9 +231,9 @@ Example messages:
 ## Troubleshooting
 
 ### External won't load in Max
-- Check Max search path includes `external/andy.gain_tilde/build/externals/`
+- Check Max search path includes `/Users/andy/Dropbox/Developer/AudioDev/Max Experiments/objects`
 - **Restart Max** (aggressive caching!)
-- Verify with: `lipo -info andy.gain~.mxo/Contents/MacOS/andy.gain~`
+- Verify with: `lipo -info objects/andy.gain~.mxo/Contents/MacOS/andy.gain~`
 
 ### OSC not working
 - Check firewall allows UDP port 7400

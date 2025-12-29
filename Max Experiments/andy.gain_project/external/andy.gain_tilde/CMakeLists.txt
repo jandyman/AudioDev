@@ -17,7 +17,7 @@ set(C74_MAX_SDK_PATH "/Users/andy/Dropbox/Developer/AudioDev/max-sdk")
 # Override SDK defaults to make build location-independent
 # (Without these, SDK assumes project is inside max-sdk/source/)
 set(C74_SUPPORT_DIR "${C74_MAX_SDK_PATH}/source/max-sdk-base/c74support")
-set(C74_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/externals")
+set(C74_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../../../objects")
 
 # Build for both Intel and Apple Silicon (universal binary)
 set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64")

@@ -9,9 +9,19 @@
             "modernui": 1
         },
         "classnamespace": "box",
-        "rect": [ 57.0, 122.0, 827.0, 696.0 ],
+        "rect": [ 603.0, 421.0, 827.0, 696.0 ],
         "helpsidebarclosed": 1,
         "boxes": [
+            {
+                "box": {
+                    "id": "obj-1",
+                    "maxclass": "ezadc~",
+                    "numinlets": 1,
+                    "numoutlets": 2,
+                    "outlettype": [ "signal", "signal" ],
+                    "patching_rect": [ 400.0, 204.0, 45.0, 45.0 ]
+                }
+            },
             {
                 "box": {
                     "id": "obj-43",
@@ -158,17 +168,6 @@
             },
             {
                 "box": {
-                    "id": "obj-7",
-                    "maxclass": "newobj",
-                    "numinlets": 1,
-                    "numoutlets": 1,
-                    "outlettype": [ "signal" ],
-                    "patching_rect": [ 285.0, 267.0, 44.0, 22.0 ],
-                    "text": "noise~"
-                }
-            },
-            {
-                "box": {
                     "id": "obj-8",
                     "maxclass": "newobj",
                     "numinlets": 1,
@@ -176,7 +175,7 @@
                     "outlettype": [ "signal" ],
                     "patching_rect": [ 259.0, 310.0, 70.0, 22.0 ],
                     "saved_object_attributes": {
-                        "gain": 0.0446683592150963
+                        "gain": 0.7079457843841379
                     },
                     "text": "andy.gain~"
                 }
@@ -202,6 +201,12 @@
             }
         ],
         "lines": [
+            {
+                "patchline": {
+                    "destination": [ "obj-8", 0 ],
+                    "source": [ "obj-1", 0 ]
+                }
+            },
             {
                 "patchline": {
                     "destination": [ "obj-16", 0 ],
@@ -268,12 +273,6 @@
                 "patchline": {
                     "destination": [ "obj-8", 0 ],
                     "source": [ "obj-6", 0 ]
-                }
-            },
-            {
-                "patchline": {
-                    "destination": [ "obj-8", 0 ],
-                    "source": [ "obj-7", 0 ]
                 }
             },
             {

@@ -23,8 +23,8 @@ gain_tilde/
 ## Key Feature: Location Independence
 
 This project can be copied ANYWHERE on your system and will build correctly. The only
-configuration needed is the SDK path in CMakeLists.txt line 15. All build output stays
-within the project's `build/externals/` folder.
+configuration needed is the SDK path in CMakeLists.txt line 15. All build output goes
+to the shared `objects/` folder at the project root.
 
 For details on how this works, see [BUILD_DEPENDENCIES.md](BUILD_DEPENDENCIES.md).
 
@@ -39,7 +39,7 @@ The CMakeLists.txt is already configured with your SDK path:
 
 If you move the SDK, edit line 7 in CMakeLists.txt.
 
-**Note:** The build output now goes to `build/externals/` within this project folder, keeping everything self-contained.
+**Note:** The build output goes to the shared `objects/` folder at the project root, where Max can find all externals and abstractions.
 
 ### 2. Generate Xcode Project
 
@@ -64,19 +64,14 @@ xcodebuild -configuration Debug
 
 Build with Cmd+B in Xcode.
 
-### 4. Install the External
+### 4. Use the External
 
-The compiled `gain~.mxo` will be in `build/externals/`
+The compiled `andy.gain~.mxo` will be in the `objects/` folder at the project root.
 
-Copy it to Max's search path:
-```bash
-cp -r build/externals/gain~.mxo ~/Documents/Max\ 8/Library/
-```
-
-Or create a symlink for easier development:
-```bash
-ln -s "$(pwd)/build/externals/gain~.mxo" ~/Documents/Max\ 8/Library/gain~.mxo
-```
+Add the objects folder to Max's search path:
+1. Max → Options → File Preferences
+2. Add path: `/Users/andy/Dropbox/Developer/AudioDev/Max Experiments/objects`
+3. Restart Max
 
 ### 5. Use in Max
 

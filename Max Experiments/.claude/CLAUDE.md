@@ -33,7 +33,7 @@ Without this: "incorrect architecture" error in Max.
 
 ### Max Integration
 - **Always restart Max** after rebuilding (aggressive caching!)
-- Search path: Add `build/externals/` to Max File Preferences
+- Search path: Add `objects/` folder to Max File Preferences
 - Use `andy.` prefix to avoid name collisions
 
 ---
@@ -98,7 +98,7 @@ xcodebuild -configuration Debug
 
 ### Verify Universal Binary
 ```bash
-lipo -info build/externals/your.external~.mxo/Contents/MacOS/your.external~
+lipo -info ../../../objects/your.external~.mxo/Contents/MacOS/your.external~
 # Must show: x86_64 arm64
 ```
 
@@ -205,7 +205,7 @@ When user asks about:
 ### Build System
 - SDK defaults to Intel-only → must override for Apple Silicon
 - Projects can exist anywhere (location-independent)
-- All build output stays in `build/externals/`
+- All build output goes to shared `objects/` folder at project root
 
 ### Modern Pattern
 - Attributes are the right approach (not proxy inlets)

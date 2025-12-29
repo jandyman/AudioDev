@@ -20,8 +20,8 @@ if [ $? -eq 0 ]; then
     echo "Next steps:"
     echo "  1. Open build/gain_tilde.xcodeproj in Xcode"
     echo "  2. Build the project (Cmd+B)"
-    echo "  3. The compiled gain~.mxo will be in build/externals/"
-    echo "  4. Copy it to ~/Documents/Max 8/Library/ to use in Max"
+    echo "  3. The compiled gain~.mxo will be in ../../../objects/"
+    echo "  4. It's already in the shared objects folder for Max to find"
     echo ""
 else
     echo ""

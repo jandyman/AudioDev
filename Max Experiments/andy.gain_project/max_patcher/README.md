@@ -10,7 +10,7 @@ Add the external build directory to Max's search path:
 
 1. Open Max → Options → File Preferences
 2. Click "+" to add a new path
-3. Navigate to: `../external/andy.gain_tilde/build/externals/`
+3. Navigate to: `/Users/andy/Dropbox/Developer/AudioDev/Max Experiments/objects`
 4. Save preferences
 5. **Restart Max** (critical - Max caches externals)
 
@@ -159,9 +159,9 @@ client.send_message("/gain", 2.0)
 ## Troubleshooting
 
 ### "andy.gain~ not found"
-- Check Max search path includes `external/andy.gain_tilde/build/externals/`
+- Check Max search path includes `/Users/andy/Dropbox/Developer/AudioDev/Max Experiments/objects`
 - Restart Max (it caches externals aggressively)
-- Verify `.mxo` exists: `ls ../external/andy.gain_tilde/build/externals/`
+- Verify `.mxo` exists: `ls ../objects/`
 
 ### "OSC-route not found"
 - Install CNMAT OSC package via Package Manager
