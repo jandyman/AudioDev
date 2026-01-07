@@ -9,6 +9,8 @@
 #include "ext_obex.h"
 #include "z_dsp.h"
 
+// Adding random comment to trigger git
+
 // Structure to hold the object data
 typedef struct _gain {
   t_pxobject obj;        // Max/MSP object header
