@@ -1,2 +1,0 @@
-max objectfile mc.limi~ mc.wrapper~ limi~ mc;
-max objectfile mcs.limi~ mcs.limi~ limi~ mcs;

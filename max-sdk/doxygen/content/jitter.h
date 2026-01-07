@@ -1,8 +1,0 @@
-
-
-/**
-	@defgroup jitter Jitter
-
-
-*/
-

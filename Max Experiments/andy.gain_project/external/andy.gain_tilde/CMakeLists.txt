@@ -11,8 +11,23 @@ cmake_minimum_required(VERSION 3.19)
 # See BUILD_DEPENDENCIES.md for full explanation
 #############################################################
 
-# ONLY REQUIRED PATH: Absolute path to Max SDK
-set(C74_MAX_SDK_PATH "/Users/andy/Dropbox/Developer/AudioDev/max-sdk")
+# CONFIGURABLE SDK PATH
+# Priority: 1) CMake command line, 2) Environment variable, 3) Default
+# Set via: cmake -DMAX_SDK_PATH=/path/to/sdk ..
+# Or: export MAX_SDK_PATH=/path/to/sdk
+if(NOT DEFINED MAX_SDK_PATH)
+    if(DEFINED ENV{MAX_SDK_PATH})
+        set(MAX_SDK_PATH "$ENV{MAX_SDK_PATH}")
+        message(STATUS "Using MAX SDK from environment: ${MAX_SDK_PATH}")
+    else()
+        set(MAX_SDK_PATH "/Users/andy/max-sdk")
+        message(STATUS "Using default MAX SDK path: ${MAX_SDK_PATH}")
+    endif()
+else()
+    message(STATUS "Using MAX SDK from command line: ${MAX_SDK_PATH}")
+endif()
+
+set(C74_MAX_SDK_PATH "${MAX_SDK_PATH}")
 
 # Override SDK defaults to make build location-independent
 # (Without these, SDK assumes project is inside max-sdk/source/)
