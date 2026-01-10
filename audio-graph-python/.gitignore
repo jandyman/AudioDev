@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/*.egg-info/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build outputs
+build/*.so
+build/*.pyi
+build/*.dSYM/
+*.o
+*.a
+
+# Test outputs
+test_output.png
+*.wav
+*.mp3
+
+# OS
+.DS_Store
+Thumbs.db
