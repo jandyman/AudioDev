@@ -123,6 +123,64 @@ filter -> output        # Implicit all-to-all (if counts match)
 - Range notation: `a[0:2] -> b[0:2]`
 - Comments: `#`
 
+**Hierarchy Support (Future):**
+
+Post-session discussion on walk: Hierarchy can be cleanly added using port statements in subgraphs.
+
+**Design:**
+```
+# reverb_chain.graph (subgraph)
+## Ports
+input: 2
+output: 2
+
+## Processors
+pre: FaustGain("gain.dsp")
+reverb: FaustReverb("reverb.dsp")
+post: FaustGain("gain.dsp")
+
+## Connections
+input[0:2] -> pre[0:2]
+pre -> reverb
+reverb -> post
+post -> output
+
+# main.graph (top-level)
+## Processors
+chain1: reverb_chain.graph   # Subgraph as processor
+chain2: reverb_chain.graph   # Separate instance
+
+## Parameters
+chain1.pre.gain = 0.8         # Dot notation for nested params
+chain1.reverb.decay = 2.0
+chain2.pre.gain = 0.6         # Independent instance
+```
+
+**Implementation Rules:**
+1. **Port Declarations** - Non-top-level graphs declare input/output counts
+2. **Uniform Interface** - Subgraphs look exactly like processors
+3. **Dot Notation** - Parameters accessed via `subgraph.processor.param`
+4. **Tree Structure Only** - No circular dependencies allowed
+5. **Unique Names Per Scope** - Names must be unique at each hierarchy level
+6. **Multiple Instances** - Each named instance is independent with its own state
+
+**Resolution Logic:**
+- `.graph` extension → Load subgraph recursively
+- `.dsp` extension → Load Faust module
+- No extension with `()` → Load C++ class
+
+**Benefits:**
+- ✅ Clean encapsulation
+- ✅ Testable subgraphs in isolation
+- ✅ Composable (build complex from simple)
+- ✅ Matches Max subpatcher model
+- ✅ No fundamental blockers to future implementation
+
+**Considerations:**
+- Circular dependency detection during graph loading
+- Capture mode depth configuration (capture inside subgraphs or just boundaries)
+- Parameter namespace flattening vs hierarchical
+
 ### 6. Graph System Enhancements
 
 **Implemented Features:**

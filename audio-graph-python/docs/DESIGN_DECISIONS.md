@@ -259,6 +259,61 @@ filter -> output              # Stereo pair
 - `blka[i] -> blkb[j]` - Single pin connection
 - `blka[i:j] -> blkb[i:j]` - Range notation
 
+### Hierarchy Support
+
+**Decision:** Support hierarchical graphs using port declarations in subgraphs.
+
+**Rationale:**
+- Clean encapsulation of complex processing chains
+- Testable subgraphs in isolation
+- Composable (build complex from simple)
+- Matches Max subpatcher model
+- Uniform interface (subgraphs look like processors)
+
+**Design:**
+```
+# reverb_chain.graph (subgraph)
+## Ports
+input: 2
+output: 2
+
+## Processors
+pre: FaustGain("gain.dsp")
+reverb: FaustReverb("reverb.dsp")
+post: FaustGain("gain.dsp")
+
+## Connections
+input -> pre -> reverb -> post -> output
+
+# main.graph (top-level)
+## Processors
+chain1: reverb_chain.graph   # Subgraph as processor
+chain2: reverb_chain.graph   # Separate instance
+
+## Parameters
+chain1.pre.gain = 0.8         # Dot notation
+chain1.reverb.decay = 2.0
+chain2.pre.gain = 0.6         # Independent state
+```
+
+**Implementation Rules:**
+1. **Port declarations** - Subgraphs declare input/output pin counts
+2. **Dot notation** - Parameters: `subgraph.processor.param = value`
+3. **Tree structure only** - No circular dependencies
+4. **Unique names per scope** - Name uniqueness at each hierarchy level
+5. **Multiple instances** - Each instance has independent state
+
+**Resolution:**
+- `name.graph` → Load subgraph recursively
+- `name.dsp` → Load Faust module
+- `Name()` → Load C++ class
+
+**Future Implementation Notes:**
+- Circular dependency detection during load
+- Capture mode depth (capture inside subgraphs or just boundaries)
+- Parameter namespace (flatten vs hierarchical)
+- Top-level graphs use file I/O or test vectors for ports
+
 **Future:** Parser to load `.graph` files and build Python AudioGraph.
 
 ## Faust Integration Insights
