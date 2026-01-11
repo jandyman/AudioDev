@@ -1,3 +1,9 @@
 
 GenericDSP/CoreDspTest/DerivedData/
 build/
+
+# Generated plots and images
+*.png
+
+# Xcode user state
+*.xcuserstate

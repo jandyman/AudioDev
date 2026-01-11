@@ -9,7 +9,7 @@
             "modernui": 1
         },
         "classnamespace": "box",
-        "rect": [ 57.0, 122.0, 827.0, 696.0 ],
+        "rect": [ 377.0, 279.0, 827.0, 696.0 ],
         "helpsidebarclosed": 1,
         "boxes": [
             {
@@ -174,11 +174,11 @@
                     "numinlets": 1,
                     "numoutlets": 1,
                     "outlettype": [ "signal" ],
-                    "patching_rect": [ 259.0, 310.0, 70.0, 22.0 ],
+                    "patching_rect": [ 259.0, 310.0, 99.0, 22.0 ],
                     "saved_object_attributes": {
-                        "gain": 0.0446683592150963
+                        "gain": 0.450276255607605
                     },
-                    "text": "andy.gain~"
+                    "text": "andy.faust_gain~"
                 }
             },
             {
