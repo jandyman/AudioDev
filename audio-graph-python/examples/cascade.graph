@@ -3,7 +3,7 @@
 
 ## Processors
 cpp_gain: ExampleProcessor()
-faust_gain: simple_gain.dsp
+faust_gain: gain.dsp
 
 ## Routing
 input -> cpp_gain

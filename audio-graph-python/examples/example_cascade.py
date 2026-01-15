@@ -12,8 +12,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Add modules to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'python'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'build'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'build'))
 
 from python import CppProcessor, FaustProcessor, AudioGraph
 
@@ -25,8 +25,8 @@ except ImportError:
     sys.exit(1)
 
 # Path to Faust DSP file
-FAUST_DSP_PATH = os.path.join(os.path.dirname(__file__), '..',
-                              'faust-python-interop', 'faust', 'simple_gain.dsp')
+FAUST_DSP_PATH = os.path.join(os.path.dirname(__file__), '..', '..',
+                              'dsp_library', 'faust', 'gain.dsp')
 if not os.path.exists(FAUST_DSP_PATH):
     print(f"Error: Faust DSP not found at {FAUST_DSP_PATH}")
     sys.exit(1)

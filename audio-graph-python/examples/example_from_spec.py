@@ -11,8 +11,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Add modules to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'python'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'build'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'build'))
 
 from python import CppProcessor, FaustProcessor, AudioGraph
 
@@ -110,8 +110,8 @@ def generate_graph_from_spec(spec, sample_rate=44100):
         # Determine processor type and create instance
         if proc_type.endswith('.dsp'):
             # Faust processor
-            dsp_path = os.path.join(os.path.dirname(__file__), '..',
-                                    'faust-python-interop', 'faust', proc_type)
+            dsp_path = os.path.join(os.path.dirname(__file__), '..', '..',
+                                    'dsp_library', 'faust', proc_type)
             if not os.path.exists(dsp_path):
                 raise FileNotFoundError(f"Faust DSP not found: {dsp_path}")
             processor = FaustProcessor(dsp_path, name=proc_name)

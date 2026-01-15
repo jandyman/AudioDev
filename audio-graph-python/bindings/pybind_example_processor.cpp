@@ -1,4 +1,4 @@
-#include "example_processor.h"
+#include "../../dsp_library/cpp/include/example_processor.h"
 #include "audio_support.h"
 
 PYBIND11_MODULE(pybind_example_processor, m) {

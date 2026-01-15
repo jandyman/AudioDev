@@ -6,12 +6,15 @@ Hybrid audio processing graph system combining Faust and C++ processors with Pyt
 
 ```
 audio-graph-python/
-├── cpp_modules/          # C++ DSP modules with pybind11 wrappers
-├── faust_modules/        # Faust .dsp source files
 ├── python/               # Python graph system and processor wrappers
-├── build/                # Build outputs (.so files)
-└── tests/                # Test files
+├── bindings/             # pybind11 bindings for C++ DSP (from dsp_library)
+├── examples/             # Example scripts and graph specifications
+├── test_audio/           # Test audio files
+├── tests/                # pytest test suite
+└── build/                # Build outputs (.so files)
 ```
+
+Core DSP implementations (both C++ and Faust) live in `../dsp_library/` and are shared with Max externals.
 
 ## Quick Start
 
