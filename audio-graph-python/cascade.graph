@@ -1,0 +1,15 @@
+# Cascade Graph Specification
+# Input → C++ Gain → Faust Gain → Output
+
+## Processors
+cpp_gain: ExampleProcessor()
+faust_gain: simple_gain.dsp
+
+## Routing
+input -> cpp_gain
+cpp_gain -> faust_gain
+faust_gain -> output
+
+## Parameters
+cpp_gain.gain = 0.5
+faust_gain.gain = 0.8
