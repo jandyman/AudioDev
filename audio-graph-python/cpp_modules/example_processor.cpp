@@ -2,9 +2,7 @@
 #include <stdexcept>
 
 ExampleProcessor::ExampleProcessor()
-  : sample_rate_(0), num_inputs_(1), num_outputs_(1) {
-  // Initialize default parameters
-  params_["gain"] = 1.0f;
+  : sample_rate_(0), num_inputs_(1), num_outputs_(1), gain_(1.0f) {
 }
 
 void ExampleProcessor::init(int sample_rate) {
@@ -15,43 +13,33 @@ void ExampleProcessor::init(int sample_rate) {
 
 void ExampleProcessor::process(const vector<vector<float>>& inputs,
                                vector<vector<float>>& outputs) {
-  // Simple gain processing
-  float gain = params_["gain"];
-
-  // Process each channel
+  // Apply gain to each channel
   for (size_t ch = 0; ch < inputs.size(); ch++) {
     const vector<float>& input = inputs[ch];
     vector<float>& output = outputs[ch];
 
-    // Apply gain to each sample
     for (size_t i = 0; i < input.size(); i++) {
-      output[i] = input[i] * gain;
+      output[i] = input[i] * gain_;
     }
   }
 }
 
 void ExampleProcessor::set_param(const string& name, float value) {
-  auto it = params_.find(name);
-  if (it != params_.end()) {
-    params_[name] = value;
+  if (name == "gain") {
+    gain_ = value;
   } else {
     throw std::runtime_error("Parameter '" + name + "' not found");
   }
 }
 
 float ExampleProcessor::get_param(const string& name) const {
-  auto it = params_.find(name);
-  if (it != params_.end()) {
-    return it->second;
+  if (name == "gain") {
+    return gain_;
   } else {
     throw std::runtime_error("Parameter '" + name + "' not found");
   }
 }
 
 vector<string> ExampleProcessor::get_param_names() const {
-  vector<string> names;
-  for (const auto& pair : params_) {
-    names.push_back(pair.first);
-  }
-  return names;
+  return {"gain"};
 }

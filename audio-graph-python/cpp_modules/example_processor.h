@@ -1,20 +1,20 @@
 #pragma once
 #include <vector>
 #include <string>
-#include <map>
 
 using std::vector;
 using std::string;
-using std::map;
 
 // Example processor: Simple gain with parameter support
 // Demonstrates the standard audio processor interface
 class ExampleProcessor {
 private:
   int sample_rate_;
-  int num_inputs_;
-  int num_outputs_;
-  map<string, float> params_;
+  const int num_inputs_;
+  const int num_outputs_;
+
+  // Parameters
+  float gain_;
 
 public:
   ExampleProcessor();

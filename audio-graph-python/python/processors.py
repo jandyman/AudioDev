@@ -60,21 +60,27 @@ class FaustProcessor(AudioProcessor):
             dsp_file_path: Path to .dsp file
             name: Processor name (for debugging)
         """
-        self.dsp_file_path = dsp_file_path
-        self.name = name
-        self.sample_rate = 0
-        self.engine = None
-        self.proc = None
-        self._num_inputs = 0
-        self._num_outputs = 0
+        object.__setattr__(self, 'dsp_file_path', dsp_file_path)
+        object.__setattr__(self, 'name', name)
+        object.__setattr__(self, 'sample_rate', 0)
+        object.__setattr__(self, 'engine', None)
+        object.__setattr__(self, 'proc', None)
+        object.__setattr__(self, '_num_inputs', 0)
+        object.__setattr__(self, '_num_outputs', 0)
+        object.__setattr__(self, '_param_names', set())
+        object.__setattr__(self, '_param_values', {})  # Cache for get_param
+        object.__setattr__(self, '_param_paths', {})  # Map short name to full path
 
     def init(self, sample_rate: int) -> None:
         """Initialize Faust processor with sample rate."""
-        self.sample_rate = sample_rate
+        object.__setattr__(self, 'sample_rate', sample_rate)
 
         # Create DawDreamer engine for this processor
-        self.engine = daw.RenderEngine(sample_rate, 512)
-        self.proc = self.engine.make_faust_processor(self.name)
+        engine = daw.RenderEngine(sample_rate, 512)
+        object.__setattr__(self, 'engine', engine)
+
+        proc = self.engine.make_faust_processor(self.name)
+        object.__setattr__(self, 'proc', proc)
 
         # Load and compile DSP code
         with open(self.dsp_file_path, 'r') as f:
@@ -82,20 +88,44 @@ class FaustProcessor(AudioProcessor):
         self.proc.set_dsp_string(dsp_code)
 
         # Cache channel counts
-        self._num_inputs = self.proc.get_num_input_channels()
-        self._num_outputs = self.proc.get_num_output_channels()
+        object.__setattr__(self, '_num_inputs', self.proc.get_num_input_channels())
+        object.__setattr__(self, '_num_outputs', self.proc.get_num_output_channels())
+
+        # Cache parameter names and values from DawDreamer
+        param_descs = self.proc.get_parameters_description()
+        param_names = set()
+        param_values = {}
+        param_paths = {}
+
+        for desc in param_descs:
+            # DawDreamer returns list of dicts with parameter info
+            # Format: {'name': '/path/name', 'label': 'name', 'value': default_value, ...}
+            if isinstance(desc, dict):
+                # Use 'label' for parameter name (short name without path)
+                param_name = desc.get('label', '')
+                param_path = desc.get('name', '')  # Full path for set_parameter
+                if param_name:
+                    param_names.add(param_name)
+                    # Store mapping from short name to full path
+                    if param_path:
+                        param_paths[param_name] = param_path
+                    # Get current/default value
+                    if 'value' in desc:
+                        param_values[param_name] = desc['value']
+
+        object.__setattr__(self, '_param_names', param_names)
+        object.__setattr__(self, '_param_paths', param_paths)
+        # Update param_values dict with initial values
+        object.__getattribute__(self, '_param_values').update(param_values)
 
     def process(self, inputs: List[np.ndarray]) -> List[np.ndarray]:
         """Process audio using DawDreamer."""
         if self.proc is None:
             raise RuntimeError("Processor not initialized. Call init() first.")
 
-        # DawDreamer expects interleaved multichannel arrays
-        # Convert list of mono arrays to multichannel array
-        if len(inputs) == 1:
-            input_array = inputs[0]
-        else:
-            input_array = np.stack(inputs, axis=1)
+        # DawDreamer expects shape (channels, samples)
+        # Stack inputs to create multichannel array
+        input_array = np.stack(inputs, axis=0)
 
         # Create playback processor for input
         playback = self.engine.make_playback_processor("input", input_array)
@@ -118,15 +148,21 @@ class FaustProcessor(AudioProcessor):
         """Set Faust parameter by name."""
         if self.proc is None:
             raise RuntimeError("Processor not initialized. Call init() first.")
-        self.proc.set_parameter(name, value)
+        # Use full path if available, otherwise use name directly
+        param_path = self._param_paths.get(name, name)
+        self.proc.set_parameter(param_path, value)
+        # Cache the value for get_param
+        self._param_values[name] = value
 
     def get_param(self, name: str) -> float:
         """Get Faust parameter value by name."""
         if self.proc is None:
             raise RuntimeError("Processor not initialized. Call init() first.")
-        # DawDreamer doesn't have direct get by name, so we'd need to track this
-        # For now, raise NotImplementedError
-        raise NotImplementedError("get_param not yet implemented for Faust processors")
+        # Return cached value (DawDreamer doesn't provide direct get)
+        if name in self._param_values:
+            return self._param_values[name]
+        else:
+            raise ValueError(f"Parameter '{name}' not found or not yet set")
 
     def get_num_inputs(self) -> int:
         """Get number of input channels."""
@@ -135,6 +171,23 @@ class FaustProcessor(AudioProcessor):
     def get_num_outputs(self) -> int:
         """Get number of output channels."""
         return self._num_outputs
+
+    def __setattr__(self, name: str, value) -> None:
+        """Route parameter assignments to set_param."""
+        # Check if this is a known parameter name
+        if hasattr(self, '_param_names') and name in self._param_names:
+            self.set_param(name, value)
+        else:
+            # Use object.__setattr__ to avoid infinite recursion
+            object.__setattr__(self, name, value)
+
+    def __getattr__(self, name: str):
+        """Route parameter access to get_param."""
+        # Check if this is a known parameter name
+        if hasattr(self, '_param_names') and name in object.__getattribute__(self, '_param_names'):
+            return self.get_param(name)
+        # Default behavior for unknown attributes
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
 
 
 class CppProcessor(AudioProcessor):
@@ -147,11 +200,14 @@ class CppProcessor(AudioProcessor):
         Args:
             cpp_module_instance: Instance of pybind11-wrapped C++ class
         """
-        self.cpp = cpp_module_instance
+        object.__setattr__(self, 'cpp', cpp_module_instance)
+        object.__setattr__(self, '_param_names', set())
 
     def init(self, sample_rate: int) -> None:
         """Initialize C++ processor with sample rate."""
         self.cpp.init(sample_rate)
+        # Cache parameter names after init
+        object.__setattr__(self, '_param_names', set(self.cpp.get_param_names()))
 
     def process(self, inputs: List[np.ndarray]) -> List[np.ndarray]:
         """Process audio using C++ module."""
@@ -172,3 +228,20 @@ class CppProcessor(AudioProcessor):
     def get_num_outputs(self) -> int:
         """Get number of output channels."""
         return self.cpp.get_num_outputs()
+
+    def __setattr__(self, name: str, value) -> None:
+        """Route parameter assignments to set_param."""
+        # Check if this is a known parameter name
+        if hasattr(self, '_param_names') and name in self._param_names:
+            self.cpp.set_param(name, value)
+        else:
+            # Use object.__setattr__ to avoid infinite recursion
+            object.__setattr__(self, name, value)
+
+    def __getattr__(self, name: str):
+        """Route parameter access to get_param."""
+        # Check if this is a known parameter name
+        if hasattr(self, '_param_names') and name in object.__getattribute__(self, '_param_names'):
+            return self.cpp.get_param(name)
+        # Default behavior for unknown attributes
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
