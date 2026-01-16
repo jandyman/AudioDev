@@ -49,11 +49,12 @@ Faust `.dsp` files are compiled dynamically by DawDreamer in Python or can be co
 
 ### C++ Processors
 - **example_processor**: Simple gain (template/example)
+- **split_chorus**: Split chorus effect - mono input, stereo output with independent delay/modulation per channel
 
 ### Faust Modules
 - **gain.dsp**: Simple gain processor
 - **split_gain.dsp**: Split signal with gain on one output
-- **dual_tap_delay.dsp**: Shared delay buffer with two independent read taps (for chorus/pitch shift)
+- **dual_tap_delay.dsp**: Shared delay buffer with two independent read taps, 9th order Lagrange interpolation (for chorus/pitch shift)
 
 ## Adding New Processors
 

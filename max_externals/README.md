@@ -8,10 +8,11 @@ Each external lives in its own subdirectory:
 
 ```
 max_externals/
-├── gain_tilde/           # gain~ external
-│   ├── gain_tilde.cpp    # Max wrapper code
-│   └── Makefile          # Build script
-├── dual_band_chorus_tilde/
+├── dual_tap_delay_tilde/ # dual_tap_delay~ - Faust-based dual tap delay
+│   ├── *.xcodeproj       # Xcode project (CMake-generated)
+│   └── ...
+├── split_chorus_tilde/   # split_chorus~ - C++ split chorus effect
+│   ├── *.xcodeproj       # Xcode project
 │   └── ...
 └── README.md             # This file
 ```
@@ -60,11 +61,11 @@ All DSP logic lives in `dsp_library/`. Max externals are thin wrappers that:
 
 ## Current Externals
 
-(None yet - to be created)
+- **dual_tap_delay~**: Dual tap delay with shared buffer and 9th order Lagrange interpolation (Faust-based)
+- **split_chorus~**: Split chorus effect with independent delay/modulation per channel (C++)
 
 ## Planned Externals
 
-- **dual_band_chorus~**: Dual-band chorus effect
 - **pitch_shifter~**: Bass guitar pitch shifter
 
 ## Resources
