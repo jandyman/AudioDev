@@ -9,7 +9,7 @@
             "modernui": 1
         },
         "classnamespace": "box",
-        "rect": [ 1811.0, 281.0, 1000.0, 780.0 ],
+        "rect": [ 1759.0, 281.0, 1000.0, 780.0 ],
         "boxes": [
             {
                 "box": {
@@ -22,12 +22,12 @@
                     "lockeddragscroll": 0,
                     "lockedsize": 0,
                     "maxclass": "bpatcher",
-                    "name": "Chorus~.maxpat",
+                    "name": "Chorus_Faust~.maxpat",
                     "numinlets": 1,
                     "numoutlets": 1,
                     "offset": [ 0.0, 0.0 ],
                     "outlettype": [ "signal" ],
-                    "patching_rect": [ 192.0, 209.0, 289.6000044643879, 240.80000358819962 ],
+                    "patching_rect": [ 192.0, 215.0, 289.6000044643879, 240.80000358819962 ],
                     "varname": "Chorus~",
                     "viewvisibility": 1
                 }
