@@ -9,14 +9,12 @@
 // drops significantly below the slow envelope, we know a note has ended and
 // arm a sensitive trigger. The next energy rise fires immediately.
 //
-// This works because:
-//   - Note endings produce a clear drop in the fast/slow envelope ratio
-//   - Once we're confident a note has ended, false triggers are benign
-//   - The slow envelope provides context for "where energy is dropping from"
-//
 // Input 1:  audio signal
 // Output 1: attack impulse (0 or 1)
-// Output 2: adaptive threshold (debug probe)
+// Output 2: adaptive threshold (probe)
+// Output 3: fast envelope (probe)
+// Output 4: slow envelope (probe)
+// Output 5: note-ended flag (probe: 1 = armed, 0 = sustaining)
 
 import("stdfaust.lib");
 
@@ -36,7 +34,7 @@ slow_attack  = 0.050;   // 50ms
 slow_release = 0.200;   // 200ms
 
 // Note-end detection: when fast/slow ratio drops below this, arm the trigger
-end_ratio = 0.5;  // fast has dropped to 50% of slow -> note has ended
+end_ratio = 0.75;  // fast has dropped to 75% of slow -> note has ended
 
 // Attack sensitivity once armed
 armed_thresh  = 0.0002;  // Very low - any energy rise triggers when armed
@@ -72,7 +70,7 @@ with {
 // Main process
 // ============================================================
 
-process(audio) = trigger, threshold
+process(audio) = trigger, threshold, fast_env, slow_env, note_ended
 with {
     // RMS front-end
     rms = rms_env(rms_window, audio);

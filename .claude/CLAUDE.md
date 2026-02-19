@@ -8,7 +8,14 @@ Always activate the conda environment before running Python scripts:
 ```bash
 source ~/miniforge3/etc/profile.d/conda.sh && conda activate scipy
 ```
-This environment has numpy, matplotlib, dawdreamer, and other dependencies needed for testing Faust modules and audio processing.
+This environment has numpy, matplotlib, dawdreamer, pybind11, and other dependencies needed for testing Faust modules and audio processing.
+
+This environment is also required when building Faust modules for Python:
+```bash
+cd audio-graph-python/build
+make -f faust.make DSP=attack_detector
+```
+The build needs pybind11 headers from the conda environment.
 
 ## Project Structure
 

@@ -44,6 +44,7 @@ set(FAUST_CPP_FILE "${CMAKE_CURRENT_BINARY_DIR}/faust_dual_tap_delay.cpp")
 # Include directories
 include_directories(
     "${CMAKE_CURRENT_BINARY_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../dsp_library/faust"
     "${C74_SUPPORT_DIR}"
     "${MAX_SDK_INCLUDES}"
     "${MAX_SDK_MSP_INCLUDES}"

@@ -1,15 +1,21 @@
 """
-Attack detector demo — visualization of Faust module probe outputs.
+Attack detector demo with chunked (block-based) processing.
 
-All DSP is done in the Faust module. Python is purely test harness and visualization.
-The Faust module outputs probe signals for its internal state, which we plot directly.
+Processes audio through the Faust attack detector in small blocks,
+simulating real-time operation. Spools all probe outputs across chunks
+and plots the full file, identical to the single-buffer demo.
+
+This validates:
+  - Faust state persists across chunk boundaries (envelopes, counters)
+  - Results match single-buffer processing
+  - Module is ready for real-time block-based use
 
 Faust outputs:
   0: attack impulse (0 or 1)
   1: adaptive threshold
   2: fast envelope
   3: slow envelope
-  4: note-ended flag (1 = armed, 0 = sustaining)
+  4: note-ended flag
 """
 import sys
 import os
@@ -23,15 +29,16 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'build'))
 from python import FaustProcessor
 
 
-def run_attack_detector_demo():
-    print("Attack Detector Demo")
+def run_chunked_demo():
+    print("Attack Detector — Chunked Processing Demo")
     print("=" * 60)
+
+    CHUNK_SIZE = 128  # Typical real-time block size
 
     # Load input audio
     input_path = os.path.join(os.path.dirname(__file__), '..', 'test_audio', 'Bass Notes No Gap.wav')
     sample_rate, audio_data = wav.read(input_path)
 
-    # Convert to float [-1, 1]
     if audio_data.dtype == np.int16:
         audio_in = audio_data.astype(np.float64) / 32768.0
     elif audio_data.dtype == np.int32:
@@ -44,22 +51,38 @@ def run_attack_detector_demo():
 
     num_samples = len(audio_in)
     duration = num_samples / sample_rate
+    num_chunks = (num_samples + CHUNK_SIZE - 1) // CHUNK_SIZE
 
     print(f"\nInput: {os.path.basename(input_path)}")
     print(f"  Sample rate: {sample_rate} Hz")
     print(f"  Duration: {duration:.2f} seconds")
     print(f"  Samples: {num_samples}")
+    print(f"  Chunk size: {CHUNK_SIZE} samples ({CHUNK_SIZE / sample_rate * 1000:.1f} ms)")
+    print(f"  Number of chunks: {num_chunks}")
 
     # Create Faust processor
     dsp_path = os.path.join(os.path.dirname(__file__), '..', '..', 'dsp_library', 'faust', 'attack_detector.dsp')
     processor = FaustProcessor(dsp_path, name="attack_detector")
     processor.init(sample_rate)
 
-    print(f"\nProcessor: {processor.get_num_inputs()} input(s), {processor.get_num_outputs()} output(s)")
+    num_outputs = processor.get_num_outputs()
+    print(f"\nProcessor: {processor.get_num_inputs()} input(s), {num_outputs} output(s)")
 
-    # Process: 1 input -> 5 outputs
-    print("Processing...")
-    outputs = processor.process([audio_in])
+    # Process in chunks, spool outputs
+    print(f"Processing in {CHUNK_SIZE}-sample chunks...")
+    output_accum = [[] for _ in range(num_outputs)]
+
+    for start in range(0, num_samples, CHUNK_SIZE):
+        end = min(start + CHUNK_SIZE, num_samples)
+        chunk = audio_in[start:end]
+
+        chunk_outputs = processor.process([chunk])
+
+        for ch in range(num_outputs):
+            output_accum[ch].append(chunk_outputs[ch])
+
+    # Concatenate all chunks
+    outputs = [np.concatenate(ch_list) for ch_list in output_accum]
 
     trigger = outputs[0]
     threshold = outputs[1]
@@ -67,15 +90,34 @@ def run_attack_detector_demo():
     slow_env = outputs[3]
     note_ended = outputs[4]
 
+    # Also run single-buffer for comparison
+    print("Processing single-buffer for comparison...")
+    processor_ref = FaustProcessor(dsp_path, name="attack_detector_ref")
+    processor_ref.init(sample_rate)
+    ref_outputs = processor_ref.process([audio_in])
+
+    # Compare chunked vs single-buffer
+    max_errors = []
+    output_names = ['trigger', 'threshold', 'fast_env', 'slow_env', 'note_ended']
+    print(f"\nChunked vs single-buffer comparison:")
+    for i, name in enumerate(output_names):
+        max_err = np.max(np.abs(outputs[i] - ref_outputs[i]))
+        max_errors.append(max_err)
+        status = "MATCH" if max_err < 1e-6 else f"DIFF (max err: {max_err:.6e})"
+        print(f"  {name}: {status}")
+
     # Find trigger points
     trigger_indices = np.where(trigger > 0.5)[0]
     trigger_times_ms = trigger_indices / sample_rate * 1000.0
 
-    print(f"\nDetected {len(trigger_indices)} attack(s):")
-    for i, (idx, t_ms) in enumerate(zip(trigger_indices, trigger_times_ms)):
-        print(f"  Attack {i+1}: sample {idx} ({t_ms:.1f} ms / {t_ms/1000:.3f} s)")
+    ref_trigger_indices = np.where(ref_outputs[0] > 0.5)[0]
 
-    # Derived signals for plotting
+    print(f"\nDetected {len(trigger_indices)} attack(s) (chunked), "
+          f"{len(ref_trigger_indices)} (single-buffer):")
+    for i, (idx, t_ms) in enumerate(zip(trigger_indices, trigger_times_ms)):
+        print(f"  Attack {i+1}: sample {idx} ({t_ms:.1f} ms)")
+
+    # Derived signals
     fast_deriv = np.diff(fast_env, prepend=0.0)
     epsilon = 0.0001
     ratio = fast_env / (slow_env + epsilon)
@@ -83,9 +125,9 @@ def run_attack_detector_demo():
     # Time axis
     t = np.arange(num_samples) / sample_rate
 
-    # Plot
+    # Plot — same layout as single-buffer demo
     fig, axes = plt.subplots(5, 1, figsize=(16, 14))
-    fig.suptitle("Attack Detector: Bass Notes No Gap.wav", fontsize=14)
+    fig.suptitle(f"Attack Detector — Chunked Processing ({CHUNK_SIZE} samples/chunk)", fontsize=14)
 
     # Panel 1: Waveform with triggers
     axes[0].plot(t, audio_in, 'b-', linewidth=0.3, alpha=0.7)
@@ -96,7 +138,7 @@ def run_attack_detector_demo():
     axes[0].grid(True, alpha=0.3)
     axes[0].set_xlim(0, t[-1])
 
-    # Panel 2: Fast and slow envelopes with note-ended regions
+    # Panel 2: Fast and slow envelopes
     axes[1].plot(t, fast_env, 'g-', linewidth=0.8, label='Fast env')
     axes[1].plot(t, slow_env, 'm-', linewidth=0.8, label='Slow env')
     axes[1].fill_between(t, 0, axes[1].get_ylim()[1] if axes[1].get_ylim()[1] > 0 else 0.2,
@@ -104,7 +146,7 @@ def run_attack_detector_demo():
     for idx in trigger_indices:
         axes[1].axvline(t[idx], color='red', linewidth=1, alpha=0.5)
     axes[1].set_ylabel('Level')
-    axes[1].set_title('Fast vs slow envelope (from Faust probes) — shaded = note ended')
+    axes[1].set_title('Fast vs slow envelope (Faust probes, chunked) — shaded = note ended')
     axes[1].legend(loc='upper right', fontsize=8)
     axes[1].grid(True, alpha=0.3)
     axes[1].set_xlim(0, t[-1])
@@ -124,7 +166,7 @@ def run_attack_detector_demo():
 
     # Panel 4: Fast derivative vs threshold
     axes[3].plot(t, fast_deriv, 'b-', linewidth=0.3, alpha=0.7, label='Fast env derivative')
-    axes[3].plot(t, threshold, 'r-', linewidth=1.0, label='Adaptive threshold (Faust)')
+    axes[3].plot(t, threshold, 'r-', linewidth=1.0, label='Adaptive threshold')
     for idx in trigger_indices:
         axes[3].axvline(t[idx], color='green', linewidth=1, alpha=0.5)
     axes[3].set_ylabel('Derivative')
@@ -133,7 +175,7 @@ def run_attack_detector_demo():
     axes[3].grid(True, alpha=0.3)
     axes[3].set_xlim(0, t[-1])
 
-    # Panel 5: Zoomed view around a detected attack
+    # Panel 5: Zoomed view
     zoom_idx = 1 if len(trigger_indices) > 1 else 0
     if len(trigger_indices) > zoom_idx:
         trig = trigger_indices[zoom_idx]
@@ -161,14 +203,14 @@ def run_attack_detector_demo():
 
     plt.tight_layout(rect=[0, 0, 1, 0.97])
     plt.subplots_adjust(hspace=0.45)
-    output_path = os.path.join(os.path.dirname(__file__), 'attack_detector_test.png')
+    output_path = os.path.join(os.path.dirname(__file__), 'attack_detector_chunked_test.png')
     plt.savefig(output_path, dpi=150)
     print(f"\nPlot saved to {output_path}")
     plt.show()
 
     print("\n" + "=" * 60)
-    print("Attack Detector Demo Complete")
+    print("Chunked Processing Demo Complete")
 
 
 if __name__ == "__main__":
-    run_attack_detector_demo()
+    run_chunked_demo()
