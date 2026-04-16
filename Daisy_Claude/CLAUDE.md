@@ -50,24 +50,34 @@ See `docs/spec/01_hardware_overview.md` for the full summary. Irreducible facts:
 ## Directory layout
 
 ```
-Daisy_Claude/
-├── CLAUDE.md                      this file — project index
+Daisy_Claude/                         repo subfolder; CubeIDE workspace lives here too
+├── CLAUDE.md                         this file — project index
+├── .metadata/                        CubeIDE workspace state (gitignored)
 ├── docs/
-│   └── spec/                      spec documents, frozen once written
+│   └── spec/                         spec documents, append-only once frozen
 │       ├── 01_hardware_overview.md
-│       ├── 02_...
-├── hardware/                      reference PDFs and vendor source
-│   ├── seed/                      Daisy Seed Rev 7 datasheet, schematic, pinout
-│   ├── pod/                       Daisy Pod Rev 5 datasheet, schematic, pinout
-│   ├── libdaisy_ref/              libDaisy source files pulled for cross-reference
-│   ├── RM0433.pdf                 STM32H7 reference manual (TODO: downloading)
-│   ├── stm32h750ib_datasheet.pdf  (TODO: downloading)
-│   └── ES0392_errata.pdf          (TODO: downloading)
-├── src/                           firmware source (does not exist yet)
-├── include/
-├── linker/
-└── Makefile
+│       ├── 02_step1_startup_and_clock.md
+│       └── 03_project_layout.md      reorg into per-target subfolders
+├── hardware/                         reference PDFs and vendor source (shared)
+│   ├── seed/                         Daisy Seed Rev 7 datasheet, schematic, pinout
+│   ├── pod/                          Daisy Pod Rev 5 datasheet, schematic, pinout
+│   └── libdaisy_ref/                 libDaisy source pulled for cross-reference only
+└── seed_h750/                        firmware project — one subfolder per hardware target
+    ├── Makefile                      hand-written, build artifacts in seed_h750/build/
+    ├── linker/
+    │   └── stm32h750_flash.ld
+    ├── include/
+    │   └── board.h
+    ├── src/
+    │   └── … (.c, .h, startup_*.s)
+    ├── build/                        gitignored
+    └── .project, .cproject, .settings/, *.launch     CubeIDE project metadata
 ```
+
+Each `<target>/` subfolder is one self-contained CubeIDE project: own Makefile,
+own linker script, own debug launch config. A future Stage 2 port to a custom H743
+board would land as `custom_h743/` next to `seed_h750/`, sharing `docs/` and
+`hardware/` but with its own build and project metadata.
 
 ## Working conventions
 

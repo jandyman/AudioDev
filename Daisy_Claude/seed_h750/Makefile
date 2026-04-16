@@ -23,8 +23,8 @@ SIZE    := $(TOOLCHAIN_PREFIX)size
 # ----- paths -----
 # CMSIS headers are provided by the libDaisy checkout next door. We do NOT
 # vendor them into this repo — only these two include paths are needed.
-CMSIS_CORE_DIR   := ../DaisyExamples/libDaisy/Drivers/CMSIS/Include
-CMSIS_DEVICE_DIR := ../DaisyExamples/libDaisy/Drivers/CMSIS/Device/ST/STM32H7xx/Include
+CMSIS_CORE_DIR   := ../../DaisyExamples/libDaisy/Drivers/CMSIS/Include
+CMSIS_DEVICE_DIR := ../../DaisyExamples/libDaisy/Drivers/CMSIS/Device/ST/STM32H7xx/Include
 
 INCLUDES := \
   -Iinclude \
