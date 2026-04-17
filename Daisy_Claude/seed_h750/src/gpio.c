@@ -58,3 +58,27 @@ void gpio_toggle(GPIO_TypeDef *port, uint32_t pin) {
 bool gpio_read(GPIO_TypeDef *port, uint32_t pin) {
   return ((port->IDR >> pin) & 1U) != 0U;
 }
+
+void gpio_configure_alternate(GPIO_TypeDef *port, uint32_t pin, uint32_t af,
+                              gpio_speed_t speed, gpio_pull_t pull) {
+  // ---- AFRL (pins 0..7) / AFRH (pins 8..15): 4 bits per pin ----
+  // Pick the right array slot and shift within it; the low nibble of `af`
+  // is the AF number from the STM32H750 alternate-function table.
+  const uint32_t af_shift = (pin & 0x7U) * 4U;
+  const uint32_t af_mask  = 0xFU << af_shift;
+  const uint32_t af_word  = (pin >> 3U) & 0x1U;   // 0 = AFRL, 1 = AFRH
+  port->AFR[af_word] = (port->AFR[af_word] & ~af_mask)
+                     | ((af & 0xFU) << af_shift);
+
+  // ---- OSPEEDR / PUPDR: 2 bits per pin ----
+  const uint32_t two_bit_shift = pin * 2U;
+  const uint32_t two_bit_mask  = 0x3U << two_bit_shift;
+  port->OSPEEDR = (port->OSPEEDR & ~two_bit_mask)
+                | ((uint32_t)speed << two_bit_shift);
+  port->PUPDR   = (port->PUPDR   & ~two_bit_mask)
+                | ((uint32_t)pull  << two_bit_shift);
+
+  // ---- MODER last: switch the pin from GPIO to AF driver. Doing this
+  // after AFRx means the pin never spends a cycle routed to the wrong AF.
+  gpio_set_mode(port, pin, GPIO_MODE_ALTERNATE);
+}

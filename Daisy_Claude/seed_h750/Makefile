@@ -61,6 +61,7 @@ C_SRCS := \
   src/clock.c       \
   src/gpio.c        \
   src/systick.c     \
+  src/sai1.c        \
   src/main.c
 
 S_SRCS := \
