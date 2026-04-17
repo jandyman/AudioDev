@@ -112,7 +112,8 @@ From `Seed_pinout.csv`. Full 40-pin table is in that file; the firmware only nee
 | STM32 pin | Function | Notes |
 |---|---|---|
 | PC7 | User LED (red) | Active-high, 1k series to GND |
-| PD5 | Rev 7 detect | Tied to GND on Rev 7; read with pull-up, 0 = Rev 7 |
+| PD4 | Rev 7 detect | Tied to GND on Rev 7 (DAISY_SEED_2_DFM); read with pull-up, 0 = Rev 7. Confirmed from libDaisy `CheckBoardVersion()` — PD3=0 means v1.1 (WM8731), PD4=0 means v2_DFM (PCM3060/Rev 7), both high = original (AK4556). Prior spec said PD5 — that was wrong. |
+| PB11 | PCM3060 deemphasis disable | Output, drive LOW at startup to disable de-emphasis. Not a RST line — RST is board-POR only on Rev 7. Confirmed from libDaisy `ConfigureAudio()` DAISY_SEED_2_DFM case. |
 | PE2..PE6 | SAI1 → PCM3060 | See §3 |
 
 ### Other STM32 pins of interest (not used in wire program but documented for future steps)
