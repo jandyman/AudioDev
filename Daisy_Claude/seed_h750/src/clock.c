@@ -30,6 +30,7 @@
 #include "core_cm7.h"
 
 #include "clock.h"
+#include "systick.h"
 
 // Published after the sequence completes so SysTick and drivers can compute
 // their own dividers without duplicating the constants.
@@ -44,6 +45,17 @@ uint32_t g_hclk_hz   = 0;
 #define PLL1_P  2U     // 960 / 2 = 480 MHz → SYSCLK
 #define PLL1_Q  5U     // 960 / 5 = 192 MHz → spare (USB/SDMMC later)
 #define PLL1_R  2U     // 960 / 2 = 480 MHz → spare
+
+// ---- PLL3 divider values (HSE=16 MHz → ~49.167 MHz for SAI1 kernel) ----
+// Target is 12.288 MHz MCLK = 256 × 48 kHz, reached via SAI_MCKDIV = 2
+// (which halves the kernel twice → /4). Exact 12.288 MHz from a 16 MHz HSE
+// is impossible with integer dividers (12.288 / 16 = 96/125, the factor
+// 125 = 5^3 cannot be hit), so we accept ~300 ppm high. Inaudible; locked
+// in spec 04 §10 decision #1. A future board with a 12.288 or 24.576 MHz
+// MCLK-matched crystal, or PLL3FRACN, could make it exact.
+#define PLL3_M  6U     // 16 MHz / 6   = 2.667 MHz PFD (RGE = 2-4 MHz)
+#define PLL3_N  295U   // 2.667 * 295  = 786.67 MHz VCO (VCOWIDE)
+#define PLL3_P  16U    // 786.67 / 16  = 49.167 MHz → SAI1 kernel
 
 static void spin_until(volatile uint32_t *reg, uint32_t mask, uint32_t want) {
   while ((*reg & mask) != want) {
@@ -156,4 +168,71 @@ void configure_clocks(void) {
   // ============================================================
   g_sysclk_hz = SYSCLK_HZ;
   g_hclk_hz   = HCLK_HZ;
+}
+
+// ============================================================================
+// configure_sai1_clock — PLL3 bring-up for the SAI1 kernel clock.
+//
+// PLL3 sits on HSE alongside PLL1/PLL2. We use PLL3P only; PLL3Q and PLL3R
+// are left disabled. After PLL3 locks we select PLL3P as the SAI1 kernel
+// source via RCC_D2CCIP1R.SAI1SEL = 0b010 (RM0433 §8.7.36).
+//
+// Unlike configure_clocks(), this routine has a BOUNDED wait on the lock
+// bit: if PLL3 fails to lock within ~5 ms of SysTick, we return false and
+// let main() signal the fault visibly (fast LED blink). PLL1 failure bricks
+// the chip by definition; PLL3 failure just loses audio — worth reporting.
+// ============================================================================
+bool configure_sai1_clock(void) {
+  // --- PLL3 must be OFF to reprogram its dividers (RM0433 §8.5.3).
+  // It is off at reset, but be explicit in case we're re-entered.
+  RCC->CR &= ~RCC_CR_PLL3ON;
+  while ((RCC->CR & RCC_CR_PLL3RDY) != 0U) {
+    // wait for the PLL to actually stop before touching its config
+  }
+
+  // --- PLLCKSELR: set DIVM3. DIVM1 was set by configure_clocks() and
+  // is preserved; DIVM2 is still at reset (0).
+  uint32_t pllckselr = RCC->PLLCKSELR;
+  pllckselr &= ~RCC_PLLCKSELR_DIVM3;
+  pllckselr |= (PLL3_M << RCC_PLLCKSELR_DIVM3_Pos);
+  RCC->PLLCKSELR = pllckselr;
+
+  // --- PLL3DIVR: N (stored as N-1), P (stored as P-1).
+  // Q and R dividers left at reset (don't care — their enables stay off).
+  RCC->PLL3DIVR = ((PLL3_N - 1U) << RCC_PLL3DIVR_N3_Pos)
+                | ((PLL3_P - 1U) << RCC_PLL3DIVR_P3_Pos);
+
+  // --- PLLCFGR: configure PLL3 input range, VCO range, and enable DIVP3.
+  //   PLL3RGE  = 0b01 (2-4 MHz PFD)
+  //   PLL3VCOSEL = 0 (wide VCO, 192-960 MHz — we're at 786.67)
+  //   PLL3FRACEN = 0 (integer mode)
+  //   DIVP3EN  = 1, DIVQ3EN = 0, DIVR3EN = 0
+  // PLL1 bits set earlier must be preserved.
+  uint32_t pllcfgr = RCC->PLLCFGR;
+  pllcfgr &= ~(RCC_PLLCFGR_PLL3VCOSEL
+             | RCC_PLLCFGR_PLL3RGE
+             | RCC_PLLCFGR_PLL3FRACEN
+             | RCC_PLLCFGR_DIVP3EN
+             | RCC_PLLCFGR_DIVQ3EN
+             | RCC_PLLCFGR_DIVR3EN);
+  pllcfgr |= (0x1U << RCC_PLLCFGR_PLL3RGE_Pos)   // 2-4 MHz input range
+           | RCC_PLLCFGR_DIVP3EN;
+  RCC->PLLCFGR = pllcfgr;
+
+  // --- Enable PLL3 and wait for lock with a bounded timeout.
+  RCC->CR |= RCC_CR_PLL3ON;
+  const uint32_t start = millis();
+  while ((RCC->CR & RCC_CR_PLL3RDY) == 0U) {
+    if ((millis() - start) >= 5U) {
+      return false;  // lock timeout — main() will show a fault blink
+    }
+  }
+
+  // --- Select PLL3P as SAI1 kernel clock (SAI1SEL = 0b010, RM0433 §8.7.36).
+  uint32_t d2ccip1r = RCC->D2CCIP1R;
+  d2ccip1r &= ~RCC_D2CCIP1R_SAI1SEL;
+  d2ccip1r |= (0x2U << RCC_D2CCIP1R_SAI1SEL_Pos);
+  RCC->D2CCIP1R = d2ccip1r;
+
+  return true;
 }
