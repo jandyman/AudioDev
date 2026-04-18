@@ -6,7 +6,8 @@ The parent `AudioDev/.claude/CLAUDE.md` still applies for conda and general audi
 
 ## Goals
 
-- **Step 1 (current):** Minimal "wire" program — stereo audio in → block-based processing function (identity) → stereo audio out, at 48 kHz, through the on-board AK4556 codec. Confirms clock tree, SAI1, DMA, and the audio callback structure all work.
+- **Stage 1 (complete):** Minimal "wire" program — stereo audio in → block-based processing function (identity) → stereo audio out, at 48 kHz, through the on-board AK4556 codec. Confirmed clock tree, SAI1, DMA, and audio callback all working end-to-end.
+- **Stage 2 (next):** Design and fab a custom board. See `docs/spec/04_stage2_custom_board.md` for planning decisions made so far.
 - **Long-term:** Build up from the wire program into a general DSP platform for the pitch-shifter work being done in sibling projects.
 
 ## Hard rules
@@ -22,11 +23,10 @@ The parent `AudioDev/.claude/CLAUDE.md` still applies for conda and general audi
 
 ## Long-term plan
 
-- **Stage 1 (current):** Wire program on the Daisy Seed Rev 4 + Pod. Split into parts:
-  - **Part 1:** Chip boot, clock tree at 480 MHz, LED blink. Proves the toolchain, startup, and clock code work.
-  - **Part 2:** SAI1 + DMA + AK4556 audio loopback at 48 kHz. TX confirmed; passthrough pending.
-- **Stage 1 is a gate, not a destination.** Its purpose is to validate whether Claude Code can actually deliver working embedded code. If yes, we move to Stage 2. If no, the project ends here.
-- **Stage 2:** Design and fab a custom board. STM32H7 variant with ≥1 MB internal flash (e.g., H743, H723), more space-constrained, no external memory chips. Code written for Stage 1 should port to this board with linker-script-level changes only.
+- **Stage 1 (complete):** Wire program on the Daisy Seed Rev 4 + Pod.
+  - Part 1: Chip boot, clock tree at 480 MHz, LED blink. ✓
+  - Part 2: SAI1 + DMA + AK4556 stereo audio passthrough at 48 kHz. ✓
+- **Stage 2 (planning):** Design and fab a custom board. Target chip locked: STM32H743VIT6 (LQFP-100). See `docs/spec/04_stage2_custom_board.md`.
 
 ## Toolchain
 
