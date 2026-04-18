@@ -63,156 +63,156 @@ g_pfnVectors:
     .word   SysTick_Handler               /* 15: SysTick                      */
 
     /* STM32H750 IRQs — position matches IRQn_Type in stm32h750xx.h */
-    .word   WWDG_IRQn_Handler             /* 0   */
-    .word   PVD_AVD_IRQn_Handler          /* 1   */
-    .word   TAMP_STAMP_IRQn_Handler       /* 2   */
-    .word   RTC_WKUP_IRQn_Handler         /* 3   */
-    .word   FLASH_IRQn_Handler            /* 4   */
-    .word   RCC_IRQn_Handler              /* 5   */
-    .word   EXTI0_IRQn_Handler            /* 6   */
-    .word   EXTI1_IRQn_Handler            /* 7   */
-    .word   EXTI2_IRQn_Handler            /* 8   */
-    .word   EXTI3_IRQn_Handler            /* 9   */
-    .word   EXTI4_IRQn_Handler            /* 10  */
-    .word   DMA1_Stream0_IRQn_Handler     /* 11  */
-    .word   DMA1_Stream1_IRQn_Handler     /* 12  */
-    .word   DMA1_Stream2_IRQn_Handler     /* 13  */
-    .word   DMA1_Stream3_IRQn_Handler     /* 14  */
-    .word   DMA1_Stream4_IRQn_Handler     /* 15  */
-    .word   DMA1_Stream5_IRQn_Handler     /* 16  */
-    .word   DMA1_Stream6_IRQn_Handler     /* 17  */
-    .word   ADC_IRQn_Handler              /* 18  */
-    .word   FDCAN1_IT0_IRQn_Handler       /* 19  */
-    .word   FDCAN2_IT0_IRQn_Handler       /* 20  */
-    .word   FDCAN1_IT1_IRQn_Handler       /* 21  */
-    .word   FDCAN2_IT1_IRQn_Handler       /* 22  */
-    .word   EXTI9_5_IRQn_Handler          /* 23  */
-    .word   TIM1_BRK_IRQn_Handler         /* 24  */
-    .word   TIM1_UP_IRQn_Handler          /* 25  */
-    .word   TIM1_TRG_COM_IRQn_Handler     /* 26  */
-    .word   TIM1_CC_IRQn_Handler          /* 27  */
-    .word   TIM2_IRQn_Handler             /* 28  */
-    .word   TIM3_IRQn_Handler             /* 29  */
-    .word   TIM4_IRQn_Handler             /* 30  */
-    .word   I2C1_EV_IRQn_Handler          /* 31  */
-    .word   I2C1_ER_IRQn_Handler          /* 32  */
-    .word   I2C2_EV_IRQn_Handler          /* 33  */
-    .word   I2C2_ER_IRQn_Handler          /* 34  */
-    .word   SPI1_IRQn_Handler             /* 35  */
-    .word   SPI2_IRQn_Handler             /* 36  */
-    .word   USART1_IRQn_Handler           /* 37  */
-    .word   USART2_IRQn_Handler           /* 38  */
-    .word   USART3_IRQn_Handler           /* 39  */
-    .word   EXTI15_10_IRQn_Handler        /* 40  */
-    .word   RTC_Alarm_IRQn_Handler        /* 41  */
+    .word   WWDG_IRQHandler             /* 0   */
+    .word   PVD_AVD_IRQHandler          /* 1   */
+    .word   TAMP_STAMP_IRQHandler       /* 2   */
+    .word   RTC_WKUP_IRQHandler         /* 3   */
+    .word   FLASH_IRQHandler            /* 4   */
+    .word   RCC_IRQHandler              /* 5   */
+    .word   EXTI0_IRQHandler            /* 6   */
+    .word   EXTI1_IRQHandler            /* 7   */
+    .word   EXTI2_IRQHandler            /* 8   */
+    .word   EXTI3_IRQHandler            /* 9   */
+    .word   EXTI4_IRQHandler            /* 10  */
+    .word   DMA1_Stream0_IRQHandler     /* 11  */
+    .word   DMA1_Stream1_IRQHandler     /* 12  */
+    .word   DMA1_Stream2_IRQHandler     /* 13  */
+    .word   DMA1_Stream3_IRQHandler     /* 14  */
+    .word   DMA1_Stream4_IRQHandler     /* 15  */
+    .word   DMA1_Stream5_IRQHandler     /* 16  */
+    .word   DMA1_Stream6_IRQHandler     /* 17  */
+    .word   ADC_IRQHandler              /* 18  */
+    .word   FDCAN1_IT0_IRQHandler       /* 19  */
+    .word   FDCAN2_IT0_IRQHandler       /* 20  */
+    .word   FDCAN1_IT1_IRQHandler       /* 21  */
+    .word   FDCAN2_IT1_IRQHandler       /* 22  */
+    .word   EXTI9_5_IRQHandler          /* 23  */
+    .word   TIM1_BRK_IRQHandler         /* 24  */
+    .word   TIM1_UP_IRQHandler          /* 25  */
+    .word   TIM1_TRG_COM_IRQHandler     /* 26  */
+    .word   TIM1_CC_IRQHandler          /* 27  */
+    .word   TIM2_IRQHandler             /* 28  */
+    .word   TIM3_IRQHandler             /* 29  */
+    .word   TIM4_IRQHandler             /* 30  */
+    .word   I2C1_EV_IRQHandler          /* 31  */
+    .word   I2C1_ER_IRQHandler          /* 32  */
+    .word   I2C2_EV_IRQHandler          /* 33  */
+    .word   I2C2_ER_IRQHandler          /* 34  */
+    .word   SPI1_IRQHandler             /* 35  */
+    .word   SPI2_IRQHandler             /* 36  */
+    .word   USART1_IRQHandler           /* 37  */
+    .word   USART2_IRQHandler           /* 38  */
+    .word   USART3_IRQHandler           /* 39  */
+    .word   EXTI15_10_IRQHandler        /* 40  */
+    .word   RTC_Alarm_IRQHandler        /* 41  */
     .word   0                             /* 42  reserved */
-    .word   TIM8_BRK_TIM12_IRQn_Handler   /* 43  */
-    .word   TIM8_UP_TIM13_IRQn_Handler    /* 44  */
-    .word   TIM8_TRG_COM_TIM14_IRQn_Handler /* 45 */
-    .word   TIM8_CC_IRQn_Handler          /* 46  */
-    .word   DMA1_Stream7_IRQn_Handler     /* 47  */
-    .word   FMC_IRQn_Handler              /* 48  */
-    .word   SDMMC1_IRQn_Handler           /* 49  */
-    .word   TIM5_IRQn_Handler             /* 50  */
-    .word   SPI3_IRQn_Handler             /* 51  */
-    .word   UART4_IRQn_Handler            /* 52  */
-    .word   UART5_IRQn_Handler            /* 53  */
-    .word   TIM6_DAC_IRQn_Handler         /* 54  */
-    .word   TIM7_IRQn_Handler             /* 55  */
-    .word   DMA2_Stream0_IRQn_Handler     /* 56  */
-    .word   DMA2_Stream1_IRQn_Handler     /* 57  */
-    .word   DMA2_Stream2_IRQn_Handler     /* 58  */
-    .word   DMA2_Stream3_IRQn_Handler     /* 59  */
-    .word   DMA2_Stream4_IRQn_Handler     /* 60  */
-    .word   ETH_IRQn_Handler              /* 61  */
-    .word   ETH_WKUP_IRQn_Handler         /* 62  */
-    .word   FDCAN_CAL_IRQn_Handler        /* 63  */
+    .word   TIM8_BRK_TIM12_IRQHandler   /* 43  */
+    .word   TIM8_UP_TIM13_IRQHandler    /* 44  */
+    .word   TIM8_TRG_COM_TIM14_IRQHandler /* 45 */
+    .word   TIM8_CC_IRQHandler          /* 46  */
+    .word   DMA1_Stream7_IRQHandler     /* 47  */
+    .word   FMC_IRQHandler              /* 48  */
+    .word   SDMMC1_IRQHandler           /* 49  */
+    .word   TIM5_IRQHandler             /* 50  */
+    .word   SPI3_IRQHandler             /* 51  */
+    .word   UART4_IRQHandler            /* 52  */
+    .word   UART5_IRQHandler            /* 53  */
+    .word   TIM6_DAC_IRQHandler         /* 54  */
+    .word   TIM7_IRQHandler             /* 55  */
+    .word   DMA2_Stream0_IRQHandler     /* 56  */
+    .word   DMA2_Stream1_IRQHandler     /* 57  */
+    .word   DMA2_Stream2_IRQHandler     /* 58  */
+    .word   DMA2_Stream3_IRQHandler     /* 59  */
+    .word   DMA2_Stream4_IRQHandler     /* 60  */
+    .word   ETH_IRQHandler              /* 61  */
+    .word   ETH_WKUP_IRQHandler         /* 62  */
+    .word   FDCAN_CAL_IRQHandler        /* 63  */
     .word   0                             /* 64  reserved */
     .word   0                             /* 65  reserved */
     .word   0                             /* 66  reserved */
     .word   0                             /* 67  reserved */
-    .word   DMA2_Stream5_IRQn_Handler     /* 68  */
-    .word   DMA2_Stream6_IRQn_Handler     /* 69  */
-    .word   DMA2_Stream7_IRQn_Handler     /* 70  */
-    .word   USART6_IRQn_Handler           /* 71  */
-    .word   I2C3_EV_IRQn_Handler          /* 72  */
-    .word   I2C3_ER_IRQn_Handler          /* 73  */
-    .word   OTG_HS_EP1_OUT_IRQn_Handler   /* 74  */
-    .word   OTG_HS_EP1_IN_IRQn_Handler    /* 75  */
-    .word   OTG_HS_WKUP_IRQn_Handler      /* 76  */
-    .word   OTG_HS_IRQn_Handler           /* 77  */
-    .word   DCMI_IRQn_Handler             /* 78  */
-    .word   CRYP_IRQn_Handler             /* 79  */
-    .word   HASH_RNG_IRQn_Handler         /* 80  */
-    .word   FPU_IRQn_Handler              /* 81  */
-    .word   UART7_IRQn_Handler            /* 82  */
-    .word   UART8_IRQn_Handler            /* 83  */
-    .word   SPI4_IRQn_Handler             /* 84  */
-    .word   SPI5_IRQn_Handler             /* 85  */
-    .word   SPI6_IRQn_Handler             /* 86  */
-    .word   SAI1_IRQn_Handler             /* 87  */
-    .word   LTDC_IRQn_Handler             /* 88  */
-    .word   LTDC_ER_IRQn_Handler          /* 89  */
-    .word   DMA2D_IRQn_Handler            /* 90  */
-    .word   SAI2_IRQn_Handler             /* 91  */
-    .word   QUADSPI_IRQn_Handler          /* 92  */
-    .word   LPTIM1_IRQn_Handler           /* 93  */
-    .word   CEC_IRQn_Handler              /* 94  */
-    .word   I2C4_EV_IRQn_Handler          /* 95  */
-    .word   I2C4_ER_IRQn_Handler          /* 96  */
-    .word   SPDIF_RX_IRQn_Handler         /* 97  */
-    .word   OTG_FS_EP1_OUT_IRQn_Handler   /* 98  */
-    .word   OTG_FS_EP1_IN_IRQn_Handler    /* 99  */
-    .word   OTG_FS_WKUP_IRQn_Handler      /* 100 */
-    .word   OTG_FS_IRQn_Handler           /* 101 */
-    .word   DMAMUX1_OVR_IRQn_Handler      /* 102 */
-    .word   HRTIM1_Master_IRQn_Handler    /* 103 */
-    .word   HRTIM1_TIMA_IRQn_Handler      /* 104 */
-    .word   HRTIM1_TIMB_IRQn_Handler      /* 105 */
-    .word   HRTIM1_TIMC_IRQn_Handler      /* 106 */
-    .word   HRTIM1_TIMD_IRQn_Handler      /* 107 */
-    .word   HRTIM1_TIME_IRQn_Handler      /* 108 */
-    .word   HRTIM1_FLT_IRQn_Handler       /* 109 */
-    .word   DFSDM1_FLT0_IRQn_Handler      /* 110 */
-    .word   DFSDM1_FLT1_IRQn_Handler      /* 111 */
-    .word   DFSDM1_FLT2_IRQn_Handler      /* 112 */
-    .word   DFSDM1_FLT3_IRQn_Handler      /* 113 */
-    .word   SAI3_IRQn_Handler             /* 114 */
-    .word   SWPMI1_IRQn_Handler           /* 115 */
-    .word   TIM15_IRQn_Handler            /* 116 */
-    .word   TIM16_IRQn_Handler            /* 117 */
-    .word   TIM17_IRQn_Handler            /* 118 */
-    .word   MDIOS_WKUP_IRQn_Handler       /* 119 */
-    .word   MDIOS_IRQn_Handler            /* 120 */
-    .word   JPEG_IRQn_Handler             /* 121 */
-    .word   MDMA_IRQn_Handler             /* 122 */
+    .word   DMA2_Stream5_IRQHandler     /* 68  */
+    .word   DMA2_Stream6_IRQHandler     /* 69  */
+    .word   DMA2_Stream7_IRQHandler     /* 70  */
+    .word   USART6_IRQHandler           /* 71  */
+    .word   I2C3_EV_IRQHandler          /* 72  */
+    .word   I2C3_ER_IRQHandler          /* 73  */
+    .word   OTG_HS_EP1_OUT_IRQHandler   /* 74  */
+    .word   OTG_HS_EP1_IN_IRQHandler    /* 75  */
+    .word   OTG_HS_WKUP_IRQHandler      /* 76  */
+    .word   OTG_HS_IRQHandler           /* 77  */
+    .word   DCMI_IRQHandler             /* 78  */
+    .word   CRYP_IRQHandler             /* 79  */
+    .word   HASH_RNG_IRQHandler         /* 80  */
+    .word   FPU_IRQHandler              /* 81  */
+    .word   UART7_IRQHandler            /* 82  */
+    .word   UART8_IRQHandler            /* 83  */
+    .word   SPI4_IRQHandler             /* 84  */
+    .word   SPI5_IRQHandler             /* 85  */
+    .word   SPI6_IRQHandler             /* 86  */
+    .word   SAI1_IRQHandler             /* 87  */
+    .word   LTDC_IRQHandler             /* 88  */
+    .word   LTDC_ER_IRQHandler          /* 89  */
+    .word   DMA2D_IRQHandler            /* 90  */
+    .word   SAI2_IRQHandler             /* 91  */
+    .word   QUADSPI_IRQHandler          /* 92  */
+    .word   LPTIM1_IRQHandler           /* 93  */
+    .word   CEC_IRQHandler              /* 94  */
+    .word   I2C4_EV_IRQHandler          /* 95  */
+    .word   I2C4_ER_IRQHandler          /* 96  */
+    .word   SPDIF_RX_IRQHandler         /* 97  */
+    .word   OTG_FS_EP1_OUT_IRQHandler   /* 98  */
+    .word   OTG_FS_EP1_IN_IRQHandler    /* 99  */
+    .word   OTG_FS_WKUP_IRQHandler      /* 100 */
+    .word   OTG_FS_IRQHandler           /* 101 */
+    .word   DMAMUX1_OVR_IRQHandler      /* 102 */
+    .word   HRTIM1_Master_IRQHandler    /* 103 */
+    .word   HRTIM1_TIMA_IRQHandler      /* 104 */
+    .word   HRTIM1_TIMB_IRQHandler      /* 105 */
+    .word   HRTIM1_TIMC_IRQHandler      /* 106 */
+    .word   HRTIM1_TIMD_IRQHandler      /* 107 */
+    .word   HRTIM1_TIME_IRQHandler      /* 108 */
+    .word   HRTIM1_FLT_IRQHandler       /* 109 */
+    .word   DFSDM1_FLT0_IRQHandler      /* 110 */
+    .word   DFSDM1_FLT1_IRQHandler      /* 111 */
+    .word   DFSDM1_FLT2_IRQHandler      /* 112 */
+    .word   DFSDM1_FLT3_IRQHandler      /* 113 */
+    .word   SAI3_IRQHandler             /* 114 */
+    .word   SWPMI1_IRQHandler           /* 115 */
+    .word   TIM15_IRQHandler            /* 116 */
+    .word   TIM16_IRQHandler            /* 117 */
+    .word   TIM17_IRQHandler            /* 118 */
+    .word   MDIOS_WKUP_IRQHandler       /* 119 */
+    .word   MDIOS_IRQHandler            /* 120 */
+    .word   JPEG_IRQHandler             /* 121 */
+    .word   MDMA_IRQHandler             /* 122 */
     .word   0                             /* 123 reserved */
-    .word   SDMMC2_IRQn_Handler           /* 124 */
-    .word   HSEM1_IRQn_Handler            /* 125 */
+    .word   SDMMC2_IRQHandler           /* 124 */
+    .word   HSEM1_IRQHandler            /* 125 */
     .word   0                             /* 126 reserved */
-    .word   ADC3_IRQn_Handler             /* 127 */
-    .word   DMAMUX2_OVR_IRQn_Handler      /* 128 */
-    .word   BDMA_Channel0_IRQn_Handler    /* 129 */
-    .word   BDMA_Channel1_IRQn_Handler    /* 130 */
-    .word   BDMA_Channel2_IRQn_Handler    /* 131 */
-    .word   BDMA_Channel3_IRQn_Handler    /* 132 */
-    .word   BDMA_Channel4_IRQn_Handler    /* 133 */
-    .word   BDMA_Channel5_IRQn_Handler    /* 134 */
-    .word   BDMA_Channel6_IRQn_Handler    /* 135 */
-    .word   BDMA_Channel7_IRQn_Handler    /* 136 */
-    .word   COMP_IRQn_Handler             /* 137 */
-    .word   LPTIM2_IRQn_Handler           /* 138 */
-    .word   LPTIM3_IRQn_Handler           /* 139 */
-    .word   LPTIM4_IRQn_Handler           /* 140 */
-    .word   LPTIM5_IRQn_Handler           /* 141 */
-    .word   LPUART1_IRQn_Handler          /* 142 */
+    .word   ADC3_IRQHandler             /* 127 */
+    .word   DMAMUX2_OVR_IRQHandler      /* 128 */
+    .word   BDMA_Channel0_IRQHandler    /* 129 */
+    .word   BDMA_Channel1_IRQHandler    /* 130 */
+    .word   BDMA_Channel2_IRQHandler    /* 131 */
+    .word   BDMA_Channel3_IRQHandler    /* 132 */
+    .word   BDMA_Channel4_IRQHandler    /* 133 */
+    .word   BDMA_Channel5_IRQHandler    /* 134 */
+    .word   BDMA_Channel6_IRQHandler    /* 135 */
+    .word   BDMA_Channel7_IRQHandler    /* 136 */
+    .word   COMP_IRQHandler             /* 137 */
+    .word   LPTIM2_IRQHandler           /* 138 */
+    .word   LPTIM3_IRQHandler           /* 139 */
+    .word   LPTIM4_IRQHandler           /* 140 */
+    .word   LPTIM5_IRQHandler           /* 141 */
+    .word   LPUART1_IRQHandler          /* 142 */
     .word   0                             /* 143 reserved */
-    .word   CRS_IRQn_Handler              /* 144 */
-    .word   ECC_IRQn_Handler              /* 145 */
-    .word   SAI4_IRQn_Handler             /* 146 */
+    .word   CRS_IRQHandler              /* 144 */
+    .word   ECC_IRQHandler              /* 145 */
+    .word   SAI4_IRQHandler             /* 146 */
     .word   0                             /* 147 reserved */
     .word   0                             /* 148 reserved */
-    .word   WAKEUP_PIN_IRQn_Handler       /* 149 */
+    .word   WAKEUP_PIN_IRQHandler       /* 149 */
 
     .size   g_pfnVectors, .-g_pfnVectors
 
@@ -292,145 +292,145 @@ Default_Handler:
     def_weak_handler PendSV_Handler
     def_weak_handler SysTick_Handler
 
-    def_weak_handler WWDG_IRQn_Handler
-    def_weak_handler PVD_AVD_IRQn_Handler
-    def_weak_handler TAMP_STAMP_IRQn_Handler
-    def_weak_handler RTC_WKUP_IRQn_Handler
-    def_weak_handler FLASH_IRQn_Handler
-    def_weak_handler RCC_IRQn_Handler
-    def_weak_handler EXTI0_IRQn_Handler
-    def_weak_handler EXTI1_IRQn_Handler
-    def_weak_handler EXTI2_IRQn_Handler
-    def_weak_handler EXTI3_IRQn_Handler
-    def_weak_handler EXTI4_IRQn_Handler
-    def_weak_handler DMA1_Stream0_IRQn_Handler
-    def_weak_handler DMA1_Stream1_IRQn_Handler
-    def_weak_handler DMA1_Stream2_IRQn_Handler
-    def_weak_handler DMA1_Stream3_IRQn_Handler
-    def_weak_handler DMA1_Stream4_IRQn_Handler
-    def_weak_handler DMA1_Stream5_IRQn_Handler
-    def_weak_handler DMA1_Stream6_IRQn_Handler
-    def_weak_handler ADC_IRQn_Handler
-    def_weak_handler FDCAN1_IT0_IRQn_Handler
-    def_weak_handler FDCAN2_IT0_IRQn_Handler
-    def_weak_handler FDCAN1_IT1_IRQn_Handler
-    def_weak_handler FDCAN2_IT1_IRQn_Handler
-    def_weak_handler EXTI9_5_IRQn_Handler
-    def_weak_handler TIM1_BRK_IRQn_Handler
-    def_weak_handler TIM1_UP_IRQn_Handler
-    def_weak_handler TIM1_TRG_COM_IRQn_Handler
-    def_weak_handler TIM1_CC_IRQn_Handler
-    def_weak_handler TIM2_IRQn_Handler
-    def_weak_handler TIM3_IRQn_Handler
-    def_weak_handler TIM4_IRQn_Handler
-    def_weak_handler I2C1_EV_IRQn_Handler
-    def_weak_handler I2C1_ER_IRQn_Handler
-    def_weak_handler I2C2_EV_IRQn_Handler
-    def_weak_handler I2C2_ER_IRQn_Handler
-    def_weak_handler SPI1_IRQn_Handler
-    def_weak_handler SPI2_IRQn_Handler
-    def_weak_handler USART1_IRQn_Handler
-    def_weak_handler USART2_IRQn_Handler
-    def_weak_handler USART3_IRQn_Handler
-    def_weak_handler EXTI15_10_IRQn_Handler
-    def_weak_handler RTC_Alarm_IRQn_Handler
-    def_weak_handler TIM8_BRK_TIM12_IRQn_Handler
-    def_weak_handler TIM8_UP_TIM13_IRQn_Handler
-    def_weak_handler TIM8_TRG_COM_TIM14_IRQn_Handler
-    def_weak_handler TIM8_CC_IRQn_Handler
-    def_weak_handler DMA1_Stream7_IRQn_Handler
-    def_weak_handler FMC_IRQn_Handler
-    def_weak_handler SDMMC1_IRQn_Handler
-    def_weak_handler TIM5_IRQn_Handler
-    def_weak_handler SPI3_IRQn_Handler
-    def_weak_handler UART4_IRQn_Handler
-    def_weak_handler UART5_IRQn_Handler
-    def_weak_handler TIM6_DAC_IRQn_Handler
-    def_weak_handler TIM7_IRQn_Handler
-    def_weak_handler DMA2_Stream0_IRQn_Handler
-    def_weak_handler DMA2_Stream1_IRQn_Handler
-    def_weak_handler DMA2_Stream2_IRQn_Handler
-    def_weak_handler DMA2_Stream3_IRQn_Handler
-    def_weak_handler DMA2_Stream4_IRQn_Handler
-    def_weak_handler ETH_IRQn_Handler
-    def_weak_handler ETH_WKUP_IRQn_Handler
-    def_weak_handler FDCAN_CAL_IRQn_Handler
-    def_weak_handler DMA2_Stream5_IRQn_Handler
-    def_weak_handler DMA2_Stream6_IRQn_Handler
-    def_weak_handler DMA2_Stream7_IRQn_Handler
-    def_weak_handler USART6_IRQn_Handler
-    def_weak_handler I2C3_EV_IRQn_Handler
-    def_weak_handler I2C3_ER_IRQn_Handler
-    def_weak_handler OTG_HS_EP1_OUT_IRQn_Handler
-    def_weak_handler OTG_HS_EP1_IN_IRQn_Handler
-    def_weak_handler OTG_HS_WKUP_IRQn_Handler
-    def_weak_handler OTG_HS_IRQn_Handler
-    def_weak_handler DCMI_IRQn_Handler
-    def_weak_handler CRYP_IRQn_Handler
-    def_weak_handler HASH_RNG_IRQn_Handler
-    def_weak_handler FPU_IRQn_Handler
-    def_weak_handler UART7_IRQn_Handler
-    def_weak_handler UART8_IRQn_Handler
-    def_weak_handler SPI4_IRQn_Handler
-    def_weak_handler SPI5_IRQn_Handler
-    def_weak_handler SPI6_IRQn_Handler
-    def_weak_handler SAI1_IRQn_Handler
-    def_weak_handler LTDC_IRQn_Handler
-    def_weak_handler LTDC_ER_IRQn_Handler
-    def_weak_handler DMA2D_IRQn_Handler
-    def_weak_handler SAI2_IRQn_Handler
-    def_weak_handler QUADSPI_IRQn_Handler
-    def_weak_handler LPTIM1_IRQn_Handler
-    def_weak_handler CEC_IRQn_Handler
-    def_weak_handler I2C4_EV_IRQn_Handler
-    def_weak_handler I2C4_ER_IRQn_Handler
-    def_weak_handler SPDIF_RX_IRQn_Handler
-    def_weak_handler OTG_FS_EP1_OUT_IRQn_Handler
-    def_weak_handler OTG_FS_EP1_IN_IRQn_Handler
-    def_weak_handler OTG_FS_WKUP_IRQn_Handler
-    def_weak_handler OTG_FS_IRQn_Handler
-    def_weak_handler DMAMUX1_OVR_IRQn_Handler
-    def_weak_handler HRTIM1_Master_IRQn_Handler
-    def_weak_handler HRTIM1_TIMA_IRQn_Handler
-    def_weak_handler HRTIM1_TIMB_IRQn_Handler
-    def_weak_handler HRTIM1_TIMC_IRQn_Handler
-    def_weak_handler HRTIM1_TIMD_IRQn_Handler
-    def_weak_handler HRTIM1_TIME_IRQn_Handler
-    def_weak_handler HRTIM1_FLT_IRQn_Handler
-    def_weak_handler DFSDM1_FLT0_IRQn_Handler
-    def_weak_handler DFSDM1_FLT1_IRQn_Handler
-    def_weak_handler DFSDM1_FLT2_IRQn_Handler
-    def_weak_handler DFSDM1_FLT3_IRQn_Handler
-    def_weak_handler SAI3_IRQn_Handler
-    def_weak_handler SWPMI1_IRQn_Handler
-    def_weak_handler TIM15_IRQn_Handler
-    def_weak_handler TIM16_IRQn_Handler
-    def_weak_handler TIM17_IRQn_Handler
-    def_weak_handler MDIOS_WKUP_IRQn_Handler
-    def_weak_handler MDIOS_IRQn_Handler
-    def_weak_handler JPEG_IRQn_Handler
-    def_weak_handler MDMA_IRQn_Handler
-    def_weak_handler SDMMC2_IRQn_Handler
-    def_weak_handler HSEM1_IRQn_Handler
-    def_weak_handler ADC3_IRQn_Handler
-    def_weak_handler DMAMUX2_OVR_IRQn_Handler
-    def_weak_handler BDMA_Channel0_IRQn_Handler
-    def_weak_handler BDMA_Channel1_IRQn_Handler
-    def_weak_handler BDMA_Channel2_IRQn_Handler
-    def_weak_handler BDMA_Channel3_IRQn_Handler
-    def_weak_handler BDMA_Channel4_IRQn_Handler
-    def_weak_handler BDMA_Channel5_IRQn_Handler
-    def_weak_handler BDMA_Channel6_IRQn_Handler
-    def_weak_handler BDMA_Channel7_IRQn_Handler
-    def_weak_handler COMP_IRQn_Handler
-    def_weak_handler LPTIM2_IRQn_Handler
-    def_weak_handler LPTIM3_IRQn_Handler
-    def_weak_handler LPTIM4_IRQn_Handler
-    def_weak_handler LPTIM5_IRQn_Handler
-    def_weak_handler LPUART1_IRQn_Handler
-    def_weak_handler CRS_IRQn_Handler
-    def_weak_handler ECC_IRQn_Handler
-    def_weak_handler SAI4_IRQn_Handler
-    def_weak_handler WAKEUP_PIN_IRQn_Handler
+    def_weak_handler WWDG_IRQHandler
+    def_weak_handler PVD_AVD_IRQHandler
+    def_weak_handler TAMP_STAMP_IRQHandler
+    def_weak_handler RTC_WKUP_IRQHandler
+    def_weak_handler FLASH_IRQHandler
+    def_weak_handler RCC_IRQHandler
+    def_weak_handler EXTI0_IRQHandler
+    def_weak_handler EXTI1_IRQHandler
+    def_weak_handler EXTI2_IRQHandler
+    def_weak_handler EXTI3_IRQHandler
+    def_weak_handler EXTI4_IRQHandler
+    def_weak_handler DMA1_Stream0_IRQHandler
+    def_weak_handler DMA1_Stream1_IRQHandler
+    def_weak_handler DMA1_Stream2_IRQHandler
+    def_weak_handler DMA1_Stream3_IRQHandler
+    def_weak_handler DMA1_Stream4_IRQHandler
+    def_weak_handler DMA1_Stream5_IRQHandler
+    def_weak_handler DMA1_Stream6_IRQHandler
+    def_weak_handler ADC_IRQHandler
+    def_weak_handler FDCAN1_IT0_IRQHandler
+    def_weak_handler FDCAN2_IT0_IRQHandler
+    def_weak_handler FDCAN1_IT1_IRQHandler
+    def_weak_handler FDCAN2_IT1_IRQHandler
+    def_weak_handler EXTI9_5_IRQHandler
+    def_weak_handler TIM1_BRK_IRQHandler
+    def_weak_handler TIM1_UP_IRQHandler
+    def_weak_handler TIM1_TRG_COM_IRQHandler
+    def_weak_handler TIM1_CC_IRQHandler
+    def_weak_handler TIM2_IRQHandler
+    def_weak_handler TIM3_IRQHandler
+    def_weak_handler TIM4_IRQHandler
+    def_weak_handler I2C1_EV_IRQHandler
+    def_weak_handler I2C1_ER_IRQHandler
+    def_weak_handler I2C2_EV_IRQHandler
+    def_weak_handler I2C2_ER_IRQHandler
+    def_weak_handler SPI1_IRQHandler
+    def_weak_handler SPI2_IRQHandler
+    def_weak_handler USART1_IRQHandler
+    def_weak_handler USART2_IRQHandler
+    def_weak_handler USART3_IRQHandler
+    def_weak_handler EXTI15_10_IRQHandler
+    def_weak_handler RTC_Alarm_IRQHandler
+    def_weak_handler TIM8_BRK_TIM12_IRQHandler
+    def_weak_handler TIM8_UP_TIM13_IRQHandler
+    def_weak_handler TIM8_TRG_COM_TIM14_IRQHandler
+    def_weak_handler TIM8_CC_IRQHandler
+    def_weak_handler DMA1_Stream7_IRQHandler
+    def_weak_handler FMC_IRQHandler
+    def_weak_handler SDMMC1_IRQHandler
+    def_weak_handler TIM5_IRQHandler
+    def_weak_handler SPI3_IRQHandler
+    def_weak_handler UART4_IRQHandler
+    def_weak_handler UART5_IRQHandler
+    def_weak_handler TIM6_DAC_IRQHandler
+    def_weak_handler TIM7_IRQHandler
+    def_weak_handler DMA2_Stream0_IRQHandler
+    def_weak_handler DMA2_Stream1_IRQHandler
+    def_weak_handler DMA2_Stream2_IRQHandler
+    def_weak_handler DMA2_Stream3_IRQHandler
+    def_weak_handler DMA2_Stream4_IRQHandler
+    def_weak_handler ETH_IRQHandler
+    def_weak_handler ETH_WKUP_IRQHandler
+    def_weak_handler FDCAN_CAL_IRQHandler
+    def_weak_handler DMA2_Stream5_IRQHandler
+    def_weak_handler DMA2_Stream6_IRQHandler
+    def_weak_handler DMA2_Stream7_IRQHandler
+    def_weak_handler USART6_IRQHandler
+    def_weak_handler I2C3_EV_IRQHandler
+    def_weak_handler I2C3_ER_IRQHandler
+    def_weak_handler OTG_HS_EP1_OUT_IRQHandler
+    def_weak_handler OTG_HS_EP1_IN_IRQHandler
+    def_weak_handler OTG_HS_WKUP_IRQHandler
+    def_weak_handler OTG_HS_IRQHandler
+    def_weak_handler DCMI_IRQHandler
+    def_weak_handler CRYP_IRQHandler
+    def_weak_handler HASH_RNG_IRQHandler
+    def_weak_handler FPU_IRQHandler
+    def_weak_handler UART7_IRQHandler
+    def_weak_handler UART8_IRQHandler
+    def_weak_handler SPI4_IRQHandler
+    def_weak_handler SPI5_IRQHandler
+    def_weak_handler SPI6_IRQHandler
+    def_weak_handler SAI1_IRQHandler
+    def_weak_handler LTDC_IRQHandler
+    def_weak_handler LTDC_ER_IRQHandler
+    def_weak_handler DMA2D_IRQHandler
+    def_weak_handler SAI2_IRQHandler
+    def_weak_handler QUADSPI_IRQHandler
+    def_weak_handler LPTIM1_IRQHandler
+    def_weak_handler CEC_IRQHandler
+    def_weak_handler I2C4_EV_IRQHandler
+    def_weak_handler I2C4_ER_IRQHandler
+    def_weak_handler SPDIF_RX_IRQHandler
+    def_weak_handler OTG_FS_EP1_OUT_IRQHandler
+    def_weak_handler OTG_FS_EP1_IN_IRQHandler
+    def_weak_handler OTG_FS_WKUP_IRQHandler
+    def_weak_handler OTG_FS_IRQHandler
+    def_weak_handler DMAMUX1_OVR_IRQHandler
+    def_weak_handler HRTIM1_Master_IRQHandler
+    def_weak_handler HRTIM1_TIMA_IRQHandler
+    def_weak_handler HRTIM1_TIMB_IRQHandler
+    def_weak_handler HRTIM1_TIMC_IRQHandler
+    def_weak_handler HRTIM1_TIMD_IRQHandler
+    def_weak_handler HRTIM1_TIME_IRQHandler
+    def_weak_handler HRTIM1_FLT_IRQHandler
+    def_weak_handler DFSDM1_FLT0_IRQHandler
+    def_weak_handler DFSDM1_FLT1_IRQHandler
+    def_weak_handler DFSDM1_FLT2_IRQHandler
+    def_weak_handler DFSDM1_FLT3_IRQHandler
+    def_weak_handler SAI3_IRQHandler
+    def_weak_handler SWPMI1_IRQHandler
+    def_weak_handler TIM15_IRQHandler
+    def_weak_handler TIM16_IRQHandler
+    def_weak_handler TIM17_IRQHandler
+    def_weak_handler MDIOS_WKUP_IRQHandler
+    def_weak_handler MDIOS_IRQHandler
+    def_weak_handler JPEG_IRQHandler
+    def_weak_handler MDMA_IRQHandler
+    def_weak_handler SDMMC2_IRQHandler
+    def_weak_handler HSEM1_IRQHandler
+    def_weak_handler ADC3_IRQHandler
+    def_weak_handler DMAMUX2_OVR_IRQHandler
+    def_weak_handler BDMA_Channel0_IRQHandler
+    def_weak_handler BDMA_Channel1_IRQHandler
+    def_weak_handler BDMA_Channel2_IRQHandler
+    def_weak_handler BDMA_Channel3_IRQHandler
+    def_weak_handler BDMA_Channel4_IRQHandler
+    def_weak_handler BDMA_Channel5_IRQHandler
+    def_weak_handler BDMA_Channel6_IRQHandler
+    def_weak_handler BDMA_Channel7_IRQHandler
+    def_weak_handler COMP_IRQHandler
+    def_weak_handler LPTIM2_IRQHandler
+    def_weak_handler LPTIM3_IRQHandler
+    def_weak_handler LPTIM4_IRQHandler
+    def_weak_handler LPTIM5_IRQHandler
+    def_weak_handler LPUART1_IRQHandler
+    def_weak_handler CRS_IRQHandler
+    def_weak_handler ECC_IRQHandler
+    def_weak_handler SAI4_IRQHandler
+    def_weak_handler WAKEUP_PIN_IRQHandler
 
     .end

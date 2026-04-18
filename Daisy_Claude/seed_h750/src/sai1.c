@@ -178,10 +178,16 @@ bool sai1_configure(void) {
   if (SAI1_Block_A->SLOTR != SAI_SLOTR_VALUE) return false;
   if (SAI1_Block_B->SLOTR != SAI_SLOTR_VALUE) return false;
 
-  // --- Enable sub-block B first, then A. B has to be listening before A
-  // starts driving clocks, per RM0433 §51.4.5. If we enabled A first, B
-  // would miss the first half-frame of data and be off by one channel
-  // forever.
+  return true;
+}
+
+// ============================================================================
+// sai1_enable — arm both sub-blocks. Separated from sai1_configure() so that
+// DMA can be configured (DMAEN set on both sub-blocks, DMA streams armed)
+// between "registers programmed" and "clocks actually running". Enabling B
+// first ensures it latches A's clocks from the very first frame.
+// ============================================================================
+bool sai1_enable(void) {
   SAI1_Block_B->CR1 |= SAI_xCR1_SAIEN;
   SAI1_Block_A->CR1 |= SAI_xCR1_SAIEN;
 

@@ -3,6 +3,12 @@
  * Layout (spec 02 §5):
  *   FLASH    0x08000000  128 KB   code + rodata + .data LMA
  *   DTCMRAM  0x20000000  128 KB   .data (VMA) + .bss + stack
+ *   RAM_D1   0x24000000  512 KB   AXI SRAM — holds .dma_buffers, rest unused
+ *
+ * The first 2 KB of RAM_D1 holds .dma_buffers and is covered by a single
+ * MPU region configured Normal / Non-cacheable / Shareable so the Cortex-M7
+ * D-cache and DMA never fight over the same cache lines. Audio buffers,
+ * and anything else DMA touches, must go in this section.
  *
  * No heap. No _end/_sbrk. Any accidental malloc reference fails to link,
  * which is exactly what the CLAUDE.md hard rule asks for.
@@ -14,6 +20,7 @@ MEMORY
 {
     FLASH   (rx)  : ORIGIN = 0x08000000, LENGTH = 128K
     DTCMRAM (rwx) : ORIGIN = 0x20000000, LENGTH = 128K
+    RAM_D1  (rw)  : ORIGIN = 0x24000000, LENGTH = 512K
 }
 
 /* Top of stack = top of DTCMRAM. Stack grows downward. */
@@ -78,6 +85,31 @@ SECTIONS
         . = ALIGN(8);
         . = . + _min_stack;
     } > DTCMRAM
+
+    /* .dma_buffers lives at the base of RAM_D1 (AXI SRAM). The section is
+     * NOLOAD because DMA fills it at runtime — we do not want the startup
+     * zero-init path to touch it, and we definitely do not want it in the
+     * .data LMA copied from flash. It is the only section placed in RAM_D1,
+     * which is what guarantees _sdma_buffers == ORIGIN(RAM_D1) and keeps
+     * the MPU region alignment simple (see the ASSERTs below).
+     *
+     * The section is padded up to 2 KB so the MPU region (base = RAM_D1
+     * origin, size = 2 KB = MPU SIZE field 10) covers exactly what we want
+     * and nothing more. */
+    .dma_buffers (NOLOAD) :
+    {
+        . = ALIGN(32);
+        _sdma_buffers = .;
+        *(.dma_buffers)
+        *(.dma_buffers*)
+        . = ALIGN(32);
+        _edma_buffers = .;
+    } > RAM_D1
+
+    ASSERT(_sdma_buffers == ORIGIN(RAM_D1),
+           "DMA buffers must start at RAM_D1 base for MPU region alignment")
+    ASSERT((_edma_buffers - _sdma_buffers) <= 2048,
+           "DMA buffers exceed the 2 KB MPU non-cacheable region")
 
     /* Discard ARM unwind tables — no C++ exceptions on this target. */
     /DISCARD/ :

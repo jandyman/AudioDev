@@ -62,6 +62,9 @@ C_SRCS := \
   src/gpio.c        \
   src/systick.c     \
   src/sai1.c        \
+  src/mpu.c         \
+  src/dma.c         \
+  src/audio.c       \
   src/main.c
 
 S_SRCS := \
