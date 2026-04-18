@@ -1,12 +1,12 @@
 # Daisy_Claude — STM32H750 Bare-Metal Audio Project
 
-An experiment: can Claude generate a working STM32H750 audio firmware largely from scratch, using the Daisy Seed (Rev 7) + Daisy Pod as the hardware target, without libDaisy and without ST HAL?
+An experiment: can Claude generate a working STM32H750 audio firmware largely from scratch, using the Daisy Seed (Rev 4) + Daisy Pod as the hardware target, without libDaisy and without ST HAL?
 
 The parent `AudioDev/.claude/CLAUDE.md` still applies for conda and general audio-dev conventions, but this folder has its own rules that override when they conflict.
 
 ## Goals
 
-- **Step 1 (current):** Minimal "wire" program — stereo audio in → block-based processing function (identity) → stereo audio out, at 48 kHz, through the on-board PCM3060 codec. Confirms clock tree, SAI1, DMA, and the audio callback structure all work.
+- **Step 1 (current):** Minimal "wire" program — stereo audio in → block-based processing function (identity) → stereo audio out, at 48 kHz, through the on-board AK4556 codec. Confirms clock tree, SAI1, DMA, and the audio callback structure all work.
 - **Long-term:** Build up from the wire program into a general DSP platform for the pitch-shifter work being done in sibling projects.
 
 ## Hard rules
@@ -22,9 +22,9 @@ The parent `AudioDev/.claude/CLAUDE.md` still applies for conda and general audi
 
 ## Long-term plan
 
-- **Stage 1 (current):** Wire program on the Daisy Seed Rev 7 + Pod. Split into parts:
+- **Stage 1 (current):** Wire program on the Daisy Seed Rev 4 + Pod. Split into parts:
   - **Part 1:** Chip boot, clock tree at 480 MHz, LED blink. Proves the toolchain, startup, and clock code work.
-  - **Part 2:** SAI1 + DMA + PCM3060 audio loopback at 48 kHz. Stereo identity passthrough.
+  - **Part 2:** SAI1 + DMA + AK4556 audio loopback at 48 kHz. TX confirmed; passthrough pending.
 - **Stage 1 is a gate, not a destination.** Its purpose is to validate whether Claude Code can actually deliver working embedded code. If yes, we move to Stage 2. If no, the project ends here.
 - **Stage 2:** Design and fab a custom board. STM32H7 variant with ≥1 MB internal flash (e.g., H743, H723), more space-constrained, no external memory chips. Code written for Stage 1 should port to this board with linker-script-level changes only.
 
@@ -33,7 +33,7 @@ The parent `AudioDev/.claude/CLAUDE.md` still applies for conda and general audi
 - **Compiler:** `arm-none-eabi-gcc` from the STM32CubeIDE-bundled toolchain
 - **Build system:** Makefile (hand-written, no CubeMX)
 - **Debugger / flasher:** STM32CubeIDE, used *only* as a debug frontend — project is not a CubeIDE-managed project
-- **Target:** STM32H750IBK6 on Daisy Seed Rev 7, mounted on Daisy Pod Rev 5
+- **Target:** STM32H750IBK6 on Daisy Seed Rev 4, mounted on Daisy Pod Rev 5
 
 ## Hardware facts (authoritative)
 
@@ -41,10 +41,10 @@ See `docs/spec/01_hardware_overview.md` for the full summary. Irreducible facts:
 
 - **HSE crystal:** 16 MHz (confirmed by back-solving libDaisy's PLL math)
 - **Target SYSCLK:** 480 MHz (VOS0, flash latency 4)
-- **On-board codec:** TI PCM3060, hardware-configured (no I2C), 24-bit left-justified, slave/slave
+- **On-board codec:** AKM AK4556, hardware-configured (no I2C/SPI), 24-bit left-justified, slave/slave
+- **Codec RST:** PB11, active-low. Pulse HIGH→1ms→LOW→1ms→HIGH at startup (before SAI clocks start). Leaving low = codec in reset = no audio.
 - **Codec bus:** SAI1 on PE2 (MCLK_A), PE3 (SD_B = RX from ADC), PE4 (FS_A), PE5 (SCK_A), PE6 (SD_A = TX to DAC). Sub-block A is TX master, sub-block B is RX slave synchronous with A.
 - **User LED:** PC7, active-high
-- **Rev 7 detect:** PD5 tied to GND (input with pull-up, reads 0 on Rev 7)
 - **Audio jacks (via Pod, passive):** line in on J2 = Seed pins 16/17, line out on J3 = Seed pins 18/19, headphone on J4 (after Pod's on-board TPA6110 amp + rotary volume pot)
 
 ## Directory layout
@@ -59,7 +59,7 @@ Daisy_Claude/                         repo subfolder; CubeIDE workspace lives he
 │       ├── 02_step1_startup_and_clock.md
 │       └── 03_project_layout.md      reorg into per-target subfolders
 ├── hardware/                         reference PDFs and vendor source (shared)
-│   ├── seed/                         Daisy Seed Rev 7 datasheet, schematic, pinout
+│   ├── seed/                         Daisy Seed Rev 4 datasheet, schematic, pinout
 │   ├── pod/                          Daisy Pod Rev 5 datasheet, schematic, pinout
 │   └── libdaisy_ref/                 libDaisy source pulled for cross-reference only
 └── seed_h750/                        firmware project — one subfolder per hardware target

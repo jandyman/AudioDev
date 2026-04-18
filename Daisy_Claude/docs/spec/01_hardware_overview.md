@@ -1,8 +1,8 @@
-# Spec 01 — Hardware Overview (Daisy Seed Rev 7 + Pod Rev 5)
+# Spec 01 — Hardware Overview (Daisy Seed Rev 4 + Pod Rev 5)
 
-**Status:** frozen 2026-04-12. Supersedes nothing.
+**Status:** corrected 2026-04-17. Original (2026-04-12) incorrectly identified the board as Rev 7 with a PCM3060 codec. Physical board says "Rev 4"; confirmed by libDaisy `CheckBoardVersion()` logic and by empirical bring-up (PB11=reset, not deemphasis).
 
-This document captures every hardware fact the firmware needs to know. Derived from Daisy Seed Rev 7 datasheet, Daisy Pod Rev 5 schematic, Daisy Pod databrief, and cross-referenced against libDaisy source for values not in the public schematic.
+This document captures every hardware fact the firmware needs to know. Derived from Daisy Seed Rev 4 datasheet, Daisy Pod Rev 5 schematic, Daisy Pod databrief, and cross-referenced against libDaisy source for values not in the public schematic.
 
 Sources (files in `hardware/`):
 - `seed/ES_Daisy_Seed_Rev7.pdf` — public (reduced) schematic
@@ -55,27 +55,27 @@ Future optimization: retune PLL3 (possibly with FRACN) for exact 48000 Hz.
 
 ---
 
-## 3. On-board audio codec — PCM3060
+## 3. On-board audio codec — AK4556
 
-- **Part:** Texas Instruments PCM3060 (24-bit stereo ADC + DAC)
-- **Control:** **hardware-configured, no I2C**. The Seed ties the PCM3060's mode pins at the factory.
-- **Mode:** H/W mode, single-ended Vout
-- **Format:** 24-bit left-justified (MSB-justified), slave for both ADC and DAC
-- **De-emphasis:** off
+- **Part:** AKM AK4556 (24-bit stereo ADC + DAC)
+- **Control:** **hardware-configured, no I2C, no SPI**. All operating parameters are fixed by the board wiring; the only MCU interaction is the RST pin.
+- **Format:** 24-bit left-justified (MSB-justified), slave for both ADC and DAC (STM32 is the BCK/LRCK master)
+- **RST pin:** active-low. Has internal pulldown. **Must be pulsed** at startup: HIGH → 1 ms → LOW → 1 ms → HIGH. This is the exact sequence from libDaisy `Ak4556::Init()`. Driving it low (or leaving it floating) holds the codec in reset — no audio either direction.
 - **Analog supply:** 4.5 V from on-board LDO
 - **Digital supply:** 3.3 V filtered from Seed's `+3V3_D`
 
 ### SAI1 pin wiring (STM32 side)
 
-These pins are **not** exposed on the Seed's 2×20 header; they are routed internally from the STM32H750 to the PCM3060.
+These pins are **not** exposed on the Seed's 2×20 header; they are routed internally from the STM32H750 to the AK4556.
 
-| STM32 Pin | Alt. function | PCM3060 pin | Role |
+| STM32 Pin | Alt. function | AK4556 pin | Role |
 |---|---|---|---|
-| PE2 | SAI1_MCLK_A | SCKI1 / SCKI2 | System master clock (shared ADC/DAC) |
-| PE3 | SAI1_SD_B   | DOUT (pin 17)  | ADC → MCU data (sub-block B, RX slave sync with A) |
-| PE4 | SAI1_FS_A   | LRCK1 / LRCK2 | Frame sync (shared) |
-| PE5 | SAI1_SCK_A  | BCK1 / BCK2   | Bit clock (shared) |
-| PE6 | SAI1_SD_A   | DIN (pin 22)   | MCU → DAC data (sub-block A, TX master) |
+| PE2 | SAI1_MCLK_A | MCLK      | Master clock |
+| PE3 | SAI1_SD_B   | SDOUT      | ADC → MCU data (sub-block B, RX slave sync with A) |
+| PE4 | SAI1_FS_A   | LRCK       | Frame sync |
+| PE5 | SAI1_SCK_A  | BICK       | Bit clock |
+| PE6 | SAI1_SD_A   | SDIN       | MCU → DAC data (sub-block A, TX master) |
+| PB11 | GPIO out   | RST (active-low) | Codec reset — pulse HIGH→LOW→HIGH at startup |
 
 ### SAI1 operating mode
 
@@ -87,7 +87,7 @@ These pins are **not** exposed on the Seed's 2×20 header; they are routed inter
 
 ### DMA
 
-libDaisy uses DMA1 Stream 0 for SAI1_B (RX) and DMA1 Stream 1 for SAI1_A (TX). We will adopt the same assignment for consistency with ST's typical examples unless a conflict arises.
+DMA1 Stream 0 (TX, SAI1_A, DMAMUX req 87) and DMA1 Stream 1 (RX, SAI1_B, DMAMUX req 88). Circular mode, 32-bit word transfers, direct mode (no FIFO). Stream 1 HT+TC IRQs pace the audio callback.
 
 ---
 
@@ -112,9 +112,8 @@ From `Seed_pinout.csv`. Full 40-pin table is in that file; the firmware only nee
 | STM32 pin | Function | Notes |
 |---|---|---|
 | PC7 | User LED (red) | Active-high, 1k series to GND |
-| PD4 | Rev 7 detect | Tied to GND on Rev 7 (DAISY_SEED_2_DFM); read with pull-up, 0 = Rev 7. Confirmed from libDaisy `CheckBoardVersion()` — PD3=0 means v1.1 (WM8731), PD4=0 means v2_DFM (PCM3060/Rev 7), both high = original (AK4556). Prior spec said PD5 — that was wrong. |
-| PB11 | PCM3060 deemphasis disable | Output, drive LOW at startup to disable de-emphasis. Not a RST line — RST is board-POR only on Rev 7. Confirmed from libDaisy `ConfigureAudio()` DAISY_SEED_2_DFM case. |
-| PE2..PE6 | SAI1 → PCM3060 | See §3 |
+| PB11 | AK4556 RST (active-low) | Output, pulse HIGH→LOW→HIGH at startup per libDaisy `Ak4556::Init()`. **Do not drive low** — holds codec in reset. |
+| PE2..PE6 | SAI1 → AK4556 | See §3 |
 
 ### Other STM32 pins of interest (not used in wire program but documented for future steps)
 
@@ -130,7 +129,7 @@ The Pod is a passive carrier board for the audio path: J2/J3/J4 are just wired t
 
 | Jack | Pod label | Signal path |
 |---|---|---|
-| J2 | LINE IN   | TRS tip/ring → Seed pins 16/17 → PCM3060 L/R IN |
+| J2 | LINE IN   | TRS tip/ring → Seed pins 16/17 → AK4556 L/R IN |
 | J3 | LINE OUT  | Seed pins 18/19 → TRS tip/ring (direct) |
 | J4 | PHONES    | Seed pins 18/19 → HP volume pot → TPA6110 amp (1.5× gain) → TRS |
 | J1 | MIDI IN   | 3.5 mm TRS MIDI → opto front-end → USART1_RX (PB7) |

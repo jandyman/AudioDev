@@ -1,8 +1,10 @@
-# Spec 04 — Step 1 Part 2: Audio Wire (SAI1 + DMA + PCM3060)
+# Spec 04 — Step 1 Part 2: Audio Wire (SAI1 + DMA + AK4556)
 
-**Status:** draft 2026-04-16. Pending: confirmation of how the PCM3060 RST line is wired on the Daisy Seed Rev 7 (full schematic was withdrawn by Electrosmith). All other decisions in §10 are locked.
+**Status:** implementation complete 2026-04-17. TX path confirmed (tone test audible). Passthrough (RX→TX) is next verification step. All open items from the draft are resolved.
 
-This step takes the bare-metal foundation from spec 02 (clock at 480 MHz, LED blink) and turns the Seed into a working audio passthrough: stereo line in → block-based callback (identity) → stereo line out, at 48 kHz, through the on-board PCM3060 codec. Once this works, every later step (DSP modules, controls, MIDI, USB) plugs into the same callback.
+**Board correction:** original draft assumed Daisy Seed Rev 7 / PCM3060. Physical board is Rev 4 / AK4556. All PCM3060 references in the original draft are superseded by this version.
+
+This step takes the bare-metal foundation from spec 02 (clock at 480 MHz, LED blink) and turns the Seed into a working audio passthrough: stereo line in → block-based callback (identity) → stereo line out, at 48 kHz, through the on-board AK4556 codec. Once this works, every later step (DSP modules, controls, MIDI, USB) plugs into the same callback.
 
 We are deliberately **not** using ST HAL or libDaisy. CMSIS device headers (`stm32h750xx.h`, `core_cm7.h`) are allowed for register definitions only.
 
@@ -39,71 +41,46 @@ seed_h750/
 │   └── mpu.h                      MPU helpers
 ├── src/
 │   ├── clock.c                   ++ PLL3 setup for SAI1 kernel clock
-│   ├── audio.c                    audio framework — buffer ownership, callback dispatch
-│   ├── sai1.c                     SAI1 register-level bring-up
+│   ├── audio.c                    audio framework — buffers, IRQ handler, audio_init()
+│   ├── sai1.c                     SAI1 register-level bring-up (split configure/enable)
 │   ├── dma.c                      DMA1 Stream 0/1 setup
 │   ├── mpu.c                      MPU non-cacheable region for .dma_buffers
-│   ├── codec_pcm3060.c            RST sequencing + post-reset wait
-│   └── main.c                    ~ audio_init + audio_set_callback(passthrough)
+│   └── main.c                    ~ audio_init(), fault blink rates, idle spin
 ```
 
-`startup_stm32h750.s` already declares `DMA1_Stream0_IRQHandler` and `DMA1_Stream1_IRQHandler` as weak aliases to `Default_Handler`. We provide the strong definitions in `dma.c` (or `audio.c`).
+No separate codec driver file — AK4556 reset is three `gpio_write` calls in `audio_init()`.
+`startup_stm32h750.s` declares `DMA1_Stream1_IRQHandler` as a weak alias; `audio.c` provides the strong definition. Handler names are `XXXIRQHandler` (not `XXXIRQn_Handler`) — a naming bug fixed during bring-up.
 
 ---
 
-## 3. PCM3060 — what we know, what the board does, what we do
+## 3. AK4556 — codec bring-up
 
-### 3.1 Hardware-mode strapping (board does this, not us)
+### 3.1 No register interface
 
-Per PCM3060 datasheet (TI SLAS533B), the codec has three control modes selected by the `MODE` pin (pin 28):
+The AK4556 is fully hardware-configured. There is no I2C, no SPI, no register writes. Operating format (24-bit left-justified, slave BCK/LRCK) is fixed by the board wiring. The only MCU action required is the RST pulse.
 
-| MODE pin connection | Mode |
-|---|---|
-| Direct to VDD | SPI control |
-| 220 kΩ pull-up to VDD | H/W mode, single-ended VOUT |
-| 220 kΩ pull-down to DGND | H/W mode, differential VOUT |
-| Direct to DGND | I²C control |
+### 3.2 RST sequencing (resolved)
 
-The Daisy Seed Rev 7 selects **H/W mode**, with no register interface. In H/W mode three pins become parallel control straps:
+**PB11 = AK4556 RST, active-low.** The RST pin has an internal pulldown — left floating or driven low, the codec stays in reset with no audio output or input.
 
-| Pin (H/W name) | LOW | HIGH | Seed value |
-|---|---|---|---|
-| MS / IFMD (27) | ADC slave + DAC slave | ADC master (256 fS) + DAC slave | **LOW** (slave/slave — STM32 is master) |
-| MC / FMT (1) | 24-bit I²S | 24-bit left-justified | **HIGH** (24-bit LJ) |
-| MD / DEMP (2) | de-emphasis disabled | de-emphasis enabled | irrelevant at 48 kHz |
+Required sequence (from libDaisy `Ak4556::Init()`):
+```
+PB11 → HIGH  (deassert)
+delay_ms(1)
+PB11 → LOW   (assert)
+delay_ms(1)
+PB11 → HIGH  (deassert and leave high)
+```
 
-Implication: we never write a register to the codec. Bring-up is purely a matter of clocks + RST sequencing.
+This happens in `audio_init()` **before** the SAI clocks are started. The AK4556 locks on to BCK/LRCK when they come up. No post-reset delay is needed; the SAI clocks start flowing immediately after the pulse and the codec follows them.
 
-### 3.2 Reset and power-up timing
-
-Per datasheet §"Power-On Reset and External Reset Sequence":
-
-- **External reset:** RST low for at least `tRST = 2048/fS` ≈ **42.7 µs at 48 kHz**.
-- **Internal reset release:** 1024 SCKI cycles after RST goes high, *provided SCKI/BCK/LRCK are running and synchronous*. At 12.288 MHz SCKI, this is ~83 µs.
-- **DAC fade-in starts:** `tDACDLY1 = 2048/fS` ≈ 42.7 ms after internal reset release.
-- **DAC valid output:** `tDACDLY2 = 1616/fS` ≈ 33.7 ms after fade-in starts.
-- **ADC valid output:** `tADCDLY1 + tADCDLY2 = 2048/fS + 1936/fS` ≈ 82.8 ms after internal reset release.
-
-Total from RST-high to valid audio: **~80 ms**. We block in `audio_init()` with `delay_ms(100)` — generous and simple. The callback is not enabled until after this wait.
-
-**Required ordering:** start SAI1 (clocks running) → wait a few µs for clocks to stabilise → release RST → wait 100 ms → enable DMA + callback.
-
-### 3.3 Codec RST line — open question
-
-The Daisy Seed Rev 7 schematic was published once by Electrosmith and then withdrawn (clone-protection). The reduced schematic in `hardware/seed/ES_Daisy_Seed_Rev7.pdf` does not show the codec block, so we do not currently know whether RST is on an MCU GPIO or tied to a board POR network.
-
-Until we confirm this:
-
-- If **MCU-controlled**, `codec_pcm3060.c` drives RST low at startup, brings clocks up, drives RST high, waits 100 ms.
-- If **board-POR only**, `codec_pcm3060.c` is just a `delay_ms(100)` after clocks are running — the codec released itself from reset when 3.3 V came up, and we just need the SCKI/BCK/LRCK lines live so the internal release can complete.
-
-We will resolve this either by getting the full schematic or by an empirical test (try board-POR-only first; if it does not produce audio, route a probe to a free GPIO and instrument).
+**Root cause of original audio silence:** prior code drove PB11 LOW (treating it as PCM3060 deemphasis), holding the AK4556 in reset for the entire run. SAI/DMA were working correctly the whole time.
 
 ---
 
 ## 4. Clock tree addition — PLL3 for SAI1
 
-PCM3060 SCKI must be one of `256/384/512/768 × fS`. For 48 kHz the cleanest target is **256 fS = 12.288 MHz**.
+AK4556 MCLK must be 256 × fS. For 48 kHz the cleanest target is **256 fS = 12.288 MHz**.
 
 SAI1's kernel clock is selected by `RCC_D2CCIP1R.SAI1SEL`. Default after reset is PLL1Q, but our PLL1Q is 192 MHz — divisible only by inconvenient ratios. We use **PLL3P** instead.
 
@@ -270,10 +247,9 @@ static void passthrough(const int32_t *in, int32_t *out, uint32_t frames) {
 3. `gpio_configure_sai1_pins()` — PE2/3/4/5/6 to AF6, very-high speed, no pull, push-pull.
 4. `dma_init_sai1_streams()` — configures both streams, but does not enable them.
 5. `sai1_configure()` — programs all SAI1 registers, but leaves SAIEN = 0.
-6. `codec_release_reset()` — drives RST high (or no-op if board-POR only).
-7. `sai1_enable()` — enables sub-block B first, then A. Clocks now running.
-8. `delay_ms(100)` — wait out the codec's 80 ms internal fade-in.
-9. `audio_start()` — enables DMA streams (both directions), enables NVIC IRQs.
+6. AK4556 RST pulse on PB11 — HIGH→1ms→LOW→1ms→HIGH (in `audio_init()` before SAI starts).
+7. `sai1_enable()` — enables sub-block B first, then A. Clocks now running, codec latches on.
+8. Enable DMA streams (TX first, then RX) and NVIC IRQs.
 
 ---
 
@@ -288,8 +264,8 @@ static void passthrough(const int32_t *in, int32_t *out, uint32_t frames) {
 | 5 | DMA buffers in AXI SRAM (D1 region 0x24000000) | Only DMA-accessible region with enough space; DTCM is not on the AHB matrix DMA1/2 see. |
 | 6 | No FreeRTOS, no preemption beyond ISRs | Stated project constraint. Cooperative model is sufficient for current and foreseeable scope. |
 
-## 11. Open items (not blocking design)
+## 11. Open items
 
-1. **PCM3060 RST line wiring on Rev 7** — schematic withdrawn by Electrosmith. Resolve via empirical test (assume board-POR first) or by asking on the Electrosmith forum.
-2. **Exact PLL3 divider triplet** — math in §4 to be reverified when `clock.c` is edited; the locked decision is "integer dividers, ~50 ppm OK", not a specific N/M/P.
-3. **SAI1 CKSTR / FSPOL / FSOFF for 24-bit LJ** — to be set against PCM3060 timing diagram (datasheet Figure 26) when writing `sai1.c`.
+1. **Passthrough verification** — TX path confirmed (440 Hz tone audible). Next: swap `tone_test` → `passthrough` in `audio.c` and confirm line-in → line-out.
+2. **Spec/code cleanup** — `audio.c` still has `tone_test` active, `passthrough` defined but unused. Debug snapshot globals (`dbg_*`) still present. Clean up once passthrough is confirmed.
+3. **Exact PLL3 MCKDIV math** — spec §4 has a note that the final divider arithmetic needs re-verification. Low priority: audio confirmed working at current clock.
