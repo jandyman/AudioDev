@@ -78,29 +78,10 @@ volatile uint32_t dbg_sai_b_cr2 = 0U;
 // `offset` is 0 for the first half (HT), AUDIO_BLOCK_FRAMES*2 for the
 // second half (TC). Both buffers are non-cacheable so no cache ops needed.
 // ============================================================================
-static void passthrough(uint32_t offset) __attribute__((unused));
 static void passthrough(uint32_t offset) {
   const uint32_t n = AUDIO_BLOCK_FRAMES * 2U;  // stereo words per half
   for (uint32_t i = 0U; i < n; ++i) {
     tx_buffer[offset + i] = rx_buffer[offset + i];
-  }
-}
-
-// ============================================================================
-// TX diagnostic — writes a ~440 Hz sawtooth to tx_buffer (ignores rx_buffer).
-// Amplitude ≈ 1/16 full scale of the 24-bit left-justified sample: audible
-// but not loud. Lets us tell whether TX + codec DAC is alive independent of
-// whether the ADC is delivering any data into rx_buffer.
-// ============================================================================
-static int32_t tone_phase = 0;
-static void tone_test(uint32_t offset) {
-  // step = 440 Hz * 2^32 / 48000 ≈ 0x258D1E  (32-bit accumulator wraps)
-  const int32_t step = 39370534;
-  for (uint32_t i = 0U; i < AUDIO_BLOCK_FRAMES; ++i) {
-    int32_t s = tone_phase >> 4;               // ~1/16 full scale
-    tx_buffer[offset + 2U * i + 0U] = s;       // L
-    tx_buffer[offset + 2U * i + 1U] = s;       // R
-    tone_phase += step;
   }
 }
 
@@ -112,12 +93,12 @@ void DMA1_Stream1_IRQHandler(void) {
 
   if (isr & DMA_LISR_HTIF1) {
     DMA1->LIFCR = DMA_LIFCR_CHTIF1;
-    tone_test(0U);                        // TX diagnostic (was passthrough)
+    passthrough(0U);
   }
 
   if (isr & DMA_LISR_TCIF1) {
     DMA1->LIFCR = DMA_LIFCR_CTCIF1;
-    tone_test(AUDIO_BLOCK_FRAMES * 2U);   // TX diagnostic (was passthrough)
+    passthrough(AUDIO_BLOCK_FRAMES * 2U);
   }
 
   // Transfer error — clear the flag. The LED will freeze (IRQs stop) if
