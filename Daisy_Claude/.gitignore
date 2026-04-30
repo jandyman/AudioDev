@@ -1,3 +1,8 @@
 # STM32CubeIDE / Eclipse workspace state — created when CubeIDE opens
 # this folder as a workspace. Local IDE session state, never committed.
 .metadata/
+
+# Hardware reference directories — large binaries and/or nested git repos.
+# Re-clone or re-download as needed (see docs/spec/05_target_chip_revision.md).
+hardware/mb1364_bdp/
+hardware/weact_h7_ref/
