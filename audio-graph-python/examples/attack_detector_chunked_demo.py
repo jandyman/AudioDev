@@ -26,7 +26,8 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'build'))
 
-from python import FaustProcessor
+from build.pybind_faust_attack_detector import FaustAttackDetector
+from python import CppProcessor
 
 
 def run_chunked_demo():
@@ -36,7 +37,7 @@ def run_chunked_demo():
     CHUNK_SIZE = 128  # Typical real-time block size
 
     # Load input audio
-    input_path = os.path.join(os.path.dirname(__file__), '..', 'test_audio', 'Bass Notes No Gap.wav')
+    input_path = os.path.join(os.path.dirname(__file__), '..', '..', 'test_audio', 'Bass Notes No Gap.wav')
     sample_rate, audio_data = wav.read(input_path)
 
     if audio_data.dtype == np.int16:
@@ -60,9 +61,8 @@ def run_chunked_demo():
     print(f"  Chunk size: {CHUNK_SIZE} samples ({CHUNK_SIZE / sample_rate * 1000:.1f} ms)")
     print(f"  Number of chunks: {num_chunks}")
 
-    # Create Faust processor
-    dsp_path = os.path.join(os.path.dirname(__file__), '..', '..', 'dsp_library', 'faust', 'attack_detector.dsp')
-    processor = FaustProcessor(dsp_path, name="attack_detector")
+    # Create compiled Faust processor (stateful across chunks)
+    processor = CppProcessor(FaustAttackDetector())
     processor.init(sample_rate)
 
     num_outputs = processor.get_num_outputs()
@@ -92,7 +92,7 @@ def run_chunked_demo():
 
     # Also run single-buffer for comparison
     print("Processing single-buffer for comparison...")
-    processor_ref = FaustProcessor(dsp_path, name="attack_detector_ref")
+    processor_ref = CppProcessor(FaustAttackDetector())
     processor_ref.init(sample_rate)
     ref_outputs = processor_ref.process([audio_in])
 

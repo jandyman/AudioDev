@@ -13,8 +13,8 @@
 						</entry>
 						<entry kind="includePath" name="${ProjDirPath}/../../DaisyExamples/libDaisy/Drivers/CMSIS/Include"/>
 						<entry kind="includePath" name="${ProjDirPath}/../../DaisyExamples/libDaisy/Drivers/CMSIS/Device/ST/STM32H7xx/Include"/>
-						<entry kind="macro" name="STM32H750xx" value=""/>
 						<entry kind="macro" name="HSE_VALUE" value="16000000"/>
+						<entry kind="macro" name="STM32H750xx" value=""/>
 					</resource>
 				</language>
 			</provider>

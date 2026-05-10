@@ -19,7 +19,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(__MODULE_NAME__, m) {
   m.doc() = "Faust module: __DSP_NAME__";
 
-  py::class_<FaustProcessorWrapper>(m, "__FAUST_CLASS__")
+  py::class_<FaustProcessorWrapper>(m, "__FAUST_CLASS__", py::module_local())
     .def(py::init([]() {
       return new FaustProcessorWrapper(new __FAUST_CLASS__());
     }))

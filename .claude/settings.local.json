@@ -2,13 +2,12 @@
   "permissions": {
     "allow": [
       "Bash",
-      "Read(//Users/andy/Dropbox/Developer/**)",
-      "Edit(//Users/andy/Dropbox/Developer/AudioDev/**)",
-      "Write(//Users/andy/Dropbox/Developer/AudioDev/**)",
+      "Read",
+      "Edit",
+      "Write",
       "WebSearch",
-      "WebFetch(domain:github.com)"
+      "WebFetch"
     ],
-    "deny": [],
-    "ask": []
+    "deny": []
   }
 }

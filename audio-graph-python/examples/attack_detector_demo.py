@@ -28,7 +28,7 @@ def run_attack_detector_demo():
     print("=" * 60)
 
     # Load input audio
-    input_path = os.path.join(os.path.dirname(__file__), '..', 'test_audio', 'Bass Notes No Gap.wav')
+    input_path = os.path.join(os.path.dirname(__file__), '..', '..', 'test_audio', 'Bass Notes No Gap.wav')
     sample_rate, audio_data = wav.read(input_path)
 
     # Convert to float [-1, 1]

@@ -35,7 +35,7 @@ def test_dual_band_chorus():
     duration = 2.0  # 2 seconds
 
     # Load bass guitar audio
-    test_audio_dir = os.path.join(os.path.dirname(__file__), '..', 'test_audio')
+    test_audio_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'test_audio')
     audio_file = os.path.join(test_audio_dir, 'Bass Notes.wav')
 
     if not os.path.exists(audio_file):

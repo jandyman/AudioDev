@@ -25,7 +25,7 @@ def test_pitch_shift():
     print("=" * 60)
 
     # Load input audio
-    input_path = os.path.join(os.path.dirname(__file__), '..', 'test_audio', 'Bass Notes.wav')
+    input_path = os.path.join(os.path.dirname(__file__), '..', '..', 'test_audio', 'Bass Notes.wav')
     sample_rate, audio_data = wav.read(input_path)
 
     # Convert to float [-1, 1]
@@ -90,7 +90,7 @@ def test_pitch_shift():
     print(f"  Tap 2 output range: [{np.min(tap2_output):.4f}, {np.max(tap2_output):.4f}]")
 
     # Create output directory
-    output_dir = os.path.join(os.path.dirname(__file__), '..', 'test_audio_out')
+    output_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'test_audio_out')
     os.makedirs(output_dir, exist_ok=True)
 
     # Save outputs as WAV files
