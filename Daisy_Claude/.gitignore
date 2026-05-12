@@ -6,3 +6,7 @@
 # Re-clone or re-download as needed (see docs/spec/05_target_chip_revision.md).
 hardware/mb1364_bdp/
 hardware/weact_h7_ref/
+
+# Python bytecode (param_walker tooling and similar).
+**/__pycache__/
+*.pyc
