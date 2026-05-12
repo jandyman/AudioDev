@@ -2,18 +2,21 @@
 """
 param_walker.py — Discover and manipulate firmware parameters via OpenOCD.
 
-Usage:
-  python3 param_walker.py <map_file> [--host localhost] [--port 4444]
+Usage (PyCharm):
+  Just run the script — it defaults to ../build/seed_h750.map
 
-The .map file (e.g., build/seed_h750.map) is parsed to find param_anchor address.
-Connects to OpenOCD's telnet interface on localhost:4444 (default) and walks the
-parameter tree, reading node structures from DTCMRAM.
+Usage (CLI):
+  python3 param_walker.py [map_file] [--host localhost] [--port 4444]
 
-Commands:
-  tree              Show the full parameter tree
-  read <path>       Read a parameter value (e.g., "read left/shelf_gain")
-  write <path> <val>  Write a parameter value
-  exit              Exit
+The .map file is parsed to find param_anchor address. Connects to OpenOCD's
+telnet interface (localhost:4444 by default) and walks the parameter tree
+structure from DTCMRAM, displaying the hierarchy and current values.
+
+Typical workflow:
+  1. Build firmware: cd .. && make clean && make
+  2. Start debugger in STM32CubeIDE (launches OpenOCD)
+  3. Run this script (hit play button in PyCharm)
+  4. Step through to inspect the parameter tree
 """
 
 import socket
@@ -184,20 +187,22 @@ def walk_tree(ocd, root_addr, path="", indent=0):
 
 
 def main():
-    if len(sys.argv) < 2:
-        print(__doc__)
-        sys.exit(1)
+    # Default to .map file in ../build/ (relative to this script)
+    script_dir = Path(__file__).parent.parent
+    default_map = script_dir / "build" / "seed_h750.map"
 
-    map_file = Path(sys.argv[1])
+    map_file = default_map
     host = "localhost"
     port = 4444
 
-    # Parse args
-    for i in range(2, len(sys.argv)):
-        if sys.argv[i] == "--host" and i + 1 < len(sys.argv):
-            host = sys.argv[i + 1]
-        elif sys.argv[i] == "--port" and i + 1 < len(sys.argv):
-            port = int(sys.argv[i + 1])
+    # Parse args if provided
+    if len(sys.argv) > 1:
+        map_file = Path(sys.argv[1])
+        for i in range(2, len(sys.argv)):
+            if sys.argv[i] == "--host" and i + 1 < len(sys.argv):
+                host = sys.argv[i + 1]
+            elif sys.argv[i] == "--port" and i + 1 < len(sys.argv):
+                port = int(sys.argv[i + 1])
 
     if not map_file.exists():
         print(f"ERROR: Map file not found: {map_file}")

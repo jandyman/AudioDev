@@ -6,21 +6,39 @@ Discover and inspect the parameter tree via OpenOCD memory reads. Useful for deb
 
 ### Setup
 
-1. Build the firmware normally:
+#### Firmware Build
+1. Build the firmware in the parent directory:
    ```bash
    cd ../
    make clean && make
    ```
 
-2. Start the debugger in STM32CubeIDE (or start OpenOCD separately):
+#### Start OpenOCD
+2. Start the debugger in STM32CubeIDE (this launches OpenOCD on localhost:4444):
+   ```
+   Debug → Debug As → STM32 C/C++ Application
+   ```
+   (Keep it running; you don't need to step through the firmware, just let the debugger stay connected.)
+
+#### Run from PyCharm
+
+3. Open the `tools/` folder as a PyCharm project:
    ```bash
-   # Via CubeIDE: Debug → Debug As → STM32 C/C++ Application
-   # This starts OpenOCD on localhost:4444
+   cd seed_h750/tools/
+   open . # or just open this folder in PyCharm
    ```
 
-3. Run the tool:
+4. Right-click `param_walker.py` → **Run 'param_walker.py'**
+
+   Or hit the ▶ button — the script defaults to `../build/seed_h750.map` and `localhost:4444`.
+
+#### Run from CLI
+
+Alternatively, run directly:
    ```bash
-   python3 tools/param_walker.py build/seed_h750.map
+   python3 param_walker.py
+   # or with a custom .map file:
+   python3 param_walker.py /path/to/seed_h750.map --host localhost --port 4444
    ```
 
 ### Expected output
