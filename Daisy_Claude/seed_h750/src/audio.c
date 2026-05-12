@@ -83,35 +83,19 @@ volatile uint32_t dbg_sai_b_cr2 = 0U;
 // guaranteed to be sign-extended, so we do it ourselves in s242f. On TX
 // the SAI transmits the low 24 bits and ignores the upper 8.
 // This matches libDaisy's s242f/f2s24 — see DaisyExamples/libDaisy/src/
-// daisy_core.h. Our earlier `>> 8` / `<< 8` assumed left-justified ([31:8])
-// which made the round-trip *accidentally* clean (the shifts cancel) but
-// broke as soon as a filter sat between them.
-//
-// BISECT levels — bypass parts of the chain to isolate bugs.
-//   0 = full EQ: hi-shelf biquad → LP biquad
-//   1 = LP biquad only (no shelf)
-//   2 = hi-shelf biquad only (no LP)
-//   3 = float round-trip only (no filters)
-//   4 = trivial 1-pole LP, hardcoded: y(n) = 0.9*x(n) + 0.1*y(n-1)
-//   5 = memoryless multiply by 0.5
+// daisy_core.h.
 // ============================================================================
-#define BISECT_LEVEL  4
-
-#if BISECT_LEVEL == 4
-static float trivial_y1_l = 0.0f;
-static float trivial_y1_r = 0.0f;
-#endif
 
 // Signed 24-bit (in low 24 bits of int32) → float in [-1, 1).
 // XOR-trick sign-extends bit 23 to bits [31:24] without C UB.
-static inline float s242f(int32_t x) {
+static inline __attribute__((always_inline)) float s242f(int32_t x) {
   x = (x ^ 0x800000) - 0x800000;
   return (float)x * (1.0f / 8388608.0f);
 }
 
 // Float → signed 24-bit (in low 24 bits of int32). Clamps to avoid the
 // boundary case where x*8388608 == 8388608 wraps to -8388608 in 24-bit.
-static inline int32_t f2s24(float x) {
+static inline __attribute__((always_inline)) int32_t f2s24(float x) {
   if (x < -0.999985f) x = -0.999985f;
   if (x >  0.999985f) x =  0.999985f;
   return (int32_t)(x * 8388608.0f);
@@ -119,9 +103,7 @@ static inline int32_t f2s24(float x) {
 
 static void process_audio(uint32_t offset)
 {
-#if BISECT_LEVEL <= 2
   eq_update_from_params();
-#endif
 
   for (uint32_t i = 0U; i < AUDIO_BLOCK_FRAMES; ++i) {
     uint32_t base = offset + i * 2U;
@@ -129,24 +111,10 @@ static void process_audio(uint32_t offset)
     float l = s242f((int32_t)rx_buffer[base]);
     float r = s242f((int32_t)rx_buffer[base + 1]);
 
-#if BISECT_LEVEL == 0 || BISECT_LEVEL == 2
     l = eq_process_biquad(&eq_ch[0].hi_shelf, l);
     r = eq_process_biquad(&eq_ch[1].hi_shelf, r);
-#endif
-#if BISECT_LEVEL == 0 || BISECT_LEVEL == 1
     l = eq_process_biquad(&eq_ch[0].lp, l);
     r = eq_process_biquad(&eq_ch[1].lp, r);
-#endif
-#if BISECT_LEVEL == 4
-    trivial_y1_l = 0.9f * l + 0.1f * trivial_y1_l;
-    trivial_y1_r = 0.9f * r + 0.1f * trivial_y1_r;
-    l = trivial_y1_l;
-    r = trivial_y1_r;
-#endif
-#if BISECT_LEVEL == 5
-    l = l * 0.5f;
-    r = r * 0.5f;
-#endif
 
     tx_buffer[base]     = f2s24(l);
     tx_buffer[base + 1] = f2s24(r);
