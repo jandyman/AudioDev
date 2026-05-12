@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-param_walker.py — Discover and manipulate firmware parameters via OpenOCD.
+param_walker.py — Discover and manipulate firmware parameters via OpenOCD telnet.
 
 Usage (PyCharm):
   Just run the script — it defaults to ../build/seed_h750.map
@@ -14,7 +14,8 @@ structure from DTCMRAM, displaying the hierarchy and current values.
 
 Typical workflow:
   1. Build firmware: cd .. && make clean && make
-  2. Start debugger in STM32CubeIDE (launches OpenOCD)
+  2. Start OpenOCD in a separate terminal:
+       openocd -f interface/stlink.cfg -f target/stm32h7x.cfg
   3. Run this script (hit play button in PyCharm)
   4. Step through to inspect the parameter tree
 """
@@ -26,44 +27,55 @@ import re
 from pathlib import Path
 
 
-class OpenOcdClient:
-    """Minimal OpenOCD telnet client for memory operations."""
+class OpenOcdTelnetClient:
+    """OpenOCD telnet client for memory operations (port 4444)."""
 
     def __init__(self, host="localhost", port=4444, timeout=2.0):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(timeout)
         self.sock.connect((host, port))
-        # Read banner
+        # Read and discard banner
         try:
-            _ = self.sock.recv(1024)
+            banner = self.sock.recv(1024)
         except socket.timeout:
             pass
+        # Halt the target so we can read memory
+        self._cmd("halt")
 
-    def cmd(self, command):
-        """Send a command and read until we see the prompt."""
+    def _cmd(self, command):
+        """Send a command and read the response with a small delay."""
+        import time
         self.sock.sendall((command + "\n").encode())
+        time.sleep(0.05)  # Give OpenOCD time to respond
+
+        # Read with short timeout - collect all data that arrives quickly
         response = b""
+        old_timeout = self.sock.gettimeout()
         try:
+            self.sock.settimeout(0.15)  # Very short timeout
             while True:
-                chunk = self.sock.recv(4096)
-                if not chunk:
+                try:
+                    chunk = self.sock.recv(4096)
+                    if not chunk:
+                        break
+                    response += chunk
+                except socket.timeout:
                     break
-                response += chunk
-                # Look for OpenOCD prompt (usually "> " or similar)
-                if b"> " in response:
-                    break
-        except socket.timeout:
-            pass
+        finally:
+            self.sock.settimeout(old_timeout)
         return response.decode("utf-8", errors="ignore")
 
     def read_u32(self, addr):
-        """Read a 32-bit word at address (DTCMRAM or SRAM)."""
-        resp = self.cmd(f"md32 0x{addr:x} 1")
-        # Response format: 0xaddress: 0xvalue
-        match = re.search(r"0x[0-9a-f]+:\s+0x([0-9a-f]+)", resp, re.IGNORECASE)
+        """Read a 32-bit word at address via 'mdw' (memory display word)."""
+        resp = self._cmd(f"mdw 0x{addr:x}")
+        # Response format: "0x20000024: da151e00" (with possible extra whitespace/nulls)
+        # Extract the hex value after the colon
+        match = re.search(r":\s*([0-9a-f]+)", resp, re.IGNORECASE)
         if match:
-            return int(match.group(1), 16)
-        raise ValueError(f"Failed to parse md32 response: {resp}")
+            hex_str = match.group(1)
+            return int(hex_str, 16)
+        # If no match, show what we got for debugging
+        raise ValueError(f"Failed to parse mdw response. Got: {repr(resp[:200])}")
 
     def read_float(self, addr):
         """Read a 32-bit float at address."""
@@ -71,8 +83,8 @@ class OpenOcdClient:
         return struct.unpack("f", struct.pack("I", val_u32))[0]
 
     def write_u32(self, addr, value):
-        """Write a 32-bit word at address."""
-        self.cmd(f"mw32 0x{addr:x} 0x{value:x}")
+        """Write a 32-bit word at address via 'mw' (memory write)."""
+        self._cmd(f"mw 0x{addr:x} 0x{value:x}")
 
     def write_float(self, addr, value):
         """Write a 32-bit float at address."""
@@ -197,7 +209,7 @@ def main():
 
     map_file = default_map
     host = "localhost"
-    port = 4444
+    port = 4444  # OpenOCD telnet port
 
     # Parse args if provided
     if len(sys.argv) > 1:
@@ -220,12 +232,13 @@ def main():
         sys.exit(1)
     print(f"Found param_anchor at 0x{anchor_addr:x}")
 
-    print(f"Connecting to OpenOCD at {host}:{port}...")
+    print(f"Connecting to OpenOCD telnet at {host}:{port}...")
     try:
-        ocd = OpenOcdClient(host, port)
+        ocd = OpenOcdTelnetClient(host, port)
     except Exception as e:
-        print(f"ERROR: Failed to connect to OpenOCD: {e}")
-        print("Make sure OpenOCD is running (e.g., via STM32CubeIDE debugger)")
+        print(f"ERROR: Failed to connect: {e}")
+        print("Make sure OpenOCD is running:")
+        print("  openocd -f interface/stlink.cfg -f target/stm32h7x.cfg")
         sys.exit(1)
 
     try:
@@ -252,6 +265,11 @@ def main():
         print("-" * 60)
 
     finally:
+        # Resume the target before closing
+        try:
+            ocd._cmd("resume")
+        except:
+            pass
         ocd.close()
 
 

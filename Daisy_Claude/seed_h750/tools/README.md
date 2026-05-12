@@ -14,11 +14,32 @@ Discover and inspect the parameter tree via OpenOCD memory reads. Useful for deb
    ```
 
 #### Start OpenOCD
-2. Start the debugger in STM32CubeIDE (this launches OpenOCD on localhost:4444):
-   ```
-   Debug → Debug As → STM32 C/C++ Application
-   ```
-   (Keep it running; you don't need to step through the firmware, just let the debugger stay connected.)
+
+**Option A: Manual (recommended for debugging)**
+
+In a separate terminal, start OpenOCD with the provided config:
+```bash
+openocd -f tools/daisy_h750.cfg
+```
+
+You should see output like:
+```
+Info : STM32H750 core diagnostics in 0.0 ms
+Info : Listening on port 4444
+Info : Listening on port 3333
+Info : Listening on port 6666
+```
+
+Then the script can connect to localhost:3333 (GDB remote) or localhost:4444 (telnet).
+
+**Option B: Via STM32CubeIDE**
+
+If you prefer the CubeIDE debugger, start it normally:
+```
+Debug → Debug As → STM32 C/C++ Application
+```
+
+However, CubeIDE's embedded OpenOCD may not expose the standard ports. The manual approach is more reliable for this tool.
 
 #### Run from PyCharm
 
