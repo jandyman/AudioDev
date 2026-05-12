@@ -257,6 +257,21 @@ Reset_Handler:
     /* --- core bring-up (FPU, VTOR, caches, clocks) --- */
     bl      SystemInit
 
+    /* --- run C++ global constructors --- */
+    /* Iterate [_sinit_array, _einit_array) and call each function pointer.
+     * The linker script places these in flash; the compiler emits one entry
+     * per non-trivial global constructor. Empty range = no-op.
+     * r4 = cursor, r5 = end (callee-saved so bl doesn't clobber them). */
+    ldr     r4, =_sinit_array
+    ldr     r5, =_einit_array
+    b       .LinitArrayCheck
+.LinitArrayLoop:
+    ldr     r0, [r4], #4
+    blx     r0
+.LinitArrayCheck:
+    cmp     r4, r5
+    bcc     .LinitArrayLoop
+
     /* --- hand off to C --- */
     bl      main
 

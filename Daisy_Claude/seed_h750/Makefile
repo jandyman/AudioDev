@@ -15,10 +15,15 @@ TARGET   := $(notdir $(CURDIR))
 BUILDDIR := build
 
 # ----- toolchain -----
+# We use g++ as the linker driver because it knows about C++ ABI bits
+# (init_array iteration via crtbegin/crtend isn't relevant here — we call
+# constructors explicitly from Reset path — but g++ won't add anything we
+# don't ask for, and gets the right multilib for -mfpu=fpv5-d16).
 TOOLCHAIN_PREFIX ?= arm-none-eabi-
 CC      := $(TOOLCHAIN_PREFIX)gcc
+CXX     := $(TOOLCHAIN_PREFIX)g++
 AS      := $(TOOLCHAIN_PREFIX)gcc
-LD      := $(TOOLCHAIN_PREFIX)gcc
+LD      := $(TOOLCHAIN_PREFIX)g++
 OBJCOPY := $(TOOLCHAIN_PREFIX)objcopy
 SIZE    := $(TOOLCHAIN_PREFIX)size
 
@@ -48,6 +53,20 @@ CFLAGS  := $(CPU) $(OPT) $(WARNINGS) $(DEFINES) $(INCLUDES) \
            -ffreestanding -nostdlib -nostartfiles -fno-common \
            -fdata-sections -ffunction-sections \
            -std=c11
+
+# C++ flags mirror C flags, plus bare-metal-friendly disables:
+#   -fno-exceptions          : no unwind tables, no eh_personality, smaller .text
+#   -fno-rtti                : no typeinfo, no dynamic_cast
+#   -fno-use-cxa-atexit      : don't register static-object dtors with __cxa_atexit
+#                              (we never destruct globals on this target)
+#   -fno-threadsafe-statics  : skip __cxa_guard_* (pulls in pthread on newlib)
+CXXFLAGS := $(CPU) $(OPT) $(WARNINGS) $(DEFINES) $(INCLUDES) \
+            -ffreestanding -nostdlib -nostartfiles -fno-common \
+            -fdata-sections -ffunction-sections \
+            -std=c++17 \
+            -fno-exceptions -fno-rtti \
+            -fno-use-cxa-atexit -fno-threadsafe-statics
+
 ASFLAGS := $(CPU) $(OPT) -x assembler-with-cpp
 
 LDSCRIPT := linker/stm32h750_flash.ld
@@ -58,24 +77,16 @@ LDFLAGS  := $(CPU) -nostdlib -nostartfiles \
             -Wl,--print-memory-usage
 
 # ----- sources -----
-C_SRCS := \
-  src/system_init.c \
-  src/clock.c       \
-  src/gpio.c        \
-  src/systick.c     \
-  src/sai1.c        \
-  src/mpu.c         \
-  src/dma.c         \
-  src/params.c      \
-  src/eq.c          \
-  src/libstubs.c    \
-  src/audio.c       \
-  src/main.c
+# Discover sources automatically so renaming .c → .cpp doesn't touch the
+# Makefile. This is the only place in the project that uses wildcards;
+# everything else is explicit.
+C_SRCS   := $(wildcard src/*.c)
+CXX_SRCS := $(wildcard src/*.cpp)
+S_SRCS   := $(wildcard src/*.s)
 
-S_SRCS := \
-  src/startup_stm32h750.s
-
-OBJS := $(C_SRCS:%.c=$(BUILDDIR)/%.o) $(S_SRCS:%.s=$(BUILDDIR)/%.o)
+OBJS := $(C_SRCS:%.c=$(BUILDDIR)/%.o) \
+        $(CXX_SRCS:%.cpp=$(BUILDDIR)/%.o) \
+        $(S_SRCS:%.s=$(BUILDDIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
 # ----- rules -----
@@ -85,6 +96,10 @@ all: $(BUILDDIR)/$(TARGET).elf $(BUILDDIR)/$(TARGET).bin $(BUILDDIR)/$(TARGET).h
 $(BUILDDIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
+
+$(BUILDDIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
 $(BUILDDIR)/%.o: %.s
 	@mkdir -p $(dir $@)

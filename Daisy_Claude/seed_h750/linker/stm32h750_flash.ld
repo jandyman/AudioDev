@@ -53,6 +53,22 @@ SECTIONS
         _etext = .;
     } > FLASH
 
+    /* C++ static constructors (function pointers placed by the compiler).
+     * Our startup walks [_sinit_array, _einit_array) and calls each entry
+     * before main(). We do not place anything in .fini_array because we never
+     * destruct globals on this target (-fno-use-cxa-atexit). The KEEP() is
+     * needed because --gc-sections would otherwise drop init_array entries
+     * (nothing in our code references them by name). */
+    .init_array :
+    {
+        . = ALIGN(4);
+        _sinit_array = .;
+        KEEP(*(SORT(.init_array.*)))
+        KEEP(*(.init_array))
+        . = ALIGN(4);
+        _einit_array = .;
+    } > FLASH
+
     /* Initialized data: LMA in FLASH, VMA in DTCMRAM. Reset_Handler
      * copies [_sidata, _sidata + (_edata - _sdata)) → [_sdata, _edata). */
     .data :
