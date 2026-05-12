@@ -55,30 +55,31 @@ int main(void) {
     }
   }
 
-  // Success path: DMA is running; IRQ handler toggles the LED every 500
-  // callbacks (~1 Hz). Wait up to ~20 ms for the first IRQ to confirm
-  // the DMA is actually firing. If it never fires, blink fast.
+  // Success path: DMA is running. Wait up to ~20 ms for the first IRQ to confirm
+  // the DMA is actually firing. If it never fires, we have a hardware fault.
   const uint32_t start = millis();
-  while (audio_irq_count == 0U) {
-    if ((millis() - start) >= 20U) {
-      // DMA armed but silent — distinct fault rate so we can tell it
-      // apart from a clean PLL3 fault (5 Hz) or SAI1 fault (10 Hz).
-      for (;;) {
-        gpio_toggle(LED_USER_PORT, LED_USER_PIN);
-        delay_ms(125U);               // 4 Hz — DMA silent after init
-      }
+  while (audio_irq_count == 0U && (millis() - start) < 20U) {
+    __asm volatile ("nop");  // Spin, waiting for first interrupt
+  }
+
+  if (audio_irq_count == 0U) {
+    // Timeout: DMA never fired. Blink fast with distinct rate to diagnose.
+    for (;;) {
+      gpio_toggle(LED_USER_PORT, LED_USER_PIN);
+      delay_ms(125U);               // 4 Hz — DMA silent after init
     }
   }
 
-  // DMA is running. Foreground loop: poll for parameter updates.
-  // When the host (macOS app / param_walker.py) writes a parameter,
-  // it sets params_dirty bit 0. We recompute coefficients here (background),
-  // set bit 1, and the ISR will apply them and clear both bits.
-  for (;;) {
+  // Main loop: DMA is running and confirmed working.
+  // LED blink is driven by the ISR (toggles every 500 callbacks, ~1 Hz).
+  // Parameter updates are checked here in the background.
+  // TODO: Add low-power mode (WFI) and interrupts to wake up.
+  while (true) {
+    // Check if host has written parameters; if so, recompute coefficients
     if (params_dirty_flag.flags & PARAMS_DIRTY_BIT_DIRTY) {
       eq_recompute_from_params();
       params_dirty_flag.flags |= PARAMS_DIRTY_BIT_READY;
     }
-    __asm volatile ("nop");  // Not WFI (causes debugger PC issues)
+    __asm volatile ("nop");  // Not WFI yet (causes debugger PC issues)
   }
 }
