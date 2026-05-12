@@ -70,9 +70,15 @@ int main(void) {
     }
   }
 
-  // DMA is running. Spin (not WFI) — WFI clock-gates the core and causes
-  // the debugger to report a garbage PC on Cortex-M7. Power management later.
+  // DMA is running. Foreground loop: poll for parameter updates.
+  // When the host (macOS app / param_walker.py) writes a parameter,
+  // it sets params_dirty bit 0. We recompute coefficients here (background),
+  // set bit 1, and the ISR will apply them and clear both bits.
   for (;;) {
-    __asm volatile ("nop");
+    if (params_dirty_flag.flags & PARAMS_DIRTY_BIT_DIRTY) {
+      eq_recompute_from_params();
+      params_dirty_flag.flags |= PARAMS_DIRTY_BIT_READY;
+    }
+    __asm volatile ("nop");  // Not WFI (causes debugger PC issues)
   }
 }

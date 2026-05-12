@@ -13,7 +13,8 @@
 #include "eq.h"
 #include "params.h"
 
-EqChannel eq_ch[2];
+EqChannel eq_ch[2];        // Live coefficients (ISR reads)
+EqChannel eq_new_ch[2];    // Staging buffer (background writes)
 
 static float prev_shelf_gain[2];
 static float prev_shelf_fc[2];
@@ -83,33 +84,52 @@ float eq_process_biquad(Biquad *bq, float x) {
   return y;
 }
 
-void eq_update_from_params(void) {
+void eq_recompute_from_params(void) {
+  // Compute new coefficients into the staging buffer (eq_new_ch).
+  // Called from foreground (main loop), NOT from ISR.
+  // Any of the three parameters can trigger a recompute.
   for (int ch = 0; ch < 2; ch++) {
     float sg = eq_params[ch].shelf_gain->value;
     float sf = eq_params[ch].shelf_fc->value;
     float lf = eq_params[ch].lp_fc->value;
 
     if (sg != prev_shelf_gain[ch] || sf != prev_shelf_fc[ch]) {
-      compute_hishelf(&eq_ch[ch].hi_shelf, sg, sf);
+      compute_hishelf(&eq_new_ch[ch].hi_shelf, sg, sf);
       prev_shelf_gain[ch] = sg;
       prev_shelf_fc[ch]   = sf;
     }
     if (lf != prev_lp_fc[ch]) {
-      compute_lpf_biquad(&eq_ch[ch].lp, lf);
+      compute_lpf_biquad(&eq_new_ch[ch].lp, lf);
       prev_lp_fc[ch] = lf;
     }
   }
 }
 
-void eq_init(void) {
+void eq_apply_new_coefficients(void) {
+  // Atomically copy new coefficients from staging buffer into live buffer.
+  // Called from ISR (process_audio) when params_dirty bit 1 (ready) is set.
+  // After this, the ISR will clear both bits of params_dirty.
   for (int ch = 0; ch < 2; ch++) {
-    compute_hishelf(&eq_ch[ch].hi_shelf,
-                    eq_params[ch].shelf_gain->value,
-                    eq_params[ch].shelf_fc->value);
-    compute_lpf_biquad(&eq_ch[ch].lp, eq_params[ch].lp_fc->value);
+    eq_ch[ch].hi_shelf = eq_new_ch[ch].hi_shelf;
+    eq_ch[ch].lp       = eq_new_ch[ch].lp;
+  }
+}
 
-    prev_shelf_gain[ch] = eq_params[ch].shelf_gain->value;
-    prev_shelf_fc[ch]   = eq_params[ch].shelf_fc->value;
-    prev_lp_fc[ch]      = eq_params[ch].lp_fc->value;
+void eq_init(void) {
+  // Initialize both live and staging buffers with current parameter values.
+  for (int ch = 0; ch < 2; ch++) {
+    float sg = eq_params[ch].shelf_gain->value;
+    float sf = eq_params[ch].shelf_fc->value;
+    float lf = eq_params[ch].lp_fc->value;
+
+    compute_hishelf(&eq_ch[ch].hi_shelf, sg, sf);
+    compute_lpf_biquad(&eq_ch[ch].lp, lf);
+
+    compute_hishelf(&eq_new_ch[ch].hi_shelf, sg, sf);
+    compute_lpf_biquad(&eq_new_ch[ch].lp, lf);
+
+    prev_shelf_gain[ch] = sg;
+    prev_shelf_fc[ch]   = sf;
+    prev_lp_fc[ch]      = lf;
   }
 }

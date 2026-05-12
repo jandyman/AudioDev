@@ -102,7 +102,11 @@ static inline __attribute__((always_inline)) int32_t f2s24(float x) {
 }
 
 static void process_audio(uint32_t offset) {
-  eq_update_from_params();
+  // Check if background task has computed new coefficients (bit 1 = ready).
+  if (params_dirty_flag.flags & PARAMS_DIRTY_BIT_READY) {
+    eq_apply_new_coefficients();
+    params_dirty_flag.flags = 0U;  // Clear both dirty and ready bits
+  }
 
   for (uint32_t i = 0U; i < AUDIO_BLOCK_FRAMES; ++i) {
     uint32_t base = offset + i * 2U;

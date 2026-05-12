@@ -69,6 +69,20 @@ typedef struct {
 
 extern ParamAnchor param_anchor;
 
+// Parameter update handshaking flag (in DTCMRAM, no cache coherency needed).
+// Bit 0: dirty (host has written parameters, background task needs to recompute)
+// Bit 1: ready (background task has computed new coefficients, ISR needs to apply)
+// Host sets bit 0 after writing a parameter; ISR clears both bits after applying.
+typedef struct {
+  uint32_t magic;      // 0xDA151E02 to mark this as a valid params_dirty struct
+  volatile uint32_t flags;  // bit 0=dirty, bit 1=ready
+} ParamsDirtyFlag;
+
+extern ParamsDirtyFlag params_dirty_flag;
+
+#define PARAMS_DIRTY_BIT_DIRTY  0x1U  // bit 0
+#define PARAMS_DIRTY_BIT_READY  0x2U  // bit 1
+
 // Convenience pointers into the tree, populated by params_init().
 // Used by eq.c to read current parameter values without tree-walking.
 typedef struct {

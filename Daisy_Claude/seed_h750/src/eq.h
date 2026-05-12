@@ -29,16 +29,22 @@ typedef struct {
   Biquad lp;
 } EqChannel;
 
-extern EqChannel eq_ch[2];  // [0]=left, [1]=right
+extern EqChannel eq_ch[2];        // [0]=left, [1]=right — live (audio ISR reads)
+extern EqChannel eq_new_ch[2];    // staging buffer — background writes new coeffs here
 
 // Must be called after params_init(). Computes initial coefficients.
 void eq_init(void);
 
-// Check whether any parameter has changed; recompute coefficients if so.
-// Safe to call from ISR — sinf/cosf/expf are reentrant.
-void eq_update_from_params(void);
+// Compute new coefficients from current parameter values. Call from background task
+// (foreground loop in main.c, NOT from ISR). Writes to eq_new_ch[].
+// Can use sinf/cosf/expf — not performance-critical.
+void eq_recompute_from_params(void);
 
-// Per-sample processing. Call after eq_update_from_params().
+// Atomically swap the new coefficients into the live buffers. Call from ISR only,
+// after params_dirty bit 1 (ready) is set.
+void eq_apply_new_coefficients(void);
+
+// Per-sample processing. Call from ISR during process_audio(). Uses live eq_ch[].
 float eq_process_biquad(Biquad *bq, float x);
 
 #endif // DAISY_CLAUDE_EQ_H

@@ -38,6 +38,7 @@ static ParamGroupNode eq_root;
 
 // ---- Public globals ----
 ParamAnchor  param_anchor;
+ParamsDirtyFlag params_dirty_flag;
 EqParamPtrs  eq_params[2];
 
 static void init_param(ParamNode *p, const char *name, ParamUnit unit,
@@ -119,4 +120,8 @@ void params_init(void) {
   eq_params[1].shelf_gain = &eq_right_shelf_gain;
   eq_params[1].shelf_fc   = &eq_right_shelf_fc;
   eq_params[1].lp_fc      = &eq_right_lp_fc;
+
+  // ---- Handshaking flag ----
+  params_dirty_flag.magic = 0xDA151E02U;
+  params_dirty_flag.flags = 0U;  // no updates pending
 }
