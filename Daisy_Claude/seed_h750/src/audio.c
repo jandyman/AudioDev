@@ -101,8 +101,7 @@ static inline __attribute__((always_inline)) int32_t f2s24(float x) {
   return (int32_t)(x * 8388608.0f);
 }
 
-static void process_audio(uint32_t offset)
-{
+static void process_audio(uint32_t offset) {
   eq_update_from_params();
 
   for (uint32_t i = 0U; i < AUDIO_BLOCK_FRAMES; ++i) {
