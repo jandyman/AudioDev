@@ -7,7 +7,8 @@ The parent `AudioDev/.claude/CLAUDE.md` still applies for conda and general audi
 ## Goals
 
 - **Stage 1 (complete):** Minimal "wire" program — stereo audio in → block-based processing function (identity) → stereo audio out, at 48 kHz, through the on-board AK4556 codec. Confirmed clock tree, SAI1, DMA, and audio callback all working end-to-end.
-- **Stage 2 (next):** Design and fab a custom board. See `docs/spec/04_stage2_custom_board.md` for planning decisions made so far.
+- **Stage 1a (in progress):** EQ + remote parameter control. Two-pole hi-shelf + one-pole lowpass per channel (biquad filters). Parameter tree discovery protocol for automatic macOS UI generation via OpenOCD/SWD. Evaluating Claude Code's value for DSP firmware development.
+- **Stage 2 (planning):** Design and fab a custom board. See `docs/spec/04_stage2_custom_board.md` for planning decisions made so far.
 - **Long-term:** Build up from the wire program into a general DSP platform for the pitch-shifter work being done in sibling projects.
 
 ## Hard rules
@@ -26,6 +27,10 @@ The parent `AudioDev/.claude/CLAUDE.md` still applies for conda and general audi
 - **Stage 1 (complete):** Wire program on the Daisy Seed Rev 4 + Pod.
   - Part 1: Chip boot, clock tree at 480 MHz, LED blink. ✓
   - Part 2: SAI1 + DMA + AK4556 stereo audio passthrough at 48 kHz. ✓
+- **Stage 1a (in progress):** EQ + remote parameter control.
+  - Stereo biquad hi-shelf + LP filters with real-time coefficient update. ✓
+  - Hierarchical parameter discovery protocol (GROUP, ARRAY, PARAM tree in DTCMRAM). ✓
+  - macOS SwiftUI app to walk tree and auto-generate parameter UI via OpenOCD/SWD (next).
 - **Stage 2 (planning):** Design and fab a custom board. Target chip locked: STM32H743VIT6 (LQFP-100). See `docs/spec/04_stage2_custom_board.md`.
 
 ## Toolchain
