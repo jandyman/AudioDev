@@ -4,6 +4,8 @@
 
 Discover and inspect the parameter tree via OpenOCD memory reads. Useful for debugging the hierarchical parameter structure before building the macOS SwiftUI app.
 
+**See [OPENOCD_RECIPE.md](OPENOCD_RECIPE.md) for the complete workflow, including hardware setup, OpenOCD startup, and troubleshooting.**
+
 ### Setup
 
 #### Firmware Build
@@ -15,31 +17,19 @@ Discover and inspect the parameter tree via OpenOCD memory reads. Useful for deb
 
 #### Start OpenOCD
 
-**Option A: Manual (recommended for debugging)**
-
-In a separate terminal, start OpenOCD with the provided config:
+In a separate terminal:
 ```bash
-openocd -f tools/daisy_h750.cfg
+openocd -f interface/stlink.cfg -f target/stm32h7x.cfg
 ```
 
-You should see output like:
+You should see:
 ```
-Info : STM32H750 core diagnostics in 0.0 ms
-Info : Listening on port 4444
-Info : Listening on port 3333
-Info : Listening on port 6666
-```
-
-Then the script can connect to localhost:3333 (GDB remote) or localhost:4444 (telnet).
-
-**Option B: Via STM32CubeIDE**
-
-If you prefer the CubeIDE debugger, start it normally:
-```
-Debug → Debug As → STM32 C/C++ Application
+Info : Listening on port 6666 for tcl connections
+Info : Listening on port 4444 for telnet connections
+Info : clock speed 1800 kHz
 ```
 
-However, CubeIDE's embedded OpenOCD may not expose the standard ports. The manual approach is more reliable for this tool.
+**Important:** Do NOT run CubeIDE's debugger at the same time — both try to claim the USB device and will conflict. OpenOCD alone is sufficient.
 
 #### Run from PyCharm
 
