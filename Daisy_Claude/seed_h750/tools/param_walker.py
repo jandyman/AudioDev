@@ -30,7 +30,7 @@ from pathlib import Path
 class OpenOcdTelnetClient:
     """OpenOCD telnet client for memory operations (port 4444)."""
 
-    def __init__(self, host="localhost", port=4444, timeout=2.0):
+    def __init__(self, host="localhost", port=4444, timeout=2.0, auto_resume=True):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(timeout)
         self.sock.connect((host, port))
@@ -39,8 +39,41 @@ class OpenOcdTelnetClient:
             banner = self.sock.recv(1024)
         except socket.timeout:
             pass
-        # Halt the target so we can read memory
-        self._cmd("halt")
+        # Check if target is halted; if so, resume it
+        if auto_resume:
+            self._ensure_running()
+
+    def _ensure_running(self):
+        """Check if target is halted; resume if so."""
+        resp = self._cmd_raw("targets")  # Ask for target state
+        if "halted" in resp.lower():
+            print("  Target was halted. Resuming...", flush=True)
+            self._cmd_raw("resume")
+            import time
+            time.sleep(0.2)  # Let it start
+            return True
+        return False
+
+    def _cmd_raw(self, command):
+        """Send a command and read response (used before socket is fully setup)."""
+        import time
+        self.sock.sendall((command + "\n").encode())
+        time.sleep(0.05)
+        response = b""
+        old_timeout = self.sock.gettimeout()
+        try:
+            self.sock.settimeout(0.15)
+            while True:
+                try:
+                    chunk = self.sock.recv(4096)
+                    if not chunk:
+                        break
+                    response += chunk
+                except socket.timeout:
+                    break
+        finally:
+            self.sock.settimeout(old_timeout)
+        return response.decode("utf-8", errors="ignore")
 
     def _cmd(self, command):
         """Send a command and read the response with a small delay."""
@@ -265,11 +298,6 @@ def main():
         print("-" * 60)
 
     finally:
-        # Resume the target before closing
-        try:
-            ocd._cmd("resume")
-        except:
-            pass
         ocd.close()
 
 
