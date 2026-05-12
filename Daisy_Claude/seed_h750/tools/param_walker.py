@@ -87,11 +87,15 @@ class OpenOcdClient:
 
 
 def find_param_anchor(map_file):
-    """Extract param_anchor address from linker map file."""
+    """Extract param_anchor address from linker map file.
+
+    The .map file format is:
+                0x20000024                param_anchor
+    """
     with open(map_file) as f:
         content = f.read()
-    # Look for: param_anchor = 0x20000000 (or similar)
-    match = re.search(r"param_anchor\s+=\s+0x([0-9a-f]+)", content, re.IGNORECASE)
+    # Look for: 0x20000024                param_anchor
+    match = re.search(r"0x([0-9a-f]+)\s+param_anchor", content, re.IGNORECASE)
     if match:
         return int(match.group(1), 16)
     raise ValueError(f"param_anchor not found in {map_file}")
