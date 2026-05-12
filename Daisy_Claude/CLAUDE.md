@@ -79,6 +79,30 @@ own linker script, own debug launch config. A future Stage 2 port to a custom H7
 board would land as `custom_h743/` next to `seed_h750/`, sharing `docs/` and
 `hardware/` but with its own build and project metadata.
 
+**Firmware milestone archives:** When a firmware version is confirmed working on
+hardware, copy `seed_h750/` to a numbered archive folder before adding new features:
+
+```
+seed_h750_01_wire/      ← stereo passthrough confirmed working
+seed_h750_02_eq/        ← EQ + OpenOCD param control confirmed working
+seed_h750/              ← active development (always the latest)
+```
+
+Each archive is a fully self-contained, independently buildable CubeIDE project.
+This gives a one-click "open and flash" recovery path without any git operations.
+Git tags (`git tag wire-program`) should be created alongside for version history.
+
+After copying, immediately update the `<name>` field in the archive's `.project`
+to match the folder name (e.g. `seed_h750_01_wire`). CubeIDE refuses to import
+two projects with the same name into one workspace.
+
+## Coding style
+
+See `docs/coding_standards.md` for the full rules. Key points that must be followed in all new code:
+- **1TBS braces** — opening brace on the same line as the function/struct/control keyword, always
+- **2-space indent** — no tabs, no 4-space indent
+- **snake_case** — variables, functions, file names
+
 ## Working conventions
 
 - When writing code, favor register-level clarity over brevity. A comment naming the reference-manual section/page for each non-obvious register write is welcome; vague "configure SAI" comments are not.
