@@ -124,6 +124,15 @@ class OpenOcdTelnetClient:
         val_u32 = struct.unpack("I", struct.pack("f", value))[0]
         self.write_u32(addr, val_u32)
 
+    def set_params_dirty_flag(self, flag_addr, bits):
+        """Set specific bits in the params_dirty_flag (OR operation)."""
+        current = self.read_u32(flag_addr + 4)  # flags is at offset 4 in ParamsDirtyFlag
+        self.write_u32(flag_addr + 4, current | bits)
+
+    def clear_params_dirty_flag(self, flag_addr):
+        """Clear all bits in the params_dirty_flag."""
+        self.write_u32(flag_addr + 4, 0)
+
     def close(self):
         try:
             self.sock.close()
@@ -146,6 +155,16 @@ def find_param_anchor(map_file):
     raise ValueError(f"param_anchor not found in {map_file}")
 
 
+def find_params_dirty_flag(map_file):
+    """Extract params_dirty_flag address from linker map file."""
+    with open(map_file) as f:
+        content = f.read()
+    match = re.search(r"0x([0-9a-f]+)\s+params_dirty_flag", content, re.IGNORECASE)
+    if match:
+        return int(match.group(1), 16)
+    raise ValueError(f"params_dirty_flag not found in {map_file}")
+
+
 # Node types
 NODE_GROUP = 0
 NODE_ARRAY = 1
@@ -154,6 +173,11 @@ NODE_PARAM = 2
 # Magic numbers
 PARAM_ANCHOR_MAGIC = 0xDA151E00
 PARAM_NODE_MAGIC = 0xDA151E01
+PARAMS_DIRTY_FLAG_MAGIC = 0xDA151E02
+
+# Handshaking bits
+PARAMS_DIRTY_BIT_DIRTY = 0x1  # bit 0: host has written parameters
+PARAMS_DIRTY_BIT_READY = 0x2  # bit 1: background has new coefficients
 
 
 def read_node_header(ocd, addr):
@@ -235,6 +259,42 @@ def walk_tree(ocd, root_addr, path="", indent=0):
         walk_tree(ocd, hdr["next"], path, indent)
 
 
+def write_parameter(ocd, param_addr, new_value, params_dirty_flag_addr, wait_for_clear=True):
+    """Write a parameter value and trigger coefficient recomputation.
+
+    Steps:
+    1. Write the new parameter value
+    2. Set params_dirty bit 0 (DIRTY) to signal background task
+    3. Optionally wait for bit to clear (indicates ISR applied the change)
+
+    Args:
+      ocd: OpenOcdTelnetClient instance
+      param_addr: Address of the parameter (float)
+      new_value: New parameter value (float)
+      params_dirty_flag_addr: Address of params_dirty_flag structure
+      wait_for_clear: If True, wait for the DIRTY bit to clear
+    """
+    print(f"  Writing parameter at 0x{param_addr:x} = {new_value:.3f}", flush=True)
+    ocd.write_float(param_addr, new_value)
+
+    print(f"  Setting DIRTY flag...", flush=True)
+    ocd.set_params_dirty_flag(params_dirty_flag_addr, PARAMS_DIRTY_BIT_DIRTY)
+
+    if wait_for_clear:
+        print(f"  Waiting for DSP to apply changes...", flush=True)
+        import time
+        max_wait = 50  # 50 * 0.1 sec = 5 seconds
+        for i in range(max_wait):
+            flags = ocd.read_u32(params_dirty_flag_addr + 4)
+            if (flags & PARAMS_DIRTY_BIT_DIRTY) == 0:
+                print(f"  ✓ DSP applied the change after {i*0.1:.1f}ms", flush=True)
+                return True
+            time.sleep(0.1)
+        print(f"  ✗ Timeout waiting for DIRTY bit to clear", flush=True)
+        return False
+    return True
+
+
 def main():
     # Default to .map file in ../build/ (relative to this script)
     script_dir = Path(__file__).parent.parent
@@ -273,6 +333,14 @@ def main():
         print("Make sure OpenOCD is running:")
         print("  openocd -f interface/stlink.cfg -f target/stm32h7x.cfg")
         sys.exit(1)
+
+    # Find params_dirty_flag address for write operations
+    try:
+        params_dirty_flag_addr = find_params_dirty_flag(str(map_file))
+        print(f"Found params_dirty_flag at 0x{params_dirty_flag_addr:x}")
+    except ValueError as e:
+        print(f"Warning: {e} — write operations will not work")
+        params_dirty_flag_addr = None
 
     try:
         # Verify anchor magic
