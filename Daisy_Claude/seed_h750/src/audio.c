@@ -28,8 +28,10 @@
 #include "audio.h"
 #include "board.h"
 #include "dma.h"
+#include "eq.h"
 #include "gpio.h"
 #include "mpu.h"
+#include "params.h"
 #include "sai1.h"
 #include "systick.h"
 
@@ -74,14 +76,80 @@ volatile uint32_t dbg_sai_b_cr1 = 0U;
 volatile uint32_t dbg_sai_b_cr2 = 0U;
 
 // ============================================================================
-// Passthrough callback — copies one half-buffer from RX to TX.
-// `offset` is 0 for the first half (HT), AUDIO_BLOCK_FRAMES*2 for the
-// second half (TC). Both buffers are non-cacheable so no cache ops needed.
+// process_audio — one half-buffer of stereo audio through the EQ chain.
+//
+// Data format: SAI with DS=24, SLOTSZ=32 packs the 24-bit sample into the
+// LOW 24 bits of each FIFO word (right-justified). bits [31:24] are not
+// guaranteed to be sign-extended, so we do it ourselves in s242f. On TX
+// the SAI transmits the low 24 bits and ignores the upper 8.
+// This matches libDaisy's s242f/f2s24 — see DaisyExamples/libDaisy/src/
+// daisy_core.h. Our earlier `>> 8` / `<< 8` assumed left-justified ([31:8])
+// which made the round-trip *accidentally* clean (the shifts cancel) but
+// broke as soon as a filter sat between them.
+//
+// BISECT levels — bypass parts of the chain to isolate bugs.
+//   0 = full EQ: hi-shelf biquad → LP biquad
+//   1 = LP biquad only (no shelf)
+//   2 = hi-shelf biquad only (no LP)
+//   3 = float round-trip only (no filters)
+//   4 = trivial 1-pole LP, hardcoded: y(n) = 0.9*x(n) + 0.1*y(n-1)
+//   5 = memoryless multiply by 0.5
 // ============================================================================
-static void passthrough(uint32_t offset) {
-  const uint32_t n = AUDIO_BLOCK_FRAMES * 2U;  // stereo words per half
-  for (uint32_t i = 0U; i < n; ++i) {
-    tx_buffer[offset + i] = rx_buffer[offset + i];
+#define BISECT_LEVEL  4
+
+#if BISECT_LEVEL == 4
+static float trivial_y1_l = 0.0f;
+static float trivial_y1_r = 0.0f;
+#endif
+
+// Signed 24-bit (in low 24 bits of int32) → float in [-1, 1).
+// XOR-trick sign-extends bit 23 to bits [31:24] without C UB.
+static inline float s242f(int32_t x) {
+  x = (x ^ 0x800000) - 0x800000;
+  return (float)x * (1.0f / 8388608.0f);
+}
+
+// Float → signed 24-bit (in low 24 bits of int32). Clamps to avoid the
+// boundary case where x*8388608 == 8388608 wraps to -8388608 in 24-bit.
+static inline int32_t f2s24(float x) {
+  if (x < -0.999985f) x = -0.999985f;
+  if (x >  0.999985f) x =  0.999985f;
+  return (int32_t)(x * 8388608.0f);
+}
+
+static void process_audio(uint32_t offset)
+{
+#if BISECT_LEVEL <= 2
+  eq_update_from_params();
+#endif
+
+  for (uint32_t i = 0U; i < AUDIO_BLOCK_FRAMES; ++i) {
+    uint32_t base = offset + i * 2U;
+
+    float l = s242f((int32_t)rx_buffer[base]);
+    float r = s242f((int32_t)rx_buffer[base + 1]);
+
+#if BISECT_LEVEL == 0 || BISECT_LEVEL == 2
+    l = eq_process_biquad(&eq_ch[0].hi_shelf, l);
+    r = eq_process_biquad(&eq_ch[1].hi_shelf, r);
+#endif
+#if BISECT_LEVEL == 0 || BISECT_LEVEL == 1
+    l = eq_process_biquad(&eq_ch[0].lp, l);
+    r = eq_process_biquad(&eq_ch[1].lp, r);
+#endif
+#if BISECT_LEVEL == 4
+    trivial_y1_l = 0.9f * l + 0.1f * trivial_y1_l;
+    trivial_y1_r = 0.9f * r + 0.1f * trivial_y1_r;
+    l = trivial_y1_l;
+    r = trivial_y1_r;
+#endif
+#if BISECT_LEVEL == 5
+    l = l * 0.5f;
+    r = r * 0.5f;
+#endif
+
+    tx_buffer[base]     = f2s24(l);
+    tx_buffer[base + 1] = f2s24(r);
   }
 }
 
@@ -93,12 +161,12 @@ void DMA1_Stream1_IRQHandler(void) {
 
   if (isr & DMA_LISR_HTIF1) {
     DMA1->LIFCR = DMA_LIFCR_CHTIF1;
-    passthrough(0U);
+    process_audio(0U);
   }
 
   if (isr & DMA_LISR_TCIF1) {
     DMA1->LIFCR = DMA_LIFCR_CTCIF1;
-    passthrough(AUDIO_BLOCK_FRAMES * 2U);
+    process_audio(AUDIO_BLOCK_FRAMES * 2U);
   }
 
   // Transfer error — clear the flag. The LED will freeze (IRQs stop) if

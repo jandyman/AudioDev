@@ -15,6 +15,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+// Sample rate in Hz — must match the PLL3 / MCKDIV configuration in sai1.c.
+#define AUDIO_SAMPLE_RATE  48000.0f
+
 // Number of stereo frames per half-buffer (one callback's worth of audio).
 #define AUDIO_BLOCK_FRAMES  48U
 

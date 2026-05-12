@@ -1,15 +1,17 @@
 # Daisy_Claude — STM32H750 bare-metal build
 #
 # Targets:
-#   make         build/daisy_step1.elf, .bin, .hex, .map
+#   make         build/<project>.elf, .bin, .hex, .map
 #   make size    arm-none-eabi-size on the elf
 #   make clean   rm -rf build/
 #
 # No `make upload` target — flashing is done from STM32CubeIDE's debug launcher,
-# which loads build/daisy_step1.elf into internal flash (0x08000000) over SWD.
+# which loads build/<project>.elf into internal flash (0x08000000) over SWD.
 # See docs/spec/02_step1_startup_and_clock.md §11 and §12.
 
-TARGET   := daisy_step1
+# Derive the target name from the project folder so the ELF matches the
+# CubeIDE project name, regardless of which archive is open.
+TARGET   := $(notdir $(CURDIR))
 BUILDDIR := build
 
 # ----- toolchain -----
@@ -64,6 +66,9 @@ C_SRCS := \
   src/sai1.c        \
   src/mpu.c         \
   src/dma.c         \
+  src/params.c      \
+  src/eq.c          \
+  src/libstubs.c    \
   src/audio.c       \
   src/main.c
 
@@ -86,7 +91,7 @@ $(BUILDDIR)/%.o: %.s
 	$(AS) $(ASFLAGS) -c $< -o $@
 
 $(BUILDDIR)/$(TARGET).elf: $(OBJS) $(LDSCRIPT)
-	$(LD) $(OBJS) $(LDFLAGS) -o $@
+	$(LD) $(OBJS) $(LDFLAGS) -lm -lgcc -o $@
 
 $(BUILDDIR)/$(TARGET).bin: $(BUILDDIR)/$(TARGET).elf
 	$(OBJCOPY) -O binary $< $@

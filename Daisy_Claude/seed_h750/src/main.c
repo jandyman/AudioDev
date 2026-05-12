@@ -21,7 +21,9 @@
 #include "audio.h"
 #include "board.h"
 #include "clock.h"
+#include "eq.h"
 #include "gpio.h"
+#include "params.h"
 #include "sai1.h"
 #include "systick.h"
 
@@ -31,6 +33,8 @@ int main(void) {
   gpio_write(LED_USER_PORT, LED_USER_PIN, false);
 
   systick_init();
+  params_init();
+  eq_init();
 
   // Fault path: blink at given half-period forever using delay_ms.
   // Only reached if something in the init chain fails.
