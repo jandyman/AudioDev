@@ -14,6 +14,10 @@
 
 #include "stm32h750xx.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
   GPIO_MODE_INPUT     = 0x0U,
   GPIO_MODE_OUTPUT_PP = 0x1U,
@@ -49,5 +53,9 @@ bool gpio_read(GPIO_TypeDef *port, uint32_t pin);
 // datasheet alternate-function table (e.g. AF6 for SAI1).
 void gpio_configure_alternate(GPIO_TypeDef *port, uint32_t pin, uint32_t af,
                               gpio_speed_t speed, gpio_pull_t pull);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // DAISY_CLAUDE_GPIO_H

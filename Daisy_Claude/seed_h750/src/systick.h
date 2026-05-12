@@ -5,6 +5,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Configure SysTick to fire every 1 ms. Must be called after the clock tree
 // is up (i.e. after configure_clocks()), because it uses g_hclk_hz to
 // compute the reload value.
@@ -15,5 +19,9 @@ uint32_t millis(void);
 
 // Busy-wait for the given number of milliseconds. Fine for step 1.
 void delay_ms(uint32_t ms);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // DAISY_CLAUDE_SYSTICK_H

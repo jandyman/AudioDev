@@ -13,11 +13,13 @@
 //   7. sai1_enable() — sets SAIEN on B then A; clocks start running
 //
 // The IRQ handler runs on every HT (half-transfer) and TC (transfer-complete)
-// of DMA Stream 1 (RX). On each event it copies one half-buffer of RX audio
-// directly into the matching half of the TX buffer — stereo passthrough with
-// zero processing. It also increments audio_irq_count and toggles the LED
-// every 500 calls, so the 1 Hz blink from main() is replaced by a 1 Hz blink
-// that is directly driven by DMA activity.
+// of DMA Stream 1 (RX). On each event it runs process_audio() for the
+// appropriate half-buffer (rx → eq → tx) and increments audio_irq_count.
+//
+// The IRQ does NOT touch the LED. The LED is driven by a SoftwareTimer in
+// main()'s foreground loop, which means a steady blink proves the main loop
+// is alive (and SysTick is ticking). audio_irq_count is left as a debugger-
+// readable "is DMA still firing?" indicator.
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -162,10 +164,6 @@ void DMA1_Stream1_IRQHandler(void) {
     dbg_sai_b_cr2 = SAI1_Block_B->CR2;
   }
 
-  // Toggle LED every 500 IRQs → ~1 Hz at 1 kHz IRQ rate.
-  if (audio_irq_count % 500U == 0U) {
-    gpio_toggle(LED_USER_PORT, LED_USER_PIN);
-  }
 }
 
 // ============================================================================

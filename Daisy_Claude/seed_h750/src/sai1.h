@@ -12,6 +12,10 @@
 
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Route PE2..PE6 to AF6, enable the SAI1 peripheral clock, and program
 // both sub-blocks for 48 kHz / 24-bit LJ / stereo. CR1.SAIEN is left OFF
 // on both sub-blocks — call sai1_enable() once DMA is armed (or right
@@ -31,5 +35,9 @@ bool sai1_configure(void);
 //
 // Returns true if both SAIEN bits read back as set.
 bool sai1_enable(void);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // DAISY_CLAUDE_SAI1_H

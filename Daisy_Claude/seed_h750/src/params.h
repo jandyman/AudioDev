@@ -12,6 +12,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define PARAM_ANCHOR_MAGIC  0xDA151E00U
 #define PARAM_NODE_MAGIC    0xDA151E01U
 
@@ -95,5 +99,9 @@ extern EqParamPtrs eq_params[2];  // [0]=left, [1]=right
 
 // Build and wire the static parameter tree. Call before eq_init().
 void params_init(void);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif // DAISY_CLAUDE_PARAMS_H

@@ -65,7 +65,13 @@ CXXFLAGS := $(CPU) $(OPT) $(WARNINGS) $(DEFINES) $(INCLUDES) \
             -fdata-sections -ffunction-sections \
             -std=c++17 \
             -fno-exceptions -fno-rtti \
-            -fno-use-cxa-atexit -fno-threadsafe-statics
+            -fno-use-cxa-atexit -fno-threadsafe-statics \
+            -Wno-register
+# -Wno-register: CMSIS headers (cmsis_gcc.h, core_cm7.h) use the C `register`
+# storage-class specifier on a few intrinsics. C++17 deprecated `register`,
+# so g++ warns whenever those intrinsics are pulled in via stm32h750xx.h.
+# It's vendor code we don't control; silencing the warning is the standard
+# workaround. (Doesn't affect codegen — the keyword is a no-op anyway.)
 
 ASFLAGS := $(CPU) $(OPT) -x assembler-with-cpp
 

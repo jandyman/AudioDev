@@ -11,6 +11,10 @@
 #ifndef DAISY_CLAUDE_MPU_H
 #define DAISY_CLAUDE_MPU_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Disable the MPU, program region 0 to cover the linker's .dma_buffers
 // section (base = ORIGIN(RAM_D1), size = 2 KB) as Normal / Non-cacheable
 // / Shareable / XN / full access, then re-enable the MPU with the default
@@ -20,5 +24,9 @@
 // RAM_D1 before calling should clean + invalidate first, but at current
 // use (first boot, nothing in RAM_D1 yet) that's not necessary.
 void mpu_configure_dma_region(void);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // DAISY_CLAUDE_MPU_H

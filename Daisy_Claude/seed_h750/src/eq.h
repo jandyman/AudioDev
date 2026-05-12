@@ -13,6 +13,10 @@
 #ifndef DAISY_CLAUDE_EQ_H
 #define DAISY_CLAUDE_EQ_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Biquad in Direct Form I.
 // Difference equation (positive-feedback storage convention):
 //   y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] + a1*y[n-1] + a2*y[n-2]
@@ -46,5 +50,9 @@ void eq_apply_new_coefficients(void);
 
 // Per-sample processing. Call from ISR during process_audio(). Uses live eq_ch[].
 float eq_process_biquad(Biquad *bq, float x);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif // DAISY_CLAUDE_EQ_H
