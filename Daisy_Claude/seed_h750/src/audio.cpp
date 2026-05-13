@@ -1,4 +1,4 @@
-// audio.c — DMA-backed stereo passthrough via SAI1 + AK4556 (Daisy Seed Rev 4)
+// audio.cpp — DMA-backed stereo passthrough via SAI1 + AK4556 (Daisy Seed Rev 4)
 //
 // Sequence (called once from main after sai1_configure() succeeds):
 //   1. PB11 pulse — AK4556 RST line. Drive high, 1 ms, low, 1 ms, high.
@@ -104,22 +104,23 @@ static inline __attribute__((always_inline)) int32_t f2s24(float x) {
 }
 
 static void process_audio(uint32_t offset) {
-  // Check if background task has computed new coefficients (bit 1 = ready).
+  // If the foreground has staged new coefficients (READY = bit 1), commit
+  // them into the live filters and clear both flags so the host can write
+  // again. apply_new_coefficients() only touches the BiquadCoeffs fields —
+  // delay-line state in each filter is preserved, so there is no click.
   if (params_dirty_flag.flags & PARAMS_DIRTY_BIT_READY) {
     eq_apply_new_coefficients();
-    params_dirty_flag.flags = 0U;  // Clear both dirty and ready bits
+    params_dirty_flag.flags = 0U;
   }
 
   for (uint32_t i = 0U; i < AUDIO_BLOCK_FRAMES; ++i) {
-    uint32_t base = offset + i * 2U;
+    const uint32_t base = offset + i * 2U;
 
-    float l = s242f((int32_t)rx_buffer[base]);
-    float r = s242f((int32_t)rx_buffer[base + 1]);
+    float l = s242f(rx_buffer[base]);
+    float r = s242f(rx_buffer[base + 1]);
 
-    l = eq_process_biquad(&eq_ch[0].hi_shelf, l);
-    r = eq_process_biquad(&eq_ch[1].hi_shelf, r);
-    l = eq_process_biquad(&eq_ch[0].lp, l);
-    r = eq_process_biquad(&eq_ch[1].lp, r);
+    l = eq_ch[0].process(l);
+    r = eq_ch[1].process(r);
 
     tx_buffer[base]     = f2s24(l);
     tx_buffer[base + 1] = f2s24(r);
@@ -128,8 +129,12 @@ static void process_audio(uint32_t offset) {
 
 // ============================================================================
 // DMA1 Stream 1 ISR — paces all audio processing.
+//
+// extern "C" so the symbol the linker resolves matches the weak alias in
+// startup_stm32h750.s (which expects unmangled C names). Without this, the
+// IRQ would silently dispatch to Default_Handler and audio would never run.
 // ============================================================================
-void DMA1_Stream1_IRQHandler(void) {
+extern "C" void DMA1_Stream1_IRQHandler(void) {
   uint32_t isr = DMA1->LISR;
 
   if (isr & DMA_LISR_HTIF1) {

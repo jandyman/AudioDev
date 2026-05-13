@@ -20,8 +20,7 @@
 //      correctly. The counter wraps every ~49.7 days; a naive `now >=
 //      next_fire_ms_` would mis-fire across the wrap.
 
-#ifndef DAISY_CLAUDE_SOFTWARE_TIMER_H
-#define DAISY_CLAUDE_SOFTWARE_TIMER_H
+#pragma once
 
 #include <stdint.h>
 
@@ -65,5 +64,3 @@ class SoftwareTimer {
   uint32_t period_ms_;
   uint32_t next_fire_ms_;
 };
-
-#endif  // DAISY_CLAUDE_SOFTWARE_TIMER_H
