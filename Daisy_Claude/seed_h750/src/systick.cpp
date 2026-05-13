@@ -1,4 +1,4 @@
-// systick.c — 1 ms SysTick on STM32H750
+// systick.cpp — 1 ms SysTick on STM32H750
 //
 // SysTick is a 24-bit down-counter inside the Cortex-M7 core (not a
 // STM32-specific peripheral). We drive it from the processor clock
@@ -29,7 +29,10 @@ void systick_init(void) {
   }
 }
 
-void SysTick_Handler(void) {
+// extern "C" so the linker resolves the symbol against the weak alias in
+// startup_stm32h750.s. Without it, name-mangling makes the vector entry
+// fall through to Default_Handler and millis() never advances.
+extern "C" void SysTick_Handler(void) {
   g_ticks_ms++;
 }
 

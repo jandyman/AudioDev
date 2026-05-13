@@ -1,4 +1,4 @@
-// system_init.c — Cortex-M7 core bring-up for STM32H750
+// system_init.cpp — Cortex-M7 core bring-up for STM32H750
 //
 // Called from Reset_Handler (startup_stm32h750.s) after .data copy and .bss
 // zero, before main(). Gets the core out of its reset-default state and into
@@ -18,9 +18,13 @@
 #include "clock.h"
 
 // Linker-script symbol: start of the vector table in flash (0x08000000).
-extern uint32_t g_pfnVectors;
+// extern "C" so g_pfnVectors stays unmangled — the symbol is defined in
+// startup_stm32h750.s, which only emits C names.
+extern "C" uint32_t g_pfnVectors;
 
-void SystemInit(void) {
+// extern "C" so the linker matches the bl-from-startup target. The .s file
+// emits `bl SystemInit`, expecting a C symbol of that exact name.
+extern "C" void SystemInit(void) {
   // --- 1. FPU: grant CP10/CP11 full access (privileged + user) ---
   // Cortex-M7 TRM §7.3.3 (CPACR). Bits [23:20] = 0b1111 → full access.
   // Must be done before any FP instruction executes, otherwise a
