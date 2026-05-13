@@ -116,8 +116,17 @@ class OpenOcdTelnetClient:
         return struct.unpack("f", struct.pack("I", val_u32))[0]
 
     def write_u32(self, addr, value):
-        """Write a 32-bit word at address via 'mw' (memory write)."""
-        self._cmd(f"mw 0x{addr:x} 0x{value:x}")
+        """Write a 32-bit word at address.
+
+        Halts the target, writes via 'mww' (explicit 32-bit write), then
+        resumes. Halting is required on Cortex-M7 for reliable DTCM writes
+        via the AHB debug port; live writes while running are unreliable.
+        """
+        self._cmd_raw("halt")
+        resp = self._cmd(f"mww 0x{addr:08x} 0x{value:08x}")
+        self._cmd_raw("resume")
+        if resp.strip() and "Error" in resp:
+            print(f"  [OpenOCD] write warning: {resp.strip()}")
 
     def write_float(self, addr, value):
         """Write a 32-bit float at address."""
@@ -125,9 +134,9 @@ class OpenOcdTelnetClient:
         self.write_u32(addr, val_u32)
 
     def set_params_dirty_flag(self, flag_addr, bits):
-        """Set specific bits in the params_dirty_flag (OR operation)."""
-        current = self.read_u32(flag_addr + 4)  # flags is at offset 4 in ParamsDirtyFlag
-        self.write_u32(flag_addr + 4, current | bits)
+        """Set the params_dirty_flag bits. Writes the value directly (no read-modify-write)
+        since the firmware clears all bits atomically and the host only ever sets bit 0."""
+        self.write_u32(flag_addr + 4, bits)
 
     def clear_params_dirty_flag(self, flag_addr):
         """Clear all bits in the params_dirty_flag."""
@@ -227,8 +236,11 @@ def read_param_node(ocd, addr):
     }
 
 
-def walk_tree(ocd, root_addr, path="", indent=0):
-    """Recursively walk the parameter tree and print it."""
+def walk_tree(ocd, root_addr, path="", indent=0, params_list=None, debug=False):
+    """Recursively walk the parameter tree and print it.
+
+    If params_list is provided, collect all PARAM nodes into it (in order encountered).
+    """
     if root_addr == 0:
         return
 
@@ -241,6 +253,12 @@ def walk_tree(ocd, root_addr, path="", indent=0):
     prefix = "  " * indent
     node_type_name = ["GROUP", "ARRAY", "PARAM"][hdr["type"]]
 
+    if debug:
+        print(
+            f"{prefix}[DEBUG] addr=0x{root_addr:x} type={node_type_name} "
+            f"child=0x{hdr['child']:x} next=0x{hdr['next']:x}"
+        )
+
     if hdr["type"] == NODE_PARAM:
         param = read_param_node(ocd, root_addr)
         full_path = f"{path}/{node_type_name}" if path else node_type_name
@@ -248,15 +266,17 @@ def walk_tree(ocd, root_addr, path="", indent=0):
             f"{prefix}[PARAM] {full_path}: value={param['value']:.3f} "
             f"({param['min']:.3f}..{param['max']:.3f})"
         )
+        if params_list is not None:
+            params_list.append((root_addr, full_path, param))
     else:
         full_path = f"{path}/{node_type_name}" if path else node_type_name
         print(f"{prefix}[{node_type_name}] {full_path}")
 
         if hdr["child"]:
-            walk_tree(ocd, hdr["child"], full_path, indent + 1)
+            walk_tree(ocd, hdr["child"], full_path, indent + 1, params_list, debug)
 
     if hdr["next"]:
-        walk_tree(ocd, hdr["next"], path, indent)
+        walk_tree(ocd, hdr["next"], path, indent, params_list, debug)
 
 
 def write_parameter(ocd, param_addr, new_value, params_dirty_flag_addr, wait_for_clear=True):
@@ -274,8 +294,9 @@ def write_parameter(ocd, param_addr, new_value, params_dirty_flag_addr, wait_for
       params_dirty_flag_addr: Address of params_dirty_flag structure
       wait_for_clear: If True, wait for the DIRTY bit to clear
     """
-    print(f"  Writing parameter at 0x{param_addr:x} = {new_value:.3f}", flush=True)
-    ocd.write_float(param_addr, new_value)
+    value_addr = param_addr + 20  # ParamNode.value is at offset 20, past the 20-byte hdr
+    print(f"  Writing parameter at 0x{value_addr:x} = {new_value:.3f}", flush=True)
+    ocd.write_float(value_addr, new_value)
 
     print(f"  Setting DIRTY flag...", flush=True)
     ocd.set_params_dirty_flag(params_dirty_flag_addr, PARAMS_DIRTY_BIT_DIRTY)
@@ -287,7 +308,7 @@ def write_parameter(ocd, param_addr, new_value, params_dirty_flag_addr, wait_for
         for i in range(max_wait):
             flags = ocd.read_u32(params_dirty_flag_addr + 4)
             if (flags & PARAMS_DIRTY_BIT_DIRTY) == 0:
-                print(f"  ✓ DSP applied the change after {i*0.1:.1f}ms", flush=True)
+                print(f"  ✓ DSP applied the change after {i*100:.0f} ms", flush=True)
                 return True
             time.sleep(0.1)
         print(f"  ✗ Timeout waiting for DIRTY bit to clear", flush=True)
@@ -362,8 +383,59 @@ def main():
         print(f"✓ Root parameter group at 0x{root_ptr:x}\n")
         print("Parameter Tree:")
         print("-" * 60)
-        walk_tree(ocd, root_ptr)
+
+        # Collect parameter addresses as we walk
+        params_list = []
+        walk_tree(ocd, root_ptr, params_list=params_list, debug=False)
         print("-" * 60)
+
+        # Print address table for debugger cross-reference
+        # ParamNode layout (36 bytes):
+        #   +0  magic       uint32  = 0xDA151E01
+        #   +4  type/unit   uint8+uint8+pad[2]
+        #   +8  name*       uint32  (pointer to string in flash)
+        #   +12 child*      uint32  (pointer to first child node)
+        #   +16 next*       uint32  (pointer to next sibling node)
+        #   +20 value       float   ← host writes here
+        #   +24 min         float
+        #   +28 max         float
+        #   +32 default_val float
+        print(f"\n{'#':<4} {'node addr':<14} {'value addr':<14} {'value':>10}  range")
+        print("-" * 60)
+        for i, (node_addr, path, param) in enumerate(params_list):
+            value_addr = node_addr + 20
+            print(f"[{i}]  0x{node_addr:08x}   0x{value_addr:08x}   "
+                  f"{param['value']:>9.1f}  "
+                  f"({param['min']:.1f} .. {param['max']:.1f})")
+        print("-" * 60)
+
+        # ParamsDirtyFlag layout (8 bytes):
+        #   +0  magic  uint32  = 0xDA151E02
+        #   +4  flags  uint32  bit0=DIRTY (host→fw), bit1=READY (fw→ISR)
+        if params_dirty_flag_addr:
+            flags = ocd.read_u32(params_dirty_flag_addr + 4)
+            print(f"\nparams_dirty_flag @ 0x{params_dirty_flag_addr:08x}")
+            print(f"  flags field      @ 0x{params_dirty_flag_addr+4:08x}  = 0x{flags:08x}  "
+                  f"(DIRTY={'1' if flags&1 else '0'} READY={'1' if flags&2 else '0'})")
+
+        # Test: Set channel 0's lowpass cutoff to 6 kHz
+        # Expected: params_list[2] = ch0 lp_fc (default 2000 Hz, range 20..20000 Hz)
+        print("\n" + "="*60)
+        print("TEST: Writing 6000 Hz to params_list[2] (ch0 lp_fc)")
+        print("="*60)
+
+        if len(params_list) >= 3:
+            lp_fc_ch0_addr, _, ref_param = params_list[2]
+            print(f"  Node addr  : 0x{lp_fc_ch0_addr:08x}")
+            print(f"  Value addr : 0x{lp_fc_ch0_addr+20:08x}  (node+20)")
+            print(f"  Before     : {ref_param['value']:.1f} Hz")
+            if write_parameter(ocd, lp_fc_ch0_addr, 6000.0, params_dirty_flag_addr):
+                new_val = ocd.read_float(lp_fc_ch0_addr + 20)
+                print(f"  After      : {new_val:.1f} Hz")
+            else:
+                print("✗ Failed to write parameter")
+        else:
+            print(f"ERROR: Expected at least 3 parameters, found {len(params_list)}")
 
     finally:
         ocd.close()
