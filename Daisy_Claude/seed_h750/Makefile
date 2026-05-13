@@ -36,6 +36,7 @@ CMSIS_DEVICE_DIR := ../../DaisyExamples/libDaisy/Drivers/CMSIS/Device/ST/STM32H7
 INCLUDES := \
   -Iinclude \
   -Isrc \
+  -Isrc/rtt \
   -I$(CMSIS_CORE_DIR) \
   -I$(CMSIS_DEVICE_DIR)
 
@@ -45,7 +46,7 @@ INCLUDES := \
 # -DSTM32H750xx                          : selects the right device block in stm32h7xx.h.
 # -DHSE_VALUE=16000000                   : irreducible hardware fact from spec 01 §1.
 CPU      := -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard
-DEFINES  := -DSTM32H750xx -DHSE_VALUE=16000000
+DEFINES  := -DSTM32H750xx -DHSE_VALUE=16000000 -DSEGGER_RTT_MEMCPY_USE_BYTELOOP=1
 WARNINGS := -Wall -Wextra -Wshadow -Wundef
 OPT      := -Og -g3
 
@@ -86,7 +87,7 @@ LDFLAGS  := $(CPU) -nostdlib -nostartfiles \
 # Discover sources automatically so renaming .c → .cpp doesn't touch the
 # Makefile. This is the only place in the project that uses wildcards;
 # everything else is explicit.
-C_SRCS   := $(wildcard src/*.c)
+C_SRCS   := $(wildcard src/*.c) $(wildcard src/rtt/*.c)
 CXX_SRCS := $(wildcard src/*.cpp)
 S_SRCS   := $(wildcard src/*.s)
 

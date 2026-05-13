@@ -27,6 +27,7 @@
 #include "eq.h"
 #include "gpio.h"
 #include "params.h"
+#include "rtt_cmd.h"
 #include "sai1.h"
 #include "software_timer.h"
 #include "systick.h"
@@ -52,6 +53,7 @@ extern "C" int main(void) {
   systick_init();
   params_init();
   eq_init();
+  rtt_cmd_init();  // must follow params_init() — reads eq_params[]
 
   // --- init chain: each step has its own fault blink rate ---
   if (!configure_sai1_clock()) {
@@ -94,6 +96,8 @@ extern "C" int main(void) {
     if (led_timer.expired()) {
       gpio_toggle(LED_USER_PORT, LED_USER_PIN);
     }
+
+    rtt_cmd_poll();
 
     if (params_dirty_flag.flags & PARAMS_DIRTY_BIT_DIRTY) {
       params_dirty_flag.flags &= ~PARAMS_DIRTY_BIT_DIRTY;
