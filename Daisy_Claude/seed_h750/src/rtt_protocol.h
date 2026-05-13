@@ -48,7 +48,7 @@ extern "C" {
 // Command IDs (host → target)
 #define CMD_PING          0x01U
 #define CMD_SET_PARAM     0x02U
-#define CMD_GET_PARAM     0x03U   // reserved — not yet implemented in firmware
+#define CMD_GET_PARAM     0x03U
 
 // Response IDs (target → host)
 #define RESP_ACK          0x01U

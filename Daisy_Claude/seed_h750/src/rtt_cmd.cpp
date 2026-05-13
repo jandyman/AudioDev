@@ -62,6 +62,26 @@ static void process_packet(const uint8_t *pkt) {
       break;
     }
 
+    case CMD_GET_PARAM: {
+      uint8_t id = pkt[2];
+      if (id >= (uint8_t)PARAM_COUNT) {
+        send_nak(seq, NAK_BAD_PARAM_ID);
+        break;
+      }
+      float val = param_table[id]->value;
+      uint32_t bits;
+      __builtin_memcpy(&bits, &val, sizeof(bits));
+      uint8_t resp[RESP_GET_LEN] = {
+        RESP_ACK, seq, 0x00U,
+        (uint8_t)( bits         & 0xFFU),
+        (uint8_t)((bits >>  8U) & 0xFFU),
+        (uint8_t)((bits >> 16U) & 0xFFU),
+        (uint8_t)((bits >> 24U) & 0xFFU),
+      };
+      SEGGER_RTT_Write(RTT_CMD_CHANNEL, resp, RESP_GET_LEN);
+      break;
+    }
+
     default:
       send_nak(seq, NAK_BAD_CMD);
       break;

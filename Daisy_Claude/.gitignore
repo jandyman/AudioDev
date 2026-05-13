@@ -10,3 +10,10 @@ hardware/weact_h7_ref/
 # Python bytecode (param_walker tooling and similar).
 **/__pycache__/
 *.pyc
+
+# Swift Package Manager build artifacts.
+macos_ui/**/.build/
+
+# Xcode per-user state — not shared.
+xcuserdata/
+*.xcuserstate
