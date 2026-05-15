@@ -32,13 +32,17 @@ The build needs pybind11 headers from the conda environment.
 
 ## Implementation Architecture
 
-All DSP logic must be implemented in **Faust or C++**. Python is used exclusively as a test harness: loading compiled modules, generating control signals, running audio through them, and plotting/saving results. Do not implement DSP algorithms in Python.
+All DSP logic is implemented in **C++**. Faust is used only for rapid algorithm sketching — once an algorithm is proven, it is translated into plain C++ and the Faust version is retired. Python DSP prototyping is acceptable only as a very temporary step before C++ translation.
 
-**No dynamic memory allocation in the audio render callback.** Allocation during module construction is fine. For embedded targets, pure static allocation (fixed-size class member arrays) is preferred and avoids the issue entirely.
+**One C++ source, two build targets.** The same C++ files compile for the embedded target (arm-none-eabi) and natively on macOS via pybind11. There is no separate desktop simulation — the code under test *is* the firmware code. Platform differences are confined to a thin platform header; DSP logic is identical across targets.
 
-If concept development or debugging becomes difficult within Faust/C++, a Python prototype is acceptable as a temporary step, but the target implementation must always be Faust or C++.
+**Static graph topology, generated at design time.** Pipelines are expressed as direct C++ function calls, not a runtime graph framework. Claude generates the connection code from a spec. This makes static graphs practical without the boilerplate cost that would otherwise force a dynamic system. Each algorithm gets freshly generated concrete code, not a reused framework.
 
-The pattern of **multiple output probe signals** per module has been working well and should be continued. Each module should expose internal state signals (envelopes, flags, computed values) as additional outputs so they can be plotted in Python for diagnosis.
+**Python is the test harness only.** Python drives pybind11-wrapped C++ blocks, generates input signals, collects outputs, and plots results. Do not implement DSP logic in Python.
+
+**No dynamic memory allocation in the audio render callback.** Allocation during module construction is fine. For embedded targets, pure static allocation (fixed-size class member arrays) is required.
+
+**Signal node probing.** Every block must expose internal state signals as additional outputs (envelopes, flags, computed values). Python taps any node in the pipeline for diagnosis without restructuring the graph. This pattern applies to all new blocks.
 
 ## Current State: Full Pipeline Working
 

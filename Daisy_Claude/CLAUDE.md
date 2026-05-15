@@ -7,7 +7,7 @@ The parent `AudioDev/.claude/CLAUDE.md` still applies for conda and general audi
 ## Goals
 
 - **Stage 1 (complete):** Minimal "wire" program — stereo audio in → block-based processing function (identity) → stereo audio out, at 48 kHz, through the on-board AK4556 codec. Confirmed clock tree, SAI1, DMA, and audio callback all working end-to-end.
-- **Stage 1a (in progress):** EQ + remote parameter control. Two-pole hi-shelf + one-pole lowpass per channel (biquad filters). Parameter tree discovery protocol for automatic macOS UI generation via OpenOCD/SWD. Evaluating Claude Code's value for DSP firmware development.
+- **Stage 1a (complete):** EQ + remote parameter control. Stereo biquad hi-shelf + LP filters, SEGGER RTT binary protocol, macOS SwiftUI app confirmed working on hardware. Verdict: Claude Code is highly effective for DSP firmware development — this stack is the blueprint for Bluetooth + iOS.
 - **Stage 2 (planning):** Design and fab a custom board. See `docs/spec/04_stage2_custom_board.md` for planning decisions made so far.
 - **Long-term:** Build up from the wire program into a general DSP platform for the pitch-shifter work being done in sibling projects.
 
@@ -27,10 +27,10 @@ The parent `AudioDev/.claude/CLAUDE.md` still applies for conda and general audi
 - **Stage 1 (complete):** Wire program on the Daisy Seed Rev 4 + Pod.
   - Part 1: Chip boot, clock tree at 480 MHz, LED blink. ✓
   - Part 2: SAI1 + DMA + AK4556 stereo audio passthrough at 48 kHz. ✓
-- **Stage 1a (in progress):** EQ + remote parameter control.
+- **Stage 1a (complete):** EQ + remote parameter control. ✓
   - Stereo biquad hi-shelf + LP filters with real-time coefficient update. ✓
-  - Hierarchical parameter discovery protocol (GROUP, ARRAY, PARAM tree in DTCMRAM). ✓
-  - macOS SwiftUI app to walk tree and auto-generate parameter UI via OpenOCD/SWD (next).
+  - SEGGER RTT binary protocol (CMD_PING, CMD_SET_PARAM, CMD_GET_PARAM). ✓
+  - macOS SwiftUI app, spec-driven UI, confirmed working on hardware. ✓
 - **Stage 2 (planning):** Design and fab a custom board. Target chip locked: STM32H743VIT6 (LQFP-100). See `docs/spec/04_stage2_custom_board.md`.
 
 ## Toolchain
@@ -107,6 +107,22 @@ See `docs/coding_standards.md` for the full rules. Key points that must be follo
 - **1TBS braces** — opening brace on the same line as the function/struct/control keyword, always
 - **2-space indent** — no tabs, no 4-space indent
 - **snake_case** — variables, functions, file names
+
+## Host app / parameter UI convention
+
+Mac and iOS apps are **spec-driven**: Claude constructs the UI from the DSP spec and source at design time. No runtime parameter-tree discovery.
+
+**Schema identity:** each DSP/app pair has a UUID v4 (random, generated when the spec changes) plus human-readable `APP_NAME` and `VERSION` constants. All three are defined in the spec document and copied verbatim into both firmware and the host app:
+
+```c
+#define SCHEMA_APP_NAME  "daisy_eq"
+#define SCHEMA_VERSION   "1.0.0"
+#define SCHEMA_UUID      "7f3a1c09-4e82-4b61-9d3f-a82c05f1ee44"
+```
+
+The host app verifies the UUID at connect time before doing anything. A mismatch means firmware and app are out of sync. Generate a new UUID (via `uuidgen`) whenever the parameter spec changes in a breaking way.
+
+Parameters are stored as named C structs so they are visible in the IDE debugger by field name, not raw address.
 
 ## Working conventions
 

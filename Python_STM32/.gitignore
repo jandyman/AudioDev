@@ -1,0 +1,21 @@
+# Firmware build artifacts
+build/
+firmware/seed_h750/build/
+firmware/dsp_cpp/src/*.o
+firmware/dsp_cpp/src/*.d
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Xcode / Swift
+*.xcuserstate
+DerivedData/
+host/apps/*/DerivedData/
+
+# CubeIDE workspace state (project files are tracked, workspace state is not)
+firmware/.metadata/
+
+# macOS
+.DS_Store

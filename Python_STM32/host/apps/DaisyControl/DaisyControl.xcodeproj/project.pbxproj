@@ -1,0 +1,347 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0782BD1044DB0705F1C9270F /* ChannelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7AB9A05A0E8989B5A4DCDA /* ChannelView.swift */; };
+		123FE70EB091E03949D80556 /* ConnectionBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704ED38F885F01CDBA55B1AE /* ConnectionBar.swift */; };
+		2CD866FD9A9B135DF7CE0B96 /* RTTConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72BE0129ADBA573CE42554ED /* RTTConnection.swift */; };
+		66A35CA7F4F04FE89540FE5F /* LogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32692FA4BE2924F478EA6BE2 /* LogView.swift */; };
+		6A66FC204648374866449E15 /* DaisyControlApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FB1711C4BD4E87A4F48B5C1 /* DaisyControlApp.swift */; };
+		7C1EC7227BFE857D7B59EA04 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42BC20532912E573A4044AB5 /* ContentView.swift */; };
+		9D4232DC9039422FEFAAE44E /* RTTProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7CEA929291CA8621B14835F /* RTTProtocol.swift */; };
+		D32B826EBC35A05AB5B65667 /* EQModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 234D07541E837D67EEF8604E /* EQModel.swift */; };
+		D470C1EBCA1BE5FE44DC31D5 /* ParamSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBECDE338EE2FFCF96ACC23A /* ParamSlider.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		234D07541E837D67EEF8604E /* EQModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EQModel.swift; sourceTree = "<group>"; };
+		32692FA4BE2924F478EA6BE2 /* LogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogView.swift; sourceTree = "<group>"; };
+		42BC20532912E573A4044AB5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		4D7AB9A05A0E8989B5A4DCDA /* ChannelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelView.swift; sourceTree = "<group>"; };
+		5A1FDC11C4132ACCD37511C4 /* DaisyControl.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DaisyControl.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		704ED38F885F01CDBA55B1AE /* ConnectionBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionBar.swift; sourceTree = "<group>"; };
+		72BE0129ADBA573CE42554ED /* RTTConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTTConnection.swift; sourceTree = "<group>"; };
+		8FB1711C4BD4E87A4F48B5C1 /* DaisyControlApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaisyControlApp.swift; sourceTree = "<group>"; };
+		BBECDE338EE2FFCF96ACC23A /* ParamSlider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParamSlider.swift; sourceTree = "<group>"; };
+		D7CEA929291CA8621B14835F /* RTTProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTTProtocol.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		167A581C0ECDEB0B09DEC9A9 /* Protocol */ = {
+			isa = PBXGroup;
+			children = (
+				D7CEA929291CA8621B14835F /* RTTProtocol.swift */,
+			);
+			path = Protocol;
+			sourceTree = "<group>";
+		};
+		570A102B0FA0AE8352B4C83B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5A1FDC11C4132ACCD37511C4 /* DaisyControl.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A2020AC37A908BDEB077D549 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				4D7AB9A05A0E8989B5A4DCDA /* ChannelView.swift */,
+				704ED38F885F01CDBA55B1AE /* ConnectionBar.swift */,
+				32692FA4BE2924F478EA6BE2 /* LogView.swift */,
+				BBECDE338EE2FFCF96ACC23A /* ParamSlider.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		C980F6058985CD2B9B887C52 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				234D07541E837D67EEF8604E /* EQModel.swift */,
+				72BE0129ADBA573CE42554ED /* RTTConnection.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		E4C3D2B293E57E3D4D4256E6 = {
+			isa = PBXGroup;
+			children = (
+				F8C51BC3678CC0F7A7F606FD /* DaisyControl */,
+				570A102B0FA0AE8352B4C83B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F8C51BC3678CC0F7A7F606FD /* DaisyControl */ = {
+			isa = PBXGroup;
+			children = (
+				42BC20532912E573A4044AB5 /* ContentView.swift */,
+				8FB1711C4BD4E87A4F48B5C1 /* DaisyControlApp.swift */,
+				C980F6058985CD2B9B887C52 /* Model */,
+				167A581C0ECDEB0B09DEC9A9 /* Protocol */,
+				A2020AC37A908BDEB077D549 /* Views */,
+			);
+			name = DaisyControl;
+			path = Sources/DaisyControl;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5206B885434820D02150C636 /* DaisyControl */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EAE8618D8717A7E9B9966A4F /* Build configuration list for PBXNativeTarget "DaisyControl" */;
+			buildPhases = (
+				4608E7F2D054FE135A7E8FA1 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DaisyControl;
+			packageProductDependencies = (
+			);
+			productName = DaisyControl;
+			productReference = 5A1FDC11C4132ACCD37511C4 /* DaisyControl.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		8B9FFF86397AD9F9076EE088 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = AAFDB6E4686B3BCAB63A75EB /* Build configuration list for PBXProject "DaisyControl" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = E4C3D2B293E57E3D4D4256E6;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 570A102B0FA0AE8352B4C83B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				5206B885434820D02150C636 /* DaisyControl */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4608E7F2D054FE135A7E8FA1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0782BD1044DB0705F1C9270F /* ChannelView.swift in Sources */,
+				123FE70EB091E03949D80556 /* ConnectionBar.swift in Sources */,
+				7C1EC7227BFE857D7B59EA04 /* ContentView.swift in Sources */,
+				6A66FC204648374866449E15 /* DaisyControlApp.swift in Sources */,
+				D32B826EBC35A05AB5B65667 /* EQModel.swift in Sources */,
+				66A35CA7F4F04FE89540FE5F /* LogView.swift in Sources */,
+				D470C1EBCA1BE5FE44DC31D5 /* ParamSlider.swift in Sources */,
+				2CD866FD9A9B135DF7CE0B96 /* RTTConnection.swift in Sources */,
+				9D4232DC9039422FEFAAE44E /* RTTProtocol.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		2ED90340A1F55BC34492DB0E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AF60082C51FE939136CE2235 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		BD1C34E5EAE5F449A6521518 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = DaisyControl/DaisyControl.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.voelkel.DaisyControl;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		F45BFAF2B7003E1BFD6BC02B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = DaisyControl/DaisyControl.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.voelkel.DaisyControl;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AAFDB6E4686B3BCAB63A75EB /* Build configuration list for PBXProject "DaisyControl" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2ED90340A1F55BC34492DB0E /* Debug */,
+				AF60082C51FE939136CE2235 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		EAE8618D8717A7E9B9966A4F /* Build configuration list for PBXNativeTarget "DaisyControl" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F45BFAF2B7003E1BFD6BC02B /* Debug */,
+				BD1C34E5EAE5F449A6521518 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 8B9FFF86397AD9F9076EE088 /* Project object */;
+}
