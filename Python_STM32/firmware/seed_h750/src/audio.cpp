@@ -103,7 +103,7 @@ static inline __attribute__((always_inline)) int32_t f2s24(float x) {
   return (int32_t)(x * 8388608.0f);
 }
 
-static void process_audio(uint32_t offset) {
+void audio_process_block(const int32_t *in, int32_t *out) {
   // If the foreground has staged new coefficients (READY = bit 1), commit
   // them into the live filters and clear both flags so the host can write
   // again. apply_new_coefficients() only touches the BiquadCoeffs fields —
@@ -114,17 +114,19 @@ static void process_audio(uint32_t offset) {
   }
 
   for (uint32_t i = 0U; i < AUDIO_BLOCK_FRAMES; ++i) {
-    const uint32_t base = offset + i * 2U;
-
-    float l = s242f(rx_buffer[base]);
-    float r = s242f(rx_buffer[base + 1]);
+    float l = s242f(in[i * 2U]);
+    float r = s242f(in[i * 2U + 1U]);
 
     l = eq_ch[0].process(l);
     r = eq_ch[1].process(r);
 
-    tx_buffer[base]     = f2s24(l);
-    tx_buffer[base + 1] = f2s24(r);
+    out[i * 2U]     = f2s24(l);
+    out[i * 2U + 1U] = f2s24(r);
   }
+}
+
+static void process_audio(uint32_t offset) {
+  audio_process_block(&rx_buffer[offset], &tx_buffer[offset]);
 }
 
 // ============================================================================

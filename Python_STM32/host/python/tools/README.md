@@ -1,84 +1,100 @@
-# Daisy_Claude Tools
+# Python_STM32 Host Tools
 
-## param_walker.py
+Scripts that talk to the STM32 firmware over SEGGER RTT via JLinkGDBServer's
+TCP telnet port (localhost:19021). All three require JLinkGDBServer to be
+running with the firmware halted or running under the debugger.
 
-Discover and inspect the parameter tree via OpenOCD memory reads. Useful for debugging the hierarchical parameter structure before building the macOS SwiftUI app.
+## Prerequisites
 
-**See [OPENOCD_RECIPE.md](OPENOCD_RECIPE.md) for the complete workflow, including hardware setup, OpenOCD startup, and troubleshooting.**
+- JLinkGDBServer running: `JLinkGDBServer -device STM32H750IB -if SWD -speed 4000`
+  (or launch via STM32CubeIDE's debug session — the RTT port opens automatically)
+- conda `scipy` environment for scripts that use numpy/scipy:
+  ```bash
+  source ~/miniforge3/etc/profile.d/conda.sh && conda activate scipy
+  ```
+- `rtt_params.py` only: `pip install pylink-square` (uses J-Link SDK directly, not TCP)
 
-### Setup
+---
 
-#### Firmware Build
-1. Build the firmware in the parent directory:
-   ```bash
-   cd ../
-   make clean && make
-   ```
+## rtt_wire_test.py
 
-#### Start OpenOCD
+Verifies the `CMD_AUDIO_BLOCK` round-trip with firmware in wire (passthrough) mode.
+Sends 200 random `int32` stereo blocks, checks that every returned sample is
+bit-identical to what was sent, and reports per-block timing.
 
-In a separate terminal:
-```bash
-openocd -f interface/stlink.cfg -f target/stm32h7x.cfg
+**Run from PyCharm** (edit variables at the bottom of the `if __name__` block):
+```
+host     = 'localhost'
+port     = 19021
+n_blocks = 200
+seed     = 42
 ```
 
-You should see:
+**Expected output:**
 ```
-Info : Listening on port 6666 for tcl connections
-Info : Listening on port 4444 for telnet connections
-Info : clock speed 1800 kHz
-```
+[connect] SEGGER J-Link GDB Server ...
+[connect] PING ok (attempt 1)
+[connect] block size = 48 frames
 
-**Important:** Do NOT run CubeIDE's debugger at the same time — both try to claim the USB device and will conflict. OpenOCD alone is sufficient.
+sending 200 random blocks ...
 
-#### Run from PyCharm
-
-3. Open the `tools/` folder as a PyCharm project:
-   ```bash
-   cd seed_h750/tools/
-   open . # or just open this folder in PyCharm
-   ```
-
-4. Right-click `param_walker.py` → **Run 'param_walker.py'**
-
-   Or hit the ▶ button — the script defaults to `../build/seed_h750.map` and `localhost:4444`.
-
-#### Run from CLI
-
-Alternatively, run directly:
-   ```bash
-   python3 param_walker.py
-   # or with a custom .map file:
-   python3 param_walker.py /path/to/seed_h750.map --host localhost --port 4444
-   ```
-
-### Expected output
-
-The tool reads the parameter tree structure from DTCMRAM and prints it like:
-```
-Parameter Tree:
-[GROUP] root
-  [GROUP] root/left
-    [PARAM] root/left/shelf_gain: value=0.000 (-12.000..12.000)
-    [PARAM] root/left/shelf_fc: value=2000.000 (100.000..10000.000)
-    [PARAM] root/left/lp_fc: value=10000.000 (100.000..20000.000)
-  [GROUP] root/right
-    ...
+PASS  200/200 blocks correct
+timing  312.4 ms total  |  1.56 ms/block  (1.6x real-time budget of 1.0 ms)
 ```
 
-### How it works
+The timing line shows the RTT round-trip overhead per block and how it compares
+to the 1 ms real-time budget (48 frames × 1/48000 s). Typical measured overhead
+with USB-SWD is ~14× real-time — fine for correctness testing, not for playback.
 
-1. **Map file parsing:** Reads the linker .map file to find the `param_anchor` symbol's address (e.g., 0x20000024)
-2. **Memory reading:** Connects to OpenOCD's telnet interface (port 4444) and reads node structures from DTCMRAM
-3. **Tree traversal:** Walks the parameter tree via child/next pointers, reading node headers and parameter values
-4. **Magic verification:** Checks PARAM_NODE_MAGIC and PARAM_ANCHOR_MAGIC to ensure the structure is valid
+---
 
-### Debugging tips
+## rtt_testbench.py
 
-- **Connection refused:** Make sure OpenOCD is running (start the CubeIDE debugger)
-- **Magic mismatch:** The DTCMRAM layout might not match params.h; check that params_init() is being called in main()
-- **Address not found:** Verify the .map file is from the current build
+Processes audio through the STM32 DSP graph block by block and compares or saves
+the output. The `RTTTestbench` class wraps connect/disconnect, block send/receive,
+and parameter get/set.
 
-### Next steps
+Primary use: send a known input through both the native pybind11 build and the
+STM32 firmware, then diff the outputs. If they match, the firmware graph is
+correct. See `Daisy_Claude/CLAUDE.md` → "Remote DSP Testing Strategy" for the
+full rationale.
 
-Once this tool shows the tree correctly, the macOS SwiftUI app will use the same discovery protocol to walk the tree and render parameter controls.
+**Edit the `if __name__` block** to choose input file, parameters, and comparison mode.
+
+---
+
+## rtt_params.py
+
+Sets and reads EQ parameters on the running firmware via SEGGER RTT. Uses the
+`pylink-square` SDK (direct J-Link API, not TCP) — no JLinkGDBServer needed,
+but the J-Link must be connected via SWD.
+
+**Edit the `main()` calls** at the bottom to choose which parameters to read or write.
+
+Param IDs (must match `rtt_protocol.h`):
+
+| ID | Parameter              | Range            |
+|----|------------------------|------------------|
+| 0  | eq[0].hi_shelf.gain    | −24 .. +24 dB    |
+| 1  | eq[0].hi_shelf.fc      | 1000 .. 20000 Hz |
+| 2  | eq[0].lp.fc            | 20 .. 20000 Hz   |
+| 3  | eq[1].hi_shelf.gain    | −24 .. +24 dB    |
+| 4  | eq[1].hi_shelf.fc      | 1000 .. 20000 Hz |
+| 5  | eq[1].lp.fc            | 20 .. 20000 Hz   |
+
+---
+
+## Protocol overview
+
+Binary protocol over RTT channel 0, exposed as a raw TCP stream by JLinkGDBServer.
+See `firmware/seed_h750/src/rtt_protocol.h` for the authoritative definition.
+
+| Command          | Opcode | Host → STM32               | STM32 → Host              |
+|------------------|--------|----------------------------|---------------------------|
+| CMD_PING         | 0x01   | `[01][seq]`                | `[01][seq][00]`           |
+| CMD_SET_PARAM    | 0x02   | `[02][seq][id][f32 LE]`    | `[01][seq][00]`           |
+| CMD_GET_PARAM    | 0x03   | `[03][seq][id]`            | `[01][seq][00][f32 LE]`   |
+| CMD_GET_BLOCK_SIZE | 0x04 | `[04][seq]`                | `[01][seq][00][u32 LE]`   |
+| CMD_AUDIO_BLOCK  | 0x06   | `[06][seq][N×int32 LE]`    | `[01][seq][00][N×int32 LE]` |
+
+All responses are `[RESP_ACK=0x01][seq][0x00]` on success or `[RESP_NAK=0x02][seq][reason]` on error.

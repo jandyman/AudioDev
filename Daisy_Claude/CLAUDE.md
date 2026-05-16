@@ -124,6 +124,26 @@ The host app verifies the UUID at connect time before doing anything. A mismatch
 
 Parameters are stored as named C structs so they are visible in the IDE debugger by field name, not raw address.
 
+## Remote DSP Testing Strategy
+
+The RTT binary protocol supports a `CMD_AUDIO_BLOCK` command: host sends a stereo PCM buffer, STM32 runs it through the DSP graph, host receives the processed buffer. This is a **blocking round-trip per buffer** — send 48 frames, wait for response, repeat.
+
+**Measured overhead (H750 at 480 MHz, USB-SWD via J-Link):** ~14× real-time. A 1 ms audio block (48 frames at 48 kHz) takes ~14 ms round-trip. RTT is therefore **not suitable for real-time playback** via the host.
+
+**What it is good for — block-level correctness testing:**
+- Send known input → receive STM32 output → compare against native C++ (pybind11) output
+- If the native and STM32 results match bit-for-bit (or within float rounding), the firmware graph is correct
+- This catches porting bugs, alignment issues, endianness errors, and coefficient calculation mistakes
+
+**Key requirement — identical graph creation:** The graph wiring code (which blocks connect to which, in what order) must be generated identically for both the native pybind11 build and the STM32 firmware. Claude generates this wiring from the same spec. If the connection code is identical, a block-level RTT test that passes guarantees the firmware graph is correct by construction.
+
+**Future: per-block execution timing.** Firmware should measure and report the CPU cycles consumed by each block's `process()` call (via DWT cycle counter or SysTick). Report these via `CMD_GET_BLOCK_TIMING` or similar. During graph creation, Claude can sum the per-block cycle budgets and flag graphs that exceed the real-time deadline (1 ms = 480,000 cycles at 480 MHz). This makes DSP load estimation automatic at design time.
+
+**Tools:** `Python_STM32/host/python/tools/`
+- `rtt_wire_test.py` — passthrough correctness + per-block timing measurement
+- `rtt_testbench.py` — process audio files through the STM32 DSP graph
+- `rtt_params.py` — set/get EQ parameters via RTT (uses pylink, not TCP)
+
 ## Working conventions
 
 - When writing code, favor register-level clarity over brevity. A comment naming the reference-manual section/page for each non-obvious register write is welcome; vague "configure SAI" comments are not.

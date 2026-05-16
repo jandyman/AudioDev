@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include "SEGGER_RTT.h"
+#include "audio.h"
 #include "rtt_protocol.h"
 #include "params.h"
 
@@ -9,16 +10,26 @@
 static ParamNode *param_table[PARAM_COUNT];
 
 // Accumulator for partial packet reads from the RTT down ring buffer.
-// RTT_CMD_MAX_LEN is the size of the longest command (CMD_SET_PARAM = 7 bytes).
+// RTT_CMD_MAX_LEN is the size of the longest command (CMD_AUDIO_BLOCK = 386 bytes).
 static uint8_t rx_buf[RTT_CMD_MAX_LEN];
 static uint32_t rx_len = 0U;
 
+// Aligned staging buffers for CMD_AUDIO_BLOCK.
+// rx_buf is uint8_t (1-byte aligned); the PCM payload must be copied into
+// int32_t storage before passing to audio_process_block() to satisfy the
+// 4-byte alignment required for int32_t access.
+static int32_t rtt_audio_in[AUDIO_BLOCK_FRAMES * 2U];
+static int32_t rtt_audio_out[AUDIO_BLOCK_FRAMES * 2U];
+
 static uint32_t cmd_expected_len(uint8_t cmd) {
   switch (cmd) {
-    case CMD_PING:      return CMD_PING_LEN;
-    case CMD_SET_PARAM: return CMD_SET_PARAM_LEN;
-    case CMD_GET_PARAM: return CMD_GET_PARAM_LEN;
-    default:            return 0U;
+    case CMD_PING:           return CMD_PING_LEN;
+    case CMD_SET_PARAM:      return CMD_SET_PARAM_LEN;
+    case CMD_GET_PARAM:      return CMD_GET_PARAM_LEN;
+    case CMD_GET_BLOCK_SIZE: return CMD_GET_BLOCK_SIZE_LEN;
+    case CMD_SET_BLOCK_SIZE: return CMD_SET_BLOCK_SIZE_LEN;
+    case CMD_AUDIO_BLOCK:    return CMD_AUDIO_BLOCK_LEN;
+    default:                 return 0U;
   }
 }
 
@@ -79,6 +90,34 @@ static void process_packet(const uint8_t *pkt) {
         (uint8_t)((bits >> 24U) & 0xFFU),
       };
       SEGGER_RTT_Write(RTT_CMD_CHANNEL, resp, RESP_GET_LEN);
+      break;
+    }
+
+    case CMD_GET_BLOCK_SIZE: {
+      uint32_t n = AUDIO_BLOCK_FRAMES;
+      uint8_t resp[RESP_GET_BLOCK_SIZE_LEN] = {
+        RESP_ACK, seq, 0x00U,
+        (uint8_t)( n        & 0xFFU),
+        (uint8_t)((n >>  8U) & 0xFFU),
+        (uint8_t)((n >> 16U) & 0xFFU),
+        (uint8_t)((n >> 24U) & 0xFFU),
+      };
+      SEGGER_RTT_Write(RTT_CMD_CHANNEL, resp, RESP_GET_BLOCK_SIZE_LEN);
+      break;
+    }
+
+    case CMD_SET_BLOCK_SIZE:
+      send_nak(seq, NAK_BLOCK_SIZE_FIXED);
+      break;
+
+    case CMD_AUDIO_BLOCK: {
+      // Copy payload into aligned buffer (pkt+2 is not guaranteed 4-byte aligned).
+      __builtin_memcpy(rtt_audio_in, pkt + 2, AUDIO_BLOCK_BYTES);
+      // Wire mode: echo input back without DSP — verifies RTT transport only.
+      // Switch to audio_process_block(rtt_audio_in, rtt_audio_out) once confirmed.
+      uint8_t hdr[RESP_LEN] = {RESP_ACK, seq, 0x00U};
+      SEGGER_RTT_Write(RTT_CMD_CHANNEL, hdr, RESP_LEN);
+      SEGGER_RTT_Write(RTT_CMD_CHANNEL, rtt_audio_in, AUDIO_BLOCK_BYTES);
       break;
     }
 
