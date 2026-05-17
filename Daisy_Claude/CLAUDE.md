@@ -2,7 +2,7 @@
 
 An experiment: can Claude generate a working STM32H750 audio firmware largely from scratch, using the Daisy Seed (Rev 4) + Daisy Pod as the hardware target, without libDaisy and without ST HAL?
 
-The parent `AudioDev/.claude/CLAUDE.md` still applies for conda and general audio-dev conventions, but this folder has its own rules that override when they conflict.
+The parent `AudioDev/.claude/CLAUDE.md` still applies for Python style and general audio-dev conventions, but this folder has its own rules that override when they conflict.
 
 ## Goals
 

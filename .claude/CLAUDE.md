@@ -4,18 +4,14 @@ Cross-project configuration for audio development work.
 
 ## Python Environment
 
-Always activate the conda environment before running Python scripts:
+Python scripts are always run from **PyCharm**, which is configured to use the `scipy` conda environment directly. Do not add conda activation steps to scripts and do not generate CLI arguments — PyCharm runs scripts as-is, and configurable parameters live as named variables at the bottom of the script.
+
+When Claude needs to run a **build** (make) command that requires the conda environment (e.g. pybind11 headers), activate it first:
 ```bash
 source ~/miniforge3/etc/profile.d/conda.sh && conda activate scipy
+make -f eq.make
 ```
-This environment has numpy, matplotlib, dawdreamer, pybind11, and other dependencies needed for testing Faust modules and audio processing.
-
-This environment is also required when building Faust modules for Python:
-```bash
-cd audio-graph-python/build
-make -f faust.make DSP=attack_detector
-```
-The build needs pybind11 headers from the conda environment.
+The `scipy` environment has numpy, matplotlib, dawdreamer, pybind11, and other audio-dev dependencies.
 
 ## Naming Conventions
 
@@ -61,7 +57,7 @@ Audio → Dual Tap Delay (Faust) ───────────────�
 
 Demo scripts:
 - `audio-graph-python/examples/loop_controller_demo.py` — loop controller probe visualization
-- `audio-graph-python/examples/pitch_shifter_demo.py` — full pipeline, saves output WAV, `--ratio` arg
+- `audio-graph-python/examples/pitch_shifter_demo.py` — full pipeline, saves output WAV
 
 C++ module: `dsp_library/cpp/src/loop_controller.cpp` / `include/loop_controller.h`
 Build: `cd audio-graph-python/build && make -f audio.make TARGET=loop_controller`

@@ -1,18 +1,33 @@
-# Python_STM32 Host Tools
+# Python_STM32 — Python Layer
 
-Scripts that talk to the STM32 firmware over SEGGER RTT via JLinkGDBServer's
-TCP telnet port (localhost:19021). All three require JLinkGDBServer to be
-running with the firmware halted or running under the debugger.
+All Python for this project lives here. Open this folder as your PyCharm project
+root and configure the interpreter to `miniforge3/envs/scipy`.
 
-## Prerequisites
+## Layout
+
+- `tests/` — all scripts: native pybind11, RTT-to-hardware, and cross-comparison
+- `bindings/` — pybind11 `.cpp` binding files
+- `build/` — Makefiles and compiled `.so` output
+- `lib/` — shared utilities (signal generators, analysis helpers) as they accumulate
+
+## Running scripts
+
+All scripts are run directly from PyCharm. Configurable parameters live as named
+variables at the bottom of each script. No CLI arguments.
+
+Scripts prefixed `rtt_` require hardware connected via J-Link:
 
 - JLinkGDBServer running: `JLinkGDBServer -device STM32H750IB -if SWD -speed 4000`
   (or launch via STM32CubeIDE's debug session — the RTT port opens automatically)
-- conda `scipy` environment for scripts that use numpy/scipy:
-  ```bash
-  source ~/miniforge3/etc/profile.d/conda.sh && conda activate scipy
-  ```
-- `rtt_params.py` only: `pip install pylink-square` (uses J-Link SDK directly, not TCP)
+- `rtt_params.py` only: also needs `pip install pylink-square` (uses J-Link SDK directly, not TCP)
+
+## Building the native pybind11 module
+
+From the `build/` directory in PyCharm's terminal:
+
+```bash
+make -f eq.make
+```
 
 ---
 
@@ -59,7 +74,7 @@ STM32 firmware, then diff the outputs. If they match, the firmware graph is
 correct. See `Daisy_Claude/CLAUDE.md` → "Remote DSP Testing Strategy" for the
 full rationale.
 
-**Edit the `if __name__` block** to choose input file, parameters, and comparison mode.
+**Edit variables at the bottom** to choose input file, parameters, and comparison mode.
 
 ---
 
