@@ -46,10 +46,55 @@ class Biquad {
   }
 
   void set_coeffs(const BiquadCoeffs& c) { c_ = c; }
+  void clear_state() { x1_ = x2_ = y1_ = y2_ = 0.f; }
 
  private:
   BiquadCoeffs c_{};
   float x1_ = 0.f, x2_ = 0.f, y1_ = 0.f, y2_ = 0.f;
+};
+
+// ---- Generalized biquad cascade (up to 4th order) -------------------------
+
+// Coefficient-only snapshot: output of filter_design(), input to FilterChannel.
+// No delay state — safe to construct in foreground and pass to ISR atomically.
+static constexpr int kMaxBiquadSections = 2;
+
+struct CascadeCoeffs {
+  BiquadCoeffs bq[kMaxBiquadSections];
+  int n_sections = 0;
+};
+
+// Up to kMaxBiquadSections biquads in series. process() is header-inlined for ISR.
+// Delay state lives here; coefficients are updated via FilterChannel without
+// touching delay state (no clicks on fc/gain changes).
+class BiquadCascade {
+ public:
+  __attribute__((always_inline))
+  float process(float x) {
+    for (int i = 0; i < n_sections_; ++i)
+      x = sections_[i].process(x);
+    return x;
+  }
+
+  // Replace coefficients on n_sections sections. Delay state untouched.
+  void set_coeffs(const CascadeCoeffs& c) {
+    n_sections_ = c.n_sections;
+    for (int i = 0; i < kMaxBiquadSections; ++i)
+      sections_[i].set_coeffs(c.bq[i]);
+  }
+
+  // Replace coefficients AND zero all delay lines (call on order change).
+  void set_coeffs_and_reset(const CascadeCoeffs& c) {
+    n_sections_ = c.n_sections;
+    for (int i = 0; i < kMaxBiquadSections; ++i) {
+      sections_[i].set_coeffs(c.bq[i]);
+      sections_[i].clear_state();
+    }
+  }
+
+ private:
+  Biquad sections_[kMaxBiquadSections];
+  int    n_sections_ = 0;
 };
 
 // One audio channel: hi-shelf → low-pass biquad chain.
