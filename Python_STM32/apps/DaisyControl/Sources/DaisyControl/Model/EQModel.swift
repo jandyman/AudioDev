@@ -51,12 +51,11 @@ class EQModel {
     connectionState = .connecting
     do {
       try await conn.connect()
-      try await conn.drainBanner()
-
+      // Send PING immediately then scan for [RESP_ACK, seq, 0x00], discarding
+      // any JLinkGDBServer banner bytes that arrive before the ACK.
       let pingSeq = nextSeq()
       try await conn.send(RTTProtocol.ping(seq: pingSeq))
-      let pingResp = try await conn.readBytes(3)
-      try RTTProtocol.parseAck(pingResp)
+      try await conn.syncToAck(seq: pingSeq)
 
       connectionState = .connected
       appendLog("Connected")

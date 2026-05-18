@@ -45,12 +45,13 @@ class RTTConnection {
     }
   }
 
-  // Drains the JLinkGDBServer greeting banner (e.g. "SEGGER J-Link V7.x ...\r\n")
-  // that arrives immediately after TCP connect, before the raw RTT stream begins.
-  func drainBanner() async throws {
+  // Read the byte stream until we find the PING ACK pattern [0x01, seq, 0x00].
+  // All preceding bytes (JLinkGDBServer's greeting banner, any extra error lines)
+  // are discarded. This is robust against any banner length or fragmentation.
+  func syncToAck(seq: UInt8) async throws {
     guard let conn = nwConn else { throw RTTError.connectionClosed }
-    var drained: [UInt8] = []
-    while !drained.contains(UInt8(ascii: "\n")) && drained.count < 512 {
+    var buf: [UInt8] = []
+    while buf.count < 1024 {
       let chunk: [UInt8] = try await withCheckedThrowingContinuation { cont in
         conn.receive(minimumIncompleteLength: 1, maximumLength: 256) { data, _, isComplete, error in
           if let error = error {
@@ -64,10 +65,21 @@ class RTTConnection {
           }
         }
       }
-      drained += chunk
+      buf += chunk
+      // Scan for [RESP_ACK=0x01, seq, 0x00]
+      let n = buf.count
+      for i in 0..<(n - 2) {
+        if buf[i] == 0x01 && buf[i + 1] == seq && buf[i + 2] == 0x00 {
+          let skipped = i
+          if skipped > 0 {
+            let banner = String(bytes: Array(buf[0..<skipped]), encoding: .utf8) ?? "<\(skipped) bytes>"
+            print("[connect] skipped \(skipped) banner bytes: \(banner.trimmingCharacters(in: .whitespacesAndNewlines))")
+          }
+          return
+        }
+      }
     }
-    let banner = String(bytes: drained, encoding: .utf8) ?? drained.map { String(format: "%02x", $0) }.joined(separator: " ")
-    print("[drainBanner] \(banner.trimmingCharacters(in: .whitespacesAndNewlines))")
+    throw RTTError.unexpectedResponse
   }
 
   func send(_ bytes: [UInt8]) async throws {
