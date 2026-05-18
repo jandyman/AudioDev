@@ -12,17 +12,19 @@
 //   or update_with_reset() (zero delay state, for order changes).
 //   ISR calls cascade.process(x) directly — no overhead.
 //
-// Platform: IRQ disable/enable uses CMSIS __disable_irq()/__enable_irq() on
-// Cortex-M7 targets. Native macOS build is single-threaded; the copy is done
-// without IRQ primitives.
+// Platform: IRQ disable/enable uses inline CPSID/CPSIE on Cortex-M7 targets.
+// Inline assembly avoids a CMSIS header dependency inside template bodies
+// (GCC requires non-dependent names to be declared at template definition time,
+// not just at instantiation time). Native macOS build is single-threaded; the
+// copy is done without IRQ primitives.
 
 #pragma once
 #include "biquad.h"
 
 // Cortex-M7 (arm-none-eabi) guard. Excludes macOS ARM (AArch64 != ARMv7E-M).
 #if defined(__ARM_ARCH_7EM__)
-#  define PARAM_DISABLE_IRQ()  __disable_irq()
-#  define PARAM_ENABLE_IRQ()   __enable_irq()
+#  define PARAM_DISABLE_IRQ()  __asm volatile ("cpsid i" ::: "memory")
+#  define PARAM_ENABLE_IRQ()   __asm volatile ("cpsie i" ::: "memory")
 #else
 #  define PARAM_DISABLE_IRQ()  do {} while(0)
 #  define PARAM_ENABLE_IRQ()   do {} while(0)

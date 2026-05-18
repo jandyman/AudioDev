@@ -32,11 +32,13 @@ SIZE    := $(TOOLCHAIN_PREFIX)size
 # vendor them into this repo — only these two include paths are needed.
 CMSIS_CORE_DIR   := ../../DaisyExamples/libDaisy/Drivers/CMSIS/Include
 CMSIS_DEVICE_DIR := ../../DaisyExamples/libDaisy/Drivers/CMSIS/Device/ST/STM32H7xx/Include
+DSP_CPP_DIR      := ../../Python_STM32/dsp_cpp
 
 INCLUDES := \
   -Iinclude \
   -Isrc \
   -Isrc/rtt \
+  -I$(DSP_CPP_DIR)/include \
   -I$(CMSIS_CORE_DIR) \
   -I$(CMSIS_DEVICE_DIR)
 
@@ -91,9 +93,12 @@ C_SRCS   := $(wildcard src/*.c) $(wildcard src/rtt/*.c)
 CXX_SRCS := $(wildcard src/*.cpp)
 S_SRCS   := $(wildcard src/*.s)
 
+DSP_CPP_OBJS := $(BUILDDIR)/dsp_cpp/eq_design.o
+
 OBJS := $(C_SRCS:%.c=$(BUILDDIR)/%.o) \
         $(CXX_SRCS:%.cpp=$(BUILDDIR)/%.o) \
-        $(S_SRCS:%.s=$(BUILDDIR)/%.o)
+        $(S_SRCS:%.s=$(BUILDDIR)/%.o) \
+        $(DSP_CPP_OBJS)
 DEPS := $(OBJS:.o=.d)
 
 # ----- rules -----
@@ -105,6 +110,10 @@ $(BUILDDIR)/%.o: %.c
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 
 $(BUILDDIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+
+$(BUILDDIR)/dsp_cpp/%.o: $(DSP_CPP_DIR)/src/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 

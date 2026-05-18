@@ -72,13 +72,21 @@ enum RTTProtocol {
   }
 }
 
-// Flat param IDs — must match rtt_protocol.h ParamId enum.
-// Index = param_id sent over the wire.
-enum ParamID: Int, CaseIterable {
-  case leftShelfGain  = 0
-  case leftShelfFc    = 1
-  case leftLpFc       = 2
-  case rightShelfGain = 3
-  case rightShelfFc   = 4
-  case rightLpFc      = 5
+// Flat param_id encoding — mirrors rtt_protocol.h / rtt_cmd.cpp.
+//   id = channel*25 + stage*5 + field
+//   channel: 0=L, 1=R
+//   stage:   0=LP, 1=HP, 2=LS, 3=HS, 4=BP
+//   field:   0=enabled, 1=fc_hz, 2=order, 3=gain_db, 4=q
+// PARAM_COUNT = 50
+
+enum ParamField: Int {
+  case enabled = 0
+  case fcHz    = 1
+  case order   = 2
+  case gainDb  = 3
+  case q       = 4
+}
+
+func paramID(channel: Int, stage: Int, field: ParamField) -> UInt8 {
+  UInt8(channel * 25 + stage * 5 + field.rawValue)
 }

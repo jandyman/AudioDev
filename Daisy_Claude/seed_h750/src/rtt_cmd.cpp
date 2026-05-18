@@ -4,12 +4,8 @@
 #include "SEGGER_RTT.h"
 #include "rtt_protocol.h"
 #include "params.h"
+#include "eq_gen.h"
 
-// Flat param_id → ParamNode pointer table, populated by rtt_cmd_init().
-static ParamNode *param_table[PARAM_COUNT];
-
-// Accumulator for partial packet reads from the RTT down ring buffer.
-// RTT_CMD_MAX_LEN is the size of the longest command (CMD_SET_PARAM = 7 bytes).
 static uint8_t rx_buf[RTT_CMD_MAX_LEN];
 static uint32_t rx_len = 0U;
 
@@ -32,6 +28,12 @@ static void send_nak(uint8_t seq, uint8_t reason) {
   SEGGER_RTT_Write(RTT_CMD_CHANNEL, resp, RESP_LEN);
 }
 
+// Decompose a flat param_id into [ch][stage][field].
+// id = channel*25 + stage*5 + field  (PARAM_COUNT = 50)
+static inline int param_ch(uint8_t id)    { return id / (N_GEN_EQ_STAGES * N_GEN_EQ_FIELDS); }
+static inline int param_stage(uint8_t id) { return (id / N_GEN_EQ_FIELDS) % N_GEN_EQ_STAGES; }
+static inline int param_field(uint8_t id) { return id % N_GEN_EQ_FIELDS; }
+
 static void process_packet(const uint8_t *pkt) {
   uint8_t cmd = pkt[0];
   uint8_t seq = pkt[1];
@@ -43,12 +45,9 @@ static void process_packet(const uint8_t *pkt) {
 
     case CMD_SET_PARAM: {
       uint8_t id = pkt[2];
-      if (id >= (uint8_t)PARAM_COUNT) {
-        send_nak(seq, NAK_BAD_PARAM_ID);
-        break;
-      }
-      // Reassemble float from little-endian bytes without a cast through float*
-      // (which would be UB). __builtin_memcpy is always available under -ffreestanding.
+      if (id >= (uint8_t)PARAM_COUNT) { send_nak(seq, NAK_BAD_PARAM_ID); break; }
+
+      // Reassemble float from LE bytes without UB cast through float*.
       uint32_t bits = (uint32_t)pkt[3]
                     | ((uint32_t)pkt[4] << 8U)
                     | ((uint32_t)pkt[5] << 16U)
@@ -56,19 +55,29 @@ static void process_packet(const uint8_t *pkt) {
       float val;
       __builtin_memcpy(&val, &bits, sizeof(val));
 
-      param_table[id]->value = val;
-      params_dirty_flag.flags |= PARAMS_DIRTY_BIT_DIRTY;
+      int ch    = param_ch(id);
+      int stage = param_stage(id);
+      int field = param_field(id);
+
+      gen_eq_params[ch][stage][field].value = val;
+
+      // Order and enabled changes require delay-line reset to avoid stale state.
+      bool reset = (field == FIELD_ORDER || field == FIELD_ENABLED);
+      eq_gen_recompute(ch, stage, reset);
+
       send_ack(seq);
       break;
     }
 
     case CMD_GET_PARAM: {
       uint8_t id = pkt[2];
-      if (id >= (uint8_t)PARAM_COUNT) {
-        send_nak(seq, NAK_BAD_PARAM_ID);
-        break;
-      }
-      float val = param_table[id]->value;
+      if (id >= (uint8_t)PARAM_COUNT) { send_nak(seq, NAK_BAD_PARAM_ID); break; }
+
+      int ch    = param_ch(id);
+      int stage = param_stage(id);
+      int field = param_field(id);
+
+      float val = gen_eq_params[ch][stage][field].value;
       uint32_t bits;
       __builtin_memcpy(&bits, &val, sizeof(bits));
       uint8_t resp[RESP_GET_LEN] = {
@@ -90,16 +99,9 @@ static void process_packet(const uint8_t *pkt) {
 
 extern "C" void rtt_cmd_init(void) {
   SEGGER_RTT_Init();
-  param_table[PARAM_EQ_LEFT_SHELF_GAIN]  = eq_params[0].shelf_gain;
-  param_table[PARAM_EQ_LEFT_SHELF_FC]    = eq_params[0].shelf_fc;
-  param_table[PARAM_EQ_LEFT_LP_FC]       = eq_params[0].lp_fc;
-  param_table[PARAM_EQ_RIGHT_SHELF_GAIN] = eq_params[1].shelf_gain;
-  param_table[PARAM_EQ_RIGHT_SHELF_FC]   = eq_params[1].shelf_fc;
-  param_table[PARAM_EQ_RIGHT_LP_FC]      = eq_params[1].lp_fc;
 }
 
 extern "C" void rtt_cmd_poll(void) {
-  // Drain RTT down buffer into local accumulator.
   unsigned n = SEGGER_RTT_Read(RTT_CMD_CHANNEL,
                                rx_buf + rx_len,
                                (unsigned)(sizeof(rx_buf) - rx_len));
@@ -111,21 +113,16 @@ extern "C" void rtt_cmd_poll(void) {
   uint32_t expected = cmd_expected_len(cmd);
 
   if (expected == 0U) {
-    // Unknown command — discard accumulator and NAK.
     uint8_t seq = (rx_len >= 2U) ? rx_buf[1] : 0x00U;
     send_nak(seq, NAK_BAD_CMD);
     rx_len = 0U;
     return;
   }
 
-  if (rx_len < expected) return;  // partial packet — wait for more bytes
+  if (rx_len < expected) return;
 
   process_packet(rx_buf);
 
-  // Slide any bytes beyond the current packet to the front of the buffer.
-  // Under the ACK/NAK synchronous protocol the host waits for a response
-  // before sending the next command, so excess bytes are not expected, but
-  // this keeps the accumulator correct if they do arrive back-to-back.
   uint32_t excess = rx_len - expected;
   for (uint32_t i = 0U; i < excess; i++) {
     rx_buf[i] = rx_buf[expected + i];

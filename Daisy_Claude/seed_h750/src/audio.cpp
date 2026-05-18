@@ -30,10 +30,9 @@
 #include "audio.h"
 #include "board.h"
 #include "dma.h"
-#include "eq.h"
+#include "eq_gen.h"
 #include "gpio.h"
 #include "mpu.h"
-#include "params.h"
 #include "sai1.h"
 #include "systick.h"
 
@@ -104,23 +103,17 @@ static inline __attribute__((always_inline)) int32_t f2s24(float x) {
 }
 
 static void process_audio(uint32_t offset) {
-  // If the foreground has staged new coefficients (READY = bit 1), commit
-  // them into the live filters and clear both flags so the host can write
-  // again. apply_new_coefficients() only touches the BiquadCoeffs fields —
-  // delay-line state in each filter is preserved, so there is no click.
-  if (params_dirty_flag.flags & PARAMS_DIRTY_BIT_READY) {
-    eq_apply_new_coefficients();
-    params_dirty_flag.flags = 0U;
-  }
-
+  // FilterChannel::update() / update_with_reset() use a brief IRQ-disable
+  // window for the coefficient copy, so there is nothing to poll here.
+  // The ISR just calls eq_gen_process() directly each sample.
   for (uint32_t i = 0U; i < AUDIO_BLOCK_FRAMES; ++i) {
     const uint32_t base = offset + i * 2U;
 
     float l = s242f(rx_buffer[base]);
     float r = s242f(rx_buffer[base + 1]);
 
-    l = eq_ch[0].process(l);
-    r = eq_ch[1].process(r);
+    l = eq_gen_process(0, l);
+    r = eq_gen_process(1, r);
 
     tx_buffer[base]     = f2s24(l);
     tx_buffer[base + 1] = f2s24(r);

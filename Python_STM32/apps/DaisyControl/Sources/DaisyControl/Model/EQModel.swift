@@ -1,8 +1,12 @@
 // EQModel.swift — Observable state and RTT command logic.
 //
 // Filter state: two channels × five filter stages (LP, HP, LS, HS, BP).
-// RTT parameter sends are stubbed — firmware protocol for the generalized
-// EQ has not been defined yet. The frequency response display is fully local.
+// Stage types and positions are fixed — only parameters change at runtime.
+// param_id encoding: channel*25 + stage*5 + field (see RTTProtocol.swift).
+//
+// Defaults match firmware gen_eq_params defaults so both sides agree at startup
+// without a full-push sync on connect. A future improvement could add a
+// syncAll() call on connect to handle firmware resets mid-session.
 
 import Foundation
 import Observation
@@ -23,7 +27,7 @@ enum ConnectionState: Equatable {
 @Observable
 class EQModel {
 
-  // MARK: Filter state — [channel][filterIndex], L=0 R=1, LP/HP/LS/HS/BP = 0–4
+  // MARK: Filter state — [channel][stageIndex], L=0 R=1, LP/HP/LS/HS/BP = 0–4
 
   var stages: [[FilterStage]] = [
     defaultStages(),  // Left
@@ -87,23 +91,48 @@ class EQModel {
     }
   }
 
-  // MARK: Stage change (debounced RTT send — firmware protocol TBD)
+  // MARK: Stage change (debounced RTT send)
 
   func stageChanged(channel: Int, filter: Int) {
     let key = "\(channel)-\(filter)"
-    // Capture values before entering the Task — stages array is stable (fixed 2×5).
-    let ch    = channel == 0 ? "L" : "R"
-    let label = stages[channel][filter].type.label
     debounce[key]?.cancel()
     debounce[key] = Task { [weak self] in
       do { try await Task.sleep(for: .milliseconds(50)) } catch { return }
-      // TODO: send updated FilterStage params to firmware once RTT protocol
-      // is extended for the generalized EQ parameter set.
-      await self?.appendLog("Ch\(ch) \(label) changed (firmware sync pending)")
+      await self?.syncStage(channel: channel, filter: filter)
     }
   }
 
   // MARK: Private helpers
+
+  private func syncStage(channel: Int, filter: Int) async {
+    guard isConnected else { return }
+    let stage = stages[channel][filter]
+    let ch    = channel == 0 ? "L" : "R"
+
+    // Send fc/gain/q first (smooth update), then order and enabled last
+    // (both trigger delay-line reset on the firmware side). This way the
+    // reset recompute sees the correct fc/gain/q values already applied.
+    let fields: [(ParamField, Float)] = [
+      (.fcHz,    stage.fc),
+      (.gainDb,  stage.gainDb),
+      (.q,       stage.q),
+      (.order,   Float(stage.order)),
+      (.enabled, stage.enabled ? 1.0 : 0.0),
+    ]
+
+    do {
+      for (field, val) in fields {
+        let id = paramID(channel: channel, stage: filter, field: field)
+        let s  = nextSeq()
+        try await conn.send(RTTProtocol.setParam(seq: s, id: id, value: val))
+        let resp = try await conn.readBytes(3)
+        try RTTProtocol.parseAck(resp)
+      }
+      appendLog("Ch\(ch) \(stage.type.label) synced")
+    } catch {
+      appendLog("Ch\(ch) \(stage.type.label) sync failed: \(error.localizedDescription)")
+    }
+  }
 
   private func nextSeq() -> UInt8 {
     defer { seq &+= 1 }
