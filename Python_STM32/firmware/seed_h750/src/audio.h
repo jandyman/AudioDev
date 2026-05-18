@@ -15,10 +15,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 // Sample rate in Hz — must match the PLL3 / MCKDIV configuration in sai1.c.
 #define AUDIO_SAMPLE_RATE  48000.0f
 
@@ -39,15 +35,5 @@ extern volatile uint32_t audio_irq_count;
 // Returns true on success. Returns false if the SAI sub-blocks fail to
 // report SAIEN=1 after enable (sai1_enable() returned false).
 bool audio_init(void);
-
-// Run one block of stereo audio through the EQ chain.
-// in/out: AUDIO_BLOCK_FRAMES stereo int32_t pairs (24-bit, low 24 bits).
-// Called by the DMA ISR for live audio and by rtt_cmd for the testbench.
-// Filter state (biquad delay lines) is shared between both callers.
-void audio_process_block(const int32_t *in, int32_t *out);
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif
 
 #endif  // DAISY_CLAUDE_AUDIO_H

@@ -89,15 +89,16 @@ LDFLAGS  := $(CPU) -nostdlib -nostartfiles \
 # Discover sources automatically so renaming .c → .cpp doesn't touch the
 # Makefile. This is the only place in the project that uses wildcards;
 # everything else is explicit.
-C_SRCS       := $(wildcard src/*.c) $(wildcard src/rtt/*.c)
-CXX_SRCS     := $(wildcard src/*.cpp)
-S_SRCS       := $(wildcard src/*.s)
-DSP_CPP_SRCS := $(wildcard $(DSP_CPP_DIR)/src/*.cpp)
+C_SRCS   := $(wildcard src/*.c) $(wildcard src/rtt/*.c)
+CXX_SRCS := $(wildcard src/*.cpp)
+S_SRCS   := $(wildcard src/*.s)
+
+DSP_CPP_OBJS := $(BUILDDIR)/dsp_cpp/eq_design.o
 
 OBJS := $(C_SRCS:%.c=$(BUILDDIR)/%.o) \
         $(CXX_SRCS:%.cpp=$(BUILDDIR)/%.o) \
         $(S_SRCS:%.s=$(BUILDDIR)/%.o) \
-        $(patsubst $(DSP_CPP_DIR)/src/%.cpp,$(BUILDDIR)/dsp_cpp/%.o,$(DSP_CPP_SRCS))
+        $(DSP_CPP_OBJS)
 DEPS := $(OBJS:.o=.d)
 
 # ----- rules -----

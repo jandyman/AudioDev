@@ -2,6 +2,14 @@
 
 An experiment: can Claude generate a working STM32H750 audio firmware largely from scratch, using the Daisy Seed (Rev 4) + Daisy Pod as the hardware target, without libDaisy and without ST HAL?
 
+> **Active firmware has moved.** The live `seed_h750` firmware project now lives at
+> `Python_STM32/firmware/seed_h750/` (alongside the shared `Python_STM32/dsp_cpp/`
+> DSP library and the CubeIDE workspace at `Python_STM32/firmware/`). Do all new
+> firmware work there. This `Daisy_Claude/` folder is retained only for `docs/`,
+> `hardware/` reference material, and the frozen milestone archives
+> (`seed_h750_01_wire/`, `seed_h750_02_eq/`). The directory-layout section below
+> predates the move and is kept for historical context.
+
 The parent `AudioDev/.claude/CLAUDE.md` still applies for Python style and general audio-dev conventions, but this folder has its own rules that override when they conflict.
 
 ## Goals

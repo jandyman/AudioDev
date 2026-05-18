@@ -13,10 +13,6 @@
 
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 // Program both DMA streams + their DMAMUX routing. The streams are left
 // DISABLED; the caller (audio_init) sets DMAEN on the SAI sub-blocks and
 // then enables the streams in the right order.
@@ -27,9 +23,5 @@ extern "C" {
 // HT/TC will fire at the mid and end points.
 void dma_configure_audio(int32_t *tx_buffer, int32_t *rx_buffer,
                          uint32_t nwords);
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif
 
 #endif  // DAISY_CLAUDE_DMA_H

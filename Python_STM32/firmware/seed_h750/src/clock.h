@@ -10,10 +10,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 // Target bus frequencies after configure_clocks() runs.
 #define SYSCLK_HZ  480000000U
 #define HCLK_HZ    240000000U
@@ -48,9 +44,5 @@ bool configure_sai1_clock(void);
 // current SYSCLK/HCLK. Populated by configure_clocks().
 extern uint32_t g_sysclk_hz;
 extern uint32_t g_hclk_hz;
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif
 
 #endif  // DAISY_CLAUDE_CLOCK_H

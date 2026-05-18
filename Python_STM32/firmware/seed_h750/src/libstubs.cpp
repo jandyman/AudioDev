@@ -17,12 +17,3 @@ extern "C" void *memset(void *s, int c, size_t n) {
   while (n--) { *p++ = static_cast<unsigned char>(c); }
   return s;
 }
-
-// __builtin_memcpy on large buffers (e.g. the 384-byte CMD_AUDIO_BLOCK payload)
-// emits a call to memcpy rather than inlining. Same situation as memset above.
-extern "C" void *memcpy(void *dst, const void *src, size_t n) {
-  unsigned char *d = static_cast<unsigned char *>(dst);
-  const unsigned char *s = static_cast<const unsigned char *>(src);
-  while (n--) { *d++ = *s++; }
-  return dst;
-}
