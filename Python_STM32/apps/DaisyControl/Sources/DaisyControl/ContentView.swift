@@ -1,4 +1,4 @@
-// ContentView.swift — root view: connection bar, two channel strips, log.
+// ContentView.swift — Root view: connection bar, L/R tab pages, log.
 
 import SwiftUI
 
@@ -9,19 +9,22 @@ struct ContentView: View {
     VStack(spacing: 0) {
       ConnectionBar(model: model)
       Divider()
-      HStack(alignment: .top, spacing: 0) {
-        ChannelView(model: model, channel: 0, label: "Left")
-          .frame(maxWidth: .infinity)
-        Divider()
-        ChannelView(model: model, channel: 1, label: "Right")
-          .frame(maxWidth: .infinity)
+
+      TabView {
+        ChannelPageView(model: model, channel: 0)
+          .tabItem { Label("Left", systemImage: "l.circle") }
+        ChannelPageView(model: model, channel: 1)
+          .tabItem { Label("Right", systemImage: "r.circle") }
       }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+
       Divider()
       LogView(entries: model.log)
-        .frame(height: 110)
+        .frame(height: 90)
     }
-    .frame(minWidth: 700, minHeight: 400)
-    .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
+    .frame(minWidth: 820, minHeight: 580)
+    .onReceive(NotificationCenter.default.publisher(
+      for: NSApplication.willTerminateNotification)) { _ in
       model.disconnect()
     }
   }

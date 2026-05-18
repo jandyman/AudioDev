@@ -10,22 +10,32 @@
 		0782BD1044DB0705F1C9270F /* ChannelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7AB9A05A0E8989B5A4DCDA /* ChannelView.swift */; };
 		123FE70EB091E03949D80556 /* ConnectionBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704ED38F885F01CDBA55B1AE /* ConnectionBar.swift */; };
 		2CD866FD9A9B135DF7CE0B96 /* RTTConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72BE0129ADBA573CE42554ED /* RTTConnection.swift */; };
+		5301723CB4C21032A08C76AA /* ChannelPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1698354294C0B21A686A78E8 /* ChannelPageView.swift */; };
 		66A35CA7F4F04FE89540FE5F /* LogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32692FA4BE2924F478EA6BE2 /* LogView.swift */; };
 		6A66FC204648374866449E15 /* DaisyControlApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FB1711C4BD4E87A4F48B5C1 /* DaisyControlApp.swift */; };
 		7C1EC7227BFE857D7B59EA04 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42BC20532912E573A4044AB5 /* ContentView.swift */; };
+		84509720ACA4DA62DAFF0419 /* FilterStripView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 438ABC654B55A67A604699F5 /* FilterStripView.swift */; };
+		983681AF6B3102AA8F470079 /* FreqResponseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 836A1FF6801B22A4ADF3E3E4 /* FreqResponseView.swift */; };
 		9D4232DC9039422FEFAAE44E /* RTTProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7CEA929291CA8621B14835F /* RTTProtocol.swift */; };
 		D32B826EBC35A05AB5B65667 /* EQModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 234D07541E837D67EEF8604E /* EQModel.swift */; };
 		D470C1EBCA1BE5FE44DC31D5 /* ParamSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBECDE338EE2FFCF96ACC23A /* ParamSlider.swift */; };
+		D82F7A87243DEC9A653D0838 /* FilterStage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2953D6FA546E89CAFD32F517 /* FilterStage.swift */; };
+		EED203D2A682FBACC02EB553 /* FilterDesign.swift in Sources */ = {isa = PBXBuildFile; fileRef = 861BE3C07502A81785603958 /* FilterDesign.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1698354294C0B21A686A78E8 /* ChannelPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelPageView.swift; sourceTree = "<group>"; };
 		234D07541E837D67EEF8604E /* EQModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EQModel.swift; sourceTree = "<group>"; };
+		2953D6FA546E89CAFD32F517 /* FilterStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterStage.swift; sourceTree = "<group>"; };
 		32692FA4BE2924F478EA6BE2 /* LogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogView.swift; sourceTree = "<group>"; };
 		42BC20532912E573A4044AB5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		438ABC654B55A67A604699F5 /* FilterStripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterStripView.swift; sourceTree = "<group>"; };
 		4D7AB9A05A0E8989B5A4DCDA /* ChannelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelView.swift; sourceTree = "<group>"; };
 		5A1FDC11C4132ACCD37511C4 /* DaisyControl.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DaisyControl.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		704ED38F885F01CDBA55B1AE /* ConnectionBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionBar.swift; sourceTree = "<group>"; };
 		72BE0129ADBA573CE42554ED /* RTTConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTTConnection.swift; sourceTree = "<group>"; };
+		836A1FF6801B22A4ADF3E3E4 /* FreqResponseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreqResponseView.swift; sourceTree = "<group>"; };
+		861BE3C07502A81785603958 /* FilterDesign.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterDesign.swift; sourceTree = "<group>"; };
 		8FB1711C4BD4E87A4F48B5C1 /* DaisyControlApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaisyControlApp.swift; sourceTree = "<group>"; };
 		BBECDE338EE2FFCF96ACC23A /* ParamSlider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParamSlider.swift; sourceTree = "<group>"; };
 		D7CEA929291CA8621B14835F /* RTTProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTTProtocol.swift; sourceTree = "<group>"; };
@@ -51,8 +61,11 @@
 		A2020AC37A908BDEB077D549 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				1698354294C0B21A686A78E8 /* ChannelPageView.swift */,
 				4D7AB9A05A0E8989B5A4DCDA /* ChannelView.swift */,
 				704ED38F885F01CDBA55B1AE /* ConnectionBar.swift */,
+				438ABC654B55A67A604699F5 /* FilterStripView.swift */,
+				836A1FF6801B22A4ADF3E3E4 /* FreqResponseView.swift */,
 				32692FA4BE2924F478EA6BE2 /* LogView.swift */,
 				BBECDE338EE2FFCF96ACC23A /* ParamSlider.swift */,
 			);
@@ -63,6 +76,7 @@
 			isa = PBXGroup;
 			children = (
 				234D07541E837D67EEF8604E /* EQModel.swift */,
+				2953D6FA546E89CAFD32F517 /* FilterStage.swift */,
 				72BE0129ADBA573CE42554ED /* RTTConnection.swift */,
 			);
 			path = Model;
@@ -76,11 +90,20 @@
 			);
 			sourceTree = "<group>";
 		};
+		F3CA4208FE0B8E9A1ECCFCD5 /* DSP */ = {
+			isa = PBXGroup;
+			children = (
+				861BE3C07502A81785603958 /* FilterDesign.swift */,
+			);
+			path = DSP;
+			sourceTree = "<group>";
+		};
 		F8C51BC3678CC0F7A7F606FD /* DaisyControl */ = {
 			isa = PBXGroup;
 			children = (
 				42BC20532912E573A4044AB5 /* ContentView.swift */,
 				8FB1711C4BD4E87A4F48B5C1 /* DaisyControlApp.swift */,
+				F3CA4208FE0B8E9A1ECCFCD5 /* DSP */,
 				C980F6058985CD2B9B887C52 /* Model */,
 				167A581C0ECDEB0B09DEC9A9 /* Protocol */,
 				A2020AC37A908BDEB077D549 /* Views */,
@@ -144,11 +167,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5301723CB4C21032A08C76AA /* ChannelPageView.swift in Sources */,
 				0782BD1044DB0705F1C9270F /* ChannelView.swift in Sources */,
 				123FE70EB091E03949D80556 /* ConnectionBar.swift in Sources */,
 				7C1EC7227BFE857D7B59EA04 /* ContentView.swift in Sources */,
 				6A66FC204648374866449E15 /* DaisyControlApp.swift in Sources */,
 				D32B826EBC35A05AB5B65667 /* EQModel.swift in Sources */,
+				EED203D2A682FBACC02EB553 /* FilterDesign.swift in Sources */,
+				D82F7A87243DEC9A653D0838 /* FilterStage.swift in Sources */,
+				84509720ACA4DA62DAFF0419 /* FilterStripView.swift in Sources */,
+				983681AF6B3102AA8F470079 /* FreqResponseView.swift in Sources */,
 				66A35CA7F4F04FE89540FE5F /* LogView.swift in Sources */,
 				D470C1EBCA1BE5FE44DC31D5 /* ParamSlider.swift in Sources */,
 				2CD866FD9A9B135DF7CE0B96 /* RTTConnection.swift in Sources */,
