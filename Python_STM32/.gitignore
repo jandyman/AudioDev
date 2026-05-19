@@ -12,7 +12,8 @@ __pycache__/
 # Xcode / Swift
 *.xcuserstate
 DerivedData/
-host/apps/*/DerivedData/
+apps/*/DerivedData/
+.build/
 
 # CubeIDE workspace state (project files are tracked, workspace state is not)
 firmware/.metadata/
