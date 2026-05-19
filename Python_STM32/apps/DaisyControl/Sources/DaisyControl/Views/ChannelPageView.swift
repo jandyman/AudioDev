@@ -22,8 +22,8 @@ struct ChannelPageView: View {
 
       VStack(spacing: 0) {
         ForEach(stages.indices, id: \.self) { i in
-          FilterStripView(stage: stages[i]) {
-            model.stageChanged(channel: channel, filter: i)
+          FilterStripView(stage: stages[i]) { field in
+            model.fieldChanged(channel: channel, filter: i, field: field)
           }
           if i < stages.count - 1 {
             Divider().padding(.horizontal, 12)

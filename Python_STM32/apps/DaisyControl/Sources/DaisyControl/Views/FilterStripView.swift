@@ -4,14 +4,14 @@ import SwiftUI
 
 struct FilterStripView: View {
   let stage: FilterStage
-  let onChanged: () -> Void
+  let onChanged: (ParamField) -> Void
 
   var body: some View {
     HStack(spacing: 8) {
 
       // Enable toggle
       Toggle("", isOn: Binding(get: { stage.enabled },
-                               set: { stage.enabled = $0; onChanged() }))
+                               set: { stage.enabled = $0; onChanged(.enabled) }))
         .labelsHidden()
         .toggleStyle(.checkbox)
         .frame(width: 18)
@@ -21,7 +21,7 @@ struct FilterStripView: View {
         .frame(width: 72, alignment: .leading)
         .foregroundStyle(stage.enabled ? .primary : .secondary)
 
-      // Fc slider (log scale) — binding setter calls onChanged(), no .onChange needed
+      // Fc slider (log scale) — binding setter calls onChanged(.fcHz), no .onChange needed
       HStack(spacing: 4) {
         Text("Fc")
           .frame(width: 18, alignment: .trailing)
@@ -43,7 +43,7 @@ struct FilterStripView: View {
             .foregroundStyle(.secondary)
           Stepper("", value: Binding(
             get: { stage.order },
-            set: { stage.order = $0; onChanged() }
+            set: { stage.order = $0; onChanged(.order) }
           ), in: 1...4)
           .labelsHidden()
           .frame(width: 36)
@@ -71,7 +71,7 @@ struct FilterStripView: View {
             .font(.caption)
           Slider(value: Binding(
             get: { Double(stage.gainDb) },
-            set: { stage.gainDb = Float($0); onChanged() }
+            set: { stage.gainDb = Float($0); onChanged(.gainDb) }
           ), in: -24...24)
           .frame(width: 100)
         }
@@ -110,7 +110,7 @@ struct FilterStripView: View {
   private var fcPositionBinding: Binding<Double> {
     Binding(
       get: { log10(Double(stage.fc) / fcMin) / log10(fcMax / fcMin) },
-      set: { stage.fc = Float(fcMin * pow(fcMax / fcMin, $0)); onChanged() }
+      set: { stage.fc = Float(fcMin * pow(fcMax / fcMin, $0)); onChanged(.fcHz) }
     )
   }
 
@@ -127,7 +127,7 @@ struct FilterStripView: View {
   private var qPositionBinding: Binding<Double> {
     Binding(
       get: { log10(Double(stage.q) / qMin) / log10(qMax / qMin) },
-      set: { stage.q = Float(qMin * pow(qMax / qMin, $0)); onChanged() }
+      set: { stage.q = Float(qMin * pow(qMax / qMin, $0)); onChanged(.q) }
     )
   }
 

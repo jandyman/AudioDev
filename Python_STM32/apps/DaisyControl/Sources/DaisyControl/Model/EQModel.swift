@@ -43,7 +43,16 @@ class EQModel {
 
   private let conn = RTTConnection()
   private var seq: UInt8 = 0
-  private var debounce: [String: Task<Void, Never>] = [:]
+
+  // One pending control change. Keyed "channel-filter-field" in pendingFields
+  // so rapid slider moves coalesce to the latest value before being sent.
+  private struct FieldRef { let channel: Int; let filter: Int; let field: ParamField }
+  private var pendingFields: [String: FieldRef] = [:]
+
+  // drainPending() runs as this task and is the ONLY code that writes to the
+  // socket, so SET_PARAM round-trips never overlap and the ACK stream stays
+  // aligned. nil when idle.
+  private var sendLoop: Task<Void, Never>?
 
   // MARK: Connection lifecycle
 
@@ -67,8 +76,9 @@ class EQModel {
   }
 
   func disconnect() {
-    debounce.values.forEach { $0.cancel() }
-    debounce.removeAll()
+    sendLoop?.cancel()
+    sendLoop = nil
+    pendingFields.removeAll()
     conn.disconnect()
     connectionState = .disconnected
     appendLog("Disconnected")
@@ -90,46 +100,71 @@ class EQModel {
     }
   }
 
-  // MARK: Stage change (debounced RTT send)
+  // MARK: Field change (throttled single-field RTT send)
 
-  func stageChanged(channel: Int, filter: Int) {
-    let key = "\(channel)-\(filter)"
-    debounce[key]?.cancel()
-    debounce[key] = Task { [weak self] in
-      do { try await Task.sleep(for: .milliseconds(50)) } catch { return }
-      await self?.syncStage(channel: channel, filter: filter)
+  // Called by FilterStripView whenever one control changes. Records the field
+  // as pending and starts the send loop if it isn't already running. While a
+  // slider is dragged this coalesces to ~one send per throttle interval.
+  func fieldChanged(channel: Int, filter: Int, field: ParamField) {
+    pendingFields["\(channel)-\(filter)-\(field.rawValue)"] =
+      FieldRef(channel: channel, filter: filter, field: field)
+    if sendLoop == nil {
+      sendLoop = Task { [weak self] in await self?.drainPending() }
     }
   }
 
   // MARK: Private helpers
 
-  private func syncStage(channel: Int, filter: Int) async {
-    guard isConnected else { return }
-    let stage = stages[channel][filter]
-    let ch    = channel == 0 ? "L" : "R"
+  // Gap between send passes. The round-trip itself is ~15 ms; a 20 ms pause
+  // caps updates near 30/s — smooth on the scope without flooding the link.
+  private static let throttleMs = 20
 
-    // Send fc/gain/q first (smooth update), then order and enabled last
-    // (both trigger delay-line reset on the firmware side). This way the
-    // reset recompute sees the correct fc/gain/q values already applied.
-    let fields: [(ParamField, Float)] = [
-      (.fcHz,    stage.fc),
-      (.gainDb,  stage.gainDb),
-      (.q,       stage.q),
-      (.order,   Float(stage.order)),
-      (.enabled, stage.enabled ? 1.0 : 0.0),
-    ]
+  // Drains pendingFields until empty: each pass sends every pending field once
+  // (freshest value, sampled at send time), then sleeps one throttle interval
+  // so further drag motion coalesces into the next pass.
+  private func drainPending() async {
+    defer { sendLoop = nil }
+    while !pendingFields.isEmpty {
+      guard isConnected else { pendingFields.removeAll(); return }
 
-    do {
-      for (field, val) in fields {
-        let id = paramID(channel: channel, stage: filter, field: field)
-        let s  = nextSeq()
-        try await conn.send(RTTProtocol.setParam(seq: s, id: id, value: val))
-        let resp = try await conn.readBytes(3)
-        try RTTProtocol.parseAck(resp)
+      let batch = pendingFields.values.sorted { sendRank($0.field) < sendRank($1.field) }
+      pendingFields.removeAll()
+
+      for ref in batch {
+        let value = fieldValue(stages[ref.channel][ref.filter], ref.field)
+        await sendField(ref, value: value)
       }
-      appendLog("Ch\(ch) \(stage.type.label) synced")
+      do { try await Task.sleep(for: .milliseconds(Self.throttleMs)) } catch { return }
+    }
+  }
+
+  // order/enabled trigger a delay-line reset on the firmware, so within a pass
+  // they go after fc/gain/q — the reset recompute then sees updated values.
+  private func sendRank(_ field: ParamField) -> Int {
+    switch field {
+    case .fcHz, .gainDb, .q: return 0
+    case .order, .enabled:   return 1
+    }
+  }
+
+  private func sendField(_ ref: FieldRef, value: Float) async {
+    guard isConnected else { return }
+    do {
+      let id = paramID(channel: ref.channel, stage: ref.filter, field: ref.field)
+      try await conn.send(RTTProtocol.setParam(seq: nextSeq(), id: id, value: value))
+      try RTTProtocol.parseAck(try await conn.readBytes(3))
     } catch {
-      appendLog("Ch\(ch) \(stage.type.label) sync failed: \(error.localizedDescription)")
+      appendLog("Param send failed: \(error.localizedDescription)")
+    }
+  }
+
+  private func fieldValue(_ stage: FilterStage, _ field: ParamField) -> Float {
+    switch field {
+    case .enabled: return stage.enabled ? 1.0 : 0.0
+    case .fcHz:    return stage.fc
+    case .order:   return Float(stage.order)
+    case .gainDb:  return stage.gainDb
+    case .q:       return stage.q
     }
   }
 
