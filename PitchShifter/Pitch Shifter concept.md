@@ -50,6 +50,8 @@ Initial investigation showed that the derivative `x - x'` at a zero crossing doe
 
 This block contains a delay buffer of a fixed size. It has three inputs: the input signal and two delay time inputs. It has two outputs corresponding to the delayed signal at each tap. The two taps share a single write buffer and operate in ping-pong fashion during crossfades.
 
+Two taps are sufficient for loop-first development on sustained signals. The final pipeline will use **three taps** to handle attack-during-loop-crossfade cleanly; see the planned three-tap design in *Open Issues*.
+
 ## Control Logic
 
 Takes inputs from the attack detector and the zero crossing detector, and determines when to reset the delay lines. It manages crossfades and overall state. It outputs the two delay times for the dual delay line.
@@ -80,76 +82,71 @@ The Control Logic should expose the following signals for diagnosis and tuning:
 
 **Looping during tails and silence:** The looping logic runs continuously, not only during active notes. During noise tails and silence, any zero crossing is a plausible loop candidate (since the signal content is indistinguishable), so transitions happen readily and the tap delay stays short. This ensures that when the next note attack arrives, the taps are already at low latency and the attack crossfade starts from a good position.
 
+### About time references
+
+I find it horribly confusing to describe the looping logic using relative times x(n) of the input, and using relative times of the output of introduces one more sense of confusion. So all the times we will store will be absolute times from the beginning of the file, expressed in samples. As an implentation note, if these numbers are stored as 32 bit integers, they will wrap around at about 24 hours at 48K. Although this is unlikely to be relevant, if we do unsigned math, we can count on being able to compute relative times even with wraparound. We just need to be careful to express things in relative terms in the actual implementation. And this will naturally fall out of the math, even though we think in absolute terms. So descriptions below are in absolute times. I think this will make more sense as we describe storing zero crossings to determine loop points. And it should make debug easier to have everything in absolute sample times.
+
 #### Why the crossfade cannot happen immediately at input zero crossing arrival
 
-When a zero crossing impulse arrives from the Zero Crossing Detector, the output tap is playing audio from some time in the past and is almost certainly not at a zero crossing. Executing a crossfade mid-waveform would produce a click.
+When a zero crossing impulse arrives from the Zero Crossing Detector of the input signal, the output tap is playing audio from some time in the past and is almost certainly not at a zero crossing. Executing a crossfade in the output at that time would produce a click.
 
-Instead, the Control Logic uses the impulse to create a record and *schedule* a future transition. Because the Control Logic knows the current delay time DT, it can compute when that zero crossing will emerge from the output. The crossfade is executed at that scheduled time, at which point the output is playing the stored zero crossing — guaranteeing a clean transition.
+Instead, the Control Logic uses the zero crossing impulse to create a record of that crossing and *schedule* a future transition. Because the Control Logic knows the current delay time DT, it can compute when that zero crossing will emerge from the output. The crossfade is executed at that scheduled time, at which point the output is playing the stored zero crossing — guaranteeing a clean transition.
 
 #### Zero crossing history
 
-When a zero crossing impulse is received, the Control Logic creates a record:
-- **Arrival Time (AT):** The current sample index when the zero crossing entered the delay buffer.
-- **Playback Time (PT):** The future sample index at which that zero crossing will emerge from the output tap.
+When a zero crossing impulse is received from the ZC Detector, the Control Logic creates a record containing the **Arrival Time (AT)** — the absolute sample index at which the zero crossing entered the delay buffer. The record is appended to a ring buffer of arrival times.
 
-PT is derived from two relationships. First, the definition of delay at output time TO with delay DO:
-
-```
-TI = TO - DO
-```
-
-Second, the delay at output time equals the input delay DI plus the delay accumulated over the intervening samples (DD is the delay increment per sample = 1 − pitch_ratio):
-
-```
-DO = DD × (TO − TI) + DI
-```
-
-Substituting the first equation into the second (TO − TI = DO):
-
-```
-DO = DD × DO + DI  →  DO = DI / (1 − DD) = DI / pitch_ratio
-```
-
-Therefore:
-
-```
-PT = AT + DI / pitch_ratio
-```
-
-where DI is the instantaneous delay at the time the zero crossing arrives. Note that the naïve formula PT = AT + DI is incorrect — it assumes the delay stays fixed after arrival, but the read head is moving at pitch_ratio speed, so it takes longer to reach AT than a simple delay offset suggests.
+At any time, the Control Logic can determine the time at which the current output sample arrived at the input by subtracting the active tap's delay from the current sample time: `AT_out = CT − DT_active`. Note that DT_active is generally fractional (it ramps by `dd = 1 − pitch_ratio` per sample), so AT_out is fractional too — but the recorded ATs are integer (they are sample indices). The implementation rule is: AT_out has *reached* a recorded AT when `AT_out ≥ AT_record`, i.e. on the first output sample where AT_out crosses that integer boundary. The fractional residue `δ = AT_out − AT_record` at the firing moment is in `[0, pitch_ratio)`. It looks like it would cause a small positioning artifact, but it doesn't — as shown in *Fractional offset cancellation* below, the cross-fade math cancels it exactly, leaving both taps at the same fractional phase past their respective period-aligned zero crossings.
 
 #### Loop candidate search
 
-As each new input zero crossing arrives (AT_new, PT_new), the looping logic runs:
+The loop check runs **per output sample**. The only input-driven action is *recording* a new ZC arrival into the ring buffer when the ZC Detector emits an impulse. All decisions — pruning, firing, bailout — happen on the output side. This asymmetry (record on input, decide on output) is the simplification the new scheme buys us, and it is why the algorithm no longer needs to compute or store playback times.
 
-1. **Prune the history:** Remove any records whose PT has already passed (current real time > PT). Those zero crossings have already been played and cannot be used as transition targets.
+On each output sample:
 
-2. **Check latency:** The current latency is DT (the current delay time). If latency is below a lower threshold, no action is taken beyond storing the new record.
+1. Compute `AT_out = CT − DT_active`.
 
-3. **If latency is above threshold, search for a candidate:** For each remaining record (AT_old, PT_old), check whether the difference in playback times is consistent with an integer number of output-domain pitch periods:
+2. While the ring buffer is non-empty and `AT_out ≥ head.AT`, the output has just reached (or crossed) the head record. One of three things then happens:
 
-   PT_new − PT_old ≈ N × T_output_period, where N ≥ 1
+   a. **Cross-fade in progress** → pop head and continue the loop. (We can't fire mid-cross-fade.)
 
-   Since PT differences are in output time and the pitch is shifted down by pitch_ratio, the output period is the input period divided by pitch_ratio. The valid range is therefore:
+   b. **`DT_active > lower_threshold` and at least one more record exists in the buffer** → fire. Treat head as `AT_old`. Pick `AT_new` by scanning from the newest record (tail) backward toward `head+1`, and choose the **first** record where:
+      ```
+      DT_inactive = DT_active − (AT_new − AT_old) ≥ MIN_DELAY_SAMPLES
+      ```
+      i.e. the newest record whose use as a target leaves a non-negligible delay. This maximises the latency reduction per transition — picking older records (smaller `AT_new − AT_old`) gives smaller reductions and causes transitions to fire on nearly every output ZC, producing an audible modulation tone. Set the inactive tap's delay to the `DT_inactive` computed above, so that the inactive tap reads `AT_new` on the very first sample of the cross-fade. The inactive tap was parked before this moment, so setting its delay here is the *only* place its value gets initialised. Start the cross-fade, pop head, and exit the loop. (Future versions will add period-alignment screening on top of this — see Open Issues.)
 
-   T_output_period = T_input_period / pitch_ratio
+   c. **Otherwise** (latency too low, or no more records to loop to) → pop head and continue. The entry was reached without firing.
 
-   For bass guitar (E1 = 41 Hz to D4 = 294 Hz), T_input_period spans approximately 3.4 ms to 24.4 ms, so T_output_period spans 3.4/pitch_ratio ms to 24.4/pitch_ratio ms (e.g. 6.8 ms to 48.8 ms for an octave drop).
+3. **Bailout**: if `DT_active > upper_threshold` on this sample and a cross-fade is not in progress, force a cross-fade immediately. Set the inactive tap to a near-zero delay (`MIN_DELAY_SAMPLES`) and use the long bailout cross-fade duration. Flush the ring buffer (its contents are stale after the reset). Because this check is per-sample (not gated on input ZC arrival), the delay can never grow unboundedly past the upper threshold — even during silence, noise tails, or unpitched content where no candidate ZC is available.
 
-4. **If a candidate is found:** Schedule a transition at real time PT_old. At that time, the output tap will be playing the zero crossing that was recorded as AT_old — a clean transition point. The new delay at fire time will be `time_until_fire = PT_old − S` (where S is the current sample index), which must be smaller than the active tap delay at fire time to reduce latency. (Note: the new delay is *not* PT_new − PT_old; that is the period alignment check quantity, not the resulting delay.)
+The while-loop in step 2 covers the rare case where AT_out crosses more than one record on a single sample (only possible with `pitch_ratio` very close to 0). The common case is at most one iteration per sample. Combining the prune and the fire check into one loop avoids the subtle bug of pruning the head before we get a chance to act on it.
 
-5. **Pre-positioning the inactive tap:** The inactive tap is set at *scheduling* time, not at fire time, so it can ramp to the correct position by the time the crossfade fires. If the inactive tap starts at `D0 = time_until_fire × pitch_ratio` now, it will ramp to `D0 + time_until_fire × dd = time_until_fire` by fire time — exactly the desired new delay. The crossfade is then executed at PT_old with no additional delay adjustment needed.
+#### Fractional offset cancellation
+
+At the moment of firing in step 2b, `AT_out = AT_old + δ` for some `δ ∈ [0, pitch_ratio)`. The outgoing tap is reading the (interpolated) signal at `AT_out`. The incoming tap's delay is set to `DT_inactive = DT_active − (AT_new − AT_old)`, so its read position works out to:
+
+```
+CT − DT_inactive  =  CT − DT_active + (AT_new − AT_old)
+                  =  AT_out + (AT_new − AT_old)
+                  =  AT_old + δ + (AT_new − AT_old)
+                  =  AT_new + δ
+```
+
+Both taps read at the *same* fractional offset `δ` past their respective ZCs. If the two ZCs are well period-aligned (the algorithm's premise), the interpolated samples at `AT_old + δ` and `AT_new + δ` are essentially identical. The cross-fade has nothing to cancel — the discontinuity is already zero at the start of the cross-fade.
+
+The cancellation happens in the *difference* of the two tap delays, not in either tap's absolute delay. Critically, it does not depend on `dd` being constant. That's why the algorithm also handles modulated delay (see below).
 
 #### Urgency and relaxed matching
 
 The need for a transition becomes more urgent as latency grows. The matching criteria relax accordingly:
 
-- **Below lower threshold (100 ms):** No search, just record.
-- **Above lower threshold:** Search for period-aligned candidates (strict matching).
-- **As latency continues to grow:** The acceptable tolerance for period alignment widens, allowing candidates that are not perfectly integer-period-aligned.
-- **Above upper threshold (200 ms, bailout):** Fire a transition immediately at the current input zero crossing, resetting the inactive tap to near-zero delay, using a longer crossfade time (3× the loop crossfade) to reduce the audible artifact. Waiting for the output ZC at PT is not viable: during the wait of `time_until_fire = current_delay / pitch_ratio`, the inactive tap ramps back up to approximately the same delay level, providing no latency reduction. Firing immediately accepts a non-ZC transition in the output (mitigated by the long crossfade) in exchange for effective latency reset. This is expected to occur during noise tails, unpitched transients, or other unresolvable situations.
+- **Below lower threshold** No search, just record.
+- **Above lower threshold:** Search for period-aligned candidates (strict matching). (FUTURE, for now any zero crossing is good enough)
+- **As latency continues to grow:** The acceptable tolerance for period alignment widens, allowing candidates that are not perfectly integer-period-aligned. (FUTURE, for now any zero crossing is good enough)
+- **Above upper threshold (200 ms, bailout):** Fire a cross-fade immediately on the current output sample, regardless of whether a ZC is being emitted. Reset the inactive tap to near-zero delay and use a longer cross-fade time (3× the loop cross-fade) to reduce the audible artifact. Because the bailout runs per output sample (see step 3 of the loop candidate search), this catches cases where no candidate ZC is available at the current output position — silence, noise tails, or unpitched content — and prevents the delay from growing unboundedly. The trade-off is a non-ZC transition in the output, mitigated by the long cross-fade.
 
-#### Period range for candidate matching
+#### Period range for candidate matching (FUTURE)
 
 The valid input-domain period range is based on the bass A string up to 2.5 octaves above:
 
@@ -157,6 +154,18 @@ The valid input-domain period range is based on the bass A string up to 2.5 octa
 - **2.5 octaves above A1 (≈ 311 Hz):** ~3.2 ms — upper limit
 
 The output-domain period range used for PT difference matching is T_input / pitch_ratio (e.g. 3.2–18.2 ms becomes 6.4–36.4 ms for an octave drop). The exact tolerances and whether to prefer the smallest valid N will require tuning once the looping logic is running.
+
+#### Modulated delay (FUTURE)
+
+The loop-detection and cross-fade math above never assume that the delay increment `dd` is constant per sample. The firing rule (`AT_out ≥ head.AT`), the cross-fade formula (`DT_inactive = DT_active − (AT_new − AT_old)`), and the fractional-offset cancellation all use `DT_active` *as observed at the current sample* — they make no commitment to how it got to that value.
+
+This means the algorithm naturally accommodates:
+
+- **Vibrato:** sinusoidal modulation of `dd` (or equivalently `pitch_ratio`) around a centre value.
+- **Pitch envelopes / glides:** a smooth schedule of `pitch_ratio` between two notes.
+- **Static pitch_ratio changes during sustain:** without needing to flush state.
+
+The earlier PT-based scheme baked a constant `pitch_ratio` into every recorded playback time, so modulation would have invalidated already-scheduled fire times. The new output-side detection has no such dependency: it would work with any monotonic schedule of `DT_active`. No additional implementation work is needed beyond exposing the modulation source as a runtime input.
 
 ## Open Issues
 
@@ -168,10 +177,17 @@ At the 200 ms bailout threshold and ~3.2 ms minimum period, the worst-case recor
 
 Sample indices can be `int32_t` (overflows after ~12 hours at 48 kHz). If long sessions on embedded hardware are a concern, timestamps can be reset to zero on each attack detection without affecting the algorithm.
 
-### Candidate selection when multiple records match
+### Candidate selection when multiple records match (FUTURE)
 
 Choose the record that produces the minimum resulting delay at fire time, which is `time_until_fire = PT_old − S`. Since PT_old is smaller for older records (they have smaller playback times), **the oldest valid record minimises latency** — not the newest. This corresponds to the largest valid N (most periods separating the two zero crossings). The search should iterate from oldest to newest record and take the first valid hit.
 
-### Attack interrupting a loop crossfade (deferred)
+### Attack interrupting a loop crossfade — three-tap design (planned)
 
-If an attack is detected while a loop crossfade is already in progress, both a fade-out and a new fade-in need to happen simultaneously. With only two taps, the tap being faded out may not be available for the attack reset. A third delay tap may be needed to handle this case cleanly — allowing both the in-progress crossfade to complete its fade-out and the new attack tap to fade in independently. This issue will be revisited once the looping logic is working in isolation.
+If an attack is detected while a loop crossfade is already in progress, both a fade-out and a new fade-in need to happen simultaneously. With only two taps, the tap being faded out is not available for the attack reset, forcing a compromise: either abort the in-progress crossfade (audible) or delay the attack response (loses transient).
+
+**Decision:** the final pipeline will use **three delay taps** rather than two, so that the in-progress crossfade can complete its fade-out on one tap while the attack reset fades in on a third. The dual-tap implementation remains adequate for validating loop-detection behaviour in isolation (loop-first development ordering); the third tap is added once the loop logic is tuned and the attack detector is brought back into the pipeline.
+
+Implementation implications:
+- `Dual Tap Delay` becomes a `Tri Tap Delay` with three independent read positions on the shared buffer.
+- The control logic tracks three tap delays and three gains instead of two, plus a "next free tap" selector (or LRU policy) for routing reset events.
+- The crossfade model generalises from "active/inactive" to "fading-out / steady / fading-in" with at most one tap in each role at any moment.

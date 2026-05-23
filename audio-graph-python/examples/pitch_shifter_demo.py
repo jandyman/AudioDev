@@ -3,56 +3,78 @@ Pitch Shifter demo — full pipeline end-to-end.
 
 Pipeline (all DSP in Faust/C++, Python is test harness):
 
-  Audio → ZC Detector (Faust)     → zc_impulse     ┐
-  Audio → Attack Detector (Faust) → attack_impulse  ┤→ Loop Controller (C++)
-                                                     ↓
-                              tap1_delay_ms, tap2_delay_ms, gain1, gain2
-                                                     ↓
-  Audio → Dual Tap Delay (Faust) ──────────────────→ tap1, tap2
-                                                     ↓
-                              output = tap1 * gain1 + tap2 * gain2
+  Audio → Input LPF (Faust, ~10 kHz) → audio_lpf ─┐
+                                                   ├→ ZC Detector → zc_impulse ───┐
+                                                   ├→ Attack Detector → (bypassed)│
+                                                   │                              ├→ Loop Controller (C++)
+                                                   │       attack_impulse = 0 ────┘
+                                                   │                              ↓
+                                                   │       tap1_delay_ms, tap2_delay_ms, gain1, gain2
+                                                   │                              ↓
+                                                   └→ Dual Tap Delay ──────────→ tap1, tap2
+                                                                                  ↓
+                                                                output = tap1 * gain1 + tap2 * gain2
 
-The loop controller and dual tap delay are processed in lockstep chunks
-so the delay control signals are applied sample-accurately.
+Loop-first development: the attack detector is wired but its output is forced
+to zero, so the loop controller sees a sustain-only signal. Flip BYPASS_ATTACK
+at the bottom of the file to re-enable it.
+
+The loop controller and dual tap delay are processed in lockstep chunks so the
+delay control signals are applied sample-accurately.
 """
 import sys
 import os
 import numpy as np
 import scipy.io.wavfile as wav
+import matplotlib
+matplotlib.use('macosx')   # native macOS backend — delivers trackpad scroll events reliably
 import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'build'))
 
+from build.pybind_faust_input_lpf import FaustInputLpf
 from build.pybind_faust_zero_crossing_detector import FaustZeroCrossingDetector
 from build.pybind_faust_attack_detector import FaustAttackDetector
 from build.pybind_loop_controller import LoopController
 from build.pybind_faust_dual_tap_delay import FaustDualTapDelay
 
 
-def run_pitch_shifter_demo(pitch_ratio=0.5):
+def run_pitch_shifter_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0, bypass_attack=True):
     print("Pitch Shifter Demo")
     print("=" * 60)
     print(f"Pitch ratio: {pitch_ratio}  ({pitch_ratio_label(pitch_ratio)})")
+    print(f"Input LPF:   {lpf_fc_hz:.0f} Hz (2nd-order Butterworth)")
+    print(f"Attack det:  {'BYPASSED (forced to zero)' if bypass_attack else 'enabled'}")
 
-    input_path = os.path.join(os.path.dirname(__file__), '..', '..', 'test_audio', 'Bass Notes No Gap.wav')
+    input_path = os.path.join(os.path.dirname(__file__), '..', '..', 'test_audio', 'Longer Bass Notes.wav')
     sample_rate, audio_data = wav.read(input_path)
 
     if audio_data.dtype == np.int16:
-        audio_in = audio_data.astype(np.float64) / 32768.0
+        audio_raw = audio_data.astype(np.float64) / 32768.0
     elif audio_data.dtype == np.int32:
-        audio_in = audio_data.astype(np.float64) / 2147483648.0
+        audio_raw = audio_data.astype(np.float64) / 2147483648.0
     else:
-        audio_in = audio_data.astype(np.float64)
+        audio_raw = audio_data.astype(np.float64)
 
-    if audio_in.ndim > 1:
-        audio_in = audio_in[:, 0]
+    if audio_raw.ndim > 1:
+        audio_raw = audio_raw[:, 0]
 
-    num_samples = len(audio_in)
+    num_samples = len(audio_raw)
     duration = num_samples / sample_rate
 
     print(f"\nInput: {os.path.basename(input_path)}")
     print(f"  Sample rate: {sample_rate} Hz,  Duration: {duration:.2f} s")
+
+    # ---------------------------------------------------------------
+    # Stage 0: Input LPF — preprocess raw file signal
+    # All downstream stages consume audio_in (the post-LPF signal),
+    # which is also what gets plotted as "Input".
+    # ---------------------------------------------------------------
+    lpf = FaustInputLpf()
+    lpf.init(sample_rate)
+    lpf.set_param("fc", lpf_fc_hz)
+    audio_in = lpf.process([audio_raw])[0]
 
     # ---------------------------------------------------------------
     # Stage 1: ZC Detector — full file, no state dependency on pitch
@@ -64,11 +86,18 @@ def run_pitch_shifter_demo(pitch_ratio=0.5):
 
     # ---------------------------------------------------------------
     # Stage 2: Attack Detector — full file
+    # Detector is kept wired so we can re-enable it with one flag,
+    # but its output is zeroed when bypass_attack is True (loop-first dev).
     # ---------------------------------------------------------------
     atk_det = FaustAttackDetector()
     atk_det.init(sample_rate)
     attack_impulse = atk_det.process([audio_in])[0]
-    print(f"Attack Det:     {int(np.sum(attack_impulse > 0.5))} attacks detected")
+    raw_attack_count = int(np.sum(attack_impulse > 0.5))
+    if bypass_attack:
+        attack_impulse = np.zeros_like(attack_impulse)
+        print(f"Attack Det:     {raw_attack_count} detected, bypassed → loop controller sees 0")
+    else:
+        print(f"Attack Det:     {raw_attack_count} attacks detected")
 
     # ---------------------------------------------------------------
     # Stages 3+4: Loop Controller + Dual Tap Delay — chunked lockstep
@@ -84,7 +113,10 @@ def run_pitch_shifter_demo(pitch_ratio=0.5):
 
     chunk = 512
     audio_out    = np.zeros(num_samples)
-    latency      = np.zeros(num_samples)
+    tap1_del     = np.zeros(num_samples)
+    tap2_del     = np.zeros(num_samples)
+    gain1_arr    = np.zeros(num_samples)
+    gain2_arr    = np.zeros(num_samples)
     loop_evts    = np.zeros(num_samples)
     bailout_evts = np.zeros(num_samples)
 
@@ -102,7 +134,10 @@ def run_pitch_shifter_demo(pitch_ratio=0.5):
         gain1         = lc_outs[2]
         gain2         = lc_outs[3]
 
-        latency[i:end]      = lc_outs[4]
+        tap1_del[i:end]     = lc_outs[0]
+        tap2_del[i:end]     = lc_outs[1]
+        gain1_arr[i:end]    = lc_outs[2]
+        gain2_arr[i:end]    = lc_outs[3]
         loop_evts[i:end]    = lc_outs[5]
         bailout_evts[i:end] = lc_outs[7]
 
@@ -122,7 +157,8 @@ def run_pitch_shifter_demo(pitch_ratio=0.5):
     bailout_count = int(np.sum(bailout_evts > 0.5))
     print(f"  Loop transitions: {loop_count}")
     print(f"  Bailout events:   {bailout_count}")
-    print(f"  Max latency:      {latency.max():.1f} ms")
+    print(f"  Max tap1 delay:   {tap1_del.max():.1f} ms")
+    print(f"  Max tap2 delay:   {tap2_del.max():.1f} ms")
 
     # ---------------------------------------------------------------
     # Save output
@@ -148,48 +184,65 @@ def run_pitch_shifter_demo(pitch_ratio=0.5):
     attack_indices = np.where(attack_impulse > 0.5)[0]
     loop_indices   = np.where(loop_evts > 0.5)[0]
 
-    fig, axes = plt.subplots(3, 1, figsize=(16, 10), sharex=True)
-    fig.suptitle(f"Pitch Shifter — {pitch_ratio_label(pitch_ratio)}  ({os.path.basename(input_path)})", fontsize=14)
+    fig, axes = plt.subplots(3, 1, figsize=(16, 10), sharex=True,
+                             gridspec_kw={'height_ratios': [2, 3, 1]})
+    attack_state = "attack bypassed" if bypass_attack else "attack on"
+    fig.suptitle(f"Pitch Shifter — {pitch_ratio_label(pitch_ratio)}  ({os.path.basename(input_path)}, LPF {lpf_fc_hz:.0f} Hz, {attack_state})", fontsize=14)
+    fig.text(0.5, 0.955, "scroll = zoom x  •  toolbar Home resets",
+             ha='center', fontsize=9, style='italic', color='#555')
 
-    # Panel 1: Input vs output waveforms
-    axes[0].plot(t, audio_in,  'b-', linewidth=0.3, alpha=0.6, label='Input')
-    axes[0].plot(t, audio_out, 'g-', linewidth=0.3, alpha=0.6, label='Output (pitch shifted)')
+    # Panel 1: Input (post-LPF) with event markers
+    axes[0].plot(t, audio_in, 'b-', linewidth=0.3, alpha=0.7, label=f'Input (post-LPF {lpf_fc_hz:.0f} Hz)')
+    for idx in loop_indices:
+        axes[0].axvline(t[idx], color='green', linewidth=0.8, alpha=0.3)
+    for idx in attack_indices:
+        axes[0].axvline(t[idx], color='red', linewidth=0.8, alpha=0.3)
     axes[0].set_ylabel('Amplitude')
-    axes[0].set_title('Input (blue) vs pitch-shifted output (green)')
+    axes[0].set_title('Input post-LPF')
     axes[0].legend(loc='upper right', fontsize=8)
     axes[0].grid(True, alpha=0.3)
     axes[0].set_xlim(0, t[-1])
 
-    # Panel 2: Latency with events
-    axes[1].plot(t, latency, 'b-', linewidth=0.6, label='Latency (active tap)')
-    axes[1].axhline(100.0, color='green', linewidth=1.0, linestyle='--', label='Lower threshold (100 ms)')
+    # Panel 2: tap delays (left) + output audio (right, independent scale)
+    ax_out = axes[1].twinx()
+
+    axes[1].plot(t, tap1_del, 'b-',  linewidth=0.7, alpha=0.9, label='Tap 1 delay (ms)')
+    axes[1].plot(t, tap2_del, 'C1-', linewidth=0.7, alpha=0.9, label='Tap 2 delay (ms)')
+    axes[1].axhline(60.0,  color='green', linewidth=1.0, linestyle='--', label='Lower threshold (60 ms)')
     axes[1].axhline(200.0, color='red',   linewidth=1.0, linestyle='--', label='Upper threshold (200 ms)')
     for idx in attack_indices:
-        axes[1].axvline(t[idx], color='red', linewidth=0.8, alpha=0.4)
+        axes[1].axvline(t[idx], color='red',   linewidth=0.8, alpha=0.4)
     for idx in loop_indices:
         axes[1].axvline(t[idx], color='green', linewidth=0.8, alpha=0.4)
-    axes[1].set_ylabel('Delay (ms)')
-    axes[1].set_title('Active tap latency — attacks (red), loop transitions (green)')
-    axes[1].legend(loc='upper right', fontsize=8)
+    axes[1].set_ylabel('Delay (ms)', color='#222')
     axes[1].grid(True, alpha=0.3)
 
-    # Panel 3: Output waveform zoomed to first note
-    zoom_end_s = min(duration, 0.5)
-    zoom_sl = slice(0, int(zoom_end_s * sample_rate))
-    t_zoom_ms = t[zoom_sl] * 1000
-    axes[2].plot(t_zoom_ms, audio_in[zoom_sl],  'b-', linewidth=0.8, alpha=0.7, label='Input')
-    axes[2].plot(t_zoom_ms, audio_out[zoom_sl], 'g-', linewidth=0.8, alpha=0.7, label='Output')
+    ax_out.plot(t, audio_out, color='#999', linewidth=0.3, alpha=0.8, label='Output audio')
+    ax_out.set_ylabel('Output amplitude', color='#555')
+    ax_out.tick_params(axis='y', labelcolor='#555')
+
+    lines1, labels1 = axes[1].get_legend_handles_labels()
+    lines2, labels2 = ax_out.get_legend_handles_labels()
+    axes[1].legend(lines1 + lines2, labels1 + labels2, loc='upper right', fontsize=8)
+    axes[1].set_title('Tap delays (blue/orange, left) + output audio (grey/right) — loop (green), attacks (red)')
+
+    # Panel 3: Crossfade gains (0–1 scale)
+    axes[2].plot(t, gain1_arr, 'b-',  linewidth=0.8, alpha=0.9, label='Gain 1')
+    axes[2].plot(t, gain2_arr, 'C1-', linewidth=0.8, alpha=0.9, label='Gain 2')
     for idx in attack_indices:
-        if t[idx] < zoom_end_s:
-            axes[2].axvline(t[idx] * 1000, color='red', linewidth=1.0, alpha=0.6)
+        axes[2].axvline(t[idx], color='red',   linewidth=0.8, alpha=0.4)
     for idx in loop_indices:
-        if t[idx] < zoom_end_s:
-            axes[2].axvline(t[idx] * 1000, color='green', linewidth=1.0, alpha=0.6)
-    axes[2].set_xlabel('Time (ms)')
-    axes[2].set_ylabel('Amplitude')
-    axes[2].set_title(f'Zoomed: first {zoom_end_s*1000:.0f} ms')
+        axes[2].axvline(t[idx], color='green', linewidth=0.8, alpha=0.4)
+    axes[2].set_xlabel('Time (s)')
+    axes[2].set_ylabel('Gain')
+    axes[2].set_ylim(-0.05, 1.1)
     axes[2].legend(loc='upper right', fontsize=8)
     axes[2].grid(True, alpha=0.3)
+
+    # Scroll-wheel zoom: horizontal-only, anchored at cursor x. With sharex=True
+    # on the subplots, changing one xlim propagates to all panels.
+    # (Matplotlib's built-in pan tool can also constrain to x: hold 'x' while panning.)
+    _install_x_zoom(fig, x_min=0.0, x_max=t[-1])
 
     plt.tight_layout(rect=[0, 0, 1, 0.97])
     plt.subplots_adjust(hspace=0.35)
@@ -214,10 +267,35 @@ def pitch_ratio_label(ratio):
     return labels.get(round(ratio, 3), f"ratio {ratio:.3f}")
 
 
+def _install_x_zoom(fig, x_min, x_max, base_scale=1.3):
+    """Scroll wheel -> horizontal-only zoom anchored at cursor x.
+
+    With sharex=True on the figure's axes, changing one xlim propagates.
+    Toolbar Home button resets to the original full range.
+    """
+    def on_scroll(event):
+        ax = event.inaxes
+        if ax is None or event.xdata is None:
+            return
+        factor = (1.0 / base_scale) if event.step > 0 else base_scale
+        x = event.xdata
+        x0, x1 = ax.get_xlim()
+        new_left  = max(x - (x - x0) * factor, x_min)
+        new_right = min(x + (x1 - x) * factor, x_max)
+        if new_right - new_left < 1e-6:
+            return
+        ax.set_xlim(new_left, new_right)
+        fig.canvas.draw_idle()
+
+    fig.canvas.mpl_connect('scroll_event', on_scroll)
+
+
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description="Pitch Shifter Demo")
-    parser.add_argument("--ratio", type=float, default=0.5,
-                        help="Pitch ratio (0 < ratio < 1, default 0.5 = octave down)")
-    args = parser.parse_args()
-    run_pitch_shifter_demo(pitch_ratio=args.ratio)
+    # ---- Demo parameters ----
+    pitch_ratio    = 0.5      # 0.5 = octave down, 0.75 = fourth down, etc.
+    lpf_fc_hz      = 10000.0  # input low-pass cutoff (2nd-order Butterworth)
+    bypass_attack  = True     # loop-first dev: force attack_impulse = 0
+    # -------------------------
+    run_pitch_shifter_demo(pitch_ratio=pitch_ratio,
+                           lpf_fc_hz=lpf_fc_hz,
+                           bypass_attack=bypass_attack)

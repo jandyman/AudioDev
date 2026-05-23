@@ -12,6 +12,14 @@ using std::string;
 // and attack impulses from the Attack Detector, and outputs the delay times and
 // crossfade gains for the Dual Tap Delay.
 //
+// Algorithm: output-side detection (see Pitch Shifter concept.md).
+//   - Input ZCs are recorded into a ring buffer as absolute sample-index ATs.
+//   - On every output sample, AT_out = sample_index - DT_active is compared
+//     against the head of the ring buffer. When AT_out reaches head.AT, we
+//     are emitting that zero crossing and may fire a loop transition.
+//   - Bailout runs per-sample (not gated on input ZC arrival), so the active
+//     delay can never grow unboundedly past the upper threshold.
+//
 // No dynamic memory allocation in process(). All state is statically declared.
 //
 // Inputs  (2): zc_impulse, attack_impulse
@@ -27,36 +35,20 @@ public:
     // Constants
     // ------------------------------------------------------------------
 
-    // ZC record ring buffer size. Worst case: 200ms / 3.2ms ≈ 63 records.
+    // ZC ring buffer size. Worst case: 200 ms / 3.2 ms ≈ 63 records.
     static const int ZC_HISTORY_SIZE = 128;
 
-    // Bass guitar frequency range for period matching:
-    // A1 (55 Hz) to ~2.5 octaves above (~311 Hz)
-    static constexpr float FREQ_LOW_HZ  = 55.0f;
-    static constexpr float FREQ_HIGH_HZ = 311.0f;
-
     // Latency thresholds
-    static constexpr float LOWER_THRESHOLD_MS = 100.0f;
+    static constexpr float LOWER_THRESHOLD_MS = 60.0f;
     static constexpr float UPPER_THRESHOLD_MS = 200.0f;
 
-    // Minimum delay on any tap reset (avoids zero-delay artifacts)
+    // Minimum delay after any tap reset (avoids zero-delay artifacts)
     static constexpr float MIN_DELAY_SAMPLES = 4.0f;
-
-    // Period-matching tolerance (±fraction)
-    static constexpr float PERIOD_TOLERANCE = 0.20f;
 
     // Crossfade durations
     static constexpr float LOOP_CROSSFADE_MS      = 5.0f;   // relaxed
     static constexpr float ATTACK_FADEIN_MS        = 1.0f;   // short — preserve transient
     static constexpr float BAILOUT_CROSSFADE_MULT  = 3.0f;   // bailout = 3× loop crossfade
-
-    // ------------------------------------------------------------------
-    // ZC record (stored per qualified zero crossing)
-    // ------------------------------------------------------------------
-    struct ZCRecord {
-        int32_t at;  // arrival time (sample index when ZC entered delay buffer)
-        float   pt;  // playback time: at + delay_at_arrival / pitch_ratio
-    };
 
     // ------------------------------------------------------------------
     // Public interface
@@ -96,7 +88,9 @@ private:
     float   pitch_ratio_;
     float   dd_;                    // delay delta per sample = 1 - pitch_ratio
 
-    // Tap delays in samples. Both taps ramp every sample.
+    // Tap delays in samples. The active tap always ramps; the inactive tap
+    // ramps only when live (during a cross-fade). Outside a cross-fade the
+    // inactive tap is parked at zero.
     float   tap_delay_[2];
     int     active_tap_;            // index of currently active (full-gain) tap
 
@@ -106,23 +100,18 @@ private:
     int     cf_elapsed_;
     int     cf_duration_;
 
-    // ZC record ring buffer (statically allocated)
-    ZCRecord zc_history_[ZC_HISTORY_SIZE];
-    int      zc_head_;              // next write position
-    int      zc_count_;             // number of valid entries
+    // ZC ring buffer: absolute sample-index of each qualified zero crossing.
+    // No playback time stored — firing is detected on the output side.
+    int32_t zc_history_[ZC_HISTORY_SIZE];
+    int     zc_head_;               // next write position
+    int     zc_count_;              // number of valid entries
 
-    // Scheduled loop transition
-    bool    transition_scheduled_;
-    float   transition_fire_pt_;    // sample index at which to execute
-
-    // Sample counter
+    // Sample counter (absolute, since init)
     int32_t sample_index_;
 
     // Derived constants (recomputed in set_pitch_ratio / init)
     float lower_threshold_;         // in samples
     float upper_threshold_;         // in samples
-    float min_period_;              // output-domain period for FREQ_HIGH_HZ, in samples
-    float max_period_;              // output-domain period for FREQ_LOW_HZ,  in samples
     int   loop_cf_samples_;
     int   attack_cf_samples_;
     int   bailout_cf_samples_;
@@ -130,10 +119,12 @@ private:
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
-    void  add_zc_record(int32_t at, float pt);
-    void  prune_zc_history();
+    void  add_zc_record(int32_t at);
+    void  pop_oldest();
     void  flush_zc_history();
-    bool  find_candidate(float& out_new_delay_now, float& out_fire_pt);
     void  start_crossfade(float new_delay_override, int cf_duration);
     void  update_derived_constants();
+
+    // True if any record exists; if so writes the oldest AT to `out`.
+    bool  peek_oldest(int32_t& out) const;
 };

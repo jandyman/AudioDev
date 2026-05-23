@@ -1,7 +1,6 @@
 #include "loop_controller.h"
 #include <cmath>
 #include <cstring>
-#include <stdexcept>
 #include <algorithm>
 
 // ============================================================
@@ -21,16 +20,13 @@ void LoopController::init(int sample_rate) {
     sample_index_ = 0;
 
     tap_delay_[0] = MIN_DELAY_SAMPLES;
-    tap_delay_[1] = MIN_DELAY_SAMPLES;
+    tap_delay_[1] = 0.0f;                // inactive tap starts parked
     active_tap_   = 0;
     cf_gain_[0]   = 1.0f;
     cf_gain_[1]   = 0.0f;
     in_crossfade_ = false;
     cf_elapsed_   = 0;
     cf_duration_  = 1;
-
-    transition_scheduled_ = false;
-    transition_fire_pt_   = 0.0f;
 
     zc_head_  = 0;
     zc_count_ = 0;
@@ -44,20 +40,12 @@ void LoopController::set_pitch_ratio(float ratio) {
     dd_          = 1.0f - pitch_ratio_;
 
     update_derived_constants();
-
-    // Flush ZC history: stored PT values are invalid with the new ratio
     flush_zc_history();
-    transition_scheduled_ = false;
 }
 
 void LoopController::update_derived_constants() {
-    // Output-domain period range: T_output = T_input / pitch_ratio
-    // T_input = sample_rate / freq, so T_output = sample_rate / (freq * pitch_ratio)
-    min_period_ = sample_rate_ / FREQ_HIGH_HZ / pitch_ratio_;
-    max_period_ = sample_rate_ / FREQ_LOW_HZ  / pitch_ratio_;
-
-    lower_threshold_ = LOWER_THRESHOLD_MS * sample_rate_ / 1000.0f;
-    upper_threshold_ = UPPER_THRESHOLD_MS * sample_rate_ / 1000.0f;
+    lower_threshold_    = LOWER_THRESHOLD_MS * sample_rate_ / 1000.0f;
+    upper_threshold_    = UPPER_THRESHOLD_MS * sample_rate_ / 1000.0f;
 
     loop_cf_samples_    = (int)(LOOP_CROSSFADE_MS   * sample_rate_ / 1000.0f);
     attack_cf_samples_  = (int)(ATTACK_FADEIN_MS    * sample_rate_ / 1000.0f);
@@ -78,7 +66,6 @@ void LoopController::process(const vector<vector<float>>& inputs,
 
     int num_samples = (int)inputs[0].size();
 
-    // Resize outputs if needed
     for (auto& ch : outputs) {
         if ((int)ch.size() != num_samples)
             ch.assign(num_samples, 0.0f);
@@ -98,6 +85,16 @@ void LoopController::process(const vector<vector<float>>& inputs,
 
 // ============================================================
 // compute() — per-sample logic
+//
+// The order matters:
+//   1. Advance sample counter.
+//   2. Ramp tap delays (active always; inactive only when live).
+//   3. Advance any in-progress cross-fade.
+//   4. Handle attack (highest priority).
+//   5. Record incoming ZC impulse.
+//   6. Loop check / cross-fade fire (output-side detection).
+//   7. Bailout check (per-sample, not gated on input ZC arrival).
+//   8. Write outputs.
 // ============================================================
 
 void LoopController::compute(float zc_impulse, float attack_impulse,
@@ -111,21 +108,27 @@ void LoopController::compute(float zc_impulse, float attack_impulse,
     // 1. Advance sample counter
     sample_index_++;
 
-    // 2. Ramp both tap delays — this is the pitch-shift mechanism
-    tap_delay_[0] += dd_;
-    tap_delay_[1] += dd_;
+    // 2. Ramp tap delays — pitch-shift mechanism.
+    //    Inactive tap ramps only when it's "live" (in cross-fade);
+    //    otherwise it stays parked at zero.
+    if (in_crossfade_) {
+        tap_delay_[0] += dd_;
+        tap_delay_[1] += dd_;
+    } else {
+        tap_delay_[active_tap_] += dd_;
+    }
 
-    // 3. Advance crossfade
+    // 3. Advance cross-fade
     if (in_crossfade_) {
         cf_elapsed_++;
         float t = (float)cf_elapsed_ / (float)cf_duration_;
         if (t >= 1.0f) {
-            // Complete: commit the incoming tap as active
-            int incoming      = 1 - active_tap_;
-            active_tap_       = incoming;
-            cf_gain_[active_tap_]     = 1.0f;
-            cf_gain_[1 - active_tap_] = 0.0f;
-            in_crossfade_     = false;
+            int incoming               = 1 - active_tap_;
+            active_tap_                = incoming;
+            cf_gain_[active_tap_]      = 1.0f;
+            cf_gain_[1 - active_tap_]  = 0.0f;
+            tap_delay_[1 - active_tap_] = 0.0f;   // park outgoing tap
+            in_crossfade_              = false;
         } else {
             int incoming           = 1 - active_tap_;
             cf_gain_[incoming]     = t;
@@ -133,62 +136,79 @@ void LoopController::compute(float zc_impulse, float attack_impulse,
         }
     }
 
-    // 4. Fire a scheduled loop transition if it's time
-    //    (delay on inactive tap was already set at scheduling time — it has
-    //     been ramping since then and now reads from the target zero crossing)
-    if (transition_scheduled_ && (float)sample_index_ >= transition_fire_pt_) {
-        start_crossfade(-1.0f, loop_cf_samples_);  // -1: delay already set
-        loop_event = 1.0f;
-        transition_scheduled_ = false;
-    }
-
-    // 5. Attack (highest priority — preempts any pending transition)
+    // 4. Attack (highest priority — preempts everything)
     if (attack_impulse > 0.5f) {
-        transition_scheduled_ = false;
         flush_zc_history();
         start_crossfade(MIN_DELAY_SAMPLES, attack_cf_samples_);
     }
 
-    // 6. Handle qualified zero crossing
+    // 5. Record incoming ZC impulse
     if (zc_impulse > 0.5f) {
-        // Compute playback time: PT = AT + DI / pitch_ratio
-        // AT = sample_index_ (now), DI = active tap delay (now)
-        float di = tap_delay_[active_tap_];
-        float pt = (float)sample_index_ + di / pitch_ratio_;
-
-        add_zc_record(sample_index_, pt);
-        prune_zc_history();
-
-        // Only search for loop candidates when:
-        // - not mid-crossfade (avoid double-scheduling)
-        // - no transition already pending
-        float latency = tap_delay_[active_tap_];
-
-        if (!in_crossfade_ && !transition_scheduled_) {
-            if (latency > upper_threshold_) {
-                // Bailout: fire immediately at this ZC input sample.
-                // Waiting for the output ZC at PT is not viable — the inactive
-                // tap ramps at dd, so by PT its delay equals time_until_fire,
-                // which matches the active tap at fire time: no latency reduction.
-                // Fire now with the long crossfade to reduce the artifact.
-                start_crossfade(MIN_DELAY_SAMPLES, bailout_cf_samples_);
-                flush_zc_history();   // old records are invalid after delay reset
-                bailout_event = 1.0f;
-
-            } else if (latency > lower_threshold_) {
-                float new_delay_now, fire_pt;
-                if (find_candidate(new_delay_now, fire_pt)) {
-                    // Set inactive tap now so it ramps to the correct position by fire time
-                    int incoming         = 1 - active_tap_;
-                    tap_delay_[incoming] = new_delay_now;
-                    transition_fire_pt_  = fire_pt;
-                    transition_scheduled_ = true;
-                }
-            }
-        }
+        add_zc_record(sample_index_);
     }
 
-    // 7. Write outputs
+    // 6. Loop check — per-output-sample.
+    //    AT_out is the absolute input-time of the sample being emitted now.
+    //    While the head has been reached or passed by AT_out, decide
+    //    whether to fire and pop. Strict less-than pruning would drop
+    //    the head before we got a chance to act on it; the while-loop
+    //    here combines prune and fire into a single check.
+    float AT_out = (float)sample_index_ - tap_delay_[active_tap_];
+
+    while (zc_count_ > 0) {
+        int32_t head_at;
+        peek_oldest(head_at);
+        if (AT_out < (float)head_at) break;     // not yet reached this ZC
+
+        // AT_out has reached (or just crossed) head.AT.
+        if (in_crossfade_) {
+            // (a) mid-cross-fade — can't fire again; just discard the entry.
+            pop_oldest();
+            continue;
+        }
+
+        float DT_active = tap_delay_[active_tap_];
+
+        // (b) fire if latency above threshold and we have a usable candidate.
+        //     Scan from newest (tail) toward head+1; first record whose use
+        //     leaves DT_inactive >= MIN_DELAY_SAMPLES is the newest valid
+        //     candidate — gives the largest latency reduction per transition.
+        //     (Picking head+1 instead would fire every output ZC and produce
+        //     an audible modulation tone.)
+        bool fired = false;
+        if (DT_active > lower_threshold_ && zc_count_ >= 2) {
+            int head_idx = (zc_head_ - zc_count_ + ZC_HISTORY_SIZE) % ZC_HISTORY_SIZE;
+            for (int i = zc_count_ - 1; i > 0; i--) {
+                int idx = (head_idx + i) % ZC_HISTORY_SIZE;
+                int32_t at_new = zc_history_[idx];
+                float new_inactive = DT_active - (float)(at_new - head_at);
+                if (new_inactive >= MIN_DELAY_SAMPLES) {
+                    tap_delay_[1 - active_tap_] = new_inactive;
+                    start_crossfade(-1.0f, loop_cf_samples_);
+                    loop_event = 1.0f;
+                    pop_oldest();
+                    fired = true;
+                    break;
+                }
+            }
+            if (fired) break;   // exit the while-loop; we're in cross-fade
+        }
+
+        // (c) latency below threshold, or no usable candidate — skip this ZC
+        pop_oldest();
+    }
+
+    // 7. Bailout — per-sample, regardless of whether a ZC is at the output.
+    //    This catches cases where AT_out has no candidate to align to
+    //    (silence, noise tails, unpitched content) so the active delay
+    //    can never run away unboundedly past the upper threshold.
+    if (!in_crossfade_ && tap_delay_[active_tap_] > upper_threshold_) {
+        start_crossfade(MIN_DELAY_SAMPLES, bailout_cf_samples_);
+        flush_zc_history();    // ring buffer is stale after a delay reset
+        bailout_event = 1.0f;
+    }
+
+    // 8. Write outputs
     float ms_per_sample = 1000.0f / sample_rate_;
     tap1_delay_ms  = tap_delay_[0] * ms_per_sample;
     tap2_delay_ms  = tap_delay_[1] * ms_per_sample;
@@ -199,25 +219,17 @@ void LoopController::compute(float zc_impulse, float attack_impulse,
 }
 
 // ============================================================
-// Helpers
+// Ring buffer helpers
 // ============================================================
 
-void LoopController::add_zc_record(int32_t at, float pt) {
-    zc_history_[zc_head_] = {at, pt};
+void LoopController::add_zc_record(int32_t at) {
+    zc_history_[zc_head_] = at;
     zc_head_ = (zc_head_ + 1) % ZC_HISTORY_SIZE;
     if (zc_count_ < ZC_HISTORY_SIZE) zc_count_++;
 }
 
-void LoopController::prune_zc_history() {
-    // Remove oldest records whose PT has already passed
-    while (zc_count_ > 0) {
-        int oldest_idx = (zc_head_ - zc_count_ + ZC_HISTORY_SIZE) % ZC_HISTORY_SIZE;
-        if (zc_history_[oldest_idx].pt <= (float)sample_index_) {
-            zc_count_--;
-        } else {
-            break;
-        }
-    }
+void LoopController::pop_oldest() {
+    if (zc_count_ > 0) zc_count_--;
 }
 
 void LoopController::flush_zc_history() {
@@ -225,50 +237,11 @@ void LoopController::flush_zc_history() {
     zc_count_ = 0;
 }
 
-bool LoopController::find_candidate(float& out_new_delay_now, float& out_fire_pt) {
-    // PT of the current ZC just arrived
-    float pt_new       = (float)sample_index_ + tap_delay_[active_tap_] / pitch_ratio_;
-    float current_delay = tap_delay_[active_tap_];
-
-    int start = (zc_head_ - zc_count_ + ZC_HISTORY_SIZE) % ZC_HISTORY_SIZE;
-
-    // Iterate oldest to newest: first valid hit gives minimum time_until_fire
-    // (new delay at fire = PT_old - S = time_until_fire; older records have smaller PT_old)
-    for (int i = 0; i < zc_count_; i++) {
-        int idx = (start + i) % ZC_HISTORY_SIZE;
-        const ZCRecord& rec = zc_history_[idx];
-
-        float time_until_fire = rec.pt - (float)sample_index_;
-        if (time_until_fire <= 0.0f) continue;   // already past
-
-        // New delay at fire time = time_until_fire (derived in spec).
-        // Must reduce latency.
-        if (time_until_fire * pitch_ratio_ >= current_delay) continue;
-
-        // Check period alignment: pt_new - rec.pt ≈ N × T_output_period
-        float pt_diff = pt_new - rec.pt;
-        if (pt_diff <= 0.0f) continue;
-
-        float tol_lo = PERIOD_TOLERANCE;
-        float tol_hi = PERIOD_TOLERANCE;
-        float n_lo = pt_diff / (max_period_ * (1.0f + tol_lo));
-        float n_hi = pt_diff / (min_period_ * (1.0f - tol_hi));
-
-        int n_min = (int)ceilf(n_lo);
-        int n_max = (int)floorf(n_hi);
-
-        if (n_min >= 1 && n_min <= n_max) {
-            // Valid: set inactive tap now to ramp to correct position by fire time.
-            // At scheduling time t=0, delay = D0. At fire time t=time_until_fire:
-            //   delay = D0 + time_until_fire * dd = time_until_fire (desired)
-            // Solving: D0 = time_until_fire * (1 - dd) = time_until_fire * pitch_ratio
-            out_new_delay_now = std::max(MIN_DELAY_SAMPLES,
-                                         time_until_fire * pitch_ratio_);
-            out_fire_pt = rec.pt;
-            return true;
-        }
-    }
-    return false;
+bool LoopController::peek_oldest(int32_t& out) const {
+    if (zc_count_ == 0) return false;
+    int idx = (zc_head_ - zc_count_ + ZC_HISTORY_SIZE) % ZC_HISTORY_SIZE;
+    out = zc_history_[idx];
+    return true;
 }
 
 void LoopController::start_crossfade(float new_delay_override, int cf_duration) {
@@ -278,19 +251,16 @@ void LoopController::start_crossfade(float new_delay_override, int cf_duration) 
         // Override delay (used for attack and bailout firing)
         tap_delay_[incoming] = new_delay_override;
     }
-    // For loop transitions new_delay_override == -1: delay was already set
-    // at scheduling time and has been ramping to the correct position.
+    // For loop transitions new_delay_override == -1: the inactive tap delay
+    // was already set by the caller (`DT_inactive = DT_active − (AT_new − AT_old)`).
 
-    // If we're interrupting a crossfade in progress (attack preempting loop):
-    // keep current gains so there's no gain discontinuity; reset elapsed
-    // to restart the fade from the current gain state toward the new target.
-    // (This is the two-tap approximation of the deferred three-tap problem.)
     if (!in_crossfade_) {
         cf_gain_[active_tap_] = 1.0f;
         cf_gain_[incoming]    = 0.0f;
     } else {
-        // Redirect crossfade: reset incoming gain to 0 so it fades in cleanly.
-        // Outgoing continues fading from wherever it is.
+        // Redirecting an in-progress crossfade (attack preempting loop):
+        // keep current outgoing gain so there's no gain discontinuity;
+        // reset incoming gain to 0 and restart the fade.
         cf_gain_[incoming] = 0.0f;
     }
 
