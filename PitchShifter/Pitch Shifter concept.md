@@ -24,27 +24,38 @@ The detector's output is simply an impulse stream. Record creation — including
 
 ### Harmonic rejection
 
-Bass guitar signals are harmonically rich, and the 2nd harmonic (and higher) can cause additional positive-going zero crossings within a single fundamental period, producing spurious records that would lead the loop controller to select incorrect loop points. Several approaches exist; the chosen design is expected to require tuning over time.
+Bass guitar signals are harmonically rich; the 2nd harmonic can produce additional positive-going zero crossings within a single fundamental period. Without suppression these spurious ZCs are indistinguishable from fundamental ones to the loop controller and lead to wrong loop points. The Harmonic Rejection block runs a parallel filter bank, scores each filter for "cleanness" of the period it would yield, and selects the lowest-cutoff filter whose score is trustworthy. The selected filter's running mean of inter-peak intervals becomes the period estimate `P` that the loop controller's candidate-selection gate (see *Urgency and relaxed matching*) tests against.
 
-**Dual low-pass filter with energy-based switching (primary approach)**
-Two LPF paths are run in parallel:
-- *Low filter* (~80–100Hz cutoff): isolates the fundamental for the E and A string range, cutting the 2nd harmonic of the low E (82Hz)
-- *High filter* (~350Hz cutoff): isolates the fundamental for the D and G string range, cutting harmonics above the 311Hz upper limit
+**Filter bank.** N parallel 2nd-order Butterworth LPFs (12 dB/oct) with octave-spaced cutoffs — current default `{60, 120, 240} Hz`. Each cutoff is chosen so that for some register of fundamentals the filter passes F0 and substantially attenuates H2. The bank is cheap (a handful of biquads) and entirely time-domain, so it adds no latency beyond filter group delay.
 
-Band energy in the low and mid frequency regions is compared to select which filter's zero crossing output to use. The filter cutoff frequencies and energy switching threshold are key tuning parameters.
+**Per-filter analysis.** For each filter `k`:
 
-**Dual low-pass filter with energy-based switching (primary)**
-Two LPF paths run in parallel:
-- *Low filter* (~80–100Hz cutoff): for E and A string range
-- *High filter* (~350Hz cutoff): for D and G string range
+- A **tall-peak stream** — positive peaks of the filtered signal whose value is at least `frac × envelope` at the same sample. The envelope is the Hilbert magnitude of the filtered signal in offline analysis or a one-pole follower in real-time. Tall peaks mark fundamental-cycle instants because harmonic bumps mid-cycle sit below the envelope.
+- **Running EMA statistics over inter-tall-peak intervals:**
+  ```
+  μ_k  = EMA over intervals               ← period estimate (samples)
+  σ_k  = sqrt( EMA of (interval − μ_k)² ) ← interval std
+  cleanness_k = 1 / (1 + σ_k / μ_k)       ← coefficient-of-variation form, ∈ (0, 1]
+  amplitude_k = EMA(env_filt) / EMA(env_raw)
+  ```
+  EMA time constant is on the order of a few cycles — short enough to track per-note period changes, long enough to smooth single-cycle perturbations. `μ_k` is undefined until the filter has produced at least two tall peaks; `cleanness_k` reports `0` (filter not qualified) until enough intervals have arrived for the EMA to settle.
 
-Band energy comparison selects which filter's crossings to trust. The cutoff frequencies and switching threshold are key tuning parameters.
+**Selector.** At each sample, walk the bank from lowest to highest cutoff and pick the first filter `k` where `cleanness_k ≥ C_min` AND `amplitude_k ≥ A_min`. Lower cutoffs are preferred because they reject H2 most strongly; the selector steps up only when the fundamental has moved above the current cutoff and the filter no longer dominates its output. The amplitude check guards against locking onto sympathetic vibration during decay, when a low-cutoff filter's output could be "clean" but tracking residual energy rather than the played note. If no filter qualifies, the selector emits a *no-estimate* sentinel; the loop controller's integer-multiple gate is then disabled and falls through to its newest-valid pick.
 
-**Peak-to-envelope ratio (strong backup)**
-For bass guitar, most of the amplitude information is in the peaks of the waveform, not the zero crossing area. The fundamental dominates the peaks because harmonic phases tend to align there. A positive peak that reaches close to the slow envelope level is almost certainly from the fundamental — harmonic bumps mid-cycle peak well below the envelope. This makes peak-based pitch detection potentially more robust than zero-crossing-based approaches for this signal type. Zero crossings remain the right tool for the actual loop transition timing, but peak tracking could be used to estimate the fundamental period and gate which zero crossings are valid.
+**Period and margin source.** When a filter is selected, `P = μ_k` of that filter. The matching margin used by the loop-candidate gate scales with `σ`:
+```
+margin = max(C_margin · P, σ_k)
+```
+A noisier estimate naturally widens the gate. The loop controller may further widen the margin with an urgency multiplier as latency grows (see *Urgency and relaxed matching*).
 
-**Derivative magnitude at crossing (not recommended)**
-Initial investigation showed that the derivative `x - x'` at a zero crossing does not reliably discriminate fundamental crossings from harmonic-induced spurious crossings. At a zero crossing the signal is mid-swing and all harmonics contribute to the slope simultaneously, so there is no clean separation. The ZC detector still emits the derivative as a probe output (output 4) for completeness, but it is not expected to be useful as a primary filter.
+**Probe outputs.** Per filter: filtered signal, envelope, envelope-normalized signal, tall-peak impulses, running `μ`, running `σ`, cleanness, amplitude. Plus selector: selected filter index, selected `P`, selected `σ`, qualified vs. no-estimate flag. All probes are emitted continuously and consumed by the offline test harness.
+
+**Earlier approaches now subsumed:**
+
+- *Dual-LPF energy switching* — generalised to the N-filter bank above. Energy-comparison switching is replaced by per-filter cleanness scoring, which is more directly aligned with what we actually want (a period estimate we can trust) and which extends to more than two filters without restructuring.
+- *Peak-to-envelope ratio* — folded into the per-filter analysis (the `frac × envelope` threshold for tall peaks). The question of "is this filter's period trustworthy?" is then answered by the cleanness and amplitude probes rather than peak-to-envelope alone.
+
+**Derivative magnitude at crossing (not recommended).** Initial investigation showed that the derivative `x - x'` at a zero crossing does not reliably discriminate fundamental crossings from harmonic-induced spurious crossings — at a zero crossing the signal is mid-swing and all harmonics contribute to the slope simultaneously, so there is no clean separation. The ZC detector still emits the derivative as a probe output (output 4) for completeness.
 
 ## Dual Fractional Delay Line
 
@@ -141,9 +152,13 @@ The cancellation happens in the *difference* of the two tap delays, not in eithe
 
 The need for a transition becomes more urgent as latency grows. The matching criteria relax accordingly:
 
-- **Below lower threshold** No search, just record.
-- **Above lower threshold:** Search for period-aligned candidates (strict matching). (FUTURE, for now any zero crossing is good enough)
-- **As latency continues to grow:** The acceptable tolerance for period alignment widens, allowing candidates that are not perfectly integer-period-aligned. (FUTURE, for now any zero crossing is good enough)
+- **Below lower threshold:** No search, just record.
+- **Above lower threshold:** Walk the ZC record list from newest (tail) backward toward oldest valid (head+1). Given the current period estimate `P` from the Harmonic Rejection block, the head's arrival time `AT_old`, and a `margin` (see Harmonic Rejection), accept the first record at `AT_new` where both:
+  - `DT_inactive = DT_active − (AT_new − AT_old) ≥ MIN_DELAY_SAMPLES` (existing latency-reduction constraint), and
+  - `| Δ − round(Δ / P) · P | ≤ margin`, where `Δ = AT_new − AT_old > 0` and `round(Δ / P) ≥ 1` (period alignment).
+
+  If no record satisfies both — or if the Harmonic Rejection block reports *no estimate* — fall back to the existing newest-valid pick: the first record satisfying the `DT_inactive` constraint alone. This fallback is the same algorithm the controller uses today, so adding the gate is purely additive: at worst we land on a wrong-harmonic crossing, which is what we already do.
+- **As latency grows toward the upper threshold:** Multiply the `margin` by an urgency factor that scales from 1 at the lower threshold to a larger value (e.g. 3×) approaching the upper threshold, so wrong-phase candidates become acceptable rather than letting the bailout fire.
 - **Above upper threshold (200 ms, bailout):** Fire a cross-fade immediately on the current output sample, regardless of whether a ZC is being emitted. Reset the inactive tap to near-zero delay and use a longer cross-fade time (3× the loop cross-fade) to reduce the audible artifact. Because the bailout runs per output sample (see step 3 of the loop candidate search), this catches cases where no candidate ZC is available at the current output position — silence, noise tails, or unpitched content — and prevents the delay from growing unboundedly. The trade-off is a non-ZC transition in the output, mitigated by the long cross-fade.
 
 #### Period range for candidate matching (FUTURE)
