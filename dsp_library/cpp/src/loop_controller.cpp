@@ -65,6 +65,7 @@ void LoopController::process(const vector<vector<float>>& inputs,
     if (inputs.size() < 2) return;
 
     int num_samples = (int)inputs[0].size();
+    bool have_gate_inputs = (inputs.size() >= 5);
 
     for (auto& ch : outputs) {
         if ((int)ch.size() != num_samples)
@@ -74,12 +75,17 @@ void LoopController::process(const vector<vector<float>>& inputs,
     for (int n = 0; n < num_samples; n++) {
         float zc_impulse     = inputs[0][n];
         float attack_impulse = inputs[1][n];
+        float P_samples      = have_gate_inputs ? inputs[2][n] : 0.0f;
+        float sigma_samples  = have_gate_inputs ? inputs[3][n] : 0.0f;
+        float qualified      = have_gate_inputs ? inputs[4][n] : 0.0f;
 
         compute(zc_impulse, attack_impulse,
+                P_samples, sigma_samples, qualified,
                 outputs[0][n], outputs[1][n],   // tap1_delay_ms, tap2_delay_ms
                 outputs[2][n], outputs[3][n],   // gain1, gain2
                 outputs[4][n], outputs[5][n],   // latency_ms, loop_event
-                outputs[6][n], outputs[7][n]);  // active_tap, bailout_event
+                outputs[6][n], outputs[7][n],   // active_tap, bailout_event
+                outputs[8][n]);                 // gated_event
     }
 }
 
@@ -98,12 +104,15 @@ void LoopController::process(const vector<vector<float>>& inputs,
 // ============================================================
 
 void LoopController::compute(float zc_impulse, float attack_impulse,
+                              float P_samples, float sigma_samples, float qualified,
                               float& tap1_delay_ms, float& tap2_delay_ms,
                               float& gain1, float& gain2,
                               float& latency_ms, float& loop_event,
-                              float& active_tap_out, float& bailout_event) {
+                              float& active_tap_out, float& bailout_event,
+                              float& gated_event) {
     loop_event    = 0.0f;
     bailout_event = 0.0f;
+    gated_event   = 0.0f;
 
     // 1. Advance sample counter
     sample_index_++;
@@ -170,26 +179,73 @@ void LoopController::compute(float zc_impulse, float attack_impulse,
         float DT_active = tap_delay_[active_tap_];
 
         // (b) fire if latency above threshold and we have a usable candidate.
-        //     Scan from newest (tail) toward head+1; first record whose use
-        //     leaves DT_inactive >= MIN_DELAY_SAMPLES is the newest valid
-        //     candidate — gives the largest latency reduction per transition.
-        //     (Picking head+1 instead would fire every output ZC and produce
-        //     an audible modulation tone.)
+        //     Scan from newest (tail) toward head+1. Each candidate must
+        //     satisfy DT_inactive >= MIN_DELAY_SAMPLES (existing
+        //     latency-reduction constraint). When the integer-multiple gate is
+        //     active (qualified > 0.5 and P > 0), additionally require the
+        //     period-alignment condition:
+        //         | delta − round(delta/P) * P | <= margin,  k = round(...) >= 1
+        //     where margin = base * urgency, base = max(MARGIN_FRAC_P*P, sigma),
+        //     and urgency scales from 1 at the lower threshold to URGENCY_MAX_MULT
+        //     at the upper threshold.
+        //     If we find a gate-passing candidate, fire it. Otherwise fall back
+        //     to the newest DT-valid candidate (the original behaviour) — this
+        //     is purely additive over the prior algorithm.
         bool fired = false;
         if (DT_active > lower_threshold_ && zc_count_ >= 2) {
-            int head_idx = (zc_head_ - zc_count_ + ZC_HISTORY_SIZE) % ZC_HISTORY_SIZE;
+            // Margin (samples). gate_active iff we have a usable estimate.
+            bool gate_active = (qualified > 0.5f) && (P_samples > 1.0f);
+            float margin = 0.0f;
+            if (gate_active) {
+                float base = MARGIN_FRAC_P * P_samples;
+                if (sigma_samples > base) base = sigma_samples;
+                float urgency_t = (DT_active - lower_threshold_) /
+                                  (upper_threshold_ - lower_threshold_);
+                if (urgency_t < 0.0f) urgency_t = 0.0f;
+                if (urgency_t > 1.0f) urgency_t = 1.0f;
+                float urgency_mult = 1.0f + urgency_t * (URGENCY_MAX_MULT - 1.0f);
+                margin = base * urgency_mult;
+            }
+
+            int head_idx     = (zc_head_ - zc_count_ + ZC_HISTORY_SIZE) % ZC_HISTORY_SIZE;
+            int fallback_i   = -1;     // newest DT-valid candidate (existing pick)
+            int match_i      = -1;     // newest DT-valid AND gate-passing
+            float fb_inactive = 0.0f, match_inactive = 0.0f;
             for (int i = zc_count_ - 1; i > 0; i--) {
                 int idx = (head_idx + i) % ZC_HISTORY_SIZE;
                 int32_t at_new = zc_history_[idx];
-                float new_inactive = DT_active - (float)(at_new - head_at);
-                if (new_inactive >= MIN_DELAY_SAMPLES) {
-                    tap_delay_[1 - active_tap_] = new_inactive;
-                    start_crossfade(-1.0f, loop_cf_samples_);
-                    loop_event = 1.0f;
-                    pop_oldest();
-                    fired = true;
-                    break;
+                float delta_samples = (float)(at_new - head_at);
+                float new_inactive = DT_active - delta_samples;
+                if (new_inactive < MIN_DELAY_SAMPLES) continue;
+
+                if (fallback_i < 0) {
+                    fallback_i  = i;
+                    fb_inactive = new_inactive;
                 }
+
+                if (gate_active) {
+                    float k = roundf(delta_samples / P_samples);
+                    if (k < 1.0f) continue;
+                    float misalign = fabsf(delta_samples - k * P_samples);
+                    if (misalign > margin) continue;
+                }
+
+                match_i        = i;
+                match_inactive = new_inactive;
+                break;   // first scanning newest -> oldest wins
+            }
+
+            int    fire_i        = (match_i >= 0) ? match_i        : fallback_i;
+            float  fire_inactive = (match_i >= 0) ? match_inactive : fb_inactive;
+            if (fire_i >= 0) {
+                tap_delay_[1 - active_tap_] = fire_inactive;
+                start_crossfade(-1.0f, loop_cf_samples_);
+                loop_event = 1.0f;
+                if (gate_active && match_i >= 0 && match_i != fallback_i) {
+                    gated_event = 1.0f;   // gate picked a different candidate than fallback
+                }
+                pop_oldest();
+                fired = true;
             }
             if (fired) break;   // exit the while-loop; we're in cross-fade
         }

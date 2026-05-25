@@ -25,9 +25,12 @@ PYBIND11_MODULE(pybind_loop_controller, m) {
 
            return vec_of_vec_to_np_list(outputs_vec);
          },
-         "Process one buffer. inputs: [zc_impulse, attack_impulse]\n"
+         "Process one buffer.\n"
+         "inputs: [zc_impulse, attack_impulse, P_samples, sigma_samples, qualified]\n"
+         "  (P, sigma, qualified come from HarmonicRejector; pass arrays of zeros\n"
+         "   to disable the integer-multiple gate and use legacy newest-valid behaviour.)\n"
          "outputs: [tap1_delay_ms, tap2_delay_ms, gain1, gain2,\n"
-         "          latency_ms, loop_event, active_tap, bailout_event]",
+         "          latency_ms, loop_event, active_tap, bailout_event, gated_event]",
          py::arg("inputs"))
 
     .def("get_num_inputs",  &LoopController::get_num_inputs)

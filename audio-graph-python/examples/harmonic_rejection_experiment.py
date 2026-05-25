@@ -305,6 +305,9 @@ def run_experiment(filter_fcs=(60.0, 120.0, 240.0), peak_frac=0.65,
 
 
 def _install_x_zoom(fig, x_min, x_max, base_scale=1.3):
+  """Scroll = x-zoom anchored at cursor. Toolbar Home resets to full range
+  (seeded on first draw — scroll-wheel zoom otherwise leaves the nav stack
+  empty and Home has nowhere to return to)."""
   def on_scroll(event):
     ax = event.inaxes
     if ax is None or event.xdata is None:
@@ -319,6 +322,15 @@ def _install_x_zoom(fig, x_min, x_max, base_scale=1.3):
     ax.set_xlim(new_left, new_right)
     fig.canvas.draw_idle()
   fig.canvas.mpl_connect('scroll_event', on_scroll)
+
+  seeded = [False]
+  def _seed_home(_evt):
+    if seeded[0]: return
+    tb = getattr(fig.canvas, 'toolbar', None)
+    if tb is not None and hasattr(tb, 'push_current'):
+      tb.push_current()
+      seeded[0] = True
+  fig.canvas.mpl_connect('draw_event', _seed_home)
 
 
 if __name__ == "__main__":

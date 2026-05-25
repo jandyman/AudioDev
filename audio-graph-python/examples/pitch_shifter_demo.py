@@ -36,6 +36,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'build'))
 from build.pybind_faust_input_lpf import FaustInputLpf
 from build.pybind_faust_zero_crossing_detector import FaustZeroCrossingDetector
 from build.pybind_faust_attack_detector import FaustAttackDetector
+from build.pybind_harmonic_rejector import HarmonicRejector
 from build.pybind_loop_controller import LoopController
 from build.pybind_faust_dual_tap_delay import FaustDualTapDelay
 
@@ -100,6 +101,28 @@ def run_pitch_shifter_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0, bypass_attack=Tru
         print(f"Attack Det:     {raw_attack_count} attacks detected")
 
     # ---------------------------------------------------------------
+    # Stage 2.5: Harmonic Rejector — multi-LPF bank + cleanness selector
+    # Produces a per-sample period estimate P (samples) plus sigma and a
+    # qualified flag, which the LoopController uses to gate candidate ZCs
+    # to integer multiples of P. Falls back to the legacy newest-valid pick
+    # when qualified == 0 (during the bank's EMA warm-up, silence, etc.).
+    # Full-buffer call here; outputs are sliced per chunk into the LC loop.
+    # ---------------------------------------------------------------
+    hr = HarmonicRejector()
+    hr.init(sample_rate)
+    hr_outs = hr.process([audio_in.astype(np.float32)])
+    N_HR = HarmonicRejector.NUM_FILTERS
+    selected_filter = hr_outs[7 * N_HR + 0]
+    P_samples       = hr_outs[7 * N_HR + 1]
+    sigma_samples   = hr_outs[7 * N_HR + 2]
+    qualified       = hr_outs[7 * N_HR + 3]
+    qual_count = int(np.sum(qualified > 0.5))
+    print(f"Harmonic Rej:   qualified {qual_count}/{num_samples} samples "
+          f"({100.0*qual_count/num_samples:.0f}%); "
+          f"per-filter selected counts: " +
+          ", ".join(f"f{fi}={int(np.sum(selected_filter == fi))}" for fi in range(N_HR)))
+
+    # ---------------------------------------------------------------
     # Stages 3+4: Loop Controller + Dual Tap Delay — chunked lockstep
     # The delay control signals must be applied sample-accurately to
     # the delay line, so both modules advance together each chunk.
@@ -119,15 +142,19 @@ def run_pitch_shifter_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0, bypass_attack=Tru
     gain2_arr    = np.zeros(num_samples)
     loop_evts    = np.zeros(num_samples)
     bailout_evts = np.zeros(num_samples)
+    gated_evts   = np.zeros(num_samples)
 
     print("\nProcessing...")
     for i in range(0, num_samples, chunk):
         end = min(i + chunk, num_samples)
 
-        # Loop Controller: ZC + attack → delay times and gains
+        # Loop Controller: ZC + attack + (P, sigma, qualified) → delays and gains
         lc_outs = lc.process([
             zc_impulse[i:end].astype(np.float32),
             attack_impulse[i:end].astype(np.float32),
+            P_samples[i:end].astype(np.float32),
+            sigma_samples[i:end].astype(np.float32),
+            qualified[i:end].astype(np.float32),
         ])
         tap1_delay_ms = lc_outs[0]
         tap2_delay_ms = lc_outs[1]
@@ -140,6 +167,7 @@ def run_pitch_shifter_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0, bypass_attack=Tru
         gain2_arr[i:end]    = lc_outs[3]
         loop_evts[i:end]    = lc_outs[5]
         bailout_evts[i:end] = lc_outs[7]
+        gated_evts[i:end]   = lc_outs[8]
 
         # Dual Tap Delay: audio + delay times → two taps
         dtd_outs = dtd.process([
@@ -155,7 +183,8 @@ def run_pitch_shifter_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0, bypass_attack=Tru
 
     loop_count    = int(np.sum(loop_evts > 0.5))
     bailout_count = int(np.sum(bailout_evts > 0.5))
-    print(f"  Loop transitions: {loop_count}")
+    gated_count   = int(np.sum(gated_evts > 0.5))
+    print(f"  Loop transitions: {loop_count}  (of which gate-redirected: {gated_count})")
     print(f"  Bailout events:   {bailout_count}")
     print(f"  Max tap1 delay:   {tap1_del.max():.1f} ms")
     print(f"  Max tap2 delay:   {tap2_del.max():.1f} ms")
@@ -184,8 +213,8 @@ def run_pitch_shifter_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0, bypass_attack=Tru
     attack_indices = np.where(attack_impulse > 0.5)[0]
     loop_indices   = np.where(loop_evts > 0.5)[0]
 
-    fig, axes = plt.subplots(3, 1, figsize=(16, 10), sharex=True,
-                             gridspec_kw={'height_ratios': [2, 3, 1]})
+    fig, axes = plt.subplots(4, 1, figsize=(16, 12), sharex=True,
+                             gridspec_kw={'height_ratios': [2, 3, 1, 2]})
     attack_state = "attack bypassed" if bypass_attack else "attack on"
     fig.suptitle(f"Pitch Shifter — {pitch_ratio_label(pitch_ratio)}  ({os.path.basename(input_path)}, LPF {lpf_fc_hz:.0f} Hz, {attack_state})", fontsize=14)
     fig.text(0.5, 0.955, "scroll = zoom x  •  toolbar Home resets",
@@ -233,11 +262,37 @@ def run_pitch_shifter_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0, bypass_attack=Tru
         axes[2].axvline(t[idx], color='red',   linewidth=0.8, alpha=0.4)
     for idx in loop_indices:
         axes[2].axvline(t[idx], color='green', linewidth=0.8, alpha=0.4)
-    axes[2].set_xlabel('Time (s)')
     axes[2].set_ylabel('Gain')
     axes[2].set_ylim(-0.05, 1.1)
     axes[2].legend(loc='upper right', fontsize=8)
     axes[2].grid(True, alpha=0.3)
+
+    # Panel 4: Harmonic Rejector selector state
+    # - background tinted by selected filter (green/orange/purple = filter 0/1/2)
+    # - black line = P (period estimate, ms); NaN where not qualified
+    # - blue ▼ markers = transitions where the integer-multiple gate redirected
+    #   the candidate pick away from newest-DT-valid
+    filter_colors = ['green', 'C1', 'purple']
+    sel = selected_filter.astype(int)
+    # Coalesce runs of equal selected-filter index so we draw one axvspan per run
+    boundaries = np.concatenate(([0], np.where(np.diff(sel) != 0)[0] + 1, [len(sel)]))
+    for s, e in zip(boundaries[:-1], boundaries[1:]):
+        fi = sel[s]
+        if 0 <= fi < N_HR:
+            axes[3].axvspan(t[s], t[e - 1], color=filter_colors[fi], alpha=0.15, lw=0)
+    P_ms = P_samples / sample_rate * 1000.0
+    P_ms_plot = np.where(qualified > 0.5, P_ms, np.nan)
+    axes[3].plot(t, P_ms_plot, 'k-', linewidth=0.6, alpha=0.85, label='P (ms)')
+    gated_indices = np.where(gated_evts > 0.5)[0]
+    if len(gated_indices):
+        axes[3].plot(t[gated_indices], np.full(len(gated_indices), 48.0),
+                     'bv', ms=6, alpha=0.7, label='gate-redirected loop')
+    axes[3].set_xlabel('Time (s)')
+    axes[3].set_ylabel('P (ms)')
+    axes[3].set_ylim(0, 50)
+    axes[3].legend(loc='upper right', fontsize=8)
+    axes[3].grid(True, alpha=0.3)
+    axes[3].set_title('Selector state — tint: filter 0 (green) / 1 (orange) / 2 (purple); black = P; blue ▼ = gate-redirected loop')
 
     # Scroll-wheel zoom: horizontal-only, anchored at cursor x. With sharex=True
     # on the subplots, changing one xlim propagates to all panels.
@@ -271,7 +326,9 @@ def _install_x_zoom(fig, x_min, x_max, base_scale=1.3):
     """Scroll wheel -> horizontal-only zoom anchored at cursor x.
 
     With sharex=True on the figure's axes, changing one xlim propagates.
-    Toolbar Home button resets to the original full range.
+    Toolbar Home button resets to the original full range (we seed the
+    toolbar's navigation stack on first draw so Home has a view to return to;
+    scroll-wheel zoom otherwise leaves the stack empty).
     """
     def on_scroll(event):
         ax = event.inaxes
@@ -288,6 +345,15 @@ def _install_x_zoom(fig, x_min, x_max, base_scale=1.3):
         fig.canvas.draw_idle()
 
     fig.canvas.mpl_connect('scroll_event', on_scroll)
+
+    seeded = [False]
+    def _seed_home(_evt):
+        if seeded[0]: return
+        tb = getattr(fig.canvas, 'toolbar', None)
+        if tb is not None and hasattr(tb, 'push_current'):
+            tb.push_current()
+            seeded[0] = True
+    fig.canvas.mpl_connect('draw_event', _seed_home)
 
 
 if __name__ == "__main__":
