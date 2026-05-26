@@ -1,3 +1,9 @@
+/* @block
+(define-block Mixer2
+ (inputs in1 in2 gain1 gain2)
+ (outputs out))
+*/
+
 #include "mixer2.h"
 
 void Mixer2::process(const float* const* inputs, float* const* outputs, int n) {

@@ -1,3 +1,10 @@
+/* @block
+(define-block HarmonicRejector
+ (inputs in)
+ (outputs x_filt_0 x_filt_1 x_filt_2 env_filt_0 env_filt_1 env_filt_2 tall_peak_0 tall_peak_1 tall_peak_2 mu_0 mu_1 mu_2 sigma_0 sigma_1 sigma_2 cleanness_0 cleanness_1 cleanness_2 amplitude_0 amplitude_1 amplitude_2 selected_filter P sigma_sel qualified)
+ (params (fc_0 :default 60) (fc_1 :default 120) (fc_2 :default 240) (peak_frac :default 0.65) (ema_tau_intervals :default 4) (cleanness_thresh :default 0.5) (amp_thresh :default 0.15) (env_fc_hz :default 30) (min_peak_distance_ms :default 1)))
+*/
+
 #include "harmonic_rejector.h"
 #include <cmath>
 #include <cstring>

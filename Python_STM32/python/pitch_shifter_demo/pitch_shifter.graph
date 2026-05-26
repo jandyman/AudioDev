@@ -1,0 +1,27 @@
+; Pitch shifter pipeline — see Python_STM32/docs/audio_graph_architecture.md
+; Single audio input, single audio output.
+
+(graph pitch_shifter
+ (port input audio_in lpf.in)
+ (port output audio_out mixer.out)
+
+ (block lpf FaustInputLpf :fc 10000)
+ (block zc FaustZeroCrossingDetector)
+ (block atk FaustAttackDetector)
+ (block hr HarmonicRejector)
+ (block lc LoopController :pitch_ratio 0.5)
+ (block dtd FaustDualTapDelay)
+ (block mixer Mixer2)
+
+ (connect lpf.out zc.in atk.in hr.in dtd.audio_in)
+ (connect zc.zc_out lc.zc_impulse)
+ (connect atk.trigger lc.attack_impulse)
+ (connect hr.P lc.P_samples)
+ (connect hr.sigma_sel lc.sigma_samples)
+ (connect hr.qualified lc.qualified)
+ (connect lc.tap1_delay_ms dtd.delay1_ms)
+ (connect lc.tap2_delay_ms dtd.delay2_ms)
+ (connect dtd.tap1 mixer.in1)
+ (connect dtd.tap2 mixer.in2)
+ (connect lc.gain1 mixer.gain1)
+ (connect lc.gain2 mixer.gain2))

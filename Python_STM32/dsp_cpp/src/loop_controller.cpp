@@ -1,3 +1,10 @@
+/* @block
+(define-block LoopController
+ (inputs zc_impulse attack_impulse P_samples sigma_samples qualified)
+ (outputs tap1_delay_ms tap2_delay_ms gain1 gain2 latency_ms loop_event active_tap bailout_event gated_event)
+ (params (pitch_ratio :default 0.5)))
+*/
+
 #include "loop_controller.h"
 #include <cmath>
 #include <cstring>
