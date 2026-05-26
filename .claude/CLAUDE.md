@@ -28,7 +28,7 @@ The `scipy` environment has numpy, matplotlib, dawdreamer, pybind11, and other a
 
 ## Implementation Architecture
 
-All DSP logic is implemented in **C++**. Faust is used only for rapid algorithm sketching — once an algorithm is proven, it is translated into plain C++ and the Faust version is retired. Python DSP prototyping is acceptable only as a very temporary step before C++ translation.
+DSP logic is implemented in **C++ or Faust**. Faust is the implementation language of choice for feedback-dense blocks (resonators, IIRs, delay-modulation effects, coupled envelope followers, multi-channel state machines); plain C++ for fixed-coefficient filters, gain/mix/sum, and straightforward chunk-wise math. The inter-block contract is chunk-based — blocks process buffers of samples, not individual samples; per-sample / feedback techniques live inside blocks. Faust's runtime never ships to the STM32 — only the generated `.cpp` is embedded as first-class firmware code, called in the chunk-by-chunk processing sequence. Python DSP prototyping is acceptable only as a very temporary step before C++/Faust translation. See `Python_STM32/docs/audio_graph_architecture.md` for the full architecture and block source file conventions.
 
 **One C++ source, two build targets.** The same C++ files compile for the embedded target (arm-none-eabi) and natively on macOS via pybind11. There is no separate desktop simulation — the code under test *is* the firmware code. Platform differences are confined to a thin platform header; DSP logic is identical across targets.
 
