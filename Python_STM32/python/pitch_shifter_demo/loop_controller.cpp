@@ -319,17 +319,19 @@ void loop_controller::start_crossfade(float new_delay_override, int cf_duration)
 // Parameters
 // ============================================================
 
-void loop_controller::set_param(const string& name, float value) {
-    if (name == "pitch_ratio") {
+void loop_controller::set_param(const char* name, float value) {
+    if (!strcmp(name, "pitch_ratio")) {
         set_pitch_ratio(value);
     }
 }
 
-float loop_controller::get_param(const string& name) const {
-    if (name == "pitch_ratio") return pitch_ratio_;
+float loop_controller::get_param(const char* name) const {
+    if (!strcmp(name, "pitch_ratio")) return pitch_ratio_;
     return 0.0f;
 }
 
+#ifndef BARE_METAL
 vector<string> loop_controller::get_param_names() const {
     return {"pitch_ratio"};
 }
+#endif

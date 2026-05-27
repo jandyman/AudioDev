@@ -218,34 +218,36 @@ void harmonic_rejector::process(const float* const* inputs, float* const* output
 // Parameters
 // ============================================================
 
-void harmonic_rejector::set_param(const string& name, float value) {
-    if (name == "fc_0") { filters_[0].fc = value; update_filter_coefs(0); }
-    else if (name == "fc_1" && NUM_FILTERS > 1) { filters_[1].fc = value; update_filter_coefs(1); }
-    else if (name == "fc_2" && NUM_FILTERS > 2) { filters_[2].fc = value; update_filter_coefs(2); }
-    else if (name == "peak_frac")          peak_frac_ = value;
-    else if (name == "ema_tau_intervals")  { ema_tau_intervals_ = value; update_ema_alpha(); }
-    else if (name == "cleanness_thresh")   cleanness_thresh_ = value;
-    else if (name == "amp_thresh")         amp_thresh_ = value;
-    else if (name == "env_fc_hz")          { env_fc_hz_ = value; update_envelope_coef(); }
-    else if (name == "min_peak_distance_ms") { min_peak_distance_ms_ = value; update_min_peak_distance_samples(); }
+void harmonic_rejector::set_param(const char* name, float value) {
+    if (!strcmp(name, "fc_0")) { filters_[0].fc = value; update_filter_coefs(0); }
+    else if (!strcmp(name, "fc_1") && NUM_FILTERS > 1) { filters_[1].fc = value; update_filter_coefs(1); }
+    else if (!strcmp(name, "fc_2") && NUM_FILTERS > 2) { filters_[2].fc = value; update_filter_coefs(2); }
+    else if (!strcmp(name, "peak_frac"))          peak_frac_ = value;
+    else if (!strcmp(name, "ema_tau_intervals"))  { ema_tau_intervals_ = value; update_ema_alpha(); }
+    else if (!strcmp(name, "cleanness_thresh"))   cleanness_thresh_ = value;
+    else if (!strcmp(name, "amp_thresh"))         amp_thresh_ = value;
+    else if (!strcmp(name, "env_fc_hz"))          { env_fc_hz_ = value; update_envelope_coef(); }
+    else if (!strcmp(name, "min_peak_distance_ms")) { min_peak_distance_ms_ = value; update_min_peak_distance_samples(); }
 }
 
-float harmonic_rejector::get_param(const string& name) const {
-    if (name == "fc_0") return filters_[0].fc;
-    if (name == "fc_1" && NUM_FILTERS > 1) return filters_[1].fc;
-    if (name == "fc_2" && NUM_FILTERS > 2) return filters_[2].fc;
-    if (name == "peak_frac")           return peak_frac_;
-    if (name == "ema_tau_intervals")   return ema_tau_intervals_;
-    if (name == "cleanness_thresh")    return cleanness_thresh_;
-    if (name == "amp_thresh")          return amp_thresh_;
-    if (name == "env_fc_hz")           return env_fc_hz_;
-    if (name == "min_peak_distance_ms") return min_peak_distance_ms_;
+float harmonic_rejector::get_param(const char* name) const {
+    if (!strcmp(name, "fc_0")) return filters_[0].fc;
+    if (!strcmp(name, "fc_1") && NUM_FILTERS > 1) return filters_[1].fc;
+    if (!strcmp(name, "fc_2") && NUM_FILTERS > 2) return filters_[2].fc;
+    if (!strcmp(name, "peak_frac"))           return peak_frac_;
+    if (!strcmp(name, "ema_tau_intervals"))   return ema_tau_intervals_;
+    if (!strcmp(name, "cleanness_thresh"))    return cleanness_thresh_;
+    if (!strcmp(name, "amp_thresh"))          return amp_thresh_;
+    if (!strcmp(name, "env_fc_hz"))           return env_fc_hz_;
+    if (!strcmp(name, "min_peak_distance_ms")) return min_peak_distance_ms_;
     return 0.0f;
 }
 
+#ifndef BARE_METAL
 vector<string> harmonic_rejector::get_param_names() const {
     return {"fc_0", "fc_1", "fc_2",
             "peak_frac", "ema_tau_intervals",
             "cleanness_thresh", "amp_thresh",
             "env_fc_hz", "min_peak_distance_ms"};
 }
+#endif

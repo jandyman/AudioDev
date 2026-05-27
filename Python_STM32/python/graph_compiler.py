@@ -269,7 +269,6 @@ def emit(graph, registry, order, inputs_of, instances, out_path, graph_src_path)
   L('#pragma once')
   L('')
   L('#include <cstring>')
-  L('#include <string>')
   L('#include "faust_minimal.h"')
   L('#include "faust_processor_wrapper.h"')
 
@@ -335,11 +334,12 @@ def emit(graph, registry, order, inputs_of, instances, out_path, graph_src_path)
   L('  void set_param(const char* path, float value) {')
   L('    const char* dot = std::strchr(path, \'.\');')
   L('    if (!dot) return;')
-  L('    std::string block(path, dot - path);')
-  L('    std::string param(dot + 1);')
+  L('    int blen = (int)(dot - path);')
+  L('    const char* param = dot + 1;')
   for b in graph['blocks']:
     if registry[b['type']]['params']:
-      L(f'    if (block == "{b["instance"]}") {{ blk_{b["instance"]}.set_param(param, value); return; }}')
+      inst = b['instance']
+      L(f'    if (blen == {len(inst)} && !std::strncmp(path, "{inst}", {len(inst)})) {{ blk_{inst}.set_param(param, value); return; }}')
   L('  }')
   L('')
 

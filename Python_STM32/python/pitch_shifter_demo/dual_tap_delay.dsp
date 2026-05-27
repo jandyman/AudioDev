@@ -13,8 +13,8 @@ import("stdfaust.lib");
 // Maximum delay buffer size
 // Fixed at 1920000 samples to support up to 10 seconds at 192kHz
 // (or ~40 seconds at 48kHz, ~43 seconds at 44.1kHz)
-max_delay_samples = 1920000;
-max_delay_ms = 10000.0;  // Maximum useful delay in milliseconds
+max_delay_samples = 14400;
+max_delay_ms = 300.0;  // Maximum useful delay in milliseconds (300ms @ 48kHz)
 
 // Dual tap delay: 3 inputs → 2 outputs
 // Input 1: audio signal to delay

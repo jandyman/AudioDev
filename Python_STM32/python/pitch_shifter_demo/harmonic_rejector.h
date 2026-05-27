@@ -1,10 +1,11 @@
 #pragma once
+#include <cstdint>
+#ifndef BARE_METAL
 #include <vector>
 #include <string>
-#include <cstdint>
-
 using std::vector;
 using std::string;
+#endif
 
 // harmonic_rejector — multi-filter LPF bank with cleanness scoring and a
 // selector that outputs a trusted period estimate (P) for the loop controller.
@@ -68,9 +69,11 @@ public:
 
     void process(const float* const* inputs, float* const* outputs, int n);
 
-    void set_param(const string& name, float value);
-    float get_param(const string& name) const;
+    void set_param(const char* name, float value);
+    float get_param(const char* name) const;
+#ifndef BARE_METAL
     vector<string> get_param_names() const;
+#endif
 
 private:
     struct FilterState {

@@ -48,12 +48,12 @@ public:
   int get_num_outputs() const { return faust_dsp_->getNumOutputs(); }
   int get_sample_rate() const { return sample_rate_; }
 
-  void set_param(const string& name, float value) {
-    faust_ui_.setParamValue(name.c_str(), value);
+  void set_param(const char* name, float value) {
+    faust_ui_.setParamValue(name, value);
   }
 
-  float get_param(const string& name) const {
-    return faust_ui_.getParamValue(name.c_str());
+  float get_param(const char* name) const {
+    return faust_ui_.getParamValue(name);
   }
 
   vector<string> get_param_names() const {

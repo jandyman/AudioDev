@@ -1,9 +1,10 @@
 #pragma once
+#ifndef BARE_METAL
 #include <vector>
 #include <string>
-
 using std::vector;
 using std::string;
+#endif
 
 // mixer2 — two-input crossfade mixer
 //
@@ -24,9 +25,11 @@ public:
 
   void process(const float* const* inputs, float* const* outputs, int n);
 
-  void   set_param(const string& name, float value) {}
-  float  get_param(const string& name) const { return 0.0f; }
+  void  set_param(const char* name, float value) {}
+  float get_param(const char* name) const { return 0.0f; }
+#ifndef BARE_METAL
   vector<string> get_param_names() const { return {}; }
+#endif
 
 private:
   int sample_rate_ = 48000;
