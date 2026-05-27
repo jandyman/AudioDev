@@ -4,6 +4,16 @@ emits a single header file with the generated pipeline class.
 
 Usage:
   python3 graph_compiler.py graphs/pitch_shifter.graph build/generated/pitch_shifter.h
+
+Naming convention: all names are snake_case throughout — graph type names,
+filenames, and C++ class names are identical. No conversion is needed.
+
+Block discovery (per block type referenced in the graph):
+  - Search for <type>.cpp in the graph file's own directory, then in any
+    (include-dir ...) directories declared in the graph file.
+  - If a sibling <type>.dsp exists alongside the .cpp, the block is Faust;
+    otherwise it is a plain C++ block.
+  - No hardcoded search paths; the graph is self-describing.
 """
 import os
 import re
@@ -69,7 +79,7 @@ def parse_kwargs(items):
   return out
 
 # ============================================================
-# @block marker extraction
+# Block discovery — type name == filename == C++ class name
 # ============================================================
 
 BLOCK_RE = re.compile(r'/\*\s*@block\b(.*?)\*/', re.DOTALL)
@@ -77,38 +87,58 @@ BLOCK_RE = re.compile(r'/\*\s*@block\b(.*?)\*/', re.DOTALL)
 def port_name(p):
   return p[0] if isinstance(p, list) else p
 
-def scan_markers(dirs):
-  """Scan .cpp files in given dirs for @block markers. Return dict type_name -> defn."""
-  registry = {}
-  for d in dirs:
-    for fname in sorted(os.listdir(d)):
-      if not fname.endswith('.cpp'): continue
-      path = os.path.join(d, fname)
-      with open(path) as f: text = f.read()
-      for m in BLOCK_RE.finditer(text):
-        forms = parse_sexpr(m.group(1))
-        if not forms: continue
-        form = forms[0]
-        if not (isinstance(form, list) and len(form) >= 2 and form[0] == 'define-block'):
-          raise ValueError(f"{path}: malformed @block")
-        name = form[1]
-        defn = {'name': name, 'source_file': path, 'inputs': [], 'outputs': [], 'params': {}}
-        for clause in form[2:]:
-          if not (isinstance(clause, list) and clause): continue
-          head = clause[0]
-          if head == 'inputs':
-            defn['inputs'] = [port_name(p) for p in clause[1:]]
-          elif head == 'outputs':
-            defn['outputs'] = [port_name(p) for p in clause[1:]]
-          elif head == 'params':
-            for p in clause[1:]:
-              if isinstance(p, list):
-                pname = p[0]
-                defn['params'][pname] = float(parse_kwargs(p[1:]).get('default', 0.0))
-              else:
-                defn['params'][p] = 0.0
-        registry[name] = defn
-  return registry
+def read_block_marker(cpp_path):
+  """Parse the @block marker from cpp_path. Returns defn dict (without is_faust)."""
+  with open(cpp_path) as f:
+    text = f.read()
+  matches = list(BLOCK_RE.finditer(text))
+  if not matches:
+    raise ValueError(f"{cpp_path}: no @block marker found")
+  forms = parse_sexpr(matches[0].group(1))
+  if not forms:
+    raise ValueError(f"{cpp_path}: empty @block marker")
+  form = forms[0]
+  if not (isinstance(form, list) and len(form) >= 2 and form[0] == 'define-block'):
+    raise ValueError(f"{cpp_path}: malformed @block — expected (define-block NAME ...)")
+  name = form[1]
+  defn = {'name': name, 'source_file': cpp_path, 'inputs': [], 'outputs': [], 'params': {}}
+  for clause in form[2:]:
+    if not (isinstance(clause, list) and clause): continue
+    head = clause[0]
+    if head == 'inputs':
+      defn['inputs'] = [port_name(p) for p in clause[1:]]
+    elif head == 'outputs':
+      defn['outputs'] = [port_name(p) for p in clause[1:]]
+    elif head == 'params':
+      for p in clause[1:]:
+        if isinstance(p, list):
+          pname = p[0]
+          defn['params'][pname] = float(parse_kwargs(p[1:]).get('default', 0.0))
+        else:
+          defn['params'][p] = 0.0
+  return defn
+
+def find_block(type_name, search_dirs):
+  """
+  Find the block source in search_dirs.
+  Faust block: type_name.dsp (marker lives in the .dsp file).
+  C++ block:   type_name.cpp (marker lives in the .cpp file).
+  Type name == filename == C++ class name (all snake_case).
+  """
+  for d in search_dirs:
+    dsp_path = os.path.join(d, type_name + '.dsp')
+    cpp_path = os.path.join(d, type_name + '.cpp')
+    if os.path.exists(dsp_path):
+      defn = read_block_marker(dsp_path)
+      defn['is_faust'] = True
+      return defn
+    if os.path.exists(cpp_path):
+      defn = read_block_marker(cpp_path)
+      defn['is_faust'] = False
+      return defn
+  raise ValueError(
+    f"block type '{type_name}': '{type_name}.dsp/.cpp' not found in {search_dirs}"
+  )
 
 # ============================================================
 # Graph file parsing
@@ -119,11 +149,18 @@ def parse_graph(text):
   if not (forms and isinstance(forms[0], list) and forms[0][0] == 'graph'):
     raise ValueError("graph file must start with (graph NAME ...)")
   g = forms[0]
-  graph = {'name': g[1], 'inputs': [], 'outputs': [], 'blocks': [], 'connects': []}
+  graph = {
+    'name': g[1],
+    'inputs': [], 'outputs': [],
+    'blocks': [], 'connects': [],
+    'include_dirs': [],
+  }
   for clause in g[2:]:
     if not (isinstance(clause, list) and clause): continue
     head = clause[0]
-    if head == 'port':
+    if head == 'include-dir':
+      graph['include_dirs'].append(clause[1])
+    elif head == 'port':
       kind = clause[1]
       if kind == 'input':
         graph['inputs'].append((clause[2], list(clause[3:])))
@@ -155,7 +192,6 @@ def validate_and_sort(graph, registry):
       raise ValueError(f"unknown block type '{b['type']}' for instance '{b['instance']}'")
   instances = {b['instance']: registry[b['type']] for b in graph['blocks']}
 
-  # input port -> source signal ref
   inputs_of = {}
   graph_input_names = set()
   for name, targets in graph['inputs']:
@@ -172,13 +208,11 @@ def validate_and_sort(graph, registry):
         raise ValueError(f"{inst}.{port} connected twice")
       inputs_of[(inst, port)] = src
 
-  # Verify every block input is connected
   for inst, defn in instances.items():
     for ip in defn['inputs']:
       if (inst, ip) not in inputs_of:
         raise ValueError(f"input {inst}.{ip} not connected")
 
-  # Verify every connected source port exists
   all_sources = set(graph_input_names)
   for inst, defn in instances.items():
     for op in defn['outputs']:
@@ -187,7 +221,6 @@ def validate_and_sort(graph, registry):
     if src not in all_sources:
       raise ValueError(f"unknown source signal '{src}'")
 
-  # Topological sort
   deps = {i: set() for i in instances}
   for (inst, _), src in inputs_of.items():
     src_inst, _ = split_ref(src)
@@ -207,28 +240,19 @@ def validate_and_sort(graph, registry):
 # Code emission
 # ============================================================
 
-def classify(name):
-  return ''.join(w.capitalize() for w in name.split('_'))
-
 def buf_name(source):
   return 'buf_' + source.replace('.', '_')
 
-def is_faust(type_name):
-  return type_name.startswith('Faust')
-
 def include_directive(defn):
-  src = defn['source_file']
-  base = os.path.basename(src)
-  if is_faust(defn['name']):
-    return f'#include "faust_{base}"'   # python/build/faust_<name>.cpp
-  # C++ block: include the sibling header
+  base = os.path.basename(defn['source_file'])
+  if defn['is_faust']:
+    return f'#include "faust_{base.replace(".dsp", ".cpp")}"'   # build/faust_<type>.cpp
   return f'#include "{base.replace(".cpp", ".h")}"'
 
 def emit(graph, registry, order, inputs_of, instances, out_path, graph_src_path):
-  class_name = classify(graph['name'])
+  class_name = graph['name']   # snake_case pipeline class name
   blocks = {b['instance']: b for b in graph['blocks']}
 
-  # Collect all signal names
   signals = set()
   for name, _ in graph['inputs']:
     signals.add(name)
@@ -264,12 +288,9 @@ def emit(graph, registry, order, inputs_of, instances, out_path, graph_src_path)
   L('  static constexpr int kChunkSize = CHUNK_SIZE;')
   L('')
 
-  # Constructor: initialize Faust wrappers (each holds a dynamically-allocated dsp).
-  # TODO: convert FaustProcessorWrapper to template so embedded target has pure static
-  # allocation. Heap is only touched at construction; not in the audio path.
   init_list = []
   for b in graph['blocks']:
-    if is_faust(b['type']):
+    if registry[b['type']]['is_faust']:
       init_list.append(f'blk_{b["instance"]}(new {b["type"]}())')
   L(f'  {class_name}()')
   if init_list:
@@ -277,7 +298,6 @@ def emit(graph, registry, order, inputs_of, instances, out_path, graph_src_path)
   L('  {}')
   L('')
 
-  # init(int sample_rate)
   L('  void init(int sample_rate) {')
   for b in graph['blocks']:
     L(f'    blk_{b["instance"]}.init(sample_rate);')
@@ -286,7 +306,6 @@ def emit(graph, registry, order, inputs_of, instances, out_path, graph_src_path)
   L('  }')
   L('')
 
-  # process_chunk(in, out, n)
   L('  void process_chunk(const float* in, float* out, int n) {')
   for name, _ in graph['inputs']:
     L(f'    std::memcpy({buf_name(name)}, in, n * sizeof(float));')
@@ -306,7 +325,6 @@ def emit(graph, registry, order, inputs_of, instances, out_path, graph_src_path)
   L('  }')
   L('')
 
-  # get_buffer(name)
   L('  const float* get_buffer(const char* name) const {')
   for sig in sorted(signals):
     L(f'    if (!std::strcmp(name, "{sig}")) return {buf_name(sig)};')
@@ -314,7 +332,6 @@ def emit(graph, registry, order, inputs_of, instances, out_path, graph_src_path)
   L('  }')
   L('')
 
-  # set_param(path, value)
   L('  void set_param(const char* path, float value) {')
   L('    const char* dot = std::strchr(path, \'.\');')
   L('    if (!dot) return;')
@@ -326,7 +343,6 @@ def emit(graph, registry, order, inputs_of, instances, out_path, graph_src_path)
   L('  }')
   L('')
 
-  # Private members
   L('private:')
   L('  // Static buffers (one per signal)')
   for sig in sorted(signals):
@@ -334,7 +350,7 @@ def emit(graph, registry, order, inputs_of, instances, out_path, graph_src_path)
   L('')
   L('  // Block instances')
   for b in graph['blocks']:
-    if is_faust(b['type']):
+    if registry[b['type']]['is_faust']:
       L(f'  FaustProcessorWrapper blk_{b["instance"]};')
     else:
       L(f'  {b["type"]} blk_{b["instance"]};')
@@ -357,20 +373,26 @@ def main():
   graph_path = sys.argv[1]
   out_path = sys.argv[2]
 
-  # Scan: shared libraries + the project folder containing the graph (for any
-  # project-private blocks). Project-local blocks override shared ones if names collide.
-  here = os.path.dirname(os.path.abspath(__file__))
-  graph_dir = os.path.dirname(os.path.abspath(graph_path))
-  block_dirs = [
-    os.path.join(here, '..', 'dsp_cpp', 'src'),
-    os.path.join(here, '..', 'dsp_faust'),
-    graph_dir,
-  ]
-  registry = scan_markers([os.path.normpath(d) for d in block_dirs])
-  print(f"Found {len(registry)} block type(s): {sorted(registry)}")
-
   with open(graph_path) as f:
     graph = parse_graph(f.read())
+
+  # Search path: graph's own directory + any declared include-dirs.
+  # include-dir paths are relative to the graph file's directory.
+  graph_dir = os.path.dirname(os.path.abspath(graph_path))
+  search_dirs = [graph_dir]
+  for d in graph['include_dirs']:
+    if os.path.isabs(d):
+      search_dirs.append(os.path.normpath(d))
+    else:
+      search_dirs.append(os.path.normpath(os.path.join(graph_dir, d)))
+
+  # Build registry: targeted lookup per unique type (no scan-all).
+  registry = {}
+  for b in graph['blocks']:
+    t = b['type']
+    if t not in registry:
+      registry[t] = find_block(t, search_dirs)
+  print(f"Found {len(registry)} block type(s): {sorted(registry)}")
   print(f"Graph '{graph['name']}': {len(graph['blocks'])} blocks, {len(graph['connects'])} connects")
 
   order, inputs_of, instances = validate_and_sort(graph, registry)

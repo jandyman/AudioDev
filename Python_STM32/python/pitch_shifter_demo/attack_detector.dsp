@@ -1,3 +1,9 @@
+/* @block
+(define-block attack_detector
+ (inputs in)
+ (outputs trigger threshold fast_env slow_env note_ended med_env))
+*/
+
 // Attack Detector - Bass Guitar Transient Detection
 //
 // Designed for bass guitar (E1=41Hz to D4=294Hz)

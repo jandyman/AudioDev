@@ -1,5 +1,5 @@
 /* @block
-(define-block HarmonicRejector
+(define-block harmonic_rejector
  (inputs in)
  (outputs x_filt_0 x_filt_1 x_filt_2 env_filt_0 env_filt_1 env_filt_2 tall_peak_0 tall_peak_1 tall_peak_2 mu_0 mu_1 mu_2 sigma_0 sigma_1 sigma_2 cleanness_0 cleanness_1 cleanness_2 amplitude_0 amplitude_1 amplitude_2 selected_filter P sigma_sel qualified)
  (params (fc_0 :default 60) (fc_1 :default 120) (fc_2 :default 240) (peak_frac :default 0.65) (ema_tau_intervals :default 4) (cleanness_thresh :default 0.5) (amp_thresh :default 0.15) (env_fc_hz :default 30) (min_peak_distance_ms :default 1)))
@@ -15,17 +15,17 @@
 #endif
 
 // Out-of-class definitions for ODR-use (pybind def_readonly_static needs these)
-const int HarmonicRejector::NUM_FILTERS;
-const int HarmonicRejector::NUM_OUTPUTS;
-const int HarmonicRejector::MIN_INTERVALS_FOR_QUALIFIED;
+const int harmonic_rejector::NUM_FILTERS;
+const int harmonic_rejector::NUM_OUTPUTS;
+const int harmonic_rejector::MIN_INTERVALS_FOR_QUALIFIED;
 
-static const float DEFAULT_FCS[HarmonicRejector::NUM_FILTERS] = { 60.0f, 120.0f, 240.0f };
+static const float DEFAULT_FCS[harmonic_rejector::NUM_FILTERS] = { 60.0f, 120.0f, 240.0f };
 
 // ============================================================
 // Constructor / init
 // ============================================================
 
-HarmonicRejector::HarmonicRejector() {
+harmonic_rejector::harmonic_rejector() {
     memset(this, 0, sizeof(*this));
     for (int k = 0; k < NUM_FILTERS; k++) filters_[k].fc = DEFAULT_FCS[k];
     peak_frac_           = 0.65f;
@@ -37,7 +37,7 @@ HarmonicRejector::HarmonicRejector() {
     sample_rate_         = 48000.0f;
 }
 
-void HarmonicRejector::init(int sample_rate) {
+void harmonic_rejector::init(int sample_rate) {
     sample_rate_  = (float)sample_rate;
     sample_index_ = 0;
     env_raw_      = 0.0f;
@@ -64,7 +64,7 @@ void HarmonicRejector::init(int sample_rate) {
 }
 
 // 2nd-order Butterworth LPF (RBJ cookbook, Q = 1/sqrt(2))
-void HarmonicRejector::update_filter_coefs(int k) {
+void harmonic_rejector::update_filter_coefs(int k) {
     FilterState& f = filters_[k];
     if (f.fc <= 0.0f || sample_rate_ <= 0.0f) return;
 
@@ -88,7 +88,7 @@ void HarmonicRejector::update_filter_coefs(int k) {
     f.a2 = a2u / a0u;
 }
 
-void HarmonicRejector::update_envelope_coef() {
+void harmonic_rejector::update_envelope_coef() {
     if (sample_rate_ <= 0.0f) return;
     // One-pole: alpha = 1 - exp(-2*pi*fc/fs)
     float w = 2.0f * (float)M_PI * env_fc_hz_ / sample_rate_;
@@ -97,12 +97,12 @@ void HarmonicRejector::update_envelope_coef() {
     if (env_alpha_ > 1.0f) env_alpha_ = 1.0f;
 }
 
-void HarmonicRejector::update_ema_alpha() {
+void harmonic_rejector::update_ema_alpha() {
     if (ema_tau_intervals_ <= 0.5f) ema_tau_intervals_ = 0.5f;
     ema_alpha_ = 1.0f - expf(-1.0f / ema_tau_intervals_);
 }
 
-void HarmonicRejector::update_min_peak_distance_samples() {
+void harmonic_rejector::update_min_peak_distance_samples() {
     min_peak_distance_samples_ = (int)(min_peak_distance_ms_ * sample_rate_ / 1000.0f);
     if (min_peak_distance_samples_ < 1) min_peak_distance_samples_ = 1;
 }
@@ -111,7 +111,7 @@ void HarmonicRejector::update_min_peak_distance_samples() {
 // process()
 // ============================================================
 
-void HarmonicRejector::process(const float* const* inputs, float* const* outputs, int num_samples) {
+void harmonic_rejector::process(const float* const* inputs, float* const* outputs, int num_samples) {
     const int N = NUM_FILTERS;
     const float EPS = 1e-6f;
 
@@ -218,7 +218,7 @@ void HarmonicRejector::process(const float* const* inputs, float* const* outputs
 // Parameters
 // ============================================================
 
-void HarmonicRejector::set_param(const string& name, float value) {
+void harmonic_rejector::set_param(const string& name, float value) {
     if (name == "fc_0") { filters_[0].fc = value; update_filter_coefs(0); }
     else if (name == "fc_1" && NUM_FILTERS > 1) { filters_[1].fc = value; update_filter_coefs(1); }
     else if (name == "fc_2" && NUM_FILTERS > 2) { filters_[2].fc = value; update_filter_coefs(2); }
@@ -230,7 +230,7 @@ void HarmonicRejector::set_param(const string& name, float value) {
     else if (name == "min_peak_distance_ms") { min_peak_distance_ms_ = value; update_min_peak_distance_samples(); }
 }
 
-float HarmonicRejector::get_param(const string& name) const {
+float harmonic_rejector::get_param(const string& name) const {
     if (name == "fc_0") return filters_[0].fc;
     if (name == "fc_1" && NUM_FILTERS > 1) return filters_[1].fc;
     if (name == "fc_2" && NUM_FILTERS > 2) return filters_[2].fc;
@@ -243,7 +243,7 @@ float HarmonicRejector::get_param(const string& name) const {
     return 0.0f;
 }
 
-vector<string> HarmonicRejector::get_param_names() const {
+vector<string> harmonic_rejector::get_param_names() const {
     return {"fc_0", "fc_1", "fc_2",
             "peak_frac", "ema_tau_intervals",
             "cleanness_thresh", "amp_thresh",

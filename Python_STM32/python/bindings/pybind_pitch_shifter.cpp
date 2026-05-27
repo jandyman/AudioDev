@@ -1,4 +1,4 @@
-// Pybind wrapper for the generated PitchShifter pipeline.
+// Pybind wrapper for the generated pitch_shifter pipeline.
 #include "pitch_shifter.h"
 
 #include <pybind11/pybind11.h>
@@ -13,16 +13,16 @@ namespace py = pybind11;
 PYBIND11_MODULE(pybind_pitch_shifter, m) {
   m.doc() = "Generated pitch-shifter pipeline (one process_chunk + buffer probes)";
 
-  py::class_<PitchShifter>(m, "PitchShifter")
+  py::class_<pitch_shifter>(m, "pitch_shifter")
     .def(py::init<>())
-    .def("init", &PitchShifter::init, py::arg("sample_rate"))
+    .def("init", &pitch_shifter::init, py::arg("sample_rate"))
 
     .def("process_chunk",
-         [](PitchShifter& self,
+         [](pitch_shifter& self,
             py::array_t<float, py::array::c_style | py::array::forcecast> in_arr)
          -> py::array_t<float> {
            int n = (int)in_arr.size();
-           if (n > PitchShifter::kChunkSize)
+           if (n > pitch_shifter::kChunkSize)
              throw std::runtime_error("input length exceeds CHUNK_SIZE");
            py::array_t<float> out_arr(n);
            self.process_chunk(in_arr.data(), out_arr.mutable_data(), n);
@@ -32,7 +32,7 @@ PYBIND11_MODULE(pybind_pitch_shifter, m) {
          py::arg("input"))
 
     .def("get_buffer",
-         [](PitchShifter& self, const std::string& name, int n) -> py::array_t<float> {
+         [](pitch_shifter& self, const std::string& name, int n) -> py::array_t<float> {
            const float* p = self.get_buffer(name.c_str());
            if (!p) throw std::runtime_error("unknown buffer: " + name);
            // Non-owning view into the static buffer; valid until the next
@@ -43,8 +43,8 @@ PYBIND11_MODULE(pybind_pitch_shifter, m) {
          "View is valid until the next process_chunk() call.",
          py::arg("name"), py::arg("n"))
 
-    .def("set_param", &PitchShifter::set_param, py::arg("path"), py::arg("value"))
+    .def("set_param", &pitch_shifter::set_param, py::arg("path"), py::arg("value"))
 
     .def_property_readonly_static("CHUNK_SIZE",
-         [](py::object) { return PitchShifter::kChunkSize; });
+         [](py::object) { return pitch_shifter::kChunkSize; });
 }

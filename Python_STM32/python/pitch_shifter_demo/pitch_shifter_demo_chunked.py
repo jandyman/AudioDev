@@ -1,7 +1,7 @@
 """
 Chunked-operation verification.
 
-Runs the generated PitchShifter twice on the same audio:
+Runs the generated pitch_shifter twice on the same audio:
   1) file-sized — one process_chunk call covers the whole file
   2) chunked   — many process_chunk calls of small batches, via Spooler
 
@@ -17,7 +17,7 @@ import scipy.io.wavfile as wav
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'build'))
 
-from build.pybind_pitch_shifter import PitchShifter
+from build.pybind_pitch_shifter import pitch_shifter
 from lib.spooler import Spooler
 
 PROBES = [
@@ -71,9 +71,9 @@ def main(pitch_ratio=0.5, lpf_fc_hz=10000.0, chunk=512):
   N = len(audio_in)
   print(f"Audio: {N} samples @ {sample_rate} Hz ({N/sample_rate:.2f} s)\n")
 
-  ps = PitchShifter()
-  if N > PitchShifter.CHUNK_SIZE:
-    raise RuntimeError(f"file size {N} > CHUNK_SIZE {PitchShifter.CHUNK_SIZE}")
+  ps = pitch_shifter()
+  if N > pitch_shifter.CHUNK_SIZE:
+    raise RuntimeError(f"file size {N} > CHUNK_SIZE {pitch_shifter.CHUNK_SIZE}")
 
   # Run 1: file-sized
   init_pipeline(ps, sample_rate, pitch_ratio, lpf_fc_hz)

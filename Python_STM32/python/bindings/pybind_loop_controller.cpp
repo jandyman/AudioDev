@@ -1,18 +1,18 @@
-#include "../../dsp_cpp/include/loop_controller.h"
+#include "../pitch_shifter_demo/loop_controller.h"
 #include "audio_support.h"
 
 PYBIND11_MODULE(pybind_loop_controller, m) {
   m.doc() = "Loop Controller: pitch-shift loop point detection and crossfade management";
 
-  py::class_<LoopController>(m, "LoopController")
+  py::class_<loop_controller>(m, "loop_controller")
     .def(py::init<>())
 
-    .def("init", &LoopController::init,
+    .def("init", &loop_controller::init,
          "Initialize with sample rate",
          py::arg("sample_rate"))
 
     .def("process",
-         [](LoopController& self, py::list inputs) -> py::list {
+         [](loop_controller& self, py::list inputs) -> py::list {
            auto inputs_vec = np_list_to_vec_of_vec<float>(inputs);
            int n = inputs_vec.empty() ? 0 : (int)inputs_vec[0].size();
            int num_outputs = self.get_num_outputs();
@@ -34,13 +34,13 @@ PYBIND11_MODULE(pybind_loop_controller, m) {
          "          latency_ms, loop_event, active_tap, bailout_event, gated_event]",
          py::arg("inputs"))
 
-    .def("get_num_inputs",  &LoopController::get_num_inputs)
-    .def("get_num_outputs", &LoopController::get_num_outputs)
-    .def("get_sample_rate", &LoopController::get_sample_rate)
+    .def("get_num_inputs",  &loop_controller::get_num_inputs)
+    .def("get_num_outputs", &loop_controller::get_num_outputs)
+    .def("get_sample_rate", &loop_controller::get_sample_rate)
 
-    .def("set_param", &LoopController::set_param,
+    .def("set_param", &loop_controller::set_param,
          py::arg("name"), py::arg("value"))
-    .def("get_param", &LoopController::get_param,
+    .def("get_param", &loop_controller::get_param,
          py::arg("name"))
-    .def("get_param_names", &LoopController::get_param_names);
+    .def("get_param_names", &loop_controller::get_param_names);
 }

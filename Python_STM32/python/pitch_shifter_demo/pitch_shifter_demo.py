@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'build'))
 
-from build.pybind_pitch_shifter import PitchShifter
+from build.pybind_pitch_shifter import pitch_shifter
 
 def run_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0):
   print("Pitch Shifter (generated pipeline)")
@@ -37,10 +37,10 @@ def run_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0):
   print(f"\nInput: {os.path.basename(input_path)}")
   print(f"  Sample rate: {sample_rate} Hz,  Duration: {num_samples/sample_rate:.2f} s,  Samples: {num_samples}")
 
-  if num_samples > PitchShifter.CHUNK_SIZE:
-    raise RuntimeError(f"file length {num_samples} exceeds CHUNK_SIZE {PitchShifter.CHUNK_SIZE}; rebuild with larger CHUNK_SIZE")
+  if num_samples > pitch_shifter.CHUNK_SIZE:
+    raise RuntimeError(f"file length {num_samples} exceeds CHUNK_SIZE {pitch_shifter.CHUNK_SIZE}; rebuild with larger CHUNK_SIZE")
 
-  ps = PitchShifter()
+  ps = pitch_shifter()
   ps.init(sample_rate)
   ps.set_param('lpf.fc', lpf_fc_hz)
   ps.set_param('lc.pitch_ratio', pitch_ratio)

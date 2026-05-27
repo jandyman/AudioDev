@@ -6,7 +6,7 @@
 using std::vector;
 using std::string;
 
-// LoopController — Pitch Shift Loop Point Detection and Crossfade Management
+// loop_controller — Pitch Shift Loop Point Detection and Crossfade Management
 //
 // Owns the delay ramp for both taps. Receives ZC impulses from the ZC Detector
 // and attack impulses from the Attack Detector, and outputs the delay times and
@@ -35,7 +35,7 @@ using std::string;
 //
 // Parameters: pitch_ratio (adjustable at runtime; flushes ZC history on change)
 
-class LoopController {
+class loop_controller {
 public:
     // ------------------------------------------------------------------
     // Constants
@@ -66,7 +66,7 @@ public:
     // ------------------------------------------------------------------
     // Public interface
     // ------------------------------------------------------------------
-    LoopController();
+    loop_controller();
 
     void init(int sample_rate);
     void set_pitch_ratio(float ratio);

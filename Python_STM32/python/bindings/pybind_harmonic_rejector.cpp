@@ -1,18 +1,18 @@
-#include "../../dsp_cpp/include/harmonic_rejector.h"
+#include "../pitch_shifter_demo/harmonic_rejector.h"
 #include "audio_support.h"
 
 PYBIND11_MODULE(pybind_harmonic_rejector, m) {
   m.doc() = "Harmonic Rejector: multi-LPF bank with cleanness selector for period estimation";
 
-  py::class_<HarmonicRejector>(m, "HarmonicRejector")
+  py::class_<harmonic_rejector>(m, "harmonic_rejector")
     .def(py::init<>())
 
-    .def("init", &HarmonicRejector::init,
+    .def("init", &harmonic_rejector::init,
          "Initialize with sample rate",
          py::arg("sample_rate"))
 
     .def("process",
-         [](HarmonicRejector& self, py::list inputs) -> py::list {
+         [](harmonic_rejector& self, py::list inputs) -> py::list {
            auto inputs_vec = np_list_to_vec_of_vec<float>(inputs);
            int n = inputs_vec.empty() ? 0 : (int)inputs_vec[0].size();
            int num_outputs = self.get_num_outputs();
@@ -43,16 +43,16 @@ PYBIND11_MODULE(pybind_harmonic_rejector, m) {
          "  7*N+3 : qualified (0/1)",
          py::arg("inputs"))
 
-    .def_readonly_static("NUM_FILTERS", &HarmonicRejector::NUM_FILTERS)
-    .def_readonly_static("NUM_OUTPUTS", &HarmonicRejector::NUM_OUTPUTS)
+    .def_readonly_static("NUM_FILTERS", &harmonic_rejector::NUM_FILTERS)
+    .def_readonly_static("NUM_OUTPUTS", &harmonic_rejector::NUM_OUTPUTS)
 
-    .def("get_num_inputs",  &HarmonicRejector::get_num_inputs)
-    .def("get_num_outputs", &HarmonicRejector::get_num_outputs)
-    .def("get_sample_rate", &HarmonicRejector::get_sample_rate)
+    .def("get_num_inputs",  &harmonic_rejector::get_num_inputs)
+    .def("get_num_outputs", &harmonic_rejector::get_num_outputs)
+    .def("get_sample_rate", &harmonic_rejector::get_sample_rate)
 
-    .def("set_param", &HarmonicRejector::set_param,
+    .def("set_param", &harmonic_rejector::set_param,
          py::arg("name"), py::arg("value"))
-    .def("get_param", &HarmonicRejector::get_param,
+    .def("get_param", &harmonic_rejector::get_param,
          py::arg("name"))
-    .def("get_param_names", &HarmonicRejector::get_param_names);
+    .def("get_param_names", &harmonic_rejector::get_param_names);
 }

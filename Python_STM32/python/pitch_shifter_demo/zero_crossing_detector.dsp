@@ -1,3 +1,9 @@
+/* @block
+(define-block zero_crossing_detector
+ (inputs in)
+ (outputs zc_out amp_env raw_zc zc_deriv))
+*/
+
 // Zero Crossing Detector - Qualified Positive-Going Zero Crossings
 //
 // Detects positive-going zero crossings in the input signal, filtered

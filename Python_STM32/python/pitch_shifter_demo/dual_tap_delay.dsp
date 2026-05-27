@@ -1,3 +1,9 @@
+/* @block
+(define-block dual_tap_delay
+ (inputs audio_in delay1_ms delay2_ms)
+ (outputs tap1 tap2))
+*/
+
 // Dual Tap Delay - Faust Implementation
 // Single shared delay buffer with two independent read taps
 // Uses 4th-order Lagrange interpolation for smooth modulation

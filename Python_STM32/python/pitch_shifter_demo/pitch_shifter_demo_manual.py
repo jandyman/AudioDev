@@ -33,13 +33,13 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'build'))
 
-from build.pybind_faust_input_lpf import FaustInputLpf
-from build.pybind_faust_zero_crossing_detector import FaustZeroCrossingDetector
-from build.pybind_faust_attack_detector import FaustAttackDetector
-from build.pybind_harmonic_rejector import HarmonicRejector
-from build.pybind_loop_controller import LoopController
-from build.pybind_faust_dual_tap_delay import FaustDualTapDelay
-from build.pybind_mixer2 import Mixer2
+from build.pybind_faust_input_lpf import input_lpf
+from build.pybind_faust_zero_crossing_detector import zero_crossing_detector
+from build.pybind_faust_attack_detector import attack_detector
+from build.pybind_harmonic_rejector import harmonic_rejector
+from build.pybind_loop_controller import loop_controller
+from build.pybind_faust_dual_tap_delay import dual_tap_delay
+from build.pybind_mixer2 import mixer2
 
 
 def run_pitch_shifter_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0, bypass_attack=True):
@@ -73,7 +73,7 @@ def run_pitch_shifter_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0, bypass_attack=Tru
     # All downstream stages consume audio_in (the post-LPF signal),
     # which is also what gets plotted as "Input".
     # ---------------------------------------------------------------
-    lpf = FaustInputLpf()
+    lpf = input_lpf()
     lpf.init(sample_rate)
     lpf.set_param("fc", lpf_fc_hz)
     audio_in = lpf.process([audio_raw])[0]
@@ -81,7 +81,7 @@ def run_pitch_shifter_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0, bypass_attack=Tru
     # ---------------------------------------------------------------
     # Stage 1: ZC Detector — full file, no state dependency on pitch
     # ---------------------------------------------------------------
-    zc_det = FaustZeroCrossingDetector()
+    zc_det = zero_crossing_detector()
     zc_det.init(sample_rate)
     zc_impulse = zc_det.process([audio_in])[0]
     print(f"\nZC Detector:    {int(np.sum(zc_impulse > 0.5))} qualified zero crossings")
@@ -91,7 +91,7 @@ def run_pitch_shifter_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0, bypass_attack=Tru
     # Detector is kept wired so we can re-enable it with one flag,
     # but its output is zeroed when bypass_attack is True (loop-first dev).
     # ---------------------------------------------------------------
-    atk_det = FaustAttackDetector()
+    atk_det = attack_detector()
     atk_det.init(sample_rate)
     attack_impulse = atk_det.process([audio_in])[0]
     raw_attack_count = int(np.sum(attack_impulse > 0.5))
@@ -109,10 +109,10 @@ def run_pitch_shifter_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0, bypass_attack=Tru
     # when qualified == 0 (during the bank's EMA warm-up, silence, etc.).
     # Full-buffer call here; outputs are sliced per chunk into the LC loop.
     # ---------------------------------------------------------------
-    hr = HarmonicRejector()
+    hr = harmonic_rejector()
     hr.init(sample_rate)
     hr_outs = hr.process([audio_in.astype(np.float32)])
-    N_HR = HarmonicRejector.NUM_FILTERS
+    N_HR = harmonic_rejector.NUM_FILTERS
     selected_filter = hr_outs[7 * N_HR + 0]
     P_samples       = hr_outs[7 * N_HR + 1]
     sigma_samples   = hr_outs[7 * N_HR + 2]
@@ -128,14 +128,14 @@ def run_pitch_shifter_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0, bypass_attack=Tru
     # The delay control signals must be applied sample-accurately to
     # the delay line, so both modules advance together each chunk.
     # ---------------------------------------------------------------
-    lc = LoopController()
+    lc = loop_controller()
     lc.init(sample_rate)
     lc.set_param("pitch_ratio", pitch_ratio)
 
-    dtd = FaustDualTapDelay()
+    dtd = dual_tap_delay()
     dtd.init(sample_rate)
 
-    mixer = Mixer2()
+    mixer = mixer2()
     mixer.init(sample_rate)
 
     chunk = 512

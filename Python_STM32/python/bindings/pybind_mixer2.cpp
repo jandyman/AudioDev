@@ -1,14 +1,14 @@
-#include "../../dsp_cpp/include/mixer2.h"
+#include "../pitch_shifter_demo/mixer2.h"
 #include "audio_support.h"
 
 PYBIND11_MODULE(pybind_mixer2, m) {
-  m.doc() = "Mixer2: two-input crossfade mixer — out = in1*gain1 + in2*gain2";
+  m.doc() = "mixer2: two-input crossfade mixer — out = in1*gain1 + in2*gain2";
 
-  py::class_<Mixer2>(m, "Mixer2")
+  py::class_<mixer2>(m, "mixer2")
     .def(py::init<>())
-    .def("init", &Mixer2::init, py::arg("sample_rate"))
+    .def("init", &mixer2::init, py::arg("sample_rate"))
     .def("process",
-         [](Mixer2& self, py::list inputs) -> py::list {
+         [](mixer2& self, py::list inputs) -> py::list {
            auto inputs_vec = np_list_to_vec_of_vec<float>(inputs);
            int n = inputs_vec.empty() ? 0 : (int)inputs_vec[0].size();
            int num_outputs = self.get_num_outputs();
@@ -24,10 +24,10 @@ PYBIND11_MODULE(pybind_mixer2, m) {
          },
          "inputs: [in1, in2, gain1, gain2]  outputs: [out]",
          py::arg("inputs"))
-    .def("get_num_inputs",  &Mixer2::get_num_inputs)
-    .def("get_num_outputs", &Mixer2::get_num_outputs)
-    .def("get_sample_rate", &Mixer2::get_sample_rate)
-    .def("set_param", &Mixer2::set_param, py::arg("name"), py::arg("value"))
-    .def("get_param", &Mixer2::get_param, py::arg("name"))
-    .def("get_param_names", &Mixer2::get_param_names);
+    .def("get_num_inputs",  &mixer2::get_num_inputs)
+    .def("get_num_outputs", &mixer2::get_num_outputs)
+    .def("get_sample_rate", &mixer2::get_sample_rate)
+    .def("set_param", &mixer2::set_param, py::arg("name"), py::arg("value"))
+    .def("get_param", &mixer2::get_param, py::arg("name"))
+    .def("get_param_names", &mixer2::get_param_names);
 }

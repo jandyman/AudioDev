@@ -1,3 +1,10 @@
+/* @block
+(define-block input_lpf
+ (inputs in)
+ (outputs out)
+ (params (fc :default 10000)))
+*/
+
 // Input low-pass filter for the pitch shifter pipeline.
 //
 // 2nd-order Butterworth at 10 kHz cutoff. Sits ahead of all detectors

@@ -1,5 +1,5 @@
 /* @block
-(define-block LoopController
+(define-block loop_controller
  (inputs zc_impulse attack_impulse P_samples sigma_samples qualified)
  (outputs tap1_delay_ms tap2_delay_ms gain1 gain2 latency_ms loop_event active_tap bailout_event gated_event)
  (params (pitch_ratio :default 0.5)))
@@ -14,7 +14,7 @@
 // Constructor / init
 // ============================================================
 
-LoopController::LoopController() {
+loop_controller::loop_controller() {
     memset(this, 0, sizeof(*this));
     pitch_ratio_ = 0.5f;
     active_tap_  = 0;
@@ -22,7 +22,7 @@ LoopController::LoopController() {
     cf_gain_[1]  = 0.0f;
 }
 
-void LoopController::init(int sample_rate) {
+void loop_controller::init(int sample_rate) {
     sample_rate_  = (float)sample_rate;
     sample_index_ = 0;
 
@@ -41,7 +41,7 @@ void LoopController::init(int sample_rate) {
     set_pitch_ratio(pitch_ratio_);
 }
 
-void LoopController::set_pitch_ratio(float ratio) {
+void loop_controller::set_pitch_ratio(float ratio) {
     // Clamp to a safe range (must be < 1 for downward pitch shift)
     pitch_ratio_ = std::max(0.1f, std::min(ratio, 0.99f));
     dd_          = 1.0f - pitch_ratio_;
@@ -50,7 +50,7 @@ void LoopController::set_pitch_ratio(float ratio) {
     flush_zc_history();
 }
 
-void LoopController::update_derived_constants() {
+void loop_controller::update_derived_constants() {
     lower_threshold_    = LOWER_THRESHOLD_MS * sample_rate_ / 1000.0f;
     upper_threshold_    = UPPER_THRESHOLD_MS * sample_rate_ / 1000.0f;
 
@@ -67,7 +67,7 @@ void LoopController::update_derived_constants() {
 // process() — buffer loop, calls compute() per sample
 // ============================================================
 
-void LoopController::process(const float* const* inputs, float* const* outputs, int n) {
+void loop_controller::process(const float* const* inputs, float* const* outputs, int n) {
     for (int i = 0; i < n; i++) {
         compute(inputs[0][i], inputs[1][i],
                 inputs[2][i], inputs[3][i], inputs[4][i],
@@ -93,7 +93,7 @@ void LoopController::process(const float* const* inputs, float* const* outputs, 
 //   8. Write outputs.
 // ============================================================
 
-void LoopController::compute(float zc_impulse, float attack_impulse,
+void loop_controller::compute(float zc_impulse, float attack_impulse,
                               float P_samples, float sigma_samples, float qualified,
                               float& tap1_delay_ms, float& tap2_delay_ms,
                               float& gain1, float& gain2,
@@ -268,29 +268,29 @@ void LoopController::compute(float zc_impulse, float attack_impulse,
 // Ring buffer helpers
 // ============================================================
 
-void LoopController::add_zc_record(int32_t at) {
+void loop_controller::add_zc_record(int32_t at) {
     zc_history_[zc_head_] = at;
     zc_head_ = (zc_head_ + 1) % ZC_HISTORY_SIZE;
     if (zc_count_ < ZC_HISTORY_SIZE) zc_count_++;
 }
 
-void LoopController::pop_oldest() {
+void loop_controller::pop_oldest() {
     if (zc_count_ > 0) zc_count_--;
 }
 
-void LoopController::flush_zc_history() {
+void loop_controller::flush_zc_history() {
     zc_head_  = 0;
     zc_count_ = 0;
 }
 
-bool LoopController::peek_oldest(int32_t& out) const {
+bool loop_controller::peek_oldest(int32_t& out) const {
     if (zc_count_ == 0) return false;
     int idx = (zc_head_ - zc_count_ + ZC_HISTORY_SIZE) % ZC_HISTORY_SIZE;
     out = zc_history_[idx];
     return true;
 }
 
-void LoopController::start_crossfade(float new_delay_override, int cf_duration) {
+void loop_controller::start_crossfade(float new_delay_override, int cf_duration) {
     int incoming = 1 - active_tap_;
 
     if (new_delay_override >= 0.0f) {
@@ -319,17 +319,17 @@ void LoopController::start_crossfade(float new_delay_override, int cf_duration) 
 // Parameters
 // ============================================================
 
-void LoopController::set_param(const string& name, float value) {
+void loop_controller::set_param(const string& name, float value) {
     if (name == "pitch_ratio") {
         set_pitch_ratio(value);
     }
 }
 
-float LoopController::get_param(const string& name) const {
+float loop_controller::get_param(const string& name) const {
     if (name == "pitch_ratio") return pitch_ratio_;
     return 0.0f;
 }
 
-vector<string> LoopController::get_param_names() const {
+vector<string> loop_controller::get_param_names() const {
     return {"pitch_ratio"};
 }

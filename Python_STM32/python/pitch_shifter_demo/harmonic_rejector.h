@@ -6,7 +6,7 @@
 using std::vector;
 using std::string;
 
-// HarmonicRejector — multi-filter LPF bank with cleanness scoring and a
+// harmonic_rejector — multi-filter LPF bank with cleanness scoring and a
 // selector that outputs a trusted period estimate (P) for the loop controller.
 //
 // See "Harmonic rejection" in Pitch Shifter concept.md for the design rationale.
@@ -48,7 +48,7 @@ using std::string;
 //   env_fc_hz                 envelope follower cutoff (Hz)
 //   min_peak_distance_ms      minimum spacing between consecutive peaks (ms)
 
-class HarmonicRejector {
+class harmonic_rejector {
 public:
     static const int NUM_FILTERS = 3;
     static const int NUM_OUTPUTS = 7 * NUM_FILTERS + 4;
@@ -58,7 +58,7 @@ public:
     // mu/sigma from EMA warmup.
     static const int MIN_INTERVALS_FOR_QUALIFIED = 3;
 
-    HarmonicRejector();
+    harmonic_rejector();
 
     void init(int sample_rate);
 

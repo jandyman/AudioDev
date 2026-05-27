@@ -3,17 +3,19 @@
 # Run from Python_STM32/python/. Outputs (generated cpp + .so) go to build/.
 #
 # Usage:
-#   make -f faust.make DSP=attack_detector
-#   make -f faust.make DSP=dual_tap_delay
-#   make -f faust.make DSP=input_lpf
-#   make -f faust.make DSP=zero_crossing_detector
+#   make -f faust.make DSP=attack_detector DSP_LIB_DIR=pitch_shifter_demo
+#   make -f faust.make DSP=dual_tap_delay  DSP_LIB_DIR=pitch_shifter_demo
+#   make -f faust.make DSP=input_lpf       DSP_LIB_DIR=pitch_shifter_demo
+#   make -f faust.make DSP=zero_crossing_detector DSP_LIB_DIR=pitch_shifter_demo
+#
+# DSP_LIB_DIR defaults to ../dsp_faust for backwards compatibility.
 #
 # This will:
 #   1. Run faust compiler: .dsp -> build/faust_*.cpp
 #   2. Generate pybind11 binding from template -> build/pybind_faust_*.cpp
 #   3. Compile to build/pybind_faust_*.so Python module
 
-DSP_LIB_DIR  = ../dsp_faust
+DSP_LIB_DIR ?= ../dsp_faust
 BINDINGS_DIR = bindings
 OUTDIR       = build
 TEMPLATE = $(BINDINGS_DIR)/pybind_faust_module.cpp.template
@@ -24,9 +26,9 @@ FAUST_CPP   = $(OUTDIR)/$(FAUST_BASE)
 BINDING_CPP = $(OUTDIR)/pybind_faust_$(DSP).cpp
 MODULE_NAME = pybind_faust_$(DSP)
 
-FAUST_CLASS = $(shell echo $(DSP) | python3 -c "import sys; s=sys.stdin.read().strip(); print('Faust' + ''.join(w.capitalize() for w in s.split('_')))")
+FAUST_CLASS = $(DSP)
 
-INCLUDE := $(shell python3 -m pybind11 --includes) -I$(BINDINGS_DIR) -I$(DSP_LIB_DIR) -I$(OUTDIR)
+INCLUDE := $(shell python3 -m pybind11 --includes) -I$(BINDINGS_DIR) -I../dsp_faust -I$(OUTDIR)
 OPT = -O2
 FLAG := -g $(OPT) -Wall -shared -std=c++17 -undefined dynamic_lookup -fPIC
 SUFFIX := $(shell python3-config --extension-suffix)
