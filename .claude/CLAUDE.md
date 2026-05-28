@@ -2,6 +2,16 @@
 
 Cross-project configuration for audio development work.
 
+## C++ Coding Style
+
+- **1TBS braces** — opening brace on the same line for functions, structs, classes, control blocks. No K&R function-definition exception.
+- **2-space indent** — no tabs, no 4-space indent.
+- **snake_case** — variables, functions, file names. Well-known domain acronyms (`dma`, `sai`, `pll`, `i2s`) stay lowercase as-is.
+- **Conserve vertical space** — blank lines between logical steps, not between every line. Tightly related statements stay contiguous.
+- **Align trailing `//` comments** vertically when a group of them appears together.
+
+Full reference: `Daisy_Claude/docs/coding_standards.md`.
+
 ## Python Environment
 
 Python scripts are always run from **PyCharm**, which is configured to use the `scipy` conda environment directly. Do not add conda activation steps to scripts and do not generate CLI arguments — PyCharm runs scripts as-is, and configurable parameters live as named variables at the bottom of the script.

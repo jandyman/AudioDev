@@ -21,6 +21,7 @@
 #include "clock.h"
 #include "gpio.h"
 #include "pitch_shifter_audio.h"
+#include "rtt_audio.h"
 #include "sai1.h"
 #include "software_timer.h"
 #include "systick.h"
@@ -40,6 +41,7 @@ extern "C" int main(void) {
   gpio_write(LED_USER_PORT, LED_USER_PIN, false);
 
   systick_init();
+  rtt_audio_init();
   pitch_shifter_audio_init(48000);
 
   if (!configure_sai1_clock()) {
@@ -63,6 +65,7 @@ extern "C" int main(void) {
   SoftwareTimer led_timer(kLedBlinkHalfPeriodMs);
 
   for (;;) {
+    rtt_audio_poll();
     if (led_timer.expired()) {
       gpio_toggle(LED_USER_PORT, LED_USER_PIN);
     }

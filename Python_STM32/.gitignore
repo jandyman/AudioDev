@@ -1,7 +1,9 @@
 # Firmware build artifacts
 firmware/seed_h750/build/
+firmware/pitch_shifter/build/
 firmware/dsp_cpp/src/*.o
 firmware/dsp_cpp/src/*.d
+firmware/python/
 
 # Python build outputs (generated cpp + binaries — makefiles live one level up at python/*.make)
 python/build/

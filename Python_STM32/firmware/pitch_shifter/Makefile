@@ -40,7 +40,7 @@ INCLUDES := \
 # ----- flags -----
 CPU      := -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard
 DEFINES  := -DSTM32H750xx -DHSE_VALUE=16000000 -DSEGGER_RTT_MEMCPY_USE_BYTELOOP=1 \
-            -DBARE_METAL=1 -DCHUNK_SIZE=48
+            -DBARE_METAL=1 -DCHUNK_SIZE=48 -DBUFFER_SIZE_DOWN=256
 WARNINGS := -Wall -Wextra -Wshadow -Wundef
 OPT      := -Og -g3
 
@@ -79,7 +79,7 @@ LDFLAGS  := $(CPU) -nostdlib -nostartfiles \
 
 # Local sources (in src/) — object goes in build/src/
 LOCAL_C_SRCS   :=
-LOCAL_CXX_SRCS := src/audio.cpp src/pitch_shifter_audio.cpp src/main.cpp src/libstubs.cpp
+LOCAL_CXX_SRCS := src/audio.cpp src/pitch_shifter_audio.cpp src/main.cpp src/libstubs.cpp src/rtt_audio.cpp
 LOCAL_S_SRCS   :=
 
 # Platform sources (../seed_h750/src/) — objects go in build/ext/platform/
