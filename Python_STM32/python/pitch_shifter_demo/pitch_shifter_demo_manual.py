@@ -24,14 +24,15 @@ delay control signals are applied sample-accurately.
 """
 import sys
 import os
-import numpy as np
-import scipy.io.wavfile as wav
-import matplotlib
-matplotlib.use('macosx')   # native macOS backend — delivers trackpad scroll events reliably
-import matplotlib.pyplot as plt
 
+# Must precede matplotlib.pyplot — diagnostic_plot sets MPLCONFIGDIR and backend.
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'build'))
+from lib.diagnostic_plot import install_x_zoom
+
+import numpy as np
+import scipy.io.wavfile as wav
+import matplotlib.pyplot as plt
 
 from build.pybind_faust_input_lpf import input_lpf
 from build.pybind_faust_zero_crossing_detector import zero_crossing_detector
@@ -307,7 +308,7 @@ def run_pitch_shifter_demo(pitch_ratio=0.5, lpf_fc_hz=10000.0, bypass_attack=Tru
     # Scroll-wheel zoom: horizontal-only, anchored at cursor x. With sharex=True
     # on the subplots, changing one xlim propagates to all panels.
     # (Matplotlib's built-in pan tool can also constrain to x: hold 'x' while panning.)
-    _install_x_zoom(fig, x_min=0.0, x_max=t[-1])
+    install_x_zoom(fig, x_min=0.0, x_max=t[-1])
 
     plt.tight_layout(rect=[0, 0, 1, 0.97])
     plt.subplots_adjust(hspace=0.35)
@@ -330,40 +331,6 @@ def pitch_ratio_label(ratio):
         0.794: "major third down",
     }
     return labels.get(round(ratio, 3), f"ratio {ratio:.3f}")
-
-
-def _install_x_zoom(fig, x_min, x_max, base_scale=1.3):
-    """Scroll wheel -> horizontal-only zoom anchored at cursor x.
-
-    With sharex=True on the figure's axes, changing one xlim propagates.
-    Toolbar Home button resets to the original full range (we seed the
-    toolbar's navigation stack on first draw so Home has a view to return to;
-    scroll-wheel zoom otherwise leaves the stack empty).
-    """
-    def on_scroll(event):
-        ax = event.inaxes
-        if ax is None or event.xdata is None:
-            return
-        factor = (1.0 / base_scale) if event.step > 0 else base_scale
-        x = event.xdata
-        x0, x1 = ax.get_xlim()
-        new_left  = max(x - (x - x0) * factor, x_min)
-        new_right = min(x + (x1 - x) * factor, x_max)
-        if new_right - new_left < 1e-6:
-            return
-        ax.set_xlim(new_left, new_right)
-        fig.canvas.draw_idle()
-
-    fig.canvas.mpl_connect('scroll_event', on_scroll)
-
-    seeded = [False]
-    def _seed_home(_evt):
-        if seeded[0]: return
-        tb = getattr(fig.canvas, 'toolbar', None)
-        if tb is not None and hasattr(tb, 'push_current'):
-            tb.push_current()
-            seeded[0] = True
-    fig.canvas.mpl_connect('draw_event', _seed_home)
 
 
 if __name__ == "__main__":

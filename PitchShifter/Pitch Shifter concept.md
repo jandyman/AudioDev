@@ -14,7 +14,124 @@ The second, lower priority trigger is used during the sustain portion of a note.
 
 ## Attack Detector
 
-This block detects attack transients. The output is zero for any sample which does not represent an attack, and one for a sample which represents an attack detection. So it is a series of isolated impulse spikes. The output is sent to the control logic.
+This block detects attack transients in the input signal. The output is an impulse stream — zero on most samples, one on samples where an attack is detected — consumed by the Control Logic where it has top priority (overrides any in-progress looping) and triggers a near-zero-delay fade-in on the dedicated attack tap of the three-tap delay (see *Three Tap Fractional Delay Line*) so the new note's transient is captured cleanly.
+
+The detector is bass-specific. Per-cycle level variation is the dominant source of false-trigger pressure across the bass range, so the design uses three envelope followers at different time scales plus a small state machine. Two detection paths cooperate: a derivative-based **normal** path that catches new attacks, and a level-based **retrigger** path that recovers from false triggers landing on top of cycle peaks.
+
+Implementation: `Python_STM32/python/pitch_shifter_demo/attack_detector.dsp` (Faust). Offline visualisation: `attack_detector_diagnostic.py` in the same folder.
+
+### Signal flow
+
+```
+audio ─→ x² → onepole → √(·)  =  rms
+                                 ├─→ env_ar(1 ms / 10 ms)   = fast_env
+                                 ├─→ env_ar(5 ms / 50 ms)   = med_env
+                                 └─→ env_ar(50 ms / 200 ms) = slow_env
+
+note_ended  = fast_env < slow_env × end_ratio
+threshold   = note_ended ? armed_thresh : active_thresh
+raw_detect  = (fast_env − fast_env') > threshold              ← normal path
+retrigger   = fast_env > med_env × retrigger_ratio            ← retrigger path
+
+state machine: inhibit_count, did_retrigger  →  trigger
+```
+
+### Front end — RMS
+
+`rms_env(window_s, x) = onepole(x²) → √(·)`, onepole coefficient `exp(−1 / (window_s · SR))`. Default `window_s = 8 ms` — short enough to track attack envelopes, long enough to average the dominant harmonic content that contributes to level. At the bottom of the bass range the 8 ms window is shorter than the fundamental period (E1 = 41 Hz → 24 ms period), so a residual 41 Hz ripple survives into the followers; see *Known issues*.
+
+### Envelope followers
+
+Three asymmetric one-pole followers (`env_ar`) sample the RMS signal at different time constants:
+
+| Follower    | Attack | Release | Purpose                                          |
+|-------------|--------|---------|--------------------------------------------------|
+| `fast_env`  | 1 ms   | 10 ms   | Tracks transients; source of the derivative     |
+| `med_env`   | 5 ms   | 50 ms   | "Current energy" reference for the retrigger path |
+| `slow_env`  | 50 ms  | 200 ms  | Long-term reference for the note-end ratio test |
+
+`env_ar` rule per sample: if `x > prev`, attack toward `x` at coefficient `att_c = exp(−1 / (att_s · SR))`; else decay (`prev := rel_c · prev`) toward zero, *not* toward `x`. The asymmetry plus the decay-toward-zero shape makes the envelopes effectively peak-hold-ish: each cycle peak refreshes the envelope upward, and between peaks the envelope drifts down at the release rate.
+
+### Note-end detection
+
+A note has ended (or is dying) when the fast envelope drops well below the slow envelope:
+
+```
+note_ended = (fast_env < slow_env × end_ratio + ε)
+```
+
+with `end_ratio = 0.75` (fast has fallen to 75 % of slow) and `ε = 0.0001` (avoids spurious arming in silence). `note_ended` is a probe output and gates the threshold scheme below.
+
+### Adaptive threshold (two regimes)
+
+The detector uses two regimes for the normal trigger threshold:
+
+- **Armed** (during `note_ended`): expecting a new attack. Threshold scales with current energy so a quiet new attack still trips: `armed_thresh = max(armed_floor, med_env × armed_scale)`. Defaults: `armed_floor = 5 × 10⁻⁵` (floor in silence), `armed_scale = 0.003` (low — favours sensitivity).
+- **Active** (sustaining note): threshold held high so derivative spikes within a sustained cycle do not re-fire. Default `active_thresh = 0.02`.
+
+The decision quantity is the per-sample derivative of `fast_env`:
+
+```
+fast_deriv = fast_env − fast_env'      // x − x'
+raw_detect = fast_deriv > threshold
+```
+
+### Two detection paths
+
+**Normal trigger.** Fires when `raw_detect == 1` AND the inhibition counter is zero. This is the main path: a real attack is rising fast enough that the derivative clears the (armed-scaled) threshold, and we are not in the post-trigger inhibition window.
+
+**Retrigger.** Some attacks land in the middle of the inhibition window of a previous (possibly false) trigger and would be lost by the armed path alone. To catch them, the retrigger path watches absolute levels:
+
+```
+retrigger_detect = (fast_env > med_env × retrigger_ratio)
+```
+
+with `retrigger_ratio = 1.4`. If true *while inhibited*, fire — but at most once per inhibition window (governed by `did_retrigger`). The retrigger does not abort the previous crossfade; it starts a fresh one. This pattern is a recovery mechanism, not a primary path — if it fires often, the normal-path tuning needs revisiting.
+
+### State machine
+
+Two state variables: `inhibit_count` (samples remaining in the inhibition window) and `did_retrigger` (has a retrigger already fired in the current window?).
+
+Per sample:
+
+```
+can_fire        = (inhibit_count ≤ 0)
+normal_fire     = raw_detect AND can_fire
+can_retrigger   = (inhibit_count > 0) AND (NOT did_retrigger) AND retrigger_detect
+trigger         = normal_fire OR can_retrigger
+inhibit_count   = trigger ? inhibit_samples : max(0, inhibit_count − 1)
+did_retrigger   = normal_fire ? 0 : (can_retrigger ? 1 : did_retrigger)
+```
+
+Default `inhibit_time = 50 ms` (~2400 samples at 48 kHz).
+
+### Probe outputs
+
+Six signals emitted continuously, all consumed by the diagnostic harness. Output indices match `attack_detector.dsp::process`:
+
+| Idx | Output       | Type        | Meaning                                                  |
+|-----|--------------|-------------|----------------------------------------------------------|
+| 0   | `trigger`    | impulse 0/1 | Attack detection — consumed by Control Logic             |
+| 1   | `threshold`  | level       | Currently active threshold (armed or active value)       |
+| 2   | `fast_env`   | level       | 1 ms / 10 ms envelope                                    |
+| 3   | `slow_env`   | level       | 50 ms / 200 ms envelope                                  |
+| 4   | `note_ended` | flag 0/1    | Armed regime indicator                                   |
+| 5   | `med_env`    | level       | 5 ms / 50 ms envelope                                    |
+
+The diagnostic distinguishes normal vs. retrigger after the fact by inter-trigger gap (gaps shorter than `inhibit_time + 5 ms` are tagged retrigger). The firmware does not currently expose the authoritative `did_retrigger` flag as a probe — see *Known issues*.
+
+### Known issues / open work
+
+- **RMS window vs. low-E period.** The 8 ms RMS window is shorter than E1's 24 ms fundamental period. A residual ~41 Hz ripple survives into `fast_env` on very low notes, raising the floor for the active-mode threshold and limiting how quickly the detector can decide a note has ended. The planned **hold-then-release envelope** (below) is one possible fix.
+- **Shared `slow_env`.** A single follower drives the note-end ratio test. Splitting roles (one envelope for arming, another for the ratio) is on the table but not yet motivated by a concrete failure.
+- **Regime-switch behaviour at the boundary** is not currently characterised — the `fast_env < slow_env × end_ratio` crossing is a single thresholded signal with no hysteresis, and rapid toggling near the boundary has not been audited.
+- **Probe gap:** `did_retrigger` and the raw `raw_detect` / `retrigger_detect` decisions are internal to the state machine. The diagnostic infers behaviour from outputs, which is reliable for normal cases but cannot distinguish, e.g., a `retrigger_detect` that was suppressed by `did_retrigger == 1` from one that simply did not occur.
+
+### Planned: hold-then-release envelope
+
+A fourth envelope follower with a two-stage release time constant is planned, to supplement (and possibly replace) `med_env`. When the signal first crosses below the envelope estimate, a timer starts. While the timer runs, release is **slow** — bridges intra-cycle ripple at the lowest fundamental of interest (~24 ms for E1). When the timer expires, release transitions to **fast** — quickly catches note-end. The transition is gradual rather than switched to avoid zipper artifacts. Goal: reduce per-cycle envelope ripple on low notes without sacrificing note-end detection latency.
+
+Design status: concept agreed, tuned to the lowest frequency of interest (not the highest), fixed timer preferred over adaptive-from-harmonic-rejector-P (because `hr.qualified` typically goes false during the decay tail, exactly when the follower needs to be working). Implementation pending.
 
 ## Zero Crossing Detector
 
@@ -57,11 +174,16 @@ A noisier estimate naturally widens the gate. The loop controller may further wi
 
 **Derivative magnitude at crossing (not recommended).** Initial investigation showed that the derivative `x - x'` at a zero crossing does not reliably discriminate fundamental crossings from harmonic-induced spurious crossings — at a zero crossing the signal is mid-swing and all harmonics contribute to the slope simultaneously, so there is no clean separation. The ZC detector still emits the derivative as a probe output (output 4) for completeness.
 
-## Dual Fractional Delay Line
+## Three Tap Fractional Delay Line
 
-This block contains a delay buffer of a fixed size. It has three inputs: the input signal and two delay time inputs. It has two outputs corresponding to the delayed signal at each tap. The two taps share a single write buffer and operate in ping-pong fashion during crossfades.
+The target design is a delay buffer of a fixed size with **three** independent read taps sharing a single write buffer. Each tap has its own delay-time input and produces one delayed-signal output. The three taps have specific roles:
 
-Two taps are sufficient for loop-first development on sustained signals. The final pipeline will use **three taps** to handle attack-during-loop-crossfade cleanly; see the planned three-tap design in *Open Issues*.
+- **Attack tap** — dedicated to attack-triggered resets. Idle except when an attack fires and during the subsequent fade-in/out.
+- **Loop 1 / Loop 2** — the ping-pong pair for loop transitions. Exactly one is the "active" tap producing sustained output at any moment; the other parks for the next loop crossfade.
+
+Reserving the attack tap (rather than time-sharing all three) is what lets an attack-triggered crossfade overlap a loop crossfade already in progress without aborting it. See *Attack interrupting a loop crossfade* in *Open Issues* for the choreography decisions still open.
+
+**Current implementation status: dual-tap.** Per the loop-first development ordering, the current `dual_tap_delay.dsp` exposes only the two loop taps; the attack tap is added once loop tuning is settled and the attack detector is brought back into the live pipeline.
 
 ## Control Logic
 
@@ -198,11 +320,16 @@ Choose the record that produces the minimum resulting delay at fire time, which 
 
 ### Attack interrupting a loop crossfade — three-tap design (planned)
 
-If an attack is detected while a loop crossfade is already in progress, both a fade-out and a new fade-in need to happen simultaneously. With only two taps, the tap being faded out is not available for the attack reset, forcing a compromise: either abort the in-progress crossfade (audible) or delay the attack response (loses transient).
+If an attack is detected while a loop crossfade is already in progress, both an attack-tap fade-in and the loop crossfade need to proceed without aborting each other. With only two taps, the loop tap being faded out is not available for the attack reset, forcing a compromise: either abort the in-progress crossfade (audible) or delay the attack response (loses transient).
 
-**Decision:** the final pipeline will use **three delay taps** rather than two, so that the in-progress crossfade can complete its fade-out on one tap while the attack reset fades in on a third. The dual-tap implementation remains adequate for validating loop-detection behaviour in isolation (loop-first development ordering); the third tap is added once the loop logic is tuned and the attack detector is brought back into the pipeline.
+**Decision:** the final pipeline uses **three delay taps with specific roles** rather than three interchangeable taps:
+
+- **Attack tap** — dedicated. Idle most of the time; fades in fast on attack detection and fades out after the attack transient has been captured.
+- **Loop 1, Loop 2** — the ping-pong pair for loop transitions. The loop crossfade in progress when an attack fires is allowed to complete on these two taps; the attack fade-in happens in parallel on the attack tap.
+
+The dual-tap implementation remains adequate for validating loop-detection behaviour in isolation (loop-first development ordering); the attack tap is added once the loop logic is tuned and the attack detector is brought back into the live pipeline.
 
 Implementation implications:
-- `Dual Tap Delay` becomes a `Tri Tap Delay` with three independent read positions on the shared buffer.
-- The control logic tracks three tap delays and three gains instead of two, plus a "next free tap" selector (or LRU policy) for routing reset events.
-- The crossfade model generalises from "active/inactive" to "fading-out / steady / fading-in" with at most one tap in each role at any moment.
+- `dual_tap_delay` becomes a three-tap delay with three independent read positions on the shared buffer.
+- The control logic tracks three tap delays and three gains, plus the role-state of each (which loop tap is currently active, whether the attack tap is engaged).
+- The crossfade model has three concurrent activity slots: at most one loop tap fading-out, one loop tap fading-in, and the attack tap engaged. **Open:** the exact gain-summing choreography when all three are active simultaneously (e.g., should loop taps continue at unchanged gains while attack fades in over the sum, or should they attenuate to make headroom?).
