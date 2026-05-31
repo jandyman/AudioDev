@@ -4,7 +4,7 @@
 #
 # Usage:
 #   make -f faust.make DSP=attack_detector DSP_LIB_DIR=pitch_shifter_demo
-#   make -f faust.make DSP=dual_tap_delay  DSP_LIB_DIR=pitch_shifter_demo
+#   make -f faust.make DSP=triple_tap_delay DSP_LIB_DIR=pitch_shifter_demo
 #   make -f faust.make DSP=input_lpf       DSP_LIB_DIR=pitch_shifter_demo
 #   make -f faust.make DSP=zero_crossing_detector DSP_LIB_DIR=pitch_shifter_demo
 #

@@ -11,14 +11,14 @@
 #   make -f faust.make DSP=input_lpf              DSP_LIB_DIR=pitch_shifter_demo
 #   make -f faust.make DSP=zero_crossing_detector DSP_LIB_DIR=pitch_shifter_demo
 #   make -f faust.make DSP=attack_detector        DSP_LIB_DIR=pitch_shifter_demo
-#   make -f faust.make DSP=dual_tap_delay         DSP_LIB_DIR=pitch_shifter_demo
+#   make -f faust.make DSP=triple_tap_delay       DSP_LIB_DIR=pitch_shifter_demo
 
 CHUNK_SIZE ?= 524288
 
 GRAPH       = pitch_shifter_demo/pitch_shifter.graph
 HEADER      = build/generated/pitch_shifter.h
 PYBIND      = bindings/pybind_pitch_shifter.cpp
-DSP_CPP     = pitch_shifter_demo/harmonic_rejector.cpp pitch_shifter_demo/loop_controller.cpp pitch_shifter_demo/mixer2.cpp
+DSP_CPP     = pitch_shifter_demo/harmonic_rejector.cpp pitch_shifter_demo/loop_controller.cpp pitch_shifter_demo/mixer3.cpp
 COMPILER    = graph_compiler.py
 
 INCLUDE := $(shell python3 -m pybind11 --includes) -Ibindings -Ipitch_shifter_demo -I../dsp_faust -Ibuild -Ibuild/generated

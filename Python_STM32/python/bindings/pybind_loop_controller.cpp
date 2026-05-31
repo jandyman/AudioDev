@@ -30,8 +30,10 @@ PYBIND11_MODULE(pybind_loop_controller, m) {
          "inputs: [zc_impulse, attack_impulse, P_samples, sigma_samples, qualified]\n"
          "  (P, sigma, qualified come from HarmonicRejector; pass arrays of zeros\n"
          "   to disable the integer-multiple gate and use legacy newest-valid behaviour.)\n"
-         "outputs: [tap1_delay_ms, tap2_delay_ms, gain1, gain2,\n"
-         "          latency_ms, loop_event, active_tap, bailout_event, gated_event]",
+         "outputs: [tap1_delay_ms, tap2_delay_ms, tap3_delay_ms,\n"
+         "          gain1, gain2, gain3,\n"
+         "          latency_ms, loop_event, active_tap, bailout_event,\n"
+         "          gated_event, attack_event]",
          py::arg("inputs"))
 
     .def("get_num_inputs",  &loop_controller::get_num_inputs)

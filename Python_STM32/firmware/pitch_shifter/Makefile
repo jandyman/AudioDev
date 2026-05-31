@@ -93,7 +93,7 @@ PLAT_S_SRCS    := $(PLATFORM)/startup_stm32h750.s
 # Python DSP block sources — objects go in build/ext/python/
 PY_CXX_SRCS    := $(PYTHON)/pitch_shifter_demo/harmonic_rejector.cpp \
                   $(PYTHON)/pitch_shifter_demo/loop_controller.cpp \
-                  $(PYTHON)/pitch_shifter_demo/mixer2.cpp
+                  $(PYTHON)/pitch_shifter_demo/mixer3.cpp
 
 # Compute object paths — strip the source prefix and put under build/ext/
 LOCAL_OBJS  := $(patsubst %.c,   $(BUILDDIR)/%.o, $(LOCAL_C_SRCS)) \
