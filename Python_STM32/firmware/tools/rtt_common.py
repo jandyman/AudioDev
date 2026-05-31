@@ -30,25 +30,42 @@ _STM32H7_RTT_SEARCH = (
   "0x38000000 0x10000"     # SRAM4 (D3)
 )
 
-def connect(device="STM32H750IB", rtt_sleep_s=1.0):
-  """Open J-Link SWD connection and start RTT, with diagnostics."""
+def connect(device="STM32H750IB", rtt_search_timeout_s=5.0):
+  """Open J-Link SWD connection and start RTT, with diagnostics.
+
+  Polls until the RTT control block is located instead of using a fixed sleep —
+  on a cold J-Link USB session the scan across all four STM32H7 search ranges
+  can take several seconds, while a warm session resolves in milliseconds.
+  """
   jlink = pylink.JLink()
   jlink.open()
   print(f"J-Link opened: {jlink.product_name}  firmware: {jlink.firmware_version}")
   jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
   jlink.connect(device)
   print(f"Target connected: core_id=0x{jlink.core_id():08X}  halted={jlink.halted()}")
-  # Extend RTT search past the default DTCMRAM range so AXI SRAM placements are found.
   jlink.exec_command(_STM32H7_RTT_SEARCH)
   jlink.rtt_start()
-  print(f"RTT started, waiting {rtt_sleep_s:.1f}s for control block scan...")
-  time.sleep(rtt_sleep_s)
-  # Drain any startup banner the firmware may have written, then probe the down channel.
+  deadline = time.monotonic() + rtt_search_timeout_s
+  scan_start = time.monotonic()
+  n_up = 0
+  while True:
+    try:
+      n_up = jlink.rtt_get_num_up_buffers()
+      if n_up > 0:
+        break
+    except pylink.errors.JLinkRTTException:
+      pass
+    if time.monotonic() > deadline:
+      raise RuntimeError(
+        f"RTT control block not found within {rtt_search_timeout_s:.1f}s — "
+        "check firmware is running and SetRTTSearchRanges covers .bss placement"
+      )
+    time.sleep(0.05)
+  print(f"RTT control block found in {time.monotonic()-scan_start:.2f}s "
+        f"(up buffers: {n_up})")
   banner = jlink.rtt_read(RTT_CHANNEL, 256)
   if banner:
     print(f"RTT banner ({len(banner)} bytes): {bytes(banner)!r}")
-  else:
-    print("RTT up buffer empty after scan (no banner from firmware)")
   n = jlink.rtt_write(RTT_CHANNEL, [])
   print(f"RTT down channel write probe returned {n}")
   return jlink
