@@ -282,9 +282,14 @@ def emit(graph, registry, order, inputs_of, instances, out_path, graph_src_path)
   L('#define CHUNK_SIZE 65536')
   L('#endif')
   L('')
+  n_in  = len(graph['inputs'])
+  n_out = len(graph['outputs'])
+
   L(f'class {class_name} {{')
   L('public:')
-  L('  static constexpr int kChunkSize = CHUNK_SIZE;')
+  L('  static constexpr int kChunkSize   = CHUNK_SIZE;')
+  L(f'  static constexpr int kNumInputs  = {n_in};')
+  L(f'  static constexpr int kNumOutputs = {n_out};')
   L('')
 
   init_list = []
@@ -305,24 +310,34 @@ def emit(graph, registry, order, inputs_of, instances, out_path, graph_src_path)
   L('  }')
   L('')
 
-  L('  void process_chunk(const float* in, float* out, int n) {')
-  for name, _ in graph['inputs']:
-    L(f'    std::memcpy({buf_name(name)}, in, n * sizeof(float));')
+  L('  // Generalized form: ins/outs are arrays of length kNumInputs / kNumOutputs.')
+  L('  // Output sources may be block.port outputs OR graph input port names.')
+  L('  void process_chunk(const float* const* ins, float* const* outs, int n) {')
+  for i, (name, _) in enumerate(graph['inputs']):
+    L(f'    std::memcpy({buf_name(name)}, ins[{i}], n * sizeof(float));')
   L('')
   for inst in order:
     defn = instances[inst]
     in_bufs = [buf_name(inputs_of[(inst, ip)]) for ip in defn['inputs']]
     out_bufs = [buf_name(f"{inst}.{op}") for op in defn['outputs']]
     L(f'    {{')
-    L(f'      const float* ins[] = {{ {", ".join(in_bufs) if in_bufs else "nullptr"} }};')
-    L(f'      float* outs[] = {{ {", ".join(out_bufs) if out_bufs else "nullptr"} }};')
-    L(f'      blk_{inst}.process(ins, outs, n);')
+    L(f'      const float* blk_ins[] = {{ {", ".join(in_bufs) if in_bufs else "nullptr"} }};')
+    L(f'      float* blk_outs[] = {{ {", ".join(out_bufs) if out_bufs else "nullptr"} }};')
+    L(f'      blk_{inst}.process(blk_ins, blk_outs, n);')
     L(f'    }}')
   L('')
-  for name, src in graph['outputs']:
-    L(f'    std::memcpy(out, {buf_name(src)}, n * sizeof(float));')
+  for i, (name, src) in enumerate(graph['outputs']):
+    L(f'    std::memcpy(outs[{i}], {buf_name(src)}, n * sizeof(float));  // {name} <- {src}')
   L('  }')
   L('')
+  if n_in == 1 and n_out == 1:
+    L('  // Convenience overload for 1-input / 1-output graphs.')
+    L('  void process_chunk(const float* in, float* out, int n) {')
+    L('    const float* ins[]  = { in };')
+    L('    float*       outs[] = { out };')
+    L('    process_chunk(ins, outs, n);')
+    L('  }')
+    L('')
 
   L('  const float* get_buffer(const char* name) const {')
   for sig in sorted(signals):

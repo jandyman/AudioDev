@@ -94,7 +94,7 @@ public:
   void set_pitch_ratio(float ratio);
   float get_pitch_ratio() const { return pitch_ratio_; }
 
-  int get_num_inputs()  const { return 5; }
+  int get_num_inputs()  const { return 6; }
   int get_num_outputs() const { return 12; }
   int get_sample_rate() const { return (int)sample_rate_; }
 

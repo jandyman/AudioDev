@@ -24,12 +24,32 @@ PYBIND11_MODULE(pybind_pitch_shifter, m) {
            int n = (int)in_arr.size();
            if (n > pitch_shifter::kChunkSize)
              throw std::runtime_error("input length exceeds CHUNK_SIZE");
-           py::array_t<float> out_arr(n);
-           self.process_chunk(in_arr.data(), out_arr.mutable_data(), n);
+           constexpr int n_out = pitch_shifter::kNumOutputs;
+           // (n, n_out) C-contiguous: row = sample, col = output channel.
+           py::array_t<float> out_arr({(py::ssize_t)n, (py::ssize_t)n_out});
+           // Process into separate channel buffers, then interleave into (n, n_out).
+           // Two channels stay on the stack for n <= kChunkSize; if n_out grows we'd
+           // need a different strategy, but for stereo this is fine.
+           std::vector<std::vector<float>> ch_bufs(n_out, std::vector<float>(n));
+           float* out_ptrs[n_out];
+           for (int c = 0; c < n_out; ++c) out_ptrs[c] = ch_bufs[c].data();
+           const float* in_ptrs[] = { in_arr.data() };
+           self.process_chunk(in_ptrs, out_ptrs, n);
+           float* dst = out_arr.mutable_data();
+           for (int i = 0; i < n; ++i)
+             for (int c = 0; c < n_out; ++c)
+               dst[i * n_out + c] = ch_bufs[c][i];
            return out_arr;
          },
-         "Process the entire input array in one call. Returns the output array.",
+         "Process the input array. Returns (N, kNumOutputs) — column 0 = first "
+         "declared output port, column 1 = second, etc.",
          py::arg("input"))
+
+    .def_property_readonly_static("NUM_OUTPUTS",
+         [](py::object) { return pitch_shifter::kNumOutputs; })
+
+    .def_property_readonly_static("NUM_INPUTS",
+         [](py::object) { return pitch_shifter::kNumInputs; })
 
     .def("get_buffer",
          [](pitch_shifter& self, const std::string& name, int n) -> py::array_t<float> {

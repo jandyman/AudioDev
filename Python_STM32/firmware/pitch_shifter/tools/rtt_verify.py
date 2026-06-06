@@ -40,12 +40,14 @@ def audio_init(jlink, seq):
     raise RuntimeError(f"AUDIO_INIT failed: {resp!r}")
 
 def audio_block(jlink, seq, block_in):
+  """Send one 48-sample block, receive interleaved L/R back. Returns (L, R) arrays."""
   payload = block_in.astype(np.float32).tobytes()  # little-endian float32, native on ARM
   send_cmd(jlink, CMD_AUDIO_BLOCK, seq, payload)
-  resp = rtt_read_exact(jlink, 2 + BLOCK_BYTES, timeout_s=2.0)
+  resp = rtt_read_exact(jlink, 2 + 2 * BLOCK_BYTES, timeout_s=2.0)
   if resp is None or resp[0] != RESP_ACK or resp[1] != (seq & 0xFF):
     raise RuntimeError(f"AUDIO_BLOCK seq={seq} failed: {resp[:4] if resp else None!r}")
-  return np.frombuffer(resp[2:], dtype=np.float32).copy()
+  interleaved = np.frombuffer(resp[2:], dtype=np.float32)
+  return interleaved[0::2].copy(), interleaved[1::2].copy()
 
 def audio_end(jlink, seq):
   send_cmd(jlink, CMD_AUDIO_END, seq)
@@ -55,7 +57,8 @@ def audio_end(jlink, seq):
 
 def run_stm32(jlink, audio_in, start_seq=0):
   n_blocks = len(audio_in) // BLOCK_N
-  stm32_out = np.zeros(n_blocks * BLOCK_N, dtype=np.float32)
+  stm32_l = np.zeros(n_blocks * BLOCK_N, dtype=np.float32)
+  stm32_r = np.zeros(n_blocks * BLOCK_N, dtype=np.float32)
   seq = start_seq
   audio_init(jlink, seq)
   seq = (seq + 1) & 0xFF
@@ -63,8 +66,9 @@ def run_stm32(jlink, audio_in, start_seq=0):
   t0 = time.monotonic()
   for i in range(n_blocks):
     blk_in = audio_in[i * BLOCK_N : (i + 1) * BLOCK_N]
-    blk_out = audio_block(jlink, seq, blk_in)
-    stm32_out[i * BLOCK_N : (i + 1) * BLOCK_N] = blk_out
+    blk_l, blk_r = audio_block(jlink, seq, blk_in)
+    stm32_l[i * BLOCK_N : (i + 1) * BLOCK_N] = blk_l
+    stm32_r[i * BLOCK_N : (i + 1) * BLOCK_N] = blk_r
     seq = (seq + 1) & 0xFF
     if (i + 1) % 100 == 0:
       elapsed = time.monotonic() - t0
@@ -72,7 +76,7 @@ def run_stm32(jlink, audio_in, start_seq=0):
             f"{(i+1)*BLOCK_N/48000:.2f}s of audio)")
 
   audio_end(jlink, seq)
-  return stm32_out
+  return stm32_l, stm32_r
 
 # ---- pybind11 reference ----
 
@@ -85,12 +89,14 @@ def run_pybind(audio_in, python_dir, sample_rate, pitch_ratio, lpf_fc):
   ps.set_param("lc.pitch_ratio", pitch_ratio)
 
   n_blocks = len(audio_in) // BLOCK_N
-  ref_out = np.zeros(n_blocks * BLOCK_N, dtype=np.float32)
+  ref_l = np.zeros(n_blocks * BLOCK_N, dtype=np.float32)
+  ref_r = np.zeros(n_blocks * BLOCK_N, dtype=np.float32)
   for i in range(n_blocks):
     blk_in = audio_in[i * BLOCK_N : (i + 1) * BLOCK_N]
-    blk_out = ps.process_chunk(blk_in)
-    ref_out[i * BLOCK_N : (i + 1) * BLOCK_N] = blk_out
-  return ref_out
+    blk_out = ps.process_chunk(blk_in)   # shape (BLOCK_N, 2)
+    ref_l[i * BLOCK_N : (i + 1) * BLOCK_N] = blk_out[:, 0]
+    ref_r[i * BLOCK_N : (i + 1) * BLOCK_N] = blk_out[:, 1]
+  return ref_l, ref_r
 
 # ---- main ----
 
@@ -122,7 +128,7 @@ def main(wav_in, python_dir, out_dir, n_verify_seconds, pitch_ratio, lpf_fc):
   print(f"Verifying {n_samples} samples ({n_samples/sample_rate:.2f}s) → {n_blocks} blocks")
 
   print("\nRunning pybind11 reference...")
-  ref_out = run_pybind(audio_in, python_dir, sample_rate, pitch_ratio, lpf_fc)
+  ref_l, ref_r = run_pybind(audio_in, python_dir, sample_rate, pitch_ratio, lpf_fc)
   print(f"  done")
 
   print(f"\nConnecting to STM32 via RTT...")
@@ -138,44 +144,44 @@ def main(wav_in, python_dir, out_dir, n_verify_seconds, pitch_ratio, lpf_fc):
                          "check LED blink rate — fast blink means firmware fault")
     print("RTT OK")
     # Re-init cleanly (seq=0 was already consumed above, start fresh from seq=1).
-    stm32_out = run_stm32(jlink, audio_in, start_seq=1)
+    stm32_l, stm32_r = run_stm32(jlink, audio_in, start_seq=1)
   finally:
     disconnect(jlink)
 
-  diff = np.abs(stm32_out - ref_out)
-  peak = float(diff.max())
-  rms  = float(np.sqrt(np.mean(diff ** 2)))
-  print(f"\nMax diff = {peak:.3e}   RMS diff = {rms:.3e}")
-
-  # Characterize each signal so we can tell what kind of divergence this is.
   def stats(name, x):
     print(f"  {name}: peak={np.abs(x).max():.4f}  rms={np.sqrt(np.mean(x**2)):.4f}  "
           f"nan={int(np.isnan(x).sum())}  silent_frac={float((np.abs(x) < 1e-6).mean()):.3f}")
-  stats("STM32   ", stm32_out)
-  stats("pybind  ", ref_out)
-  stats("input   ", audio_in)
 
-  # First 16 samples side by side — eyeball test for shift / scale / garbage.
-  print("\n  i    input        pybind        stm32         diff")
-  for i in range(16):
-    print(f"  {i:2d}  {audio_in[i]:+.6f}  {ref_out[i]:+.6f}  {stm32_out[i]:+.6f}  "
-          f"{stm32_out[i]-ref_out[i]:+.6f}")
+  pass_all = True
+  for chan, ref, stm32 in (('L (dry)', ref_l, stm32_l), ('R (shifted)', ref_r, stm32_r)):
+    diff = np.abs(stm32 - ref)
+    peak = float(diff.max())
+    rms  = float(np.sqrt(np.mean(diff ** 2)))
+    print(f"\n--- Channel {chan} ---")
+    print(f"  Max diff = {peak:.3e}   RMS diff = {rms:.3e}")
+    stats("STM32 ", stm32)
+    stats("pybind", ref)
+    first_div = int(np.argmax(diff > 0.01)) if (diff > 0.01).any() else -1
+    if first_div >= 0:
+      print(f"  First sample with diff > 0.01: index {first_div} "
+            f"({first_div/sample_rate*1000:.2f} ms in)")
+    if peak >= 1e-3:
+      pass_all = False
+      print(f"  FAIL — diff exceeds 1e-3")
+    else:
+      print(f"  PASS")
 
-  # Find where the first significant divergence happens.
-  first_div = int(np.argmax(diff > 0.01)) if (diff > 0.01).any() else -1
-  print(f"\n  First sample with diff > 0.01: index {first_div} "
-        f"({first_div/sample_rate*1000:.2f} ms in)" if first_div >= 0 else "  No significant divergence")
+  stats("input ", audio_in)
+  print("\n" + ("OVERALL: PASS" if pass_all else "OVERALL: FAIL"))
 
-  if peak < 1e-3:
-    print("PASS")
-  else:
-    print("FAIL — diff exceeds 1e-3; check algorithm or float rounding")
-
+  # Write stereo WAVs: (N, 2) array with column 0 = L, column 1 = R.
+  stm32_stereo = np.stack([stm32_l, stm32_r], axis=1)
+  ref_stereo   = np.stack([ref_l,   ref_r],   axis=1)
   wavfile.write(os.path.join(out_dir, "rtt_stm32_out.wav"),  sample_rate,
-                (stm32_out * 32767).clip(-32768, 32767).astype(np.int16))
+                (stm32_stereo * 32767).clip(-32768, 32767).astype(np.int16))
   wavfile.write(os.path.join(out_dir, "rtt_pybind_ref.wav"), sample_rate,
-                (ref_out  * 32767).clip(-32768, 32767).astype(np.int16))
-  print(f"Saved rtt_stm32_out.wav and rtt_pybind_ref.wav to {out_dir}/")
+                (ref_stereo   * 32767).clip(-32768, 32767).astype(np.int16))
+  print(f"Saved stereo rtt_stm32_out.wav and rtt_pybind_ref.wav to {out_dir}/")
 
 
 # ---- configuration ----

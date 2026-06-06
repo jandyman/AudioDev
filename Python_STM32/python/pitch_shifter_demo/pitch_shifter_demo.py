@@ -2,7 +2,7 @@
 Pitch Shifter demo — using the graph-compiler-generated pipeline.
 
 One process_chunk() call feeds the whole file through; per-block buffers are
-probed by name for diagnostics. Saves output WAV + a 4-panel probe plot:
+probed by name for diagnostics. Saves output WAV and shows interactive plots:
   1. Input (post-LPF) + event markers
   2. Three tap delays (left) + output audio (right) + thresholds
   3. Three tap gains
@@ -68,12 +68,13 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   audio_lpf   = ps.get_buffer('lpf.out', N)
   zc_impulse  = ps.get_buffer('zc.zc_out', N)
   atk_trigger = ps.get_buffer('atk.trigger', N)
-  atk_thresh  = ps.get_buffer('atk.threshold', N)
+  atk_thresh  = ps.get_buffer('atk.threshold', N)        # = hold * k_effective
   atk_fast    = ps.get_buffer('atk.fast_env', N)
   atk_slow    = ps.get_buffer('atk.slow_env', N)
-  atk_med     = ps.get_buffer('atk.med_env', N)
   atk_hold    = ps.get_buffer('atk.hold_env', N)
-  atk_ended   = ps.get_buffer('atk.note_ended', N)
+  atk_dive    = ps.get_buffer('atk.dive_strength', N)
+  atk_keff    = ps.get_buffer('atk.k_effective', N)
+  atk_gain    = ps.get_buffer('atk.active_gain', N)      # = 1 - dive_strength
   P_samples   = ps.get_buffer('hr.P', N)
   qualified   = ps.get_buffer('hr.qualified', N)
   selected    = ps.get_buffer('hr.selected_filter', N)
@@ -108,12 +109,16 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   os.makedirs(out_dir, exist_ok=True)
   ratio_str = f"{int(round(pitch_ratio*100))}pct"
   out_path = os.path.join(out_dir, f"pitch_shifted_generated_{ratio_str}.wav")
+  # audio_out shape: (N, 2)  — column 0 = dry (audio_in), column 1 = pitch-shifted.
+  # Normalize jointly so the L/R level relationship is preserved.
   ao = np.asarray(audio_out, dtype=np.float64)
   peak = np.abs(ao).max()
   if peak > 0: ao /= peak * 1.05
   out_int16 = np.clip(ao * 32767, -32768, 32767).astype(np.int16)
   wav.write(out_path, sample_rate, out_int16)
-  print(f"\nOutput saved: {out_path}")
+  print(f"\nOutput saved (stereo, L=dry / R=shifted): {out_path}")
+  # Extract the shifted channel for in-script plotting/analysis below.
+  audio_shifted = ao[:, 1]
 
   if not show_plot:
     return out_path
@@ -160,7 +165,7 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   mark_events(axes[1])
   axes[1].set_ylabel('Delay (ms)')
   axes[1].grid(True, alpha=0.3)
-  ax_out.plot(t, ao, color='#999', linewidth=0.3, alpha=0.8, label='Output audio')
+  ax_out.plot(t, audio_shifted, color='#999', linewidth=0.3, alpha=0.8, label='Output audio (R = shifted)')
   ax_out.set_ylabel('Output amplitude', color='#555')
   ax_out.tick_params(axis='y', labelcolor='#555')
   lines1, labels1 = axes[1].get_legend_handles_labels()
@@ -205,9 +210,6 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   install_x_zoom(fig, x_min=0.0, x_max=t[-1])
   plt.tight_layout(rect=[0, 0, 1, 0.97])
   plt.subplots_adjust(hspace=0.35)
-  plot_path = os.path.join(out_dir, f"pitch_shifter_generated_{ratio_str}.png")
-  plt.savefig(plot_path, dpi=150)
-  print(f"Plot saved:   {plot_path}")
 
   # ---------------------------------------------------------------
   # Figure 2: attack-detector probes (3 panels). Input audio for time
@@ -232,16 +234,11 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   ax2[0].grid(True, alpha=0.3)
   ax2[0].set_xlim(0, t[-1])
 
-  # Panel 2: envelopes + decision threshold; legacy note_ended tinted for ref.
-  ended_runs = np.concatenate(([0], np.where(np.diff(atk_ended > 0.5) != 0)[0] + 1, [len(atk_ended)]))
-  for s, e in zip(ended_runs[:-1], ended_runs[1:]):
-    if atk_ended[s] > 0.5:
-      ax2[1].axvspan(t[s], t[e-1], color='yellow', alpha=0.10, lw=0)
+  # Panel 2: envelopes + live decision threshold (= hold × k_effective).
   ax2[1].plot(t, atk_fast,   'b-',  linewidth=0.7, alpha=0.9, label='fast_env (1/10 ms)')
-  ax2[1].plot(t, atk_med,    'C1-', linewidth=0.6, alpha=0.6, label='med_env (5/50 ms, legacy)')
-  ax2[1].plot(t, atk_slow,   'g-',  linewidth=0.7, alpha=0.9, label='slow_env (50/200 ms)')
-  ax2[1].plot(t, atk_hold,   'm-',  linewidth=0.7, alpha=0.9, label='hold_env (5ms / 24ms hold / 50ms)')
-  ax2[1].plot(t, atk_thresh, 'r--', linewidth=0.8, alpha=0.8, label='threshold = slow × K (decision line)')
+  ax2[1].plot(t, atk_hold,   'm-',  linewidth=0.7, alpha=0.9, label='hold_env (5/24h/10 ms)')
+  ax2[1].plot(t, atk_slow,   'g-',  linewidth=0.7, alpha=0.9, label='slow_env (200ms/1s — natural-decay ref)')
+  ax2[1].plot(t, atk_thresh, 'r--', linewidth=0.9, alpha=0.85, label='threshold = hold × k_effective')
   atk_trig_idx = np.where(atk_trigger > 0.5)[0]
   if len(atk_trig_idx):
     ax2[1].plot(t[atk_trig_idx], np.full(len(atk_trig_idx), atk_fast.max() * 0.95),
@@ -250,31 +247,41 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   ax2[1].set_ylabel('Envelope level')
   ax2[1].legend(loc='upper right', fontsize=8)
   ax2[1].grid(True, alpha=0.3)
-  ax2[1].set_title('Envelopes + decision threshold (yellow tint = legacy note_ended, no longer used)')
+  ax2[1].set_title('Envelopes + live threshold — trigger fires when fast crosses threshold')
 
-  # Panel 3: candidate denominators — fast/slow (current rule) vs fast/hold
-  # (proposed alternative). Both above 1.0 indicate fast has exceeded the
-  # reference; the dashed red line is the K=1.5 fire level for fast/slow.
-  fs_ratio = atk_fast / (atk_slow + 1e-12)
-  fh_ratio = atk_fast / (atk_hold + 1e-12)
-  ax2[2].plot(t, fs_ratio, 'g-', linewidth=0.6, alpha=0.85, label='fast / slow (current rule denominator)')
-  ax2[2].plot(t, fh_ratio, 'm-', linewidth=0.6, alpha=0.85, label='fast / hold (proposed alternative)')
-  ax2[2].axhline(1.0, color='black', linewidth=0.5, linestyle=':',  alpha=0.5)
-  ax2[2].axhline(1.5, color='red',   linewidth=0.8, linestyle='--', alpha=0.6, label='K = 1.5 (fire level)')
+  # Panel 3: normalized fire strength = (fast/hold) / k_effective.
+  # 1.0 = exactly at fire threshold; > 1 fires; < 1 stays silent.
+  # Clipped at 2.5 so the action near 1.0 is visible (real attacks can peak
+  # much higher and would otherwise compress the scale).
+  fh_ratio   = atk_fast / (atk_hold + 1e-12)
+  fire_norm  = np.clip(fh_ratio / (atk_keff + 1e-12), 0, 2.5)
+  ax_dive    = ax2[2].twinx()
+  ax2[2].plot(t, fire_norm, 'm-', linewidth=0.5, alpha=0.85,
+              label='(fast/hold) / k_effective  (clipped 0..2.5)')
+  ax2[2].axhline(1.0, color='red', linewidth=1.0, linestyle='--', alpha=0.7,
+                 label='fire threshold (= 1.0)')
+  atk_trig_idx = np.where(atk_trigger > 0.5)[0]
+  if len(atk_trig_idx):
+    ax2[2].plot(t[atk_trig_idx], np.clip(fire_norm[atk_trig_idx], 0, 2.5),
+                'rv', ms=7, alpha=0.85, label=f'fires ({len(atk_trig_idx)})')
   for idx in attack_indices: ax2[2].axvline(t[idx], color='orange', linewidth=1.0, alpha=0.6)
   ax2[2].set_xlabel('Time (s)')
-  ax2[2].set_ylabel('Ratio')
-  ax2[2].set_ylim(0, 4.0)
-  ax2[2].legend(loc='upper right', fontsize=8)
+  ax2[2].set_ylabel('Normalized fire strength')
+  ax2[2].set_ylim(0, 2.5)
+  ax_dive.plot(t, atk_dive, color='#0a7', linewidth=0.5, alpha=0.7, label='dive_strength (0..1)')
+  ax_dive.set_ylabel('dive_strength', color='#0a7')
+  ax_dive.set_ylim(0, 1.0)
+  ax_dive.tick_params(axis='y', labelcolor='#0a7')
+  lines1, labels1 = ax2[2].get_legend_handles_labels()
+  lines2, labels2 = ax_dive.get_legend_handles_labels()
+  ax2[2].legend(lines1 + lines2, labels1 + labels2, loc='upper right', fontsize=8)
   ax2[2].grid(True, alpha=0.3)
-  ax2[2].set_title('Decision ratios: fast/slow vs fast/hold — pick the one that separates attacks from sustain most cleanly')
+  ax2[2].set_title('Normalized fire strength — anything above the red 1.0 line is a trigger candidate. '
+                   'Red markers = actual fires. Height ≈ how strong the trigger is.')
 
   install_x_zoom(fig2, x_min=0.0, x_max=t[-1])
   fig2.tight_layout(rect=[0, 0, 1, 0.97])
   fig2.subplots_adjust(hspace=0.35)
-  plot2_path = os.path.join(out_dir, f"attack_detector_in_pipeline_{ratio_str}.png")
-  fig2.savefig(plot2_path, dpi=150)
-  print(f"Plot saved:   {plot2_path}")
 
   plt.show()
   return out_path
@@ -282,5 +289,5 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
 if __name__ == '__main__':
   pitch_ratio = 0.5
   lpf_fc_hz   = 10000.0
-  run_demo("bass notes no gap.wav", pitch_ratio=pitch_ratio, lpf_fc_hz=lpf_fc_hz)
+  run_demo("bass notes bad trigger 2.wav", pitch_ratio=pitch_ratio, lpf_fc_hz=lpf_fc_hz)
   print("\n" + "=" * 60 + "\nDemo complete")

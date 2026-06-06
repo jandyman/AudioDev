@@ -3,7 +3,7 @@
 // Chunk-based version for the pitch_shifter graph. The DMA ISR collects
 // AUDIO_BLOCK_FRAMES (48) stereo int32 samples per half-buffer, converts the
 // left channel to float, calls pitch_shifter_audio_process(), and writes the
-// mono float result to both output channels.
+// two output channels: left = dry input, right = pitch-shifted.
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -77,14 +77,14 @@ static inline __attribute__((always_inline)) int32_t f2s24(float x) {
 // ============================================================================
 static void process_audio(uint32_t offset) {
   float in_f[AUDIO_BLOCK_FRAMES];
-  float out_f[AUDIO_BLOCK_FRAMES];
+  float out_l[AUDIO_BLOCK_FRAMES];
+  float out_r[AUDIO_BLOCK_FRAMES];
   for (uint32_t i = 0U; i < AUDIO_BLOCK_FRAMES; ++i)
     in_f[i] = s242f(rx_buffer[offset + i * 2U]);
-  pitch_shifter_audio_process(in_f, out_f, AUDIO_BLOCK_FRAMES);
+  pitch_shifter_audio_process(in_f, out_l, out_r, AUDIO_BLOCK_FRAMES);
   for (uint32_t i = 0U; i < AUDIO_BLOCK_FRAMES; ++i) {
-    int32_t s = f2s24(out_f[i]);
-    tx_buffer[offset + i * 2U]     = s;
-    tx_buffer[offset + i * 2U + 1] = s;
+    tx_buffer[offset + i * 2U]     = f2s24(out_l[i]);   // left  = dry
+    tx_buffer[offset + i * 2U + 1] = f2s24(out_r[i]);   // right = shifted
   }
 }
 

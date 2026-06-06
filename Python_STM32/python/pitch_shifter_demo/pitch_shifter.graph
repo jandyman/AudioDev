@@ -1,9 +1,10 @@
 ; Pitch shifter pipeline — see Python_STM32/docs/audio_graph_architecture.md
-; Single audio input, single audio output.
+; One audio input, two audio outputs (L = raw input dry, R = pitch-shifted).
 
 (graph pitch_shifter
  (port input audio_in lpf.in)
- (port output audio_out mixer.out)
+ (port output audio_out_l audio_in)
+ (port output audio_out_r mixer.out)
 
  (block lpf input_lpf :fc 10000)
  (block zc zero_crossing_detector)
@@ -27,4 +28,5 @@
  (connect dtd.tap3 mixer.in3)
  (connect lc.gain1 mixer.gain1)
  (connect lc.gain2 mixer.gain2)
- (connect lc.gain3 mixer.gain3))
+ (connect lc.gain3 mixer.gain3)
+ (connect atk.active_gain lc.active_gain mixer.gate))

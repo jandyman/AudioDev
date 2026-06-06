@@ -1,6 +1,6 @@
 /* @block
 (define-block loop_controller
- (inputs zc_impulse attack_impulse P_samples sigma_samples qualified)
+ (inputs zc_impulse attack_impulse P_samples sigma_samples qualified active_gain)
  (outputs tap1_delay_ms tap2_delay_ms tap3_delay_ms
           gain1 gain2 gain3
           latency_ms loop_event active_tap bailout_event gated_event attack_event)
@@ -90,6 +90,14 @@ void loop_controller::process(const float* const* inputs, float* const* outputs,
             outputs[6][i], outputs[7][i],                  // latency_ms, loop_event
             outputs[8][i], outputs[9][i],                  // active_tap, bailout_event
             outputs[10][i], outputs[11][i]);               // gated_event, attack_event
+
+    // Loop-tap gating: multiply loop-pair gains (gain1, gain2) by active_gain
+    // so the buffer-bleed has no audible path during silence and the new
+    // attack's crossfade. Attack tap (gain3) is intentionally NOT gated —
+    // it must carry the new transient at full level.
+    const float active_gain = inputs[5][i];
+    outputs[3][i] *= active_gain;   // gain1
+    outputs[4][i] *= active_gain;   // gain2
   }
 }
 

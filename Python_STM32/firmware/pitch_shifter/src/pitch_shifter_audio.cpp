@@ -14,16 +14,18 @@ void pitch_shifter_audio_init(int sample_rate) {
   g_ps.set_param("lc.pitch_ratio", 0.5f);
 }
 
-void pitch_shifter_audio_process(const float* in, float* out, int n) {
+void pitch_shifter_audio_process(const float* in, float* out_l, float* out_r, int n) {
   float in_peak  = g_in_peak;
   float out_peak = g_out_peak;
   for (int i = 0; i < n; ++i) {
     float a = fabsf(in[i]);
     if (a > in_peak) in_peak = a;
   }
-  g_ps.process_chunk(in, out, n);
+  const float* ins[]  = { in };
+  float*       outs[] = { out_l, out_r };
+  g_ps.process_chunk(ins, outs, n);
   for (int i = 0; i < n; ++i) {
-    float a = fabsf(out[i]);
+    float a = fabsf(out_r[i]);
     if (a > out_peak) out_peak = a;
   }
   g_in_peak  = in_peak;
