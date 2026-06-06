@@ -221,14 +221,55 @@ Keywords:
 Formatting: spaces only, no tabs, no column alignment. Single space between
 tokens.
 
-## Code generation
+## Build outputs and folder layout
 
-The graph compiler (`graph_compiler.py`) reads the `.graph` file and emits a
-single `#pragma once` C++ header:
+All paths below are relative to `Python_STM32/python/`. The build system has two
+entry points — `faust.make` for individual Faust blocks, `pitch_shifter.make`
+for the pipeline — and writes everything under `build/`. The generated pipeline
+header is consumed by both the host pybind build and the STM32 firmware build.
 
-- `#include` directives for each block type (the generated Faust `.cpp` or the
-  block's `.h`).
-- Static buffer arrays for every signal (`float buf_NAME[CHUNK_SIZE]`).
+### Hand-written sources
+
+- `<project>/<name>.dsp` — Faust block source (e.g. `pitch_shifter_demo/input_lpf.dsp`).
+- `<project>/<name>.cpp` + `<name>.h` — C++ block source (e.g. `pitch_shifter_demo/loop_controller.cpp`).
+- `<project>/<graph>.graph` — graph description (e.g. `pitch_shifter_demo/pitch_shifter.graph`).
+- `bindings/pybind_<graph>.cpp` — pybind11 binding wrapping the generated pipeline class.
+- `bindings/pybind_faust_module.cpp.template` — sed template for per-block standalone bindings.
+- `bindings/faust_processor_wrapper.h`, `bindings/audio_support.h` — Faust adapter / numpy helpers.
+- `dsp_cpp/`, `dsp_faust/` — shared block libraries (only genuinely-reused blocks).
+
+### Generated artifacts
+
+| Path | Built by | Description |
+|------|----------|-------------|
+| `build/<name>.cpp` | `faust.make` | Faust compiler output for one block (e.g. `build/input_lpf.cpp`). Pulled into the pipeline header via `#include`. |
+| `build/pybind_<name>.cpp` | `faust.make` | sed-rendered standalone pybind binding for one block (from the template). |
+| `build/pybind_<name>.cpython-<py>-<plat>.so` | `faust.make` | Compiled standalone block module — `import build.pybind_<name>`. Used only by per-block diagnostic scripts. |
+| `build/generated/<graph>.h` | `pitch_shifter.make` → `graph_compiler.py` | Generated pipeline header. Consumed by both the pybind build (`bindings/pybind_<graph>.cpp`) and the STM32 firmware build. |
+| `build/pybind_<graph>.cpython-<py>-<plat>.so` | `pitch_shifter.make` | Compiled pipeline pybind module — `import build.pybind_<graph>`. Used by the Python test harness (e.g. `pitch_shifter_demo.py`). |
+
+### Build commands
+
+From `Python_STM32/python/`:
+
+```bash
+# Rebuild one Faust block (refreshes build/<name>.cpp + standalone build/pybind_<name>.so):
+make -f faust.make DSP=triple_tap_delay DSP_LIB_DIR=pitch_shifter_demo
+
+# Rebuild the full pipeline (runs graph_compiler.py + compiles bindings/pybind_<graph>.cpp):
+make -f pitch_shifter.make
+```
+
+The graph compiler runs automatically as a make dependency when the `.graph`
+file changes. Faust blocks must be rebuilt individually after a `.dsp` change
+before the pipeline build picks them up.
+
+### Generated pipeline header contents
+
+`build/generated/<graph>.h` is a single `#pragma once` C++ header containing:
+
+- `#include` directives for each block type (the Faust-emitted `.cpp` or the C++ block's `.h`).
+- Static buffer arrays for every signal in the graph (`float buf_NAME[CHUNK_SIZE]`).
 - Block instances as class members.
 - `void process_chunk(const float* in, float* out, int n)` — calls each block's
   `process()` in topological order, passing named intermediate buffers.
@@ -236,9 +277,6 @@ single `#pragma once` C++ header:
   buffer, for probing from Python or RTT.
 - `void set_param(const char* path, float value)` — routes `"inst.param"` paths
   to the appropriate block's `set_param()`.
-
-The generated header is a build artifact — regenerate it from the `.graph` file
-whenever the graph changes.
 
 `CHUNK_SIZE` is a compile-time `#define`. The same source compiles at any chunk
 size; buffer dimensions are the only thing that changes.
@@ -266,21 +304,6 @@ Faust's runtime never ships to the STM32. Faust compiles to plain `.cpp` files
 that are called in the chunk-by-chunk processing sequence. Faust blocks expose
 the same `process(const float* const*, float* const*, int n)` interface as C++
 blocks via `FaustProcessorWrapper` (in `bindings/faust_processor_wrapper.h`).
-
-## Build
-
-From `Python_STM32/python/`:
-
-```bash
-# Rebuild Faust C++ for a block whose .dsp changed:
-make -f faust.make DSP=triple_tap_delay DSP_LIB_DIR=pitch_shifter_demo
-
-# Rebuild the full pipeline (runs graph compiler + compiles C++):
-make -f pitch_shifter.make
-```
-
-The graph compiler runs automatically as a make dependency when the `.graph`
-file changes.
 
 ## Control
 
