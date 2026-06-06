@@ -246,7 +246,7 @@ def buf_name(source):
 def include_directive(defn):
   base = os.path.basename(defn['source_file'])
   if defn['is_faust']:
-    return f'#include "faust_{base.replace(".dsp", ".cpp")}"'   # build/faust_<type>.cpp
+    return f'#include "{base.replace(".dsp", ".cpp")}"'   # build/<type>.cpp
   return f'#include "{base.replace(".cpp", ".h")}"'
 
 def emit(graph, registry, order, inputs_of, instances, out_path, graph_src_path):

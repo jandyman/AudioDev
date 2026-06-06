@@ -273,7 +273,7 @@ From `Python_STM32/python/`:
 
 ```bash
 # Rebuild Faust C++ for a block whose .dsp changed:
-make -f faust.make DSP=dual_tap_delay DSP_LIB_DIR=pitch_shifter_demo
+make -f faust.make DSP=triple_tap_delay DSP_LIB_DIR=pitch_shifter_demo
 
 # Rebuild the full pipeline (runs graph compiler + compiles C++):
 make -f pitch_shifter.make
@@ -300,4 +300,3 @@ in its `@block` marker (name, default).
 - `(probe ...)` form — only needed alongside buffer reuse; deferred.
 - How the buffer directory is exposed on STM32 for RTT inspection — likely a
   linker section the RTT bridge can iterate.
-- Wiring the generated `pitch_shifter` class into the STM32 firmware codec ISR.

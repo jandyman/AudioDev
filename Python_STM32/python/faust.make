@@ -11,9 +11,9 @@
 # DSP_LIB_DIR defaults to ../dsp_faust for backwards compatibility.
 #
 # This will:
-#   1. Run faust compiler: .dsp -> build/faust_*.cpp
-#   2. Generate pybind11 binding from template -> build/pybind_faust_*.cpp
-#   3. Compile to build/pybind_faust_*.so Python module
+#   1. Run faust compiler: .dsp -> build/<name>.cpp
+#   2. Generate pybind11 binding from template -> build/pybind_<name>.cpp
+#   3. Compile to build/pybind_<name>.so Python module
 
 DSP_LIB_DIR ?= ../dsp_faust
 BINDINGS_DIR = bindings
@@ -21,10 +21,10 @@ OUTDIR       = build
 TEMPLATE = $(BINDINGS_DIR)/pybind_faust_module.cpp.template
 
 DSP_FILE    = $(DSP_LIB_DIR)/$(DSP).dsp
-FAUST_BASE  = faust_$(DSP).cpp
+FAUST_BASE  = $(DSP).cpp
 FAUST_CPP   = $(OUTDIR)/$(FAUST_BASE)
-BINDING_CPP = $(OUTDIR)/pybind_faust_$(DSP).cpp
-MODULE_NAME = pybind_faust_$(DSP)
+BINDING_CPP = $(OUTDIR)/pybind_$(DSP).cpp
+MODULE_NAME = pybind_$(DSP)
 
 FAUST_CLASS = $(DSP)
 
@@ -58,8 +58,8 @@ $(OUTDIR)/$(MODULE_NAME)$(SUFFIX): $(BINDING_CPP) $(FAUST_CPP)
 	@echo ""
 
 clean:
-	rm -f $(OUTDIR)/faust_*.cpp $(OUTDIR)/pybind_faust_*.cpp $(OUTDIR)/pybind_faust_*.so
-	rm -rf $(OUTDIR)/*.dSYM
+	rm -f $(FAUST_CPP) $(BINDING_CPP) $(OUTDIR)/$(MODULE_NAME)$(SUFFIX)
+	rm -rf $(OUTDIR)/$(MODULE_NAME)$(SUFFIX).dSYM
 	@echo "Cleaned Faust build artifacts in $(OUTDIR)/"
 
 .PHONY: target clean

@@ -6,7 +6,7 @@
 #   make -f pitch_shifter.make CHUNK_SIZE=1000000
 #   make -f pitch_shifter.make clean
 #
-# Prerequisite: the four Faust build/faust_*.cpp must already exist in build/.
+# Prerequisite: the four Faust-emitted build/<name>.cpp must already exist in build/.
 # Rebuild them with (run from python/):
 #   make -f faust.make DSP=input_lpf              DSP_LIB_DIR=pitch_shifter_demo
 #   make -f faust.make DSP=zero_crossing_detector DSP_LIB_DIR=pitch_shifter_demo

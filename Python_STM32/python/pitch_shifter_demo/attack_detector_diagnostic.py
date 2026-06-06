@@ -23,7 +23,7 @@ from lib.diagnostic_plot import install_x_zoom, load_audio_mono
 import numpy as np
 import matplotlib.pyplot as plt
 
-from build.pybind_faust_attack_detector import attack_detector
+from build.pybind_attack_detector import attack_detector
 
 # Mirror the constants from attack_detector.dsp (kept in sync by eye).
 INHIBIT_MS      = 50    # inhibit_time = 0.050
