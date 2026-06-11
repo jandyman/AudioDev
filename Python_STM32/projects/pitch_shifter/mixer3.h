@@ -6,21 +6,21 @@ using std::vector;
 using std::string;
 #endif
 
-// mixer3 — three-input weighted mixer with master gate
+// mixer3 — three-input weighted mixer
 //
-// Computes out[n] = (in1[n]*gain1[n] + in2[n]*gain2[n] + in3[n]*gain3[n]) * gate[n].
+// Computes out[n] = in1[n]*gain1[n] + in2[n]*gain2[n] + in3[n]*gain3[n].
 // Gains are per-sample inputs so time-varying crossfades are handled correctly.
-// gate is a 0..1 master multiplier (e.g. active_gain from attack_detector) that
-// mutes output when no note is sounding. Stateless — no internal memory.
+// Stateless — no internal memory. All tap-level muting (dead-note, attack
+// response, loop crossfades) is owned by loop_controller upstream.
 //
-// Inputs  (7): in1, in2, in3, gain1, gain2, gain3, gate
+// Inputs  (6): in1, in2, in3, gain1, gain2, gain3
 // Outputs (1): out
 
 class mixer3 {
 public:
   void init(int sample_rate) { sample_rate_ = sample_rate; }
 
-  int get_num_inputs()  const { return 7; }
+  int get_num_inputs()  const { return 6; }
   int get_num_outputs() const { return 1; }
   int get_sample_rate() const { return sample_rate_; }
 

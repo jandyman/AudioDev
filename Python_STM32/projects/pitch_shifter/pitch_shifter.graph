@@ -29,4 +29,4 @@
  (connect lc.gain1 mixer.gain1)
  (connect lc.gain2 mixer.gain2)
  (connect lc.gain3 mixer.gain3)
- (connect atk.active_gain lc.active_gain mixer.gate))
+ (connect atk.active_gain lc.active_gain))
