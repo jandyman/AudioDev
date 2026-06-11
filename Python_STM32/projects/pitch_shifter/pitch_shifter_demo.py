@@ -4,9 +4,10 @@ Pitch Shifter demo — using the graph-compiler-generated pipeline.
 One process_chunk() call feeds the whole file through; per-block buffers are
 probed by name for diagnostics. Saves output WAV and shows interactive plots:
   1. Input (post-LPF) + event markers
-  2. Three tap delays (left) + output audio (right) + thresholds
-  3. Three tap gains
-  4. HR selector tint + P estimate + gated/bailout markers
+  2. Output audio + active_gain — fade-in / mute behavior around attacks
+  3. Three tap delays + thresholds
+  4. Three tap gains
+  5. HR selector tint + P estimate + gated/bailout markers
 Scroll wheel zooms x on all panels.
 """
 import sys
@@ -129,8 +130,8 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   # ---------------------------------------------------------------
   t = np.arange(N) / sample_rate
 
-  fig, axes = plt.subplots(4, 1, figsize=(16, 11), sharex=True,
-                           gridspec_kw={'height_ratios': [2, 3, 1, 2]},
+  fig, axes = plt.subplots(5, 1, figsize=(16, 13), sharex=True,
+                           gridspec_kw={'height_ratios': [2, 2, 3, 1, 2]},
                            num='Pitch Shifter')
   fig.suptitle(f"Pitch Shifter — {pitch_ratio_label(pitch_ratio)}  "
                f"({os.path.basename(input_path)}, LPF {lpf_fc_hz:.0f} Hz)",
@@ -153,59 +154,68 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   axes[0].grid(True, alpha=0.3)
   axes[0].set_xlim(0, t[-1])
 
-  # Panel 2: tap delays (left) + output audio (right twin)
-  ax_out = axes[1].twinx()
-  axes[1].plot(t, tap1_del, 'b-',  linewidth=0.7, alpha=0.9, label='Tap 1 delay (ms)')
-  axes[1].plot(t, tap2_del, 'C1-', linewidth=0.7, alpha=0.9, label='Tap 2 delay (ms)')
-  axes[1].plot(t, tap3_del, 'm-',  linewidth=0.7, alpha=0.9, label='Tap 3 delay (ms, attack)')
-  axes[1].axhline(LOWER_THRESHOLD_MS, color='green', linewidth=1.0, linestyle='--',
-                  label=f'Lower threshold ({LOWER_THRESHOLD_MS:.0f} ms)')
-  axes[1].axhline(UPPER_THRESHOLD_MS, color='red',   linewidth=1.0, linestyle='--',
-                  label=f'Upper threshold ({UPPER_THRESHOLD_MS:.0f} ms)')
+  # Panel 2: output audio + active_gain — shows fade-in / mute behavior
+  ax_gain = axes[1].twinx()
+  axes[1].plot(t, audio_shifted, 'b-', linewidth=0.3, alpha=0.7, label='Output audio (R = shifted)')
   mark_events(axes[1])
-  axes[1].set_ylabel('Delay (ms)')
+  axes[1].set_ylabel('Output amplitude')
   axes[1].grid(True, alpha=0.3)
-  ax_out.plot(t, audio_shifted, color='#999', linewidth=0.3, alpha=0.8, label='Output audio (R = shifted)')
-  ax_out.set_ylabel('Output amplitude', color='#555')
-  ax_out.tick_params(axis='y', labelcolor='#555')
+  ax_gain.plot(t, atk_gain, color='#0a7', linewidth=0.6, alpha=0.85, label='active_gain (= 1 − dive)')
+  ax_gain.set_ylabel('active_gain', color='#0a7')
+  ax_gain.set_ylim(-0.05, 1.1)
+  ax_gain.tick_params(axis='y', labelcolor='#0a7')
   lines1, labels1 = axes[1].get_legend_handles_labels()
-  lines2, labels2 = ax_out.get_legend_handles_labels()
+  lines2, labels2 = ax_gain.get_legend_handles_labels()
   axes[1].legend(lines1 + lines2, labels1 + labels2, loc='upper right', fontsize=8)
-  axes[1].set_title('Tap delays (left) + output audio (grey, right)')
+  axes[1].set_title('Output (shifted) + active_gain — direct view of fade-in / mute around attacks')
 
-  # Panel 3: tap gains
-  axes[2].plot(t, gain1_arr, 'b-',  linewidth=0.8, alpha=0.9, label='Gain 1')
-  axes[2].plot(t, gain2_arr, 'C1-', linewidth=0.8, alpha=0.9, label='Gain 2')
-  axes[2].plot(t, gain3_arr, 'm-',  linewidth=0.8, alpha=0.9, label='Gain 3 (attack)')
+  # Panel 3: tap delays
+  axes[2].plot(t, tap1_del, 'b-',  linewidth=0.7, alpha=0.9, label='Tap 1 delay (ms)')
+  axes[2].plot(t, tap2_del, 'C1-', linewidth=0.7, alpha=0.9, label='Tap 2 delay (ms)')
+  axes[2].plot(t, tap3_del, 'm-',  linewidth=0.7, alpha=0.9, label='Tap 3 delay (ms, attack)')
+  axes[2].axhline(LOWER_THRESHOLD_MS, color='green', linewidth=1.0, linestyle='--',
+                  label=f'Lower threshold ({LOWER_THRESHOLD_MS:.0f} ms)')
+  axes[2].axhline(UPPER_THRESHOLD_MS, color='red',   linewidth=1.0, linestyle='--',
+                  label=f'Upper threshold ({UPPER_THRESHOLD_MS:.0f} ms)')
   mark_events(axes[2])
-  axes[2].set_ylabel('Gain')
-  axes[2].set_ylim(-0.05, 1.1)
-  axes[2].legend(loc='upper right', fontsize=8)
+  axes[2].set_ylabel('Delay (ms)')
   axes[2].grid(True, alpha=0.3)
+  axes[2].legend(loc='upper right', fontsize=8)
+  axes[2].set_title('Tap delays')
 
-  # Panel 4: HR selector + P estimate
+  # Panel 4: tap gains
+  axes[3].plot(t, gain1_arr, 'b-',  linewidth=0.8, alpha=0.9, label='Gain 1')
+  axes[3].plot(t, gain2_arr, 'C1-', linewidth=0.8, alpha=0.9, label='Gain 2')
+  axes[3].plot(t, gain3_arr, 'm-',  linewidth=0.8, alpha=0.9, label='Gain 3 (attack)')
+  mark_events(axes[3])
+  axes[3].set_ylabel('Gain')
+  axes[3].set_ylim(-0.05, 1.1)
+  axes[3].legend(loc='upper right', fontsize=8)
+  axes[3].grid(True, alpha=0.3)
+
+  # Panel 5: HR selector + P estimate
   filter_colors = ['green', 'C1', 'purple']
   sel = selected.astype(int)
   boundaries = np.concatenate(([0], np.where(np.diff(sel) != 0)[0] + 1, [len(sel)]))
   for s, e in zip(boundaries[:-1], boundaries[1:]):
     fi = sel[s]
     if 0 <= fi < N_HR_FILTERS:
-      axes[3].axvspan(t[s], t[e-1], color=filter_colors[fi], alpha=0.15, lw=0)
+      axes[4].axvspan(t[s], t[e-1], color=filter_colors[fi], alpha=0.15, lw=0)
   P_ms = P_samples / sample_rate * 1000.0
   P_ms_plot = np.where(qualified > 0.5, P_ms, np.nan)
-  axes[3].plot(t, P_ms_plot, 'k-', linewidth=0.6, alpha=0.85, label='P (ms, qualified only)')
+  axes[4].plot(t, P_ms_plot, 'k-', linewidth=0.6, alpha=0.85, label='P (ms, qualified only)')
   if len(gated_indices):
-    axes[3].plot(t[gated_indices], np.full(len(gated_indices), 48.0),
+    axes[4].plot(t[gated_indices], np.full(len(gated_indices), 48.0),
                  'bv', ms=6, alpha=0.7, label='gate-redirected loop')
   if len(bailout_indices):
-    axes[3].plot(t[bailout_indices], np.full(len(bailout_indices), 5.0),
+    axes[4].plot(t[bailout_indices], np.full(len(bailout_indices), 5.0),
                  'r^', ms=8, alpha=0.7, label='bailout')
-  axes[3].set_xlabel('Time (s)')
-  axes[3].set_ylabel('P (ms)')
-  axes[3].set_ylim(0, 50)
-  axes[3].legend(loc='upper right', fontsize=8)
-  axes[3].grid(True, alpha=0.3)
-  axes[3].set_title('HR selector tint (green=0 / orange=1 / purple=2); black=P; markers per legend')
+  axes[4].set_xlabel('Time (s)')
+  axes[4].set_ylabel('P (ms)')
+  axes[4].set_ylim(0, 50)
+  axes[4].legend(loc='upper right', fontsize=8)
+  axes[4].grid(True, alpha=0.3)
+  axes[4].set_title('HR selector tint (green=0 / orange=1 / purple=2); black=P; markers per legend')
 
   install_x_zoom(fig, x_min=0.0, x_max=t[-1])
   plt.tight_layout(rect=[0, 0, 1, 0.97])
