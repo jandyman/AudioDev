@@ -1,4 +1,4 @@
-#include "../pitch_shifter_demo/harmonic_rejector.h"
+#include "harmonic_rejector.h"
 #include "audio_support.h"
 
 PYBIND11_MODULE(pybind_harmonic_rejector, m) {

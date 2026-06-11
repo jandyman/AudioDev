@@ -1,4 +1,4 @@
-#include "../pitch_shifter_demo/loop_controller.h"
+#include "loop_controller.h"
 #include "audio_support.h"
 
 PYBIND11_MODULE(pybind_loop_controller, m) {

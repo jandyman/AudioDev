@@ -1,4 +1,4 @@
-#include "../pitch_shifter_demo/mixer3.h"
+#include "mixer3.h"
 #include "audio_support.h"
 
 PYBIND11_MODULE(pybind_mixer3, m) {
