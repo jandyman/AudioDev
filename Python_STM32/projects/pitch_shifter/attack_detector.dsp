@@ -44,9 +44,10 @@
 //   - Rising-edge detection on `attack_detected` ensures one fire per attack.
 //   - 50 ms inhibit absorbs brief within-period drops/rises of attack_detected
 //     so a single physical attack doesn't double-fire on intra-cycle ripple.
-//   - No retrigger machinery — the dive-modulated K_effective already handles
-//     same-level new attacks naturally (dive rises → K drops → next attack
-//     crosses threshold on its own).
+//   - Retrigger override: inhibit is bypassed when the new attack's fast/hold
+//     ratio exceeds the previously-fired ratio by retrigger_mult (2×). Lets a
+//     genuinely stronger attack fire within the inhibit window after a weak
+//     (e.g. false-positive) fire, while same-strength ripple cannot.
 //
 // Output 1: trigger impulse (0 or 1)
 // Output 2: live threshold (= hold * k_effective) — probe
@@ -92,6 +93,24 @@ K_FLOOR = 4.0;   // full dive: minimum rise above hold to count as attack
 // Inhibit window: just long enough to suppress within-period ripple from
 // causing same-attack double-fires. Well under typical inter-note spacing.
 inhibit_time = 0.050;
+
+// Retrigger override. The inhibit window is bypassed if a new attack's
+// fast/hold ratio exceeds the ratio at which the previous fire occurred by
+// this factor. Self-scaling: a weak (false) fire at ratio ~5 sets a low
+// override bar (~10); a strong real fire at ratio ~15 sets a high bar (~30).
+// Within-transient ripple peaks have similar ratios to the first peak so
+// they can't double the bar — ripple suppression is preserved. Override
+// path does NOT require a rising edge of attack_detected (only that it's
+// still true) — handles the case where attack_detected stays continuously
+// high between a weak fire and a stronger real attack.
+retrigger_mult = 2.0;
+
+// Cap on the recorded fired_ratio. If hold_env is tiny at fire time
+// (e.g. quiet section, hold has decayed near zero) the raw fast/hold
+// ratio can be artifactually huge, making the override bar unreachable.
+// Capping at 2 × K_FULL keeps the override responsive in pathological
+// cases without weakening ripple suppression on real strong attacks.
+fired_ratio_cap = K_FULL * 2.0;
 
 // Avoid divide-by-zero in dive_strength when slow ≈ 0
 slow_eps = 1.0e-9;
@@ -199,21 +218,32 @@ with {
 
     attack_detected = fast_env > threshold;
 
-    // State machine: inhibit counter + previous attack_detected state.
-    // Fire on the rising edge of attack_detected (false → true), gated by
-    // can_fire (inhibit window). No retrigger logic — dive-modulated K
-    // handles same-level new attacks via the ratio test itself.
+    // State machine: inhibit counter, previous attack_detected, and the
+    // (capped) fast/hold ratio at the last fire.
+    //
+    // Two fire paths:
+    //   fire_normal   — rising edge of attack_detected, inhibit expired.
+    //   fire_override — current ratio >> ratio at last fire, attack still
+    //                   active. No rising-edge requirement, so a real attack
+    //                   can fire even if attack_detected stayed continuously
+    //                   true through a previous weak fire.
+    // After any fire, n_fired_ratio updates so the override bar climbs with
+    // each successful fire — prevents continuous re-firing.
     inhibit_samples = int(inhibit_time * ma.SR);
+    current_ratio   = fast_env / max(hold_env, slow_eps);
 
-    sm(p_inhib, p_prev_det) = n_inhib, n_prev_det, trig
+    sm(p_inhib, p_prev_det, p_fired_ratio) = n_inhib, n_prev_det, n_fired_ratio, trig
     with {
-        can_fire    = p_inhib <= 0;
-        rising_edge = attack_detected & (p_prev_det < 0.5);
-        trig        = rising_edge & can_fire;
-        n_inhib     = ba.if(trig, inhibit_samples, max(0, p_inhib - 1));
-        n_prev_det  = ba.if(attack_detected, 1.0, 0.0);
+        rising_edge   = attack_detected & (p_prev_det < 0.5);
+        fire_normal   = rising_edge & (p_inhib <= 0);
+        fire_override = attack_detected & (current_ratio > p_fired_ratio * retrigger_mult);
+        trig          = fire_normal | fire_override;
+        capped_ratio  = min(current_ratio, fired_ratio_cap);
+        n_inhib       = ba.if(trig, inhibit_samples, max(0, p_inhib - 1));
+        n_prev_det    = ba.if(attack_detected, 1.0, 0.0);
+        n_fired_ratio = ba.if(trig, capped_ratio, p_fired_ratio);
     };
 
-    feedback = sm ~ (_, _);
-    trigger  = feedback : !, !, _;
+    feedback = sm ~ (_, _, _);
+    trigger  = feedback : !, !, !, _;
 };
