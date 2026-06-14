@@ -79,6 +79,41 @@ def env_ar_hold(x, att_c, rel_c_hold, rel_c_drop, hold_samples):
   return y
 
 @njit
+def env_ar_2attack_hold(x, att_c_slow, att_c_fast, att_slow_samples,
+                        rel_c_hold, rel_c_drop, rel_hold_samples):
+  """AR follower with a two-stage attack AND a two-stage release.
+
+     Attack: for the first att_slow_samples after entering attack mode, rise
+     with att_c_slow (slow — lets x pull ahead so x/y opens a wider gap at the
+     transient); then switch to att_c_fast so y catches up to x (closing the
+     ratio back down — this is the trigger holdoff). The attack timer resets
+     each time y re-enters attack mode (x rises above y after a fall).
+
+     Release: hold-rate (rel_c_hold) for the first rel_hold_samples after a
+     peak, then drop-rate (rel_c_drop) — same as env_ar_hold."""
+  y = np.empty_like(x)
+  prev = 0.0
+  atk_timer = 0.0
+  rel_timer = 0.0
+  rising = False
+  for i in range(len(x)):
+    if x[i] > prev:
+      if not rising:
+        atk_timer = 0.0          # just entered attack mode — restart slow window
+        rising = True
+      c = att_c_slow if atk_timer < att_slow_samples else att_c_fast
+      prev = c * prev + (1.0 - c) * x[i]
+      atk_timer += 1.0
+      rel_timer = 0.0
+    else:
+      rising = False
+      c = rel_c_hold if rel_timer < rel_hold_samples else rel_c_drop
+      prev = c * prev
+      rel_timer += 1.0
+    y[i] = prev
+  return y
+
+@njit
 def env_peak_hold_accel(x_abs, hold_samples, log_rel_c):
   """Peak-track on |x| with continuously-accelerating release.
      Effective release TC shrinks as (t/hold)^2, so behavior is perfect
@@ -118,20 +153,26 @@ def compute(audio, sr):
                              hold_samples=fast_hold_s * sr,
                              log_rel_c=np.log(tau_to_c(fast_rel_s, sr)))
 
-  # ref: edge-detector reference.  Attack slower than fast (25 ms) so the
-  # ratio fast/ref opens a gap on a rising edge.  Release holds briefly
-  # then drops fast so ref dives along with fast between notes — a new
-  # attack always sees a low ref and gets a clean ratio spike, regardless
-  # of how loud the previous note was.
-  ref_att_s       = 0.025
+  # ref: edge-detector reference.  Two-stage attack — slow for a brief window
+  # after entering attack mode so fast pulls ahead and fast/ref opens a WIDER
+  # gap at the transient (stronger detection), then fast so ref catches up to
+  # fast (closing the ratio back down = trigger holdoff).  Release holds
+  # briefly then drops fast so ref dives along with fast between notes — a new
+  # attack always sees a low ref and gets a clean ratio spike, regardless of
+  # how loud the previous note was.
+  ref_att_slow_s  = 0.050          # slow initial attack — widens the gap at onset
+  ref_att_fast_s  = 0.015          # quick catch-up after the slow window (holdoff)
+  ref_att_slow_dur_s = 0.012       # how long ref stays in slow attack after onset
   ref_hold_s      = 0.025          # plateau matches one low-E period
   ref_hold_rel_s  = 1.000          # essentially "hold" — long TC during plateau
   ref_drop_s      = 0.050          # fall rate past the plateau
-  ref = env_ar_hold(fast,
-                    att_c       = tau_to_c(ref_att_s,      sr),
-                    rel_c_hold  = tau_to_c(ref_hold_rel_s, sr),
-                    rel_c_drop  = tau_to_c(ref_drop_s,     sr),
-                    hold_samples= ref_hold_s * sr)
+  ref = env_ar_2attack_hold(fast,
+                    att_c_slow      = tau_to_c(ref_att_slow_s,  sr),
+                    att_c_fast      = tau_to_c(ref_att_fast_s,  sr),
+                    att_slow_samples= ref_att_slow_dur_s * sr,
+                    rel_c_hold      = tau_to_c(ref_hold_rel_s,  sr),
+                    rel_c_drop      = tau_to_c(ref_drop_s,      sr),
+                    rel_hold_samples= ref_hold_s * sr)
 
   # Trigger: ratio crosses threshold (rising edge), with debounce.
   k        = 1.4
