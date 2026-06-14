@@ -68,7 +68,7 @@ C++ class names, and Python class names are all identical snake_case strings.
 No conversion is needed anywhere — the type name in the graph file is the
 filename without extension and is also the C++ class name.
 
-Examples: `harmonic_rejector`, `loop_controller`, `dual_tap_delay`, `mixer2`.
+Examples: `harmonic_rejector`, `loop_controller`, `triple_tap_delay`, `mixer3`.
 
 The generated pipeline class takes the graph's name directly (e.g. a graph
 named `pitch_shifter` produces `class pitch_shifter`).
@@ -136,7 +136,7 @@ extension), and C++ class name are always identical.
 ## Block location
 
 **Private blocks** (used by one project) live in the project folder alongside
-the `.graph` file — e.g. `pitch_shifter_demo/harmonic_rejector.cpp`. The graph
+the `.graph` file — e.g. `pitch_shifter/harmonic_rejector.cpp`. The graph
 compiler always searches the graph file's own directory first, so no
 configuration is needed.
 
@@ -230,9 +230,9 @@ header is consumed by both the host pybind build and the STM32 firmware build.
 
 ### Hand-written sources
 
-- `<project>/<name>.dsp` — Faust block source (e.g. `pitch_shifter_demo/input_lpf.dsp`).
-- `<project>/<name>.cpp` + `<name>.h` — C++ block source (e.g. `pitch_shifter_demo/loop_controller.cpp`).
-- `<project>/<graph>.graph` — graph description (e.g. `pitch_shifter_demo/pitch_shifter.graph`).
+- `<project>/<name>.dsp` — Faust block source (e.g. `pitch_shifter/input_lpf.dsp`).
+- `<project>/<name>.cpp` + `<name>.h` — C++ block source (e.g. `pitch_shifter/loop_controller.cpp`).
+- `<project>/<graph>.graph` — graph description (e.g. `pitch_shifter/pitch_shifter.graph`).
 - `bindings/pybind_<graph>.cpp` — pybind11 binding wrapping the generated pipeline class.
 - `bindings/pybind_faust_module.cpp.template` — sed template for per-block standalone bindings.
 - `bindings/faust_processor_wrapper.h`, `bindings/audio_support.h` — Faust adapter / numpy helpers.

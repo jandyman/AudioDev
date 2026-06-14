@@ -69,13 +69,14 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   audio_lpf   = ps.get_buffer('lpf.out', N)
   zc_impulse  = ps.get_buffer('zc.zc_out', N)
   atk_trigger = ps.get_buffer('atk.trigger', N)
-  atk_thresh  = ps.get_buffer('atk.threshold', N)        # = hold * k_effective
+  atk_thresh  = ps.get_buffer('atk.threshold', N)        # = ref_env * k_trigger (constant)
   atk_fast    = ps.get_buffer('atk.fast_env', N)
   atk_slow    = ps.get_buffer('atk.slow_env', N)
   atk_hold    = ps.get_buffer('atk.hold_env', N)
   atk_dive    = ps.get_buffer('atk.dive_strength', N)
   atk_keff    = ps.get_buffer('atk.k_effective', N)
   atk_gain    = ps.get_buffer('atk.active_gain', N)      # = 1 - dive_strength
+  atk_ref     = ps.get_buffer('atk.ref_env', N)          # trigger reference (two-stage-attack follower of fast)
   P_samples   = ps.get_buffer('hr.P', N)
   qualified   = ps.get_buffer('hr.qualified', N)
   selected    = ps.get_buffer('hr.selected_filter', N)
@@ -233,7 +234,7 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
                 f"(detected: {int((atk_trigger > 0.5).sum())} triggers, acted on: {len(attack_indices)})",
                 fontsize=14)
   fig2.text(0.5, 0.955, "scroll = zoom x  •  toolbar Home resets  "
-                        "•  yellow tint = note_ended (armed regime)",
+                        "•  orange lines = attack events acted on by loop controller",
             ha='center', fontsize=9, style='italic', color='#555')
 
   # Panel 1: input audio for reference
@@ -245,11 +246,12 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   ax2[0].grid(True, alpha=0.3)
   ax2[0].set_xlim(0, t[-1])
 
-  # Panel 2: envelopes + live decision threshold (= hold × k_effective).
-  ax2[1].plot(t, atk_fast,   'b-',  linewidth=0.7, alpha=0.9, label='fast_env (1/10 ms)')
-  ax2[1].plot(t, atk_hold,   'm-',  linewidth=0.7, alpha=0.9, label='hold_env (5/24h/10 ms)')
-  ax2[1].plot(t, atk_slow,   'g-',  linewidth=0.7, alpha=0.9, label='slow_env (200ms/1s — natural-decay ref)')
-  ax2[1].plot(t, atk_thresh, 'r--', linewidth=0.9, alpha=0.85, label='threshold = hold × k_effective')
+  # Panel 2: envelopes + live decision threshold (= ref_env × k_trigger).
+  ax2[1].plot(t, atk_fast,   'b-',  linewidth=0.7, alpha=0.9, label='fast_env (peak track, 25ms hold)')
+  ax2[1].plot(t, atk_hold,   'm-',  linewidth=0.6, alpha=0.5, label='hold_env (probe/dive only)')
+  ax2[1].plot(t, atk_slow,   'g-',  linewidth=0.6, alpha=0.5, label='slow_env (200ms/1s — dive ref)')
+  ax2[1].plot(t, atk_ref,    'c-',  linewidth=1.0, alpha=0.95, label='ref_env (two-stage-attack follower of fast — trigger ref)')
+  ax2[1].plot(t, atk_thresh, 'r--', linewidth=0.9, alpha=0.85, label='threshold = ref × k (1.4)')
   atk_trig_idx = np.where(atk_trigger > 0.5)[0]
   if len(atk_trig_idx):
     ax2[1].plot(t[atk_trig_idx], np.full(len(atk_trig_idx), atk_fast.max() * 0.95),
@@ -260,25 +262,28 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   ax2[1].grid(True, alpha=0.3)
   ax2[1].set_title('Envelopes + live threshold — trigger fires when fast crosses threshold')
 
-  # Panel 3: normalized fire strength = (fast/hold) / k_effective.
-  # 1.0 = exactly at fire threshold; > 1 fires; < 1 stays silent.
-  # Clipped at 2.5 so the action near 1.0 is visible (real attacks can peak
-  # much higher and would otherwise compress the scale).
-  fh_ratio   = atk_fast / (atk_hold + 1e-12)
-  fire_norm  = np.clip(fh_ratio / (atk_keff + 1e-12), 0, 2.5)
+  # Panel 3: trigger decision plane — fast/ref ratio (blue) against the
+  # constant fire threshold k (red, recovered as threshold/ref so both live on
+  # the same axis; with constant k this is a flat line at 1.4). A fire is
+  # exactly "blue crosses above red" on a rising edge, with a 25 ms debounce.
+  RATIO_CLIP = 5.0
+  fr_ratio   = np.clip(atk_fast / (atk_ref + 1e-12), 0, RATIO_CLIP)
+  k_live     = np.clip(atk_thresh / (atk_ref + 1e-12), 0, RATIO_CLIP)
   ax_dive    = ax2[2].twinx()
-  ax2[2].plot(t, fire_norm, 'm-', linewidth=0.5, alpha=0.85,
-              label='(fast/hold) / k_effective  (clipped 0..2.5)')
-  ax2[2].axhline(1.0, color='red', linewidth=1.0, linestyle='--', alpha=0.7,
-                 label='fire threshold (= 1.0)')
+  ax2[2].plot(t, fr_ratio, color='#0066cc', linewidth=0.7, alpha=0.9,
+              label='fast/ref ratio')
+  ax2[2].plot(t, k_live, 'r-', linewidth=0.9, alpha=0.85,
+              label='k = 1.4 (constant fire threshold)')
+  ax2[2].axhline(1.0, color='gray', linewidth=0.6, linestyle=':',
+                 label='sustain baseline (= 1.0)')
   atk_trig_idx = np.where(atk_trigger > 0.5)[0]
   if len(atk_trig_idx):
-    ax2[2].plot(t[atk_trig_idx], np.clip(fire_norm[atk_trig_idx], 0, 2.5),
+    ax2[2].plot(t[atk_trig_idx], fr_ratio[atk_trig_idx],
                 'rv', ms=7, alpha=0.85, label=f'fires ({len(atk_trig_idx)})')
   for idx in attack_indices: ax2[2].axvline(t[idx], color='orange', linewidth=1.0, alpha=0.6)
   ax2[2].set_xlabel('Time (s)')
-  ax2[2].set_ylabel('Normalized fire strength')
-  ax2[2].set_ylim(0, 2.5)
+  ax2[2].set_ylabel('fast/ref ratio')
+  ax2[2].set_ylim(0, RATIO_CLIP)
   ax_dive.plot(t, atk_dive, color='#0a7', linewidth=0.5, alpha=0.7, label='dive_strength (0..1)')
   ax_dive.set_ylabel('dive_strength', color='#0a7')
   ax_dive.set_ylim(0, 1.0)
@@ -287,8 +292,8 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   lines2, labels2 = ax_dive.get_legend_handles_labels()
   ax2[2].legend(lines1 + lines2, labels1 + labels2, loc='upper right', fontsize=8)
   ax2[2].grid(True, alpha=0.3)
-  ax2[2].set_title('Normalized fire strength — anything above the red 1.0 line is a trigger candidate. '
-                   'Red markers = actual fires. Height ≈ how strong the trigger is.')
+  ax2[2].set_title('Trigger decision — blue = fast/ref ratio, red = constant threshold k (1.4). '
+                   'Blue crossing above red = fire (red markers).')
 
   install_x_zoom(fig2, x_min=0.0, x_max=t[-1])
   fig2.tight_layout(rect=[0, 0, 1, 0.97])

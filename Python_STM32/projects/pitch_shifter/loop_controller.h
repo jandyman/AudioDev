@@ -35,7 +35,7 @@ using std::string;
 //
 // During an attack response (mode != LOOP_ONLY) loop firing and bailout are
 // suppressed; the response runs to completion (~ 11 ms worst case) and the
-// attack detector's inhibit window (50 ms) prevents overlapping attacks.
+// attack detector's 25 ms debounce keeps attacks from overlapping.
 //
 // No dynamic memory allocation in process(). All state is statically declared.
 //
