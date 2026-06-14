@@ -91,13 +91,18 @@ void loop_controller::process(const float* const* inputs, float* const* outputs,
             outputs[8][i], outputs[9][i],                  // active_tap, bailout_event
             outputs[10][i], outputs[11][i]);               // gated_event, attack_event
 
-    // Loop-tap gating: multiply loop-pair gains (gain1, gain2) by active_gain
-    // so the buffer-bleed has no audible path during silence and the new
-    // attack's crossfade. Attack tap (gain3) is intentionally NOT gated —
-    // it must carry the new transient at full level.
+    // Loop-tap gating: multiply every NON-attack tap's gain by active_gain so
+    // buffer-bleed has no audible path during silence / the attack crossfade.
+    // The attack tap must carry the new transient at full level, so it is NOT
+    // gated — otherwise active_gain (still recovering from the prior note-end)
+    // drags its 1 ms fade-in out to ~10 ms. Gate by ROLE, not a fixed index:
+    // pick_free_tap can place the attack tap on any of {0,1,2}, so gain1/gain2
+    // is the wrong thing to key on (attack_tap_ == -1 in LOOP_ONLY → all gated).
     const float active_gain = inputs[5][i];
-    outputs[3][i] *= active_gain;   // gain1
-    outputs[4][i] *= active_gain;   // gain2
+    for (int tap = 0; tap < NUM_TAPS; tap++) {
+      if (tap == attack_tap_) continue;
+      outputs[3 + tap][i] *= active_gain;   // outputs[3..5] = gain1..gain3
+    }
   }
 }
 
