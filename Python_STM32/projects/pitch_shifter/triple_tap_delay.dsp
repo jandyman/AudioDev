@@ -4,28 +4,14 @@
  (outputs tap1 tap2 tap3))
 */
 
-// Triple Tap Delay - Faust Implementation
-// Single shared delay buffer with three independent read taps.
-// Tap 1/2 are the ping-pong loop pair; tap 3 is dedicated to attack response.
-// Uses 4th-order Lagrange interpolation for smooth modulation.
+// Triple tap delay — one shared delay buffer, three independent fractional read
+// taps (4th-order Lagrange interpolation). Doc: triple_tap_delay.md.
 
 import("stdfaust.lib");
 
 // Maximum delay buffer size (300 ms at 48 kHz).
 max_delay_samples = 14400;
 max_delay_ms = 300.0;
-
-// Triple tap delay: 4 inputs → 3 outputs
-// Input  1: audio signal to delay
-// Input  2: delay time in milliseconds for tap 1 (control signal)
-// Input  3: delay time in milliseconds for tap 2 (control signal)
-// Input  4: delay time in milliseconds for tap 3 (control signal)
-// Output 1: tap 1 (delayed audio)
-// Output 2: tap 2 (delayed audio)
-// Output 3: tap 3 (delayed audio)
-//
-// All three taps read from a SINGLE shared delay buffer at different positions.
-// This is more memory-efficient than separate buffers per tap.
 
 process(audio_in, delay1_ms, delay2_ms, delay3_ms) = tap1, tap2, tap3
 with {

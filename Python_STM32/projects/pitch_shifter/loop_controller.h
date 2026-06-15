@@ -7,52 +7,11 @@ using std::vector;
 using std::string;
 #endif
 
-// loop_controller — Pitch Shift Loop Point Detection and Crossfade Management
-//
-// Three-tap variant. Owns the delay ramp and gain for all three taps. Receives
-// ZC impulses from the ZC Detector and attack impulses from the Attack Detector,
-// and outputs the delay times and crossfade gains for the Triple Tap Delay.
-//
-// Tap roles (concept doc: "Three Tap Fractional Delay Line"):
-//   - One tap at a time is the "active" loop tap (the bulk of the output).
-//   - During a loop crossfade, a second tap is the "loop incoming" tap fading in.
-//   - On attack detection, a third (free) tap becomes the dedicated attack tap;
-//     it fades in fast over ATTACK_FADEIN_MS while the loop pair continues
-//     whatever they were doing, then the loop taps fade out together over
-//     ATTACK_FADEOUT_MS, after which the attack tap becomes the new active tap.
-//
-// Role-to-physical-tap mapping is dynamic: which of {0,1,2} is "active" /
-// "loop_incoming" / "attack" can shift after each response. The doc's
-// "ping-pong pair" becomes round-robin across three taps.
-//
-// Algorithm: output-side detection (see Pitch Shifter concept.md).
-//   - Input ZCs are recorded into a ring buffer as absolute sample-index ATs.
-//   - On every output sample, AT_out = sample_index - DT_active is compared
-//     against the head of the ring buffer. When AT_out reaches head.AT, we
-//     are emitting that zero crossing and may fire a loop transition.
-//   - Bailout runs per-sample (not gated on input ZC arrival), so the active
-//     delay can never grow unboundedly past the upper threshold.
-//
-// During an attack response (mode != LOOP_ONLY) loop firing and bailout are
-// suppressed; the response runs to completion (~ 11 ms worst case) and the
-// attack detector's 25 ms debounce keeps attacks from overlapping.
-//
-// No dynamic memory allocation in process(). All state is statically declared.
-//
-// Inputs  (5): zc_impulse, attack_impulse,
-//              P_samples, sigma_samples, qualified
-//              (the last three come from HarmonicRejector; when qualified < 0.5
-//              or P_samples <= 0, the integer-multiple gate is disabled and
-//              candidate selection falls back to "newest DT-valid".)
-// Outputs(12): tap1_delay_ms, tap2_delay_ms, tap3_delay_ms,
-//              gain1, gain2, gain3,
-//              latency_ms (probe), loop_event (probe),
-//              active_tap (probe; 0, 1, or 2),
-//              bailout_event (probe), gated_event (probe;
-//              1 when integer-multiple gate caused us to pick something other
-//              than newest DT-valid), attack_event (probe; 1 on attack fire)
-//
-// Parameters: pitch_ratio (adjustable at runtime; flushes ZC history on change)
+// loop_controller — pitch-shift loop-point detection + crossfade management.
+// Three-tap variant: owns all delay ramps and tap gains, turning ZC + attack
+// impulses (and the harmonic rejector's period estimate) into the three tap
+// delays and crossfade gains for the triple tap delay. No dynamic allocation in
+// process(). Design, tap roles, and the active_gain gate: loop_controller.md.
 
 class loop_controller {
 public:

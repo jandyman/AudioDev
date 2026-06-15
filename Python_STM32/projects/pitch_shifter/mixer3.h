@@ -6,15 +6,8 @@ using std::vector;
 using std::string;
 #endif
 
-// mixer3 — three-input weighted mixer
-//
-// Computes out[n] = in1[n]*gain1[n] + in2[n]*gain2[n] + in3[n]*gain3[n].
-// Gains are per-sample inputs so time-varying crossfades are handled correctly.
-// Stateless — no internal memory. All tap-level muting (dead-note, attack
-// response, loop crossfades) is owned by loop_controller upstream.
-//
-// Inputs  (6): in1, in2, in3, gain1, gain2, gain3
-// Outputs (1): out
+// mixer3 — stateless three-input weighted summer
+// (out = in1*gain1 + in2*gain2 + in3*gain3). Doc: mixer3.md.
 
 class mixer3 {
 public:

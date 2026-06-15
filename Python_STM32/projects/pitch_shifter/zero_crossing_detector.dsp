@@ -4,24 +4,8 @@
  (outputs zc_out amp_env raw_zc zc_deriv))
 */
 
-// Zero Crossing Detector - Qualified Positive-Going Zero Crossings
-//
-// Detects positive-going zero crossings in the input signal, filtered
-// to reject noise-floor crossings and spurious crossings from harmonics.
-//
-// A crossing is qualified if:
-//   1. Signal transitions from negative to non-negative (positive-going only)
-//   2. Short-term amplitude envelope exceeds a minimum threshold
-//   3. Minimum time has elapsed since the last qualified crossing
-//
-// Expected input: bass guitar signal, A1 (55 Hz) to ~311 Hz (2.5 octaves above A1)
-// Corresponding periods: ~3.2 ms to ~18.2 ms
-//
-// Input 1:  audio signal
-// Output 1: zero crossing impulse (0 or 1)
-// Output 2: amplitude envelope (probe)
-// Output 3: raw positive-going zero crossing before gating (probe)
-// Output 4: derivative magnitude at each qualified crossing, 0 elsewhere (probe)
+// Zero-crossing detector — qualified positive-going crossings (amplitude-gated,
+// min-spacing) for bass guitar. Doc: zero_crossing_detector.md.
 
 import("stdfaust.lib");
 

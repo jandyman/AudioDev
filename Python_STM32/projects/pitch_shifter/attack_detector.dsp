@@ -4,61 +4,9 @@
  (outputs trigger threshold fast_env slow_env hold_env dive_strength k_effective active_gain ref_env))
 */
 
-// Attack Detector — bass guitar transient detection
-//
-// Ported from the Python lab (attack_detector_lab.py). Two independent
-// subsystems share this block:
-//
-//   1. TRIGGER  (fast / ref edge detector — the live, simple path)
-//   2. DIVE     (slow / hold note-end detector — feeds active_gain muting in
-//               loop_controller; preserved verbatim, lower-priority to simplify)
-//
-// ---- Trigger (level-invariant edge detector) -------------------------------
-//
-//   fast_env = peak-track of |audio|, 25 ms hold, accelerating release.
-//   ref_env  = two-stage-attack / two-stage-release follower OF fast_env.
-//   trigger  = rising edge of (fast_env / ref_env) across a LIVE threshold k(t)
-//              that rests at k_nom, snaps to k_boost on each fire, then decays
-//              back toward k_nom (the boosted-threshold holdoff — see below).
-//
-// ref_env is the reference ceiling that fast_env is measured against. Its
-// attack is deliberately lagged so a fresh transient opens a fast/ref gap:
-//
-//   - Two-stage ATTACK: for a brief window (ref_att_slow_dur_s) after ref
-//     re-enters attack mode it rises SLOWLY (ref_att_slow_s), so fast pulls
-//     further ahead and the fast/ref ratio spikes higher at the transient
-//     (stronger detection). Then it switches to a FAST attack (ref_att_fast_s)
-//     so ref catches back up to fast between sub-peaks.
-//   - Two-stage RELEASE: holds (ref_hold_rel_s ≈ ∞) for ref_hold_s after a
-//     peak, then drops fast (ref_drop_s) so ref dives along with fast between
-//     notes. A new attack therefore always sees a low ref → clean ratio spike
-//     regardless of how loud the previous note was (works on legato, where a
-//     within-cycle RMS reference rode up with the signal and showed no gap).
-//
-// No absolute level threshold: noise-floor false fires are accepted (signal so
-// low it cannot produce an audible artifact, and active_gain mutes downstream).
-//
-// ---- Dive (note-end detector — preserved for loop_controller muting) -------
-//
-// hold_env (fast 5/24h/10 ms RMS peak) vs slow_env (200 ms / 1 s RMS, natural
-// ring-down reference). When the player damps/articulates a note end, hold
-// falls fast while slow lags — that gap is the dive:
-//
-//   dive_strength = clip((slow - hold) / slow, 0, 1)
-//   active_gain   = 1 - dive_strength      // 1 = note sounding, 0 = ended/damped
-//
-// loop_controller multiplies the pitch-shifted loop taps by active_gain, so
-// the output is muted during silence and armed-regime false fires land silent.
-//
-// Output 1: trigger impulse (0 or 1)
-// Output 2: threshold (= ref_env * k_live) — probe, plots against fast_env
-// Output 3: fast_env — probe
-// Output 4: slow_env — probe (dive)
-// Output 5: hold_env — probe (dive)
-// Output 6: dive_strength 0..1 — probe / mute source
-// Output 7: k_effective (= k_live, the live boosted threshold) — probe
-// Output 8: active_gain (= 1 - dive_strength) — probe / mute
-// Output 9: ref_env — trigger reference ceiling — probe
+// Attack detector — bass-guitar transient trigger (fast/ref boosted-threshold
+// edge detector) plus a separate DIVE note-end detector that drives active_gain
+// muting in loop_controller. Design, signals, and parameters: attack_detector.md.
 
 import("stdfaust.lib");
 

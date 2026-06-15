@@ -7,47 +7,10 @@ using std::vector;
 using std::string;
 #endif
 
-// harmonic_rejector — multi-filter LPF bank with cleanness scoring and a
-// selector that outputs a trusted period estimate (P) for the loop controller.
-//
-// See "Harmonic rejection" in Pitch Shifter concept.md for the design rationale.
-//
-// Per filter k:
-//   - 2nd-order Butterworth LPF (12 dB/oct), causal biquad
-//   - One-pole envelope follower on |x_filt|
-//   - Tall-peak detection (1-sample delay): local max of x_filt above
-//     peak_frac * env_filt, with minimum spacing constraint
-//   - EMA over inter-tall-peak intervals → mu (period in samples), sigma (std)
-//   - cleanness = 1 / (1 + sigma/mu)
-//   - amplitude = env_filt / env_raw
-//
-// Selector picks the lowest-cutoff filter where cleanness >= cleanness_thresh
-// AND amplitude >= amp_thresh AND at least min_intervals_for_qualified
-// inter-peak intervals have been observed (so the EMA has settled).
-// Selected mu becomes P for the loop controller.
-//
-// Inputs (1): audio
-// Outputs (7 * NUM_FILTERS + 4 = 25 for NUM_FILTERS=3):
-//   per filter k in [0, NUM_FILTERS):
-//     0*N + k : x_filt
-//     1*N + k : env_filt
-//     2*N + k : tall_peak (impulse 0/1)
-//     3*N + k : mu (samples)
-//     4*N + k : sigma (samples)
-//     5*N + k : cleanness
-//     6*N + k : amplitude
-//   7*N + 0 : selected_filter_index (-1.0 if none)
-//   7*N + 1 : P (selected mu, samples; 0 if none)
-//   7*N + 2 : sigma_sel (selected sigma; 0 if none)
-//   7*N + 3 : qualified (1.0 if a filter is selected else 0.0)
-//
-// Parameters (set_param / get_param):
-//   fc_0, fc_1, fc_2          per-filter LPF cutoffs (Hz)
-//   peak_frac                 tall-peak threshold as fraction of envelope
-//   ema_tau_intervals         EMA time constant, expressed in # of intervals
-//   cleanness_thresh, amp_thresh   selector qualification thresholds
-//   env_fc_hz                 envelope follower cutoff (Hz)
-//   min_peak_distance_ms      minimum spacing between consecutive peaks (ms)
+// harmonic_rejector — multi-filter LPF bank with per-filter cleanness scoring
+// and a selector that outputs a trusted period estimate (P, sigma_sel,
+// qualified) for the loop controller. Design, outputs, and parameters:
+// harmonic_rejector.md.
 
 class harmonic_rejector {
 public:
