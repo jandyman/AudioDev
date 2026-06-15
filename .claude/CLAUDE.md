@@ -26,13 +26,14 @@ The `scipy` environment has numpy, matplotlib, dawdreamer, pybind11, and other a
 ## Naming Conventions
 
 - **Never name example/demo scripts with a `test_` prefix.** PyCharm collects `test_*.py` files for pytest, which prevents interactive plotting. Use `_demo.py` suffix instead (e.g. `attack_detector_demo.py`, `pitch_shift_demo.py`).
-- Actual unit tests live in `audio-graph-python/tests/` and DO use the `test_` prefix.
+- Actual unit tests use the `test_` prefix and live in a `tests/` folder, separate from demos.
 
 ## Project Structure
 
+- **Python_STM32/** - ACTIVE hub: shared C++/Faust DSP blocks, built native (pybind11) and for the STM32H750; per-algorithm work lives in `projects/<algo>/`. See `Python_STM32/.claude/CLAUDE.md`.
 - **max_externals/** - Max/MSP external objects (C++)
 - **dsp_library/** - Shared DSP code including Faust modules
-- **audio-graph-python/** - Python testing framework
+- **audio-graph-python/** - DEPRECATED reference framework (superseded by Python_STM32); no new work here
 - **Max Experiments/** - Max patchers and documentation
 - **PitchShifter/** - Pitch shifter algorithm development
 
@@ -50,30 +51,9 @@ DSP logic is implemented in **C++ or Faust**. Faust is the implementation langua
 
 **Signal node probing.** Every block must expose internal state signals as additional outputs (envelopes, flags, computed values). Python taps any node in the pipeline for diagnosis without restructuring the graph. This pattern applies to all new blocks.
 
-## Current State: Full Pipeline Working
+## Per-project state
 
-The end-to-end pitch shifter pipeline is implemented and producing audio output:
-
-```
-Audio → ZC Detector (Faust) → zc_impulse ─────────────┐
-Audio → Attack Detector (Faust) → attack_impulse        ├→ Loop Controller (C++)
-                                                        ↓
-                              tap1_delay_ms, tap2_delay_ms, gain1, gain2
-                                                        ↓
-Audio → Dual Tap Delay (Faust) ──────────────────────→ tap1, tap2
-                                                        ↓
-                              output = tap1 * gain1 + tap2 * gain2
-```
-
-Demo scripts:
-- `audio-graph-python/examples/loop_controller_demo.py` — loop controller probe visualization
-- `audio-graph-python/examples/pitch_shifter_demo.py` — full pipeline, saves output WAV
-
-C++ module: `dsp_library/cpp/src/loop_controller.cpp` / `include/loop_controller.h`
-Build: `cd audio-graph-python/build && make -f audio.make TARGET=loop_controller`
-
-## Next Steps
-
-- Listen to output and tune parameters (thresholds, crossfade durations, pitch_ratio)
-- Fix zoomed panel in pitch_shifter_demo.py (sharex=True conflicts with mixed time units)
-- Harmonic rejection in ZC Detector (dual LPF approach — see spec) once basic tuning is done
+This file is cross-project configuration only. Each project's current state,
+structure, and next steps live in its own `CLAUDE.md`. The active project is
+**Python_STM32** — see `Python_STM32/.claude/CLAUDE.md` for the pitch-shifter
+pipeline state, build workflow, and conventions.
