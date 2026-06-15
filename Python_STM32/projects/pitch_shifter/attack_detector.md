@@ -1,3 +1,5 @@
+# Attack Detector
+
 Bass-guitar transient detector. Two independent subsystems share the block,
 joined only at its outputs:
 

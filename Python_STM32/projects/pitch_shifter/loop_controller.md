@@ -1,3 +1,5 @@
+# Loop Controller
+
 The brain of the pitch shifter. It owns every delay ramp and tap gain across the
 three delay taps and decides when to splice a new loop or respond to an attack.
 

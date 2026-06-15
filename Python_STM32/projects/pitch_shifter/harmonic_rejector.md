@@ -1,3 +1,5 @@
+# Harmonic Rejector
+
 A bank of low-pass filters with per-filter cleanness scoring and a selector that
 emits a trusted period estimate `P` (and its spread `sigma_sel`) for the loop
 controller. Its job is to avoid the octave/harmonic errors a raw zero-crossing

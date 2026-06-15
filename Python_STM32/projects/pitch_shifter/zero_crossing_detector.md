@@ -1,3 +1,5 @@
+# Zero-Crossing Detector
+
 Detects positive-going zero crossings in the input, filtered to reject
 noise-floor and harmonic crossings. A crossing qualifies when all of:
 

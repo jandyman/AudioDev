@@ -1,3 +1,5 @@
+# Mixer3
+
 A stateless three-input weighted summer:
 
 ```

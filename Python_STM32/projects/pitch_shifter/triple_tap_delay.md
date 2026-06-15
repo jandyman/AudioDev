@@ -1,3 +1,5 @@
+# Triple-Tap Delay
+
 A single shared delay buffer (300 ms max at 48 kHz) with three independent read
 taps, each at its own fractional delay. Taps 1 and 2 are the ping-pong loop
 pair; tap 3 is dedicated to the attack response. Reads use 4th-order Lagrange

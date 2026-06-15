@@ -426,7 +426,17 @@ def emit_doc(graph, registry, order, instances, out_path, graph_src_path):
     mdp = block_doc_path(defn)
     if os.path.exists(mdp):
       with open(mdp) as f:
-        L(f.read().rstrip())
+        body = f.read().splitlines()
+      # Drop a leading H1 title — the per-block .md carries one for standalone
+      # readability, but the section header emitted above already names the
+      # block, so keeping it here would double-title the assembled doc.
+      while body and not body[0].strip():
+        body.pop(0)
+      if body and body[0].lstrip().startswith('# '):
+        body.pop(0)
+        while body and not body[0].strip():
+          body.pop(0)
+      L('\n'.join(body).rstrip())
     else:
       L(f'_No `{os.path.basename(mdp)}` yet._')
       print(f"warning: block '{typ}' has no doc '{mdp}'")
