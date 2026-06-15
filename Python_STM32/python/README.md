@@ -1,18 +1,27 @@
-# Python_STM32 — Python Layer
+# Python_STM32 — host Python layer
 
-All Python for this project lives here. Open this folder as your PyCharm project
-root and configure the interpreter to `miniforge3/envs/scipy`.
+Shared host tooling for the audio-graph build system, plus the hardware (RTT)
+test scripts. Per-algorithm work — Faust/C++ blocks, the `.graph`, demos, labs —
+lives in `../projects/<algo>/` (e.g. `../projects/pitch_shifter/`), not here.
+
+Open `Python_STM32/` as your PyCharm project root and point the interpreter at
+`miniforge3/envs/scipy`.
 
 ## Layout
 
-- `tests/` — all scripts: native pybind11, RTT-to-hardware, and cross-comparison
-- `bindings/` — pybind11 `.cpp` binding files
-- `build/` — Makefiles and compiled `.so` output
-- `lib/` — shared utilities (signal generators, analysis helpers) as they accumulate
+- `graph_compiler.py` — turns a `.graph` + `@block` markers into a generated pipeline header.
+- `graph_build.mk` — shared make rules every project's `<graph>.make` includes
+  (Faust→cpp, header gen, `-MMD` dependency tracking, compile + link).
+- `faust.make` — builds a standalone single-block pybind module for diagnostics.
+- `eq.make`, `audio.make` — older per-target makefiles (EQ / RTT work).
+- `bindings/` — shared pybind support headers + the per-block binding template.
+- `build/` — output for `faust.make` standalone modules and the EQ build.
+- `lib/` — shared utilities (e.g. `diagnostic_plot.py`).
+- `tests/` — RTT-to-hardware and cross-comparison scripts (documented below).
 
 ## Running scripts
 
-All scripts are run directly from PyCharm. Configurable parameters live as named
+All scripts run directly from PyCharm. Configurable parameters live as named
 variables at the bottom of each script. No CLI arguments.
 
 Scripts prefixed `rtt_` require hardware connected via J-Link:
@@ -21,13 +30,17 @@ Scripts prefixed `rtt_` require hardware connected via J-Link:
   (or launch via STM32CubeIDE's debug session — the RTT port opens automatically)
 - `rtt_params.py` only: also needs `pip install pylink-square` (uses J-Link SDK directly, not TCP)
 
-## Building the native pybind11 module
+## Building native pybind11 modules
 
-From the `build/` directory in PyCharm's terminal:
+A **graph project** builds from its own folder (self-contained; see
+`../docs/audio_graph_architecture.md`):
 
 ```bash
-make -f eq.make
+cd ../projects/pitch_shifter && make -f pitch_shifter.make
 ```
+
+The **EQ** module (hardware-test path below) builds here via `make -f eq.make`.
+Both need the `scipy` conda env active for the pybind11 headers.
 
 ---
 

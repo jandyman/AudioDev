@@ -223,46 +223,66 @@ tokens.
 
 ## Build outputs and folder layout
 
-All paths below are relative to `Python_STM32/python/`. The build system has two
-entry points — `faust.make` for individual Faust blocks, `pitch_shifter.make`
-for the pipeline — and writes everything under `build/`. The generated pipeline
-header is consumed by both the host pybind build and the STM32 firmware build.
+A graph project is **self-contained in `projects/<name>/`** (e.g.
+`projects/pitch_shifter/`). The build runs from that folder, generates
+everything it needs into the project's own `build/`, and tracks header
+dependencies automatically. Shared host tooling lives in `python/`.
 
-### Hand-written sources
+### Project sources (`projects/<name>/`)
 
-- `<project>/<name>.dsp` — Faust block source (e.g. `pitch_shifter/input_lpf.dsp`).
-- `<project>/<name>.cpp` + `<name>.h` — C++ block source (e.g. `pitch_shifter/loop_controller.cpp`).
-- `<project>/<graph>.graph` — graph description (e.g. `pitch_shifter/pitch_shifter.graph`).
-- `bindings/pybind_<graph>.cpp` — pybind11 binding wrapping the generated pipeline class.
-- `bindings/pybind_faust_module.cpp.template` — sed template for per-block standalone bindings.
-- `bindings/faust_processor_wrapper.h`, `bindings/audio_support.h` — Faust adapter / numpy helpers.
-- `dsp_cpp/`, `dsp_faust/` — shared block libraries (only genuinely-reused blocks).
+- `<name>.dsp` — Faust block source.
+- `<name>.cpp` + `<name>.h` — C++ block source.
+- `<graph>.graph` — graph description.
+- `pybind_<graph>.cpp` — pybind11 binding wrapping the generated pipeline class.
+- `<graph>.make` — thin project makefile: declares `MODULE`, `FAUST_BLOCKS`,
+  `DSP_CPP`, then `include ../../python/graph_build.mk`.
 
-### Generated artifacts
+### Shared host tooling (`python/`)
 
-| Path | Built by | Description |
-|------|----------|-------------|
-| `build/<name>.cpp` | `faust.make` | Faust compiler output for one block (e.g. `build/input_lpf.cpp`). Pulled into the pipeline header via `#include`. |
-| `build/pybind_<name>.cpp` | `faust.make` | sed-rendered standalone pybind binding for one block (from the template). |
-| `build/pybind_<name>.cpython-<py>-<plat>.so` | `faust.make` | Compiled standalone block module — `import build.pybind_<name>`. Used only by per-block diagnostic scripts. |
-| `build/generated/<graph>.h` | `pitch_shifter.make` → `graph_compiler.py` | Generated pipeline header. Consumed by both the pybind build (`bindings/pybind_<graph>.cpp`) and the STM32 firmware build. |
-| `build/pybind_<graph>.cpython-<py>-<plat>.so` | `pitch_shifter.make` | Compiled pipeline pybind module — `import build.pybind_<graph>`. Used by the Python test harness (e.g. `pitch_shifter_demo.py`). |
+- `graph_compiler.py` — reads the `.graph` + each block's `@block` marker and
+  emits the generated pipeline header.
+- `graph_build.mk` — the build rules every project makefile `include`s; single
+  source of truth for build policy (Faust→cpp generation, header generation,
+  `clang -MMD` header-dependency tracking, per-TU compile + link).
+- `faust.make` — a SEPARATE tool that builds a standalone single-block pybind
+  module (`python/build/pybind_<block>.so`) for per-block diagnostic / lab work.
+  Not used by the graph build.
+- `bindings/` — `faust_processor_wrapper.h`, `audio_support.h`, and
+  `pybind_faust_module.cpp.template` (shared support, pulled in by include path).
+- `dsp_faust/`, `dsp_cpp/` — shared block libraries; promote a block here only
+  once it is genuinely reused (default home is the project folder).
+
+### Generated artifacts (per project, in `projects/<name>/build/`, git-ignored)
+
+| Path | Description |
+|------|-------------|
+| `build/<name>.cpp` | Faust compiler output for each Faust block; `#include`d by the generated header. |
+| `build/generated/<graph>.h` | Generated pipeline header (see below). Shared with the STM32 firmware build. |
+| `build/<tu>.o` + `build/<tu>.d` | Per-translation-unit objects and their auto-generated header-dependency files. |
+| `build/pybind_<graph>.cpython-<py>-<plat>.so` | Compiled pipeline pybind module — `import build.pybind_<graph>` (used by the test harness, e.g. `pitch_shifter_demo.py`). |
 
 ### Build commands
 
-From `Python_STM32/python/`:
+From the project folder, under the `scipy` conda env (so `python3 -m pybind11`
+resolves):
 
 ```bash
-# Rebuild one Faust block (refreshes build/<name>.cpp + standalone build/pybind_<name>.so):
-make -f faust.make DSP=triple_tap_delay DSP_LIB_DIR=pitch_shifter_demo
-
-# Rebuild the full pipeline (runs graph_compiler.py + compiles bindings/pybind_<graph>.cpp):
-make -f pitch_shifter.make
+make -f pitch_shifter.make                 # build everything (default CHUNK_SIZE)
+make -f pitch_shifter.make CHUNK_SIZE=524288
+make -f pitch_shifter.make clean
 ```
 
-The graph compiler runs automatically as a make dependency when the `.graph`
-file changes. Faust blocks must be rebuilt individually after a `.dsp` change
-before the pipeline build picks them up.
+The build is self-contained and dependency-correct: editing any `.dsp`,
+`.graph`, block `.cpp`, or any header it transitively `#include`s rebuilds
+exactly what depends on it, then relinks — no manual Faust step and no forced
+relink. Incremental builds recompile only the changed translation unit.
+
+To build a standalone single-block module for diagnostics (separate from the
+graph), run `faust.make` from `python/`:
+
+```bash
+make -f faust.make DSP=attack_detector DSP_LIB_DIR=../projects/pitch_shifter
+```
 
 ### Generated pipeline header contents
 
