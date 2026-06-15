@@ -137,10 +137,9 @@ def env_peak_hold_accel(x_abs, hold_samples, log_rel_c):
 # ============================================================
 # Detector  — EDIT THIS
 # ============================================================
-# Simple example: peak-tracking fast env vs slow-attack ref env, fire
-# when the ratio crosses k while above a noise floor.  Debounced.
-# Replace with whatever you want; just keep the (audio, sr) -> dict
-# contract.
+# Peak-tracking fast env vs two-stage-attack ref env. Fire on a rising edge of
+# fast/ref across a threshold that boosts on each fire and decays back (see the
+# trigger block in compute). Keep the (audio, sr) -> dict contract.
 
 def compute(audio, sr):
   x = audio.astype(np.float64)
@@ -174,33 +173,39 @@ def compute(audio, sr):
                     rel_c_drop      = tau_to_c(ref_drop_s,      sr),
                     rel_hold_samples= ref_hold_s * sr)
 
-  # Trigger: ratio crosses threshold (rising edge), with debounce.
-  k_nom    = 2
-  k_boost  = 20
-  ratio    = fast / np.maximum(ref, 1e-12)
+  # Trigger: rising edge of the ratio across a LIVE threshold k(t). k rests at
+  # k_nom; each fire snaps it up to k_boost, then it decays back toward k_nom
+  # (k_decay_s TC). Testing the edge against the moving threshold means a
+  # sustained-high ratio produces no new edge as k decays — the boost IS the
+  # holdoff, no debounce needed. Level-independent: k rests at a fixed nominal
+  # value, only the post-fire holdoff is time-varying.
+  k_nom     = 2.0          # resting threshold
+  k_boost   = 20.0         # threshold snaps here on each fire
+  k_decay_s = 0.020        # boost decay time constant (s)
+  ratio     = fast / np.maximum(ref, 1e-12)
 
-  # Rising-edge fire with debounce.  Plain Python loop is fine here —
-  # the heavy lifting is in the envelopes above.
-  k = []
-  last_k = k_nom
-  last_ratio = 0
-  fires = []
-  for i in range(len(audio)):
-    if ratio[i] > last_k and last_ratio <= last_k:
+  # Plain Python loop is fine here — the heavy lifting is in the envelopes.
+  decay_c    = tau_to_c(k_decay_s, sr)
+  k          = np.empty(len(ratio))
+  fires      = []
+  cur_k      = k_nom
+  prev_ratio = 0.0
+  for i in range(len(ratio)):
+    if ratio[i] > cur_k and prev_ratio <= cur_k:    # rising edge across live threshold
       fires.append(i)
-      last_k = k_boost
+      cur_k = k_boost
     else:
-      last_k = (last_k - k_nom) * tau_to_c(.02, sr) + k_nom
-    last_ratio = ratio[i]
-    k.append(last_k)
+      cur_k = (cur_k - k_nom) * decay_c + k_nom     # decay back toward k_nom
+    prev_ratio = ratio[i]
+    k[i] = cur_k
 
   return {
     'fast':      fast,
     'ref':       ref,
-    'threshold': ref * k,        # plot directly against fast
     'ratio':     ratio,
+    'k':         k,                 # live threshold (in ratio units)
+    'threshold': ref * k,           # threshold in level units (plot against fast)
     'fires':     np.array(fires, dtype=np.int64),
-    'k':         k,
   }
 
 
@@ -227,11 +232,10 @@ def plot_panels(axes, sigs, t):
   ax.legend(loc='upper right', fontsize=8)
 
   ax = axes[2]
-  ax.plot(t, np.clip(sigs['ratio']), 'm-', lw=0.5, alpha=0.7)
-  ax.plot(t, sigs['k'], 'r--', lw=1, label='k')
-  ax.axhline(1.0, color='gray', ls=':',  lw=0.5)
+  ax.plot(t, np.clip(sigs['ratio'], 0, 20), 'm-', lw=0.5, alpha=0.7, label='fast/ref ratio')
+  ax.plot(t, sigs['k'], 'r--', lw=1, label='k (live threshold)')
   ax.set_ylim(0, 20); ax.set_ylabel('fast / ref')
-  ax.set_title('Ratio (fires when crossing red while above floor)')
+  ax.set_title('Ratio vs live threshold — fire when ratio crosses k (k boosts on each fire, then decays)')
   ax.legend(loc='upper right', fontsize=8)
 
 
