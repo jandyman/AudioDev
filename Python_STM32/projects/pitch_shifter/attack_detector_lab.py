@@ -175,21 +175,24 @@ def compute(audio, sr):
                     rel_hold_samples= ref_hold_s * sr)
 
   # Trigger: ratio crosses threshold (rising edge), with debounce.
-  k        = 1.4
-  debounce = int(0.025 * sr)
+  k_nom    = 2
+  k_boost  = 20
   ratio    = fast / np.maximum(ref, 1e-12)
-  detected = ratio > k
 
   # Rising-edge fire with debounce.  Plain Python loop is fine here —
   # the heavy lifting is in the envelopes above.
+  k = []
+  last_k = k_nom
+  last_ratio = 0
   fires = []
-  last_fire = -debounce - 1
-  prev_det = False
   for i in range(len(audio)):
-    if detected[i] and not prev_det and (i - last_fire) > debounce:
+    if ratio[i] > last_k and last_ratio <= last_k:
       fires.append(i)
-      last_fire = i
-    prev_det = bool(detected[i])
+      last_k = k_boost
+    else:
+      last_k = (last_k - k_nom) * tau_to_c(.02, sr) + k_nom
+    last_ratio = ratio[i]
+    k.append(last_k)
 
   return {
     'fast':      fast,
@@ -197,6 +200,7 @@ def compute(audio, sr):
     'threshold': ref * k,        # plot directly against fast
     'ratio':     ratio,
     'fires':     np.array(fires, dtype=np.int64),
+    'k':         k,
   }
 
 
@@ -216,17 +220,17 @@ def plot_panels(axes, sigs, t):
   ax.set_ylabel('amplitude'); ax.set_title('Input waveform')
 
   ax = axes[1]
-  ax.plot(t, sigs['fast'],      'r-',  lw=0.8, label='fast')
-  ax.plot(t, sigs['ref'],       'c-',  lw=1.0, label='ref')
+  ax.plot(t, sigs['fast'], 'r-',  lw=0.8, label='fast')
+  ax.plot(t, sigs['ref'], 'c-',  lw=1.0, label='ref')
   ax.plot(t, sigs['threshold'], 'r--', lw=0.6, alpha=0.7, label='ref × k')
   ax.set_ylabel('level'); ax.set_title('Envelopes')
   ax.legend(loc='upper right', fontsize=8)
 
   ax = axes[2]
-  ax.plot(t, np.clip(sigs['ratio'], 0, 5), 'm-', lw=0.5, alpha=0.7)
-  ax.axhline(1.4, color='r',    ls='--', lw=1,   label='k')
+  ax.plot(t, np.clip(sigs['ratio']), 'm-', lw=0.5, alpha=0.7)
+  ax.plot(t, sigs['k'], 'r--', lw=1, label='k')
   ax.axhline(1.0, color='gray', ls=':',  lw=0.5)
-  ax.set_ylim(0, 5); ax.set_ylabel('fast / ref')
+  ax.set_ylim(0, 20); ax.set_ylabel('fast / ref')
   ax.set_title('Ratio (fires when crossing red while above floor)')
   ax.legend(loc='upper right', fontsize=8)
 
