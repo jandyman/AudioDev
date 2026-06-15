@@ -24,7 +24,6 @@ CHUNK_SIZE ?= 1048576
 
 GRAPH    = $(MODULE).graph
 HEADER   = build/generated/$(MODULE).h
-DOC      = build/generated/$(MODULE).md
 PYBIND   = pybind_$(MODULE).cpp
 COMPILER = ../../python/graph_compiler.py
 
@@ -69,13 +68,6 @@ build/%.cpp: %.dsp | build
 $(HEADER): $(GRAPH) $(BLOCK_DEFS) $(COMPILER) | build/generated
 	python3 $(COMPILER) $(GRAPH) $(HEADER)
 
-# Documentation: assemble the per-graph intro + each block's sibling .md (in
-# topological order) into build/generated/$(MODULE).md. Not built by default;
-# run `make -f <graph>.make doc`. Depends on every .md in the project folder.
-doc: $(DOC)
-$(DOC): $(GRAPH) $(BLOCK_DEFS) $(wildcard *.md) $(COMPILER) | build/generated
-	python3 $(COMPILER) --doc $(GRAPH) $(DOC)
-
 # Compile each TU to an object, emitting a .d of its header dependencies
 # (-MMD: user headers only; -MP: phony targets so a deleted header won't wedge
 # the build). The order-only prereqs guarantee the generated sources EXIST for
@@ -89,7 +81,7 @@ $(TARGET): $(OBJ)
 	@echo "Built $(TARGET) (CHUNK_SIZE=$(CHUNK_SIZE))"
 
 clean:
-	rm -f $(HEADER) $(DOC) $(FAUST_CPP) $(OBJ) $(DEP) $(TARGET)
+	rm -f $(HEADER) $(FAUST_CPP) $(OBJ) $(DEP) $(TARGET)
 	rm -rf $(TARGET).dSYM
 
 # The Faust cpp are made by a pattern rule and referenced only as order-only
@@ -100,4 +92,4 @@ clean:
 
 -include $(DEP)
 
-.PHONY: target doc clean
+.PHONY: target clean
