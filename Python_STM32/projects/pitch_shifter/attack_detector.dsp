@@ -17,7 +17,9 @@
 //
 //   fast_env = peak-track of |audio|, 25 ms hold, accelerating release.
 //   ref_env  = two-stage-attack / two-stage-release follower OF fast_env.
-//   trigger  = rising edge of (fast_env / ref_env > k_trigger), 25 ms debounce.
+//   trigger  = rising edge of (fast_env / ref_env) across a LIVE threshold k(t)
+//              that rests at k_nom, snaps to k_boost on each fire, then decays
+//              back toward k_nom (the boosted-threshold holdoff — see below).
 //
 // ref_env is the reference ceiling that fast_env is measured against. Its
 // attack is deliberately lagged so a fresh transient opens a fast/ref gap:
@@ -26,8 +28,7 @@
 //     re-enters attack mode it rises SLOWLY (ref_att_slow_s), so fast pulls
 //     further ahead and the fast/ref ratio spikes higher at the transient
 //     (stronger detection). Then it switches to a FAST attack (ref_att_fast_s)
-//     so ref catches up to fast, closing the ratio back below k_trigger — that
-//     catch-up IS the trigger holdoff (no second fire on the same note).
+//     so ref catches back up to fast between sub-peaks.
 //   - Two-stage RELEASE: holds (ref_hold_rel_s ≈ ∞) for ref_hold_s after a
 //     peak, then drops fast (ref_drop_s) so ref dives along with fast between
 //     notes. A new attack therefore always sees a low ref → clean ratio spike
@@ -50,12 +51,12 @@
 // the output is muted during silence and armed-regime false fires land silent.
 //
 // Output 1: trigger impulse (0 or 1)
-// Output 2: threshold (= ref_env * k_trigger) — probe, plots against fast_env
+// Output 2: threshold (= ref_env * k_live) — probe, plots against fast_env
 // Output 3: fast_env — probe
 // Output 4: slow_env — probe (dive)
 // Output 5: hold_env — probe (dive)
 // Output 6: dive_strength 0..1 — probe / mute source
-// Output 7: k_effective (= k_trigger, constant) — probe
+// Output 7: k_effective (= k_live, the live boosted threshold) — probe
 // Output 8: active_gain (= 1 - dive_strength) — probe / mute
 // Output 9: ref_env — trigger reference ceiling — probe
 
@@ -83,9 +84,15 @@ ref_hold_s         = 0.025;   // release plateau ≈ one low-E period
 ref_hold_rel_s     = 1.000;   // hold-rate TC during the plateau (≈ perfect hold)
 ref_drop_s         = 0.050;   // fall rate past the plateau
 
-// Trigger compare + debounce.
-k_trigger     = 1.4;     // fire when fast/ref crosses this (rising edge)
-debounce_time = 0.025;   // refire blackout while the transient develops
+// Trigger: boosted-threshold holdoff (replaces the absolute debounce). The
+// live threshold k(t) rests at k_nom, snaps to k_boost on each fire, then
+// decays back toward k_nom with TC k_decay_s. The fire test is a rising edge
+// of the ratio across the LIVE k, so a sustained-high ratio yields no new edge
+// as k decays (no re-fire); a genuinely larger attack (ratio above the still-
+// elevated k) overrides. Level-independent — k rests at a fixed nominal value.
+k_nom     = 2.0;     // resting threshold
+k_boost   = 20.0;    // threshold snaps here on each fire
+k_decay_s = 0.020;   // boost decay time constant (s)
 
 // --- Dive path (preserved for active_gain / loop_controller muting) ---
 
@@ -224,22 +231,28 @@ with {
     dive_strength = max(0.0, min(1.0, dive_raw));
     active_gain   = 1.0 - dive_strength;
 
-    // --- Trigger state machine: rising-edge fire on the ratio with debounce ---
-    current_ratio    = fast_env / max(ref_env, eps);
-    debounce_samples = int(debounce_time * ma.SR);
+    // --- Trigger state machine: boosted-threshold holdoff (mirror of the lab) ---
+    // State (p_b, p_prev_ratio): p_b is the boost ABOVE k_nom (starts at 0 so
+    // the live threshold starts at k_nom, matching the lab), p_prev_ratio is the
+    // previous-sample ratio. Fire on a rising edge of the ratio across the live
+    // threshold (k_nom + p_b); on fire set the boost to (k_boost - k_nom), else
+    // decay it toward 0. Live threshold k = k_nom + boost.
+    current_ratio = fast_env / max(ref_env, 1.0e-12);
+    k_decay_c     = exp(-1.0 / (k_decay_s * ma.SR));
 
-    sm(p_deb, p_prev_det) = n_deb, n_prev_det, trig
+    sm(p_b, p_prev_ratio) = n_b, n_prev_ratio, trig
     with {
-        detected    = current_ratio > k_trigger;
-        rising_edge = detected & (p_prev_det < 0.5);
-        trig        = rising_edge & (p_deb <= 0);
-        n_deb       = ba.if(trig, debounce_samples, max(0, p_deb - 1));
-        n_prev_det  = ba.if(detected, 1.0, 0.0);
+        k_now        = k_nom + p_b;
+        trig         = (current_ratio > k_now) & (p_prev_ratio <= k_now);
+        n_b          = ba.if(trig, k_boost - k_nom, p_b * k_decay_c);
+        n_prev_ratio = current_ratio;
     };
 
-    trigger = (sm ~ (_, _)) : !, !, _;
+    feedback = sm ~ (_, _);
+    trigger  = feedback : !, !, _;
+    k_live   = k_nom + (feedback : _, !, !);   // live threshold, for probes
 
     // Probes.
-    threshold   = ref_env * k_trigger;
-    k_effective = k_trigger;
+    threshold   = ref_env * k_live;
+    k_effective = k_live;
 };
