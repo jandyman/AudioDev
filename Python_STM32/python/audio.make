@@ -5,7 +5,7 @@
 #   make -f audio.make TARGET=biquad
 #
 # Project-folder layout (for project-private blocks colocating .h + .cpp):
-#   make -f audio.make TARGET=harmonic_rejector DSP_SRC_DIR=pitch_shifter_demo DSP_INC_DIR=pitch_shifter_demo
+#   make -f audio.make TARGET=pitch_detector DSP_SRC_DIR=pitch_shifter_demo DSP_INC_DIR=pitch_shifter_demo
 #   make -f audio.make TARGET=loop_controller   DSP_SRC_DIR=pitch_shifter_demo DSP_INC_DIR=pitch_shifter_demo
 #   make -f audio.make TARGET=mixer3            DSP_SRC_DIR=pitch_shifter_demo DSP_INC_DIR=pitch_shifter_demo
 

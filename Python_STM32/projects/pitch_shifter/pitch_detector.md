@@ -1,4 +1,4 @@
-# Harmonic Rejector
+# Pitch Detector
 
 A bank of low-pass filters with per-filter cleanness scoring and a selector that
 emits a trusted period estimate `P` (and its spread `sigma_sel`) for the loop

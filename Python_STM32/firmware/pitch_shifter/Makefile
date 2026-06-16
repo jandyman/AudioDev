@@ -91,7 +91,7 @@ PLAT_CXX_SRCS  := $(PLATFORM)/clock.cpp $(PLATFORM)/dma.cpp \
 PLAT_S_SRCS    := $(PLATFORM)/startup_stm32h750.s
 
 # Python DSP block sources — objects go in build/ext/python/
-PY_CXX_SRCS    := $(PYTHON)/pitch_shifter_demo/harmonic_rejector.cpp \
+PY_CXX_SRCS    := $(PYTHON)/pitch_shifter_demo/pitch_detector.cpp \
                   $(PYTHON)/pitch_shifter_demo/loop_controller.cpp \
                   $(PYTHON)/pitch_shifter_demo/mixer3.cpp
 

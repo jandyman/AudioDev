@@ -7,12 +7,12 @@ using std::vector;
 using std::string;
 #endif
 
-// harmonic_rejector — multi-filter LPF bank with per-filter cleanness scoring
+// pitch_detector — multi-filter LPF bank with per-filter cleanness scoring
 // and a selector that outputs a trusted period estimate (P, sigma_sel,
 // qualified) for the loop controller. Design, outputs, and parameters:
-// harmonic_rejector.md.
+// pitch_detector.md.
 
-class harmonic_rejector {
+class pitch_detector {
 public:
     static const int NUM_FILTERS = 3;
     static const int NUM_OUTPUTS = 7 * NUM_FILTERS + 4;
@@ -22,7 +22,7 @@ public:
     // mu/sigma from EMA warmup.
     static const int MIN_INTERVALS_FOR_QUALIFIED = 3;
 
-    harmonic_rejector();
+    pitch_detector();
 
     void init(int sample_rate);
 

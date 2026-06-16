@@ -13,6 +13,6 @@
 
 MODULE       = pitch_shifter
 FAUST_BLOCKS = input_lpf zero_crossing_detector attack_detector triple_tap_delay
-DSP_CPP      = harmonic_rejector.cpp loop_controller.cpp mixer3.cpp
+DSP_CPP      = pitch_detector.cpp loop_controller.cpp mixer3.cpp
 
 include ../../python/graph_build.mk

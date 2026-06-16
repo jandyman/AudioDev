@@ -68,7 +68,7 @@ C++ class names, and Python class names are all identical snake_case strings.
 No conversion is needed anywhere — the type name in the graph file is the
 filename without extension and is also the C++ class name.
 
-Examples: `harmonic_rejector`, `loop_controller`, `triple_tap_delay`, `mixer3`.
+Examples: `pitch_detector`, `loop_controller`, `triple_tap_delay`, `mixer3`.
 
 The generated pipeline class takes the graph's name directly (e.g. a graph
 named `pitch_shifter` produces `class pitch_shifter`).
@@ -96,16 +96,16 @@ does not redeclare them.
 Each block is a single source file. The `@block` marker and the implementation
 live together in that file.
 
-**C++ block** — `harmonic_rejector.cpp` + `harmonic_rejector.h`:
+**C++ block** — `pitch_detector.cpp` + `pitch_detector.h`:
 ```cpp
 /* @block
-(define-block harmonic_rejector
+(define-block pitch_detector
  (inputs in)
  (outputs x_filt_0 ... selected_filter P sigma_sel qualified)
  (params (fc_0 :default 60) ...))
 */
 
-#include "harmonic_rejector.h"
+#include "pitch_detector.h"
 // ... C++ implementation ...
 ```
 
@@ -136,7 +136,7 @@ extension), and C++ class name are always identical.
 ## Block location
 
 **Private blocks** (used by one project) live in the project folder alongside
-the `.graph` file — e.g. `pitch_shifter/harmonic_rejector.cpp`. The graph
+the `.graph` file — e.g. `pitch_shifter/pitch_detector.cpp`. The graph
 compiler always searches the graph file's own directory first, so no
 configuration is needed.
 

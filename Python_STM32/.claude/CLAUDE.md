@@ -39,7 +39,7 @@ Output-side pitch shifter; `pitch_ratio` 0.5 = octave-down. Pipeline
 audio → lpf (input_lpf, Faust)
       → zc  (zero_crossing_detector, Faust) → loop_controller (zc_impulse)
       → atk (attack_detector, Faust)        → loop_controller (trigger + active_gain)
-      → hr  (harmonic_rejector, C++)        → loop_controller (P / sigma / qualified gate)
+      → pd  (pitch_detector, C++)        → loop_controller (P / sigma / qualified gate)
       → dtd (triple_tap_delay, Faust)
 loop_controller → 3 tap delays + 3 gains → dtd → mixer3 (C++ summer) → audio_out_r
 audio_out_l = dry input

@@ -9,7 +9,7 @@ using std::string;
 
 // loop_controller — pitch-shift loop-point detection + crossfade management.
 // Three-tap variant: owns all delay ramps and tap gains, turning ZC + attack
-// impulses (and the harmonic rejector's period estimate) into the three tap
+// impulses (and the pitch detector's period estimate) into the three tap
 // delays and crossfade gains for the triple tap delay. No dynamic allocation in
 // process(). Design, tap roles, and the active_gain gate: loop_controller.md.
 

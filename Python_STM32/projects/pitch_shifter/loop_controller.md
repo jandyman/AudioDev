@@ -38,7 +38,7 @@ this exclusion is by role (`attack_tap_`), not by a fixed gain index.
 
 ### Harmonic-rejector gate
 
-When the harmonic rejector reports `qualified` with a period `P`, loop-point
+When the pitch detector reports `qualified` with a period `P`, loop-point
 selection prefers a candidate whose loop length is an integer multiple of `P`
 (rejecting octave errors); otherwise it falls back to the newest delay-valid
 candidate.

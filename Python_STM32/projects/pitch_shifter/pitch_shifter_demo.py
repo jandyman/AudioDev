@@ -77,9 +77,9 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   atk_keff    = ps.get_buffer('atk.k_effective', N)
   atk_gain    = ps.get_buffer('atk.active_gain', N)      # = 1 - dive_strength
   atk_ref     = ps.get_buffer('atk.ref_env', N)          # trigger reference (two-stage-attack follower of fast)
-  P_samples   = ps.get_buffer('hr.P', N)
-  qualified   = ps.get_buffer('hr.qualified', N)
-  selected    = ps.get_buffer('hr.selected_filter', N)
+  P_samples   = ps.get_buffer('pd.P', N)
+  qualified   = ps.get_buffer('pd.qualified', N)
+  selected    = ps.get_buffer('pd.selected_filter', N)
   tap1_del    = ps.get_buffer('lc.tap1_delay_ms', N)
   tap2_del    = ps.get_buffer('lc.tap2_delay_ms', N)
   tap3_del    = ps.get_buffer('lc.tap3_delay_ms', N)

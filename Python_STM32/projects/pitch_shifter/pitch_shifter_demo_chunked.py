@@ -22,7 +22,7 @@ from lib.spooler import Spooler
 
 PROBES = [
   'zc.zc_out', 'atk.trigger',
-  'hr.P', 'hr.qualified', 'hr.selected_filter',
+  'pd.P', 'pd.qualified', 'pd.selected_filter',
   'lc.tap1_delay_ms', 'lc.tap2_delay_ms',
   'lc.gain1', 'lc.gain2',
   'lc.loop_event', 'lc.bailout_event', 'lc.gated_event',

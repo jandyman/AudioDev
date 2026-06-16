@@ -1,18 +1,18 @@
-#include "harmonic_rejector.h"
+#include "pitch_detector.h"
 #include "audio_support.h"
 
-PYBIND11_MODULE(pybind_harmonic_rejector, m) {
-  m.doc() = "Harmonic Rejector: multi-LPF bank with cleanness selector for period estimation";
+PYBIND11_MODULE(pybind_pitch_detector, m) {
+  m.doc() = "Pitch Detector: multi-LPF bank with cleanness selector for period estimation";
 
-  py::class_<harmonic_rejector>(m, "harmonic_rejector")
+  py::class_<pitch_detector>(m, "pitch_detector")
     .def(py::init<>())
 
-    .def("init", &harmonic_rejector::init,
+    .def("init", &pitch_detector::init,
          "Initialize with sample rate",
          py::arg("sample_rate"))
 
     .def("process",
-         [](harmonic_rejector& self, py::list inputs) -> py::list {
+         [](pitch_detector& self, py::list inputs) -> py::list {
            auto inputs_vec = np_list_to_vec_of_vec<float>(inputs);
            int n = inputs_vec.empty() ? 0 : (int)inputs_vec[0].size();
            int num_outputs = self.get_num_outputs();
@@ -43,16 +43,16 @@ PYBIND11_MODULE(pybind_harmonic_rejector, m) {
          "  7*N+3 : qualified (0/1)",
          py::arg("inputs"))
 
-    .def_readonly_static("NUM_FILTERS", &harmonic_rejector::NUM_FILTERS)
-    .def_readonly_static("NUM_OUTPUTS", &harmonic_rejector::NUM_OUTPUTS)
+    .def_readonly_static("NUM_FILTERS", &pitch_detector::NUM_FILTERS)
+    .def_readonly_static("NUM_OUTPUTS", &pitch_detector::NUM_OUTPUTS)
 
-    .def("get_num_inputs",  &harmonic_rejector::get_num_inputs)
-    .def("get_num_outputs", &harmonic_rejector::get_num_outputs)
-    .def("get_sample_rate", &harmonic_rejector::get_sample_rate)
+    .def("get_num_inputs",  &pitch_detector::get_num_inputs)
+    .def("get_num_outputs", &pitch_detector::get_num_outputs)
+    .def("get_sample_rate", &pitch_detector::get_sample_rate)
 
-    .def("set_param", &harmonic_rejector::set_param,
+    .def("set_param", &pitch_detector::set_param,
          py::arg("name"), py::arg("value"))
-    .def("get_param", &harmonic_rejector::get_param,
+    .def("get_param", &pitch_detector::get_param,
          py::arg("name"))
-    .def("get_param_names", &harmonic_rejector::get_param_names);
+    .def("get_param_names", &pitch_detector::get_param_names);
 }
