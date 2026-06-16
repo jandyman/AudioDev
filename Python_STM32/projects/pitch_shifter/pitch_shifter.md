@@ -8,12 +8,23 @@ seamlessly. `pitch_ratio` 0.5 = one octave down.
 Signal flow — left output channel is the dry input, right is the shifted output:
 
 ```
-audio → lpf ─┬─→ zc  ───────────────→ loop_controller (zc_impulse)
-             ├─→ atk ───────────────→ loop_controller (trigger + active_gain)
-             ├─→ hr  ───────────────→ loop_controller (P / sigma / qualified)
-             └─→ dtd (triple-tap delay)
-loop_controller → 3 tap delays + 3 gains → dtd → mixer3 → audio_out_r
+audio ─┬─→ lpf ─┬─→ zc  ─(zc_impulse)──────────┐
+       │        ├─→ atk ─(trigger, active_gain)─┤
+       │        ├─→ hr  ─(P, sigma, qualified)──┴─→ lc ──┬─(3 tap delays)──┐
+       │        │                                        │                 ▼
+       │        └─────────────────(audio_in)────────────────────────────→ dtd
+       │                                                 │                 │
+       │                                          (3 gains)            (3 taps)
+       │                                                 ▼                 ▼
+       │                                                 └──→ mixer3 ◄──────┘
+       │                                                        │
+       │                                                        └─→ audio_out_r
+       └────────────────────────────────────────────────────────────→ audio_out_l  (dry)
 ```
+
+`lc` (loop_controller) is the hub: the detectors feed it, and it drives both `dtd`
+(the three tap delay times) and `mixer3` (the three tap gains). `dtd` reads the
+delay line that `lpf` fills and emits the three taps that `mixer3` sums.
 
 The wiring is defined in [`pitch_shifter.graph`](pitch_shifter.graph); each block
 has its own doc beside its source.
