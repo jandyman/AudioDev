@@ -8,7 +8,12 @@ Cross-project configuration for audio development work.
 - **2-space indent** — no tabs, no 4-space indent.
 - **snake_case** — variables, functions, file names. Well-known domain acronyms (`dma`, `sai`, `pll`, `i2s`) stay lowercase as-is.
 - **Conserve vertical space** — blank lines between logical steps, not between every line. Tightly related statements stay contiguous.
+- **Block-comment spacing** — code should read like paragraphs: a paragraph-style (multi-line) comment heading a function *or* a block of constants gets a blank line under it; single-line labels and in-body comments hug the code.
 - **Align trailing `//` comments** vertically when a group of them appears together.
+
+These apply to Faust `.dsp` source as well as C++ — read "function" as a top-level
+definition (`name = …;`), and a labeled parameter group as a block of constants;
+only the 1TBS brace rule is C++-specific.
 
 Full reference: `Daisy_Claude/docs/coding_standards.md`.
 

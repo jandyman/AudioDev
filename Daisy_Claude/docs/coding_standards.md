@@ -34,26 +34,46 @@ The general philosophy is to **conserve vertical space** while keeping code read
 
 Concretely:
 
-- A multi-line comment (say, 3+ lines) describing the block below it gets a blank line between the comment and the code, the same way prose separates a heading from its paragraph.
+The guiding idea is simply that code should **read like paragraphs**, the way people are used to: a paragraph-style comment is a heading, and a heading sits a blank line above its paragraph.
+
+- A **paragraph-style comment** (multi-line prose) heading a top-level definition — a function *or* a block of constant declarations — gets a blank line beneath it, so the code reads as the paragraph under that heading.
+- A **single-line label** hugs the group it introduces (e.g. `// Latency thresholds (ms)` right above its constants) — it's a caption, not a paragraph.
+- A comment **inside a function body** hugs the code it annotates, even when it runs several lines — it's an inline note within the paragraph, not a new heading. The blank line that separates two steps goes *above* the next step's comment.
 - Tightly related statements stay contiguous — no gratuitous blank lines inside a small block.
-- Two logically distinct steps within one function get a blank line between them, even if each is only one or two lines.
 
 Example:
 
 ```c
-// Enable the SAI1 peripheral clock and reset the block before any
-// register configuration, per RM0433 §8.7.26. Without the reset,
-// re-running init after a warm boot can leave FIFOs in odd states.
+class loop_controller {
+  // Latency thresholds (ms)            — single-line label, hugs its group.
+  static constexpr float LOWER_THRESHOLD_MS = 100.0f;
+  static constexpr float UPPER_THRESHOLD_MS = 200.0f;
 
-RCC->APB2ENR |= RCC_APB2ENR_SAI1EN;
-RCC->APB2RSTR |=  RCC_APB2RSTR_SAI1RST;
-RCC->APB2RSTR &= ~RCC_APB2RSTR_SAI1RST;
+  // Crossfade lengths. The bailout fade runs longer than a loop fade, so a
+  // forced reset is gentler. This multi-line paragraph heads a constant
+  // block, so it gets a blank line — same as a comment above a function.
 
-// Sub-block A: TX master. FS and SCK are generated here and shared
-// with sub-block B via synchronous mode.
+  static constexpr float LOOP_CROSSFADE_MS    = 5.0f;
+  static constexpr float BAILOUT_CROSSFADE_MS = 15.0f;
 
-SAI1_Block_A->CR1 = ...;
+  // advance_tap_state() — one delay+gain ramp step per tap; parks any tap
+  // whose gain reaches zero.
+
+  void advance_tap_state() {
+    // Advance each live tap, then park any that reached zero gain. An inline
+    // note inside the body hugs its code, even when it runs to two lines.
+    for (int i = 0; i < NUM_TAPS; i++) {
+      // ...
+    }
+  }
+};
 ```
+
+These vertical-rhythm rules are language-agnostic — they apply to Faust `.dsp`
+source as much as C++. Read "function" as a **top-level definition** (a Faust
+`name = …;` binding, including `process`), and a labeled group of parameter
+definitions is a **block of constants** — exactly the pattern in blocks like
+`attack_detector.dsp`.
 
 ---
 
