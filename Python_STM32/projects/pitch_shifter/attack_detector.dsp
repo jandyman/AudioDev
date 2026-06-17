@@ -38,7 +38,7 @@ ref_drop_s         = 0.050;   // fall rate past the plateau
 // of the ratio across the LIVE k, so a sustained-high ratio yields no new edge
 // as k decays (no re-fire); a genuinely larger attack (ratio above the still-
 // elevated k) overrides. Level-independent — k rests at a fixed nominal value.
-k_nom     = 2.0;     // resting threshold
+k_nom     = 1.6;     // resting threshold
 k_boost   = 20.0;    // threshold snaps here on each fire
 k_decay_s = 0.020;   // boost decay time constant (s)
 
