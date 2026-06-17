@@ -19,7 +19,7 @@ The selector picks the **lowest-cutoff** filter that clears all of:
 `MIN_INTERVALS_FOR_QUALIFIED` (3) observed intervals (so the EMA has settled).
 The selected `mu` becomes `P`, and `qualified` goes to 1. The loop controller
 uses `P` for its integer-multiple loop-length gate, falling back to
-"newest delay-valid" when `qualified` is 0.
+"nearest delay-valid" when `qualified` is 0.
 
 ### Outputs
 

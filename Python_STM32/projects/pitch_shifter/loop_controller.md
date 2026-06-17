@@ -36,12 +36,21 @@ attack crossfade. The attack tap is deliberately **not** gated — that is what
 lets its 1 ms fade-in carry the transient cleanly. Because tap roles are dynamic,
 this exclusion is by role (`attack_tap_`), not by a fixed gain index.
 
-### Harmonic-rejector gate
+### Loop-point selection (nearest-first + period gate)
 
-When the pitch detector reports `qualified` with a period `P`, loop-point
-selection prefers a candidate whose loop length is an integer multiple of `P`
-(rejecting octave errors); otherwise it falls back to the newest delay-valid
-candidate.
+Candidates are scanned **nearest-first** — the smallest forward jump wins, so
+each loop steps the read point ahead by ~one period instead of dumping latency
+to the minimum. That keeps the per-loop amplitude step on a decaying note small
+(~one decay-period) rather than the large ~200 ms-period modulation a
+jump-to-newest produces. The cost is a higher, steadier operating latency (it
+sits just under `LOWER_THRESHOLD_MS`).
+
+When the pitch detector reports `qualified` with a period `P`, selection takes
+the nearest candidate whose loop length is an integer multiple of `P` (rejecting
+octave errors, `k ≥ 1` within an urgency-scaled margin); otherwise it falls back
+to the nearest delay-valid candidate. The scan stops as soon as `new_inactive`
+drops below `MIN_DELAY` — since the jump grows monotonically, nothing farther can
+qualify.
 
 No dynamic allocation in `process()` — all state is statically declared.
 Parameter: `pitch_ratio` (runtime-adjustable; flushes ZC history on change).

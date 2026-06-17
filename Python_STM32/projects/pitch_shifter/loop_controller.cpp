@@ -306,18 +306,24 @@ void loop_controller::compute(float zc_impulse, float attack_impulse,
           margin = base * urgency_mult;
         }
 
+        // Search candidates NEAREST-first (smallest forward jump). Each loop
+        // then steps the read point forward by ~one period (k=1) instead of
+        // dumping latency to MIN — small amplitude steps on a decaying note
+        // rather than the ~200 ms sawtooth. delta grows monotonically with i,
+        // so new_inactive shrinks monotonically: once it falls below MIN_DELAY
+        // no later (larger-delta) candidate can be valid → stop the scan.
         int   head_idx     = (zc_head_ - zc_count_ + ZC_HISTORY_SIZE) % ZC_HISTORY_SIZE;
         int   fallback_i   = -1;
         int   match_i      = -1;
         float fb_inactive  = 0.0f, match_inactive = 0.0f;
-        for (int i = zc_count_ - 1; i > 0; i--) {
+        for (int i = 1; i < zc_count_; i++) {
           int     idx          = (head_idx + i) % ZC_HISTORY_SIZE;
           int32_t at_new       = zc_history_[idx];
           float   delta_samples = (float)(at_new - head_at);
           float   new_inactive  = DT_active - delta_samples;
-          if (new_inactive < MIN_DELAY_SAMPLES) continue;
+          if (new_inactive < MIN_DELAY_SAMPLES) break;
 
-          if (fallback_i < 0) {
+          if (fallback_i < 0) {                 // nearest delay-valid = ungated fallback
             fallback_i  = i;
             fb_inactive = new_inactive;
           }
