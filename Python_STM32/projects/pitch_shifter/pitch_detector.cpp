@@ -1,6 +1,6 @@
 /* @block
 (define-block pitch_detector
- (inputs in)
+ (inputs in reset)
  (outputs x_filt_0 x_filt_1 x_filt_2 env_filt_0 env_filt_1 env_filt_2 tall_peak_0 tall_peak_1 tall_peak_2 mu_0 mu_1 mu_2 sigma_0 sigma_1 sigma_2 cleanness_0 cleanness_1 cleanness_2 amplitude_0 amplitude_1 amplitude_2 selected_filter P sigma_sel qualified)
  (params (fc_0 :default 60) (fc_1 :default 120) (fc_2 :default 240) (peak_frac :default 0.65) (ema_tau_intervals :default 4) (cleanness_thresh :default 0.5) (amp_thresh :default 0.15) (env_fc_hz :default 30) (min_peak_distance_ms :default 1)))
 */
@@ -118,6 +118,24 @@ void pitch_detector::process(const float* const* inputs, float* const* outputs, 
     for (int n = 0; n < num_samples; n++) {
         float audio = inputs[0][n];
         sample_index_++;
+
+        // Note-onset reset: on the attack impulse, clear the period-tracking
+        // stats so a new note starts from a clean slate instead of the EMA
+        // gliding off the previous note's period. Biquads and envelope followers
+        // keep running (no filter transient is injected); only the inter-peak
+        // interval stats are cleared, so qualified honestly stays 0 until
+        // MIN_INTERVALS_FOR_QUALIFIED fresh intervals rebuild it.
+        if (inputs[1][n] > 0.5f) {
+            for (int k = 0; k < N; k++) {
+                FilterState& f = filters_[k];
+                f.last_peak_sample        = 0;
+                f.samples_since_last_peak = 0;
+                f.intervals_seen          = 0;
+                f.mu                      = 0.0f;
+                f.sigma_sq                = 0.0f;
+                f.cleanness               = 0.0f;
+            }
+        }
 
         // Raw envelope follower
         float abs_audio = fabsf(audio);

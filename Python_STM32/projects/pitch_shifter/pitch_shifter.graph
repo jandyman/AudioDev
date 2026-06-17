@@ -16,7 +16,7 @@
 
  (connect lpf.out zc.in atk.in pd.in dtd.audio_in)
  (connect zc.zc_out lc.zc_impulse)
- (connect atk.trigger lc.attack_impulse)
+ (connect atk.trigger lc.attack_impulse pd.reset)
  (connect pd.P lc.P_samples)
  (connect pd.sigma_sel lc.sigma_samples)
  (connect pd.qualified lc.qualified)

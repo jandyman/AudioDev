@@ -27,6 +27,19 @@ Beyond the selector outputs (`selected_filter`, `P`, `sigma_sel`, `qualified`),
 every per-filter intermediate is exposed as a probe — `x_filt_k`, `env_filt_k`,
 `tall_peak_k`, `mu_k`, `sigma_k`, `cleanness_k`, `amplitude_k` — for diagnosis.
 
+### Note-onset reset
+
+A second input, `reset`, is wired to the attack detector's `trigger`. On each
+onset impulse the per-filter period stats (`mu`, `sigma`, `intervals_seen`,
+`last_peak_sample`) are cleared so a new note starts from a **clean slate**
+instead of the EMA gliding off the previous note's period (which otherwise left
+`P` stale — up to ~2.5× wrong — for the first cycles of a note). The biquads and
+envelope followers keep running across the reset, so no filter transient is
+injected. Because the stats are cleared, `qualified` honestly drops to 0 until
+`MIN_INTERVALS_FOR_QUALIFIED` fresh intervals rebuild it (~3 cycles), during
+which the loop controller falls back to ungated "newest delay-valid" selection —
+preferable to gating on a wrong period.
+
 ### Key parameters
 
 `fc_0` / `fc_1` / `fc_2` (per-filter cutoffs), `peak_frac`, `ema_tau_intervals`,

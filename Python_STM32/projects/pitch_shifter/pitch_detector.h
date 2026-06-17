@@ -26,7 +26,7 @@ public:
 
     void init(int sample_rate);
 
-    int get_num_inputs()  const { return 1; }
+    int get_num_inputs()  const { return 2; }
     int get_num_outputs() const { return NUM_OUTPUTS; }
     int get_sample_rate() const { return (int)sample_rate_; }
 

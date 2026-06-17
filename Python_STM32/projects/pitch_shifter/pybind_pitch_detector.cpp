@@ -26,7 +26,7 @@ PYBIND11_MODULE(pybind_pitch_detector, m) {
            self.process(in_ptrs.data(), out_ptrs.data(), n);
            return vec_of_vec_to_np_list(outputs_vec);
          },
-         "Process one buffer. inputs: [audio]\n"
+         "Process one buffer. inputs: [audio, reset]\n"
          "outputs are 7*NUM_FILTERS + 4 channels.\n"
          "Per filter k in [0, NUM_FILTERS):\n"
          "  0*N+k : x_filt\n"
