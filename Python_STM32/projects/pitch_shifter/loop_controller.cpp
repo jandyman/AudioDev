@@ -83,13 +83,13 @@ void loop_controller::update_derived_constants() {
 
 void loop_controller::process(const float* const* inputs, float* const* outputs, int n) {
   for (int i = 0; i < n; i++) {
+    Probes p { outputs[6][i], outputs[7][i], outputs[8][i],     // latency_ms, loop_event, active_tap
+               outputs[9][i], outputs[10][i], outputs[11][i] }; // bailout_event, gated_event, attack_event
     compute(inputs[0][i], inputs[1][i],
             inputs[2][i], inputs[3][i], inputs[4][i],
             outputs[0][i], outputs[1][i], outputs[2][i],   // tapN_delay_ms
             outputs[3][i], outputs[4][i], outputs[5][i],   // gainN
-            outputs[6][i], outputs[7][i],                  // latency_ms, loop_event
-            outputs[8][i], outputs[9][i],                  // active_tap, bailout_event
-            outputs[10][i], outputs[11][i]);               // gated_event, attack_event
+            p);
 
     // Loop-tap gating: multiply every NON-attack tap's gain by active_gain so
     // buffer-bleed has no audible path during silence / the attack crossfade.
@@ -211,13 +211,11 @@ void loop_controller::compute(float zc_impulse, float attack_impulse,
                               float P_samples, float sigma_samples, float qualified,
                               float& tap1_delay_ms, float& tap2_delay_ms, float& tap3_delay_ms,
                               float& gain1, float& gain2, float& gain3,
-                              float& latency_ms, float& loop_event,
-                              float& active_tap_out, float& bailout_event,
-                              float& gated_event, float& attack_event) {
-  loop_event    = 0.0f;
-  bailout_event = 0.0f;
-  gated_event   = 0.0f;
-  attack_event  = 0.0f;
+                              Probes& p) {
+  p.loop_event    = 0.0f;
+  p.bailout_event = 0.0f;
+  p.gated_event   = 0.0f;
+  p.attack_event  = 0.0f;
 
   // 1. Advance sample counter
   sample_index_++;
@@ -265,7 +263,7 @@ void loop_controller::compute(float zc_impulse, float attack_impulse,
   // 4. Attack impulse (priority — but only while not already responding)
   if (attack_impulse > 0.5f && mode_ == MODE_LOOP_ONLY) {
     start_attack_response();
-    attack_event = 1.0f;
+    p.attack_event = 1.0f;
   }
 
   // 5. Record incoming ZC impulse
@@ -344,9 +342,9 @@ void loop_controller::compute(float zc_impulse, float attack_impulse,
         float fire_inactive = (match_i >= 0) ? match_inactive : fb_inactive;
         if (fire_i >= 0) {
           start_loop_crossfade(fire_inactive, loop_cf_samples_);
-          loop_event = 1.0f;
+          p.loop_event = 1.0f;
           if (gate_active && match_i >= 0 && match_i != fallback_i) {
-            gated_event = 1.0f;
+            p.gated_event = 1.0f;
           }
           pop_oldest();
           fired = true;
@@ -361,7 +359,7 @@ void loop_controller::compute(float zc_impulse, float attack_impulse,
     if (!in_loop_crossfade_ && tap_delay_[active_tap_] > upper_threshold_) {
       start_loop_crossfade(MIN_DELAY_SAMPLES, bailout_cf_samples_);
       flush_zc_history();
-      bailout_event = 1.0f;
+      p.bailout_event = 1.0f;
     }
   }
 
@@ -373,8 +371,8 @@ void loop_controller::compute(float zc_impulse, float attack_impulse,
   gain1          = gain_[0];
   gain2          = gain_[1];
   gain3          = gain_[2];
-  latency_ms     = tap_delay_[active_tap_] * ms_per_sample;
-  active_tap_out = (float)active_tap_;
+  p.latency_ms   = tap_delay_[active_tap_] * ms_per_sample;
+  p.active_tap   = (float)active_tap_;
 }
 
 // ============================================================

@@ -78,13 +78,25 @@ private:
   // ------------------------------------------------------------------
   // Per-sample compute (called by process())
   // ------------------------------------------------------------------
+
+  // Diagnostic-only outputs. None are wired downstream in the graph (see
+  // pitch_shifter.graph) — they exist purely as probe taps for Python plots.
+  // Grouped here to keep compute()'s signature legible; each member is a
+  // reference bound to the corresponding output buffer slot in process().
+  struct Probes {
+    float& latency_ms;
+    float& loop_event;
+    float& active_tap;
+    float& bailout_event;
+    float& gated_event;
+    float& attack_event;
+  };
+
   void compute(float zc_impulse, float attack_impulse,
                float P_samples, float sigma_samples, float qualified,
                float& tap1_delay_ms, float& tap2_delay_ms, float& tap3_delay_ms,
                float& gain1, float& gain2, float& gain3,
-               float& latency_ms, float& loop_event,
-               float& active_tap_out, float& bailout_event,
-               float& gated_event, float& attack_event);
+               Probes& p);
 
   // ------------------------------------------------------------------
   // Internal state — all statically declared
