@@ -19,11 +19,13 @@ amp_release = 0.010;   // 10ms - holds level briefly after crossing
 
 // Minimum amplitude to qualify a zero crossing.
 // Set above noise floor, below softest expected bass note.
+
 min_amplitude = 0.01;
 
 // Minimum spacing between qualified crossings.
 // Must be below the shortest expected period (3.2ms at 311Hz) to pass all
 // fundamentals, while blocking most harmonic crossings at higher frequencies.
+
 min_spacing = 0.0025;  // 2.5ms -> passes fundamentals up to 400Hz
 
 // ============================================================

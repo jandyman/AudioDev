@@ -19,12 +19,14 @@ import("stdfaust.lib");
 // fast: instantaneous peak track of |audio| with hold + accelerating release.
 // Hold > one low-E period (~24.4 ms) eliminates per-cycle wobble without RMS
 // lag; past hold the release TC shrinks continuously.
+
 fast_hold_s = 0.025;
 fast_rel_s  = 0.050;
 
 // ref: two-stage-attack / two-stage-release follower of fast_env.
 // Attack: slow for ref_att_slow_dur_s after entering attack (widens the gap),
 // then fast (catch-up = holdoff). Release: hold then drop (dives with fast).
+
 ref_att_slow_s     = 0.050;   // slow initial attack — widens fast/ref at onset
 ref_att_fast_s     = 0.015;   // quick catch-up after the slow window (holdoff)
 ref_att_slow_dur_s = 0.012;   // how long ref stays in slow attack after onset
@@ -38,6 +40,7 @@ ref_drop_s         = 0.050;   // fall rate past the plateau
 // of the ratio across the LIVE k, so a sustained-high ratio yields no new edge
 // as k decays (no re-fire); a genuinely larger attack (ratio above the still-
 // elevated k) overrides. Level-independent — k rests at a fixed nominal value.
+
 k_nom     = 1.6;     // resting threshold
 k_boost   = 20.0;    // threshold snaps here on each fire
 k_decay_s = 0.020;   // boost decay time constant (s)
@@ -79,6 +82,7 @@ with {
 
 // Hold-then-release follower: attack like env_ar; on release the coefficient
 // blends from 1.0 (perfect hold) to rel_c over hold_samples.
+
 env_hold(att_s, hold_s, rel_fast_s, x) = feedback : _, !
 with {
     att_c        = exp(-1.0 / (att_s * ma.SR));
@@ -105,6 +109,7 @@ with {
 // shrinks continuously: TC(t) = rel_s * (hold_samples/t)^2. The "hold-ish"
 // behavior near a peak emerges from TC being very large there.
 //   eff_rel = exp(sf^2 * log_rel_c),  sf = t / hold_samples.
+
 env_hold_accel(hold_s, rel_s, x) = feedback : _, !
 with {
     rel_c        = exp(-1.0 / (rel_s * ma.SR));
@@ -129,6 +134,7 @@ with {
 // after re-entering attack mode, then fast (att_fast_s). Release: hold-rate
 // (rel_hold_s) for rel_hold_dur_s after a peak, then drop-rate (rel_drop_s).
 // The attack timer resets each time the follower re-enters attack mode.
+
 env_ar_2attack(att_slow_s, att_fast_s, att_slow_dur_s,
                rel_hold_s, rel_drop_s, rel_hold_dur_s, x) = feedback : _, !, !, !
 with {
