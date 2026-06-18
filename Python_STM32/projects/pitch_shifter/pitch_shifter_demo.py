@@ -4,7 +4,7 @@ Pitch Shifter demo — using the graph-compiler-generated pipeline.
 One process_chunk() call feeds the whole file through; per-block buffers are
 probed by name for diagnostics. Saves output WAV and shows interactive plots:
   1. Input (post-LPF) + event markers
-  2. Output audio + active_gain — fade-in / mute behavior around attacks
+  2. Output audio (shifted)
   3. Three tap delays + thresholds
   4. Three tap gains
   5. HR selector tint + P estimate + gated/bailout markers
@@ -156,20 +156,13 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   axes[0].grid(True, alpha=0.3)
   axes[0].set_xlim(0, t[-1])
 
-  # Panel 2: output audio + active_gain — shows fade-in / mute behavior
-  ax_gain = axes[1].twinx()
+  # Panel 2: output audio (shifted)
   axes[1].plot(t, audio_shifted, 'b-', linewidth=0.3, alpha=0.7, label='Output audio (R = shifted)')
   mark_events(axes[1])
   axes[1].set_ylabel('Output amplitude')
   axes[1].grid(True, alpha=0.3)
-  ax_gain.plot(t, atk_gain, color='#0a7', linewidth=0.6, alpha=0.85, label='active_gain (= 1 − dive)')
-  ax_gain.set_ylabel('active_gain', color='#0a7')
-  ax_gain.set_ylim(-0.05, 1.1)
-  ax_gain.tick_params(axis='y', labelcolor='#0a7')
-  lines1, labels1 = axes[1].get_legend_handles_labels()
-  lines2, labels2 = ax_gain.get_legend_handles_labels()
-  axes[1].legend(lines1 + lines2, labels1 + labels2, loc='upper right', fontsize=8)
-  axes[1].set_title('Output (shifted) + active_gain — direct view of fade-in / mute around attacks')
+  axes[1].legend(loc='upper right', fontsize=8)
+  axes[1].set_title('Output (shifted)')
 
   # Panel 3: tap delays
   axes[2].plot(t, tap1_del, 'b-',  linewidth=0.7, alpha=0.9, label='Tap 1 delay (ms)')
@@ -304,7 +297,7 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   return out_path
 
 if __name__ == '__main__':
-  pitch_ratio = 0.5
+  pitch_ratio = 0.75   # 0.5 = octave down (-12st), 0.75 = perfect fourth down (-5st)
   lpf_fc_hz   = 10000.0
-  run_demo("bass notes bad trigger 2.wav", pitch_ratio=pitch_ratio, lpf_fc_hz=lpf_fc_hz)
+  run_demo("Fourth Test.wav", pitch_ratio=pitch_ratio, lpf_fc_hz=lpf_fc_hz)
   print("\n" + "=" * 60 + "\nDemo complete")
