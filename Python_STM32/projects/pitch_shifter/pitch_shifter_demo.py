@@ -109,9 +109,9 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
 
   out_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'test_audio_out')
   os.makedirs(out_dir, exist_ok=True)
-  ratio_str = f"{int(round(pitch_ratio*100))}pct"
+  semitones = int(round(12.0 * np.log2(pitch_ratio)))   # 0.5 -> -12, 0.75 -> -5
   input_stem = os.path.splitext(os.path.basename(input_path))[0]
-  out_path = os.path.join(out_dir, f"{input_stem}_pitch_shifted_{ratio_str}.wav")
+  out_path = os.path.join(out_dir, f"{input_stem}_pitch_shifted_{semitones:+d}st.wav")
   # audio_out shape: (N, 2)  — column 0 = dry (audio_in), column 1 = pitch-shifted.
   # Normalize jointly so the L/R level relationship is preserved.
   ao = np.asarray(audio_out, dtype=np.float64)
@@ -306,5 +306,5 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
 if __name__ == '__main__':
   pitch_ratio = 0.5
   lpf_fc_hz   = 10000.0
-  run_demo("longer bass notes.wav", pitch_ratio=pitch_ratio, lpf_fc_hz=lpf_fc_hz)
+  run_demo("bass notes bad trigger 2.wav", pitch_ratio=pitch_ratio, lpf_fc_hz=lpf_fc_hz)
   print("\n" + "=" * 60 + "\nDemo complete")
