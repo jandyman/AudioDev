@@ -37,10 +37,10 @@ Output-side pitch shifter; `pitch_ratio` 0.5 = octave-down. Pipeline
 
 ```
 audio → lpf (input_lpf, Faust)
-      → zc  (zero_crossing_detector, Faust) → loop_controller (zc_impulse)
       → atk (attack_detector, Faust)        → loop_controller (trigger + active_gain)
-      → pd  (pitch_detector, C++)        → loop_controller (P / sigma / qualified gate)
+      → pd  (pitch_detector, C++)           → loop_controller (selected_peak = loop clock)
       → dtd (triple_tap_delay, Faust)
+zc (zero_crossing_detector, Faust)          → diagnostic probe only (no longer the loop clock)
 loop_controller → 3 tap delays + 3 gains → dtd → mixer3 (C++ summer) → audio_out_r
 audio_out_l = dry input
 ```
@@ -52,10 +52,15 @@ audio_out_l = dry input
   A parallel dive path (slow/hold envelopes → `dive_strength` → `active_gain`)
   drives note muting downstream; kept separate from the trigger. Tuned in
   `attack_detector_lab.py` (pure Python), then ported to Faust (verified lab == Faust).
+- **pitch_detector** (C++): LPF bank + per-filter cleanness scoring → trusted
+  period `P`; also emits `selected_peak` (selected band's one-per-period peak
+  train) as the loop controller's clean, phase-isolated **loop clock**.
 - **loop_controller** (C++): owns all delay ramps + tap gains across three taps
   (active / loop-incoming / attack roles, dynamic across {0,1,2}); 1 ms attack
   fade-in / 10 ms fade-out; gates non-attack taps by `active_gain` (by ROLE, not
-  a fixed index); bailout + loop crossfades.
+  a fixed index); bailout + loop crossfades. Loop points = `pd.selected_peak`
+  (phase-matched splices); selection is **target-latency** (jump back to the peak
+  nearest the operating point — k=1 holds latency, any k for clawback).
 - **mixer3** (C++): stateless weighted summer — all muting is upstream in loop_controller.
 
 Demos: `pitch_shifter_demo.py` (full pipeline + probe plots, saves WAV),

@@ -3,12 +3,17 @@
 The brain of the pitch shifter. It owns every delay ramp and tap gain across the
 three delay taps and decides when to splice a new loop or respond to an attack.
 
-**Output-side detection:** input zero crossings are recorded as absolute
-sample-index times in a ring buffer; on each output sample the controller
-compares `AT_out = sample_index − DT_active` against the head of that buffer, and
-when they line up it is emitting that crossing and may fire a loop transition.
-Bailout runs every sample (not gated on input arrival), so the active delay can
-never grow unbounded past the upper threshold.
+**Output-side detection:** loop points come from the pitch detector's
+**selected-band peak train** (`pd.selected_peak`) — a clean one-per-period clock
+that isolates the fundamental, far steadier than raw input zero crossings on
+harmonically-rich notes (which stutter on the growing 2nd harmonic). Each peak
+time is recorded as an absolute sample index in a ring buffer; on each output
+sample the controller compares `AT_out = sample_index − DT_active` against the
+head of that buffer, and when they line up it may fire a loop transition.
+Splicing peak-to-peak is **phase-matched by construction** — both endpoints share
+the filter's group delay, which cancels in the loop length. Bailout runs every
+sample (not gated on peak arrival), so the active delay can never grow unbounded
+past the upper threshold.
 
 ### Tap roles
 
@@ -36,21 +41,23 @@ attack crossfade. The attack tap is deliberately **not** gated — that is what
 lets its 1 ms fade-in carry the transient cleanly. Because tap roles are dynamic,
 this exclusion is by role (`attack_tap_`), not by a fixed gain index.
 
-### Loop-point selection (nearest-first + period gate)
+### Loop-point selection (target latency)
 
-Candidates are scanned **nearest-first** — the smallest forward jump wins, so
-each loop steps the read point ahead by ~one period instead of dumping latency
-to the minimum. That keeps the per-loop amplitude step on a decaying note small
-(~one decay-period) rather than the large ~200 ms-period modulation a
-jump-to-newest produces. The cost is a higher, steadier operating latency (it
-sits just under `LOWER_THRESHOLD_MS`).
+When latency exceeds `LOWER_THRESHOLD_MS`, the controller jumps back to whichever
+peak lands latency closest to the operating point (the lower threshold). In steady
+state only ~one period has accumulated since the last loop, so this is a
+**single-peak (k=1) step that holds latency near the threshold** — small per-loop
+amplitude steps, not a jump-to-minimum sawtooth. If latency has overshot (clawback
+after a deferral, or corner cases) it jumps back as many peaks as needed: `k` is
+simply whatever reaches the target. Because the candidates are the clean
+per-period peak clock, every jump is an integer number of periods and
+phase-matched, so **no period/margin gate is needed** (the old `MARGIN_FRAC_P` /
+urgency machinery is gone). The scan stops once a candidate would drop
+`new_inactive` below `MIN_DELAY`.
 
-When the pitch detector reports `qualified` with a period `P`, selection takes
-the nearest candidate whose loop length is an integer multiple of `P` (rejecting
-octave errors, `k ≥ 1` within an urgency-scaled margin); otherwise it falls back
-to the nearest delay-valid candidate. The scan stops as soon as `new_inactive`
-drops below `MIN_DELAY` — since the jump grows monotonically, nothing farther can
-qualify.
+*Known residual:* the firing-cadence/crossfade dynamics currently yield a
+~2-period latency sawtooth rather than a tight 1-period one — a deferred polish,
+not a correctness issue; splices stay phase-matched throughout.
 
 No dynamic allocation in `process()` — all state is statically declared.
 Parameter: `pitch_ratio` (runtime-adjustable; flushes ZC history on change).

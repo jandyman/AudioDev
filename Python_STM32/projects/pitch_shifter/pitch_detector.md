@@ -27,6 +27,11 @@ Beyond the selector outputs (`selected_filter`, `P`, `sigma_sel`, `qualified`),
 every per-filter intermediate is exposed as a probe — `x_filt_k`, `env_filt_k`,
 `tall_peak_k`, `mu_k`, `sigma_k`, `cleanness_k`, `amplitude_k` — for diagnosis.
 
+`selected_peak` is the `tall_peak` of the currently selected filter — a clean
+one-per-period impulse train that isolates the fundamental. The loop controller
+consumes it as its **loop clock** (phase-matched splice points), in place of the
+wideband zero-crossing stream, which stutters on harmonic content.
+
 ### Note-onset reset
 
 A second input, `reset`, is wired to the attack detector's `trigger`. On each
