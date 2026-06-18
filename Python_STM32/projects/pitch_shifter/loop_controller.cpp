@@ -66,6 +66,7 @@ void loop_controller::set_pitch_ratio(float ratio) {
 void loop_controller::update_derived_constants() {
   lower_threshold_        = LOWER_THRESHOLD_MS * sample_rate_ / 1000.0f;
   upper_threshold_        = UPPER_THRESHOLD_MS * sample_rate_ / 1000.0f;
+  margin_floor_samples_   = MARGIN_FLOOR_MS    * sample_rate_ / 1000.0f;
   loop_cf_samples_        = (int)(LOOP_CROSSFADE_MS   * sample_rate_ / 1000.0f);
   attack_fadein_samples_  = (int)(ATTACK_FADEIN_MS    * sample_rate_ / 1000.0f);
   attack_fadeout_samples_ = (int)(ATTACK_FADEOUT_MS   * sample_rate_ / 1000.0f);
@@ -295,7 +296,8 @@ void loop_controller::compute(float zc_impulse, float attack_impulse,
         float margin      = 0.0f;
         if (gate_active) {
           float base = MARGIN_FRAC_P * P_samples;
-          if (sigma_samples > base) base = sigma_samples;
+          if (sigma_samples > base)        base = sigma_samples;
+          if (margin_floor_samples_ > base) base = margin_floor_samples_;
           float urgency_t = (DT_active - lower_threshold_) /
                             (upper_threshold_ - lower_threshold_);
           if (urgency_t < 0.0f) urgency_t = 0.0f;

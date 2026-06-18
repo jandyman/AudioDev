@@ -24,8 +24,11 @@ public:
   // ZC ring buffer size. Worst case: 200 ms / 3.2 ms ≈ 63 records.
   static const int ZC_HISTORY_SIZE = 128;
 
-  // Latency thresholds
-  static constexpr float LOWER_THRESHOLD_MS = 100.0f;
+  // Latency thresholds. Lower = earliest a loop may fire (operating point, since
+  // per-cycle loops keep latency hovering just above it); upper = bailout ceiling
+  // (decoupled safety, rarely reached). Lower latency = fresher looped material =
+  // less timbral modulation on an evolving note. See loop_controller.md.
+  static constexpr float LOWER_THRESHOLD_MS = 50.0f;
   static constexpr float UPPER_THRESHOLD_MS = 200.0f;
 
   // Minimum delay after any tap reset (avoids zero-delay artifacts)
@@ -43,6 +46,17 @@ public:
   // URGENCY_MAX_MULT at the upper threshold.
   static constexpr float MARGIN_FRAC_P     = 0.05f;
   static constexpr float URGENCY_MAX_MULT  = 3.0f;
+
+  // Absolute floor on the gate margin (ms). The ZC stream jitters by a roughly
+  // CONSTANT absolute amount (~1 ms, set by the waveform/LPF, not the period).
+  // A purely fractional margin (MARGIN_FRAC_P * P) shrinks below that jitter on
+  // short high-note periods (e.g. ~0.38 ms on a 131 Hz note), so the correct
+  // one-period (k=1) candidate keeps failing and the nearest-first scan leaps to
+  // a far, coincidentally-aligned ZC — the erratic high-note loop points. Flooring
+  // the margin in absolute time keeps k=1 choosable regardless of pitch. We always
+  // splice on a real ZC, so value-continuity holds; the floor only governs which
+  // k is accepted. Sized from the measured ~1 ms C3 jitter. See loop_controller.md.
+  static constexpr float MARGIN_FLOOR_MS   = 1.5f;
 
   // ------------------------------------------------------------------
   // Public interface
@@ -133,6 +147,7 @@ private:
   // Derived constants (recomputed in set_pitch_ratio / init)
   float lower_threshold_;             // samples
   float upper_threshold_;             // samples
+  float margin_floor_samples_;        // absolute gate-margin floor (samples)
   int   loop_cf_samples_;
   int   attack_fadein_samples_;
   int   attack_fadeout_samples_;

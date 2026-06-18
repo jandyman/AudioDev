@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 from build.pybind_pitch_shifter import pitch_shifter
 
 # Mirror the constants from loop_controller.h (kept in sync by eye).
-LOWER_THRESHOLD_MS = 100.0
+LOWER_THRESHOLD_MS = 50.0
 UPPER_THRESHOLD_MS = 200.0
 N_HR_FILTERS       = 3
 
