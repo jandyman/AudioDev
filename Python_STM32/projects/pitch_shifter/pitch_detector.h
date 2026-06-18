@@ -15,7 +15,7 @@ using std::string;
 class pitch_detector {
 public:
     static const int NUM_FILTERS = 3;
-    static const int NUM_OUTPUTS = 7 * NUM_FILTERS + 4;
+    static const int NUM_OUTPUTS = 7 * NUM_FILTERS + 5;   // +1: selected_peak (loop clock)
 
     // A filter is "qualified" (eligible for selection) only after this many
     // intervals have been observed — guards against acting on uninitialised

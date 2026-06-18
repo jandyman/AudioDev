@@ -1,7 +1,7 @@
 /* @block
 (define-block pitch_detector
  (inputs in reset)
- (outputs x_filt_0 x_filt_1 x_filt_2 env_filt_0 env_filt_1 env_filt_2 tall_peak_0 tall_peak_1 tall_peak_2 mu_0 mu_1 mu_2 sigma_0 sigma_1 sigma_2 cleanness_0 cleanness_1 cleanness_2 amplitude_0 amplitude_1 amplitude_2 selected_filter P sigma_sel qualified)
+ (outputs x_filt_0 x_filt_1 x_filt_2 env_filt_0 env_filt_1 env_filt_2 tall_peak_0 tall_peak_1 tall_peak_2 mu_0 mu_1 mu_2 sigma_0 sigma_1 sigma_2 cleanness_0 cleanness_1 cleanness_2 amplitude_0 amplitude_1 amplitude_2 selected_filter P sigma_sel qualified selected_peak)
  (params (fc_0 :default 60) (fc_1 :default 120) (fc_2 :default 240) (peak_frac :default 0.65) (ema_tau_intervals :default 4) (cleanness_thresh :default 0.5) (amp_thresh :default 0.15) (env_fc_hz :default 30) (min_peak_distance_ms :default 1)))
 */
 
@@ -229,6 +229,10 @@ void pitch_detector::process(const float* const* inputs, float* const* outputs, 
         outputs[7 * N + 1][n] = P_sel;
         outputs[7 * N + 2][n] = sig_sel;
         outputs[7 * N + 3][n] = (selected >= 0) ? 1.0f : 0.0f;
+        // Peak train of the SELECTED band — clean, one-per-period loop clock for
+        // the loop controller (replaces the wideband ZC stream). tall_peak of the
+        // selected filter was written above to outputs[2*N + selected].
+        outputs[7 * N + 4][n] = (selected >= 0) ? outputs[2 * N + selected][n] : 0.0f;
     }
 }
 

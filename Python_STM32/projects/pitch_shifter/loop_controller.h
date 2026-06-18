@@ -40,24 +40,6 @@ public:
   static constexpr float ATTACK_FADEOUT_MS      = 10.0f;  // slow tail-out of previous note
   static constexpr float BAILOUT_CROSSFADE_MULT = 3.0f;   // bailout = 3× loop crossfade
 
-  // Integer-multiple candidate gate (see concept doc, Harmonic Rejection +
-  // Urgency and relaxed matching). Base margin = max(MARGIN_FRAC_P * P, sigma);
-  // multiplied by an urgency factor scaling from 1 at the lower threshold to
-  // URGENCY_MAX_MULT at the upper threshold.
-  static constexpr float MARGIN_FRAC_P     = 0.05f;
-  static constexpr float URGENCY_MAX_MULT  = 3.0f;
-
-  // Absolute floor on the gate margin (ms). The ZC stream jitters by a roughly
-  // CONSTANT absolute amount (~1 ms, set by the waveform/LPF, not the period).
-  // A purely fractional margin (MARGIN_FRAC_P * P) shrinks below that jitter on
-  // short high-note periods (e.g. ~0.38 ms on a 131 Hz note), so the correct
-  // one-period (k=1) candidate keeps failing and the nearest-first scan leaps to
-  // a far, coincidentally-aligned ZC — the erratic high-note loop points. Flooring
-  // the margin in absolute time keeps k=1 choosable regardless of pitch. We always
-  // splice on a real ZC, so value-continuity holds; the floor only governs which
-  // k is accepted. Sized from the measured ~1 ms C3 jitter. See loop_controller.md.
-  static constexpr float MARGIN_FLOOR_MS   = 1.5f;
-
   // ------------------------------------------------------------------
   // Public interface
   // ------------------------------------------------------------------
@@ -147,7 +129,6 @@ private:
   // Derived constants (recomputed in set_pitch_ratio / init)
   float lower_threshold_;             // samples
   float upper_threshold_;             // samples
-  float margin_floor_samples_;        // absolute gate-margin floor (samples)
   int   loop_cf_samples_;
   int   attack_fadein_samples_;
   int   attack_fadeout_samples_;

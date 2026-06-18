@@ -66,7 +66,6 @@ void loop_controller::set_pitch_ratio(float ratio) {
 void loop_controller::update_derived_constants() {
   lower_threshold_        = LOWER_THRESHOLD_MS * sample_rate_ / 1000.0f;
   upper_threshold_        = UPPER_THRESHOLD_MS * sample_rate_ / 1000.0f;
-  margin_floor_samples_   = MARGIN_FLOOR_MS    * sample_rate_ / 1000.0f;
   loop_cf_samples_        = (int)(LOOP_CROSSFADE_MS   * sample_rate_ / 1000.0f);
   attack_fadein_samples_  = (int)(ATTACK_FADEIN_MS    * sample_rate_ / 1000.0f);
   attack_fadeout_samples_ = (int)(ATTACK_FADEOUT_MS   * sample_rate_ / 1000.0f);
@@ -292,62 +291,35 @@ void loop_controller::compute(float zc_impulse, float attack_impulse,
 
       bool fired = false;
       if (DT_active > lower_threshold_ && zc_count_ >= 2) {
-        bool  gate_active = (qualified > 0.5f) && (P_samples > 1.0f);
-        float margin      = 0.0f;
-        if (gate_active) {
-          float base = MARGIN_FRAC_P * P_samples;
-          if (sigma_samples > base)        base = sigma_samples;
-          if (margin_floor_samples_ > base) base = margin_floor_samples_;
-          float urgency_t = (DT_active - lower_threshold_) /
-                            (upper_threshold_ - lower_threshold_);
-          if (urgency_t < 0.0f) urgency_t = 0.0f;
-          if (urgency_t > 1.0f) urgency_t = 1.0f;
-          float urgency_mult = 1.0f + urgency_t * (URGENCY_MAX_MULT - 1.0f);
-          margin = base * urgency_mult;
-        }
-
-        // Search candidates NEAREST-first (smallest forward jump). Each loop
-        // then steps the read point forward by ~one period (k=1) instead of
-        // dumping latency to MIN — small amplitude steps on a decaying note
-        // rather than the ~200 ms sawtooth. delta grows monotonically with i,
-        // so new_inactive shrinks monotonically: once it falls below MIN_DELAY
-        // no later (larger-delta) candidate can be valid → stop the scan.
-        int   head_idx     = (zc_head_ - zc_count_ + ZC_HISTORY_SIZE) % ZC_HISTORY_SIZE;
-        int   fallback_i   = -1;
-        int   match_i      = -1;
-        float fb_inactive  = 0.0f, match_inactive = 0.0f;
+        // Target-latency loop: jump back to whichever peak lands latency closest
+        // to the operating point. In steady state only ~one period has built up,
+        // so this is a single-peak (k=1) step holding latency near the threshold;
+        // if latency overshot (clawback / corner cases) it jumps back as many
+        // peaks as needed, automatically. Candidates are the detector's clean
+        // per-period peak clock, so every one is phase-matched — no period/margin
+        // gate. new_inactive shrinks monotonically with i, so |new_inactive -
+        // target| is U-shaped: stop once it starts rising.
+        const float target  = lower_threshold_;
+        int   head_idx      = (zc_head_ - zc_count_ + ZC_HISTORY_SIZE) % ZC_HISTORY_SIZE;
+        int   best_i        = -1;
+        float best_inactive = 0.0f;
+        float best_err      = 1e30f;
         for (int i = 1; i < zc_count_; i++) {
-          int     idx          = (head_idx + i) % ZC_HISTORY_SIZE;
-          int32_t at_new       = zc_history_[idx];
-          float   delta_samples = (float)(at_new - head_at);
-          float   new_inactive  = DT_active - delta_samples;
-          if (new_inactive < MIN_DELAY_SAMPLES) break;
-
-          if (fallback_i < 0) {                 // nearest delay-valid = ungated fallback
-            fallback_i  = i;
-            fb_inactive = new_inactive;
+          int   idx           = (head_idx + i) % ZC_HISTORY_SIZE;
+          float delta_samples = (float)(zc_history_[idx] - head_at);
+          float new_inactive  = DT_active - delta_samples;
+          if (new_inactive < MIN_DELAY_SAMPLES) break;   // delta only grows → stop
+          float err = fabsf(new_inactive - target);
+          if (err < best_err) {
+            best_err = err; best_i = i; best_inactive = new_inactive;
+          } else {
+            break;                                       // past the U-shaped minimum
           }
-
-          if (gate_active) {
-            float k = roundf(delta_samples / P_samples);
-            if (k < 1.0f) continue;
-            float misalign = fabsf(delta_samples - k * P_samples);
-            if (misalign > margin) continue;
-          }
-
-          match_i        = i;
-          match_inactive = new_inactive;
-          break;
         }
-
-        int   fire_i        = (match_i >= 0) ? match_i        : fallback_i;
-        float fire_inactive = (match_i >= 0) ? match_inactive : fb_inactive;
-        if (fire_i >= 0) {
-          start_loop_crossfade(fire_inactive, loop_cf_samples_);
+        if (best_i >= 0) {
+          start_loop_crossfade(best_inactive, loop_cf_samples_);
           p.loop_event = 1.0f;
-          if (gate_active && match_i >= 0 && match_i != fallback_i) {
-            p.gated_event = 1.0f;
-          }
+          if (best_i > 1) p.gated_event = 1.0f;          // repurposed: multi-peak (k>1) jump
           pop_oldest();
           fired = true;
         }

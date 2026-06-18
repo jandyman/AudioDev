@@ -15,7 +15,10 @@
  (block mixer mixer3)
 
  (connect lpf.out zc.in atk.in pd.in dtd.audio_in)
- (connect zc.zc_out lc.zc_impulse)
+ ; loop clock = detector's selected-band peak train (clean, one-per-period),
+ ; NOT the wideband zero crossings (jittery on harmonically-rich high notes).
+ ; zc stays in the graph as a diagnostic probe. See loop_controller / the C3 work.
+ (connect pd.selected_peak lc.zc_impulse)
  (connect atk.trigger lc.attack_impulse pd.reset)
  (connect pd.P lc.P_samples)
  (connect pd.sigma_sel lc.sigma_samples)
