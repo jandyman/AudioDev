@@ -4,6 +4,8 @@
 ; name via get_buffer('yd.<port>', n); the f0 output port is the graph's result.
 
 (graph yin
+ (include-dir ../../dsp_cpp/src)
+
  (port input audio_in yd.in)
  (port output f0 yd.f0)
 

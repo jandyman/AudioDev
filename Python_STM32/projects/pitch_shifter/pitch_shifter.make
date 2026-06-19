@@ -13,7 +13,8 @@
 
 MODULE       = pitch_shifter
 FAUST_BLOCKS = input_lpf attack_detector triple_tap_delay
+# yin_detector.cpp is a shared block under dsp_cpp/ (standing vpath in graph_build.mk);
+# loop_controller/mixer3 are project-local. Graph adds (include-dir ../../dsp_cpp/src).
 DSP_CPP      = loop_controller.cpp mixer3.cpp yin_detector.cpp
-BLOCK_DIRS   = ../yin
 
 include ../../python/graph_build.mk

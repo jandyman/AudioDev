@@ -4,7 +4,7 @@
 ; the old peak-clock apparatus (pitch_detector bank + zero_crossing_detector).
 
 (graph pitch_shifter
- (include-dir ../yin)
+ (include-dir ../../dsp_cpp/src)
 
  (port input audio_in lpf.in)
  (port output audio_out_l audio_in)

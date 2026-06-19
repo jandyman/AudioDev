@@ -41,17 +41,22 @@ FAUST_CPP = $(addprefix build/,$(addsuffix .cpp,$(FAUST_BLOCKS)))
 # hand-written markers in the .cpp).
 BLOCK_DEFS = $(FAUST_DSP) $(DSP_CPP)
 
-# BLOCK_DIRS (optional): extra directories holding shared / cross-project block
-# sources (.cpp + .h). Added to the include path AND to the .cpp search path so a
-# DSP_CPP entry can be a bare basename found in one of these dirs. The graph file
-# still needs a matching (include-dir ...) so the compiler discovers the @block.
+# Shared graph-block sources live under dsp_cpp/{src,include} — a STANDING source
+# location (like dsp_faust). A project uses a shared C++ block by listing its
+# basename in DSP_CPP and adding (include-dir ../../dsp_cpp/src) to its .graph so
+# the compiler discovers the @block; the .cpp is found here via vpath, the .h via
+# the include path below.
+#
+# BLOCK_DIRS (optional): ADDITIONAL dirs for genuinely cross-project block sources
+# not yet promoted to dsp_cpp. Same treatment (include path + .cpp search path).
 BLOCK_DIRS ?=
-vpath %.cpp $(BLOCK_DIRS)
+vpath %.cpp ../../dsp_cpp/src $(BLOCK_DIRS)
 
 INCLUDE := $(shell python3 -m pybind11 --includes) \
            -I. \
            -I../../python/bindings \
            -I../../dsp_faust \
+           -I../../dsp_cpp/include \
            -Ibuild \
            -Ibuild/generated \
            $(addprefix -I,$(BLOCK_DIRS))
