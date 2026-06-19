@@ -1,5 +1,13 @@
-// Pybind wrapper for the generated pitch_shifter pipeline.
-#include "pitch_shifter.h"
+// Generated from pybind_graph_module.cpp.template by graph_build.mk — DO NOT EDIT.
+//
+// Graph-agnostic pybind wrapper for ANY graph_compiler-generated pipeline: one
+// process_chunk + get_buffer probes + set_param + introspection. It names the
+// pipeline through the canonical `audio_graph` alias the generated header emits,
+// so this single template serves every graph — no per-project pybind file.
+//
+// Assumes one audio input channel (kNumInputs == 1), matching every current
+// graph; a multi-input graph would extend process_chunk to take a list.
+#include "__GRAPH_HEADER__"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
@@ -7,29 +15,27 @@
 
 #include <cstring>
 #include <stdexcept>
+#include <vector>
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(pybind_pitch_shifter, m) {
-  m.doc() = "Generated pitch-shifter pipeline (one process_chunk + buffer probes)";
+PYBIND11_MODULE(__MODULE_NAME__, m) {
+  m.doc() = "Generated graph pipeline (process_chunk + buffer probes)";
 
-  py::class_<pitch_shifter>(m, "pitch_shifter")
+  py::class_<audio_graph>(m, "__GRAPH_PYNAME__")
     .def(py::init<>())
-    .def("init", &pitch_shifter::init, py::arg("sample_rate"))
+    .def("init", &audio_graph::init, py::arg("sample_rate"))
 
     .def("process_chunk",
-         [](pitch_shifter& self,
+         [](audio_graph& self,
             py::array_t<float, py::array::c_style | py::array::forcecast> in_arr)
          -> py::array_t<float> {
            int n = (int)in_arr.size();
-           if (n > pitch_shifter::kChunkSize)
+           if (n > audio_graph::kChunkSize)
              throw std::runtime_error("input length exceeds CHUNK_SIZE");
-           constexpr int n_out = pitch_shifter::kNumOutputs;
-           // (n, n_out) C-contiguous: row = sample, col = output channel.
+           constexpr int n_out = audio_graph::kNumOutputs;
+           // (n, n_out) C-contiguous: row = sample, col = output port.
            py::array_t<float> out_arr({(py::ssize_t)n, (py::ssize_t)n_out});
-           // Process into separate channel buffers, then interleave into (n, n_out).
-           // Two channels stay on the stack for n <= kChunkSize; if n_out grows we'd
-           // need a different strategy, but for stereo this is fine.
            std::vector<std::vector<float>> ch_bufs(n_out, std::vector<float>(n));
            float* out_ptrs[n_out];
            for (int c = 0; c < n_out; ++c) out_ptrs[c] = ch_bufs[c].data();
@@ -42,17 +48,18 @@ PYBIND11_MODULE(pybind_pitch_shifter, m) {
            return out_arr;
          },
          "Process the input array. Returns (N, kNumOutputs) — column 0 = first "
-         "declared output port, column 1 = second, etc.",
+         "declared output port, etc. Same code path for whole-file or chunked.",
          py::arg("input"))
 
     .def_property_readonly_static("NUM_OUTPUTS",
-         [](py::object) { return pitch_shifter::kNumOutputs; })
-
+         [](py::object) { return audio_graph::kNumOutputs; })
     .def_property_readonly_static("NUM_INPUTS",
-         [](py::object) { return pitch_shifter::kNumInputs; })
+         [](py::object) { return audio_graph::kNumInputs; })
+    .def_property_readonly_static("CHUNK_SIZE",
+         [](py::object) { return audio_graph::kChunkSize; })
 
     .def("get_buffer",
-         [](pitch_shifter& self, const std::string& name, int n) -> py::array_t<float> {
+         [](audio_graph& self, const std::string& name, int n) -> py::array_t<float> {
            const float* p = self.get_buffer(name.c_str());
            if (!p) throw std::runtime_error("unknown buffer: " + name);
            // Non-owning view into the static buffer; valid until the next
@@ -63,8 +70,5 @@ PYBIND11_MODULE(pybind_pitch_shifter, m) {
          "View is valid until the next process_chunk() call.",
          py::arg("name"), py::arg("n"))
 
-    .def("set_param", &pitch_shifter::set_param, py::arg("path"), py::arg("value"))
-
-    .def_property_readonly_static("CHUNK_SIZE",
-         [](py::object) { return pitch_shifter::kChunkSize; });
+    .def("set_param", &audio_graph::set_param, py::arg("path"), py::arg("value"));
 }
