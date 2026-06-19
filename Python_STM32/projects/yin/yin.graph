@@ -1,0 +1,10 @@
+; Standalone YIN pitch detector — one block, whole-file or chunked.
+; See Python_STM32/projects/yin/yin_detector.md and docs/audio_graph_architecture.md.
+; All of yd's outputs (f0, P, aperiodicity, decimated, dprime) are tappable by
+; name via get_buffer('yd.<port>', n); the f0 output port is the graph's result.
+
+(graph yin
+ (port input audio_in yd.in)
+ (port output f0 yd.f0)
+
+ (block yd yin_detector))
