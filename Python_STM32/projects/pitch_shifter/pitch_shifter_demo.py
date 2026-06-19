@@ -293,7 +293,7 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   return out_path
 
 if __name__ == '__main__':
-  pitch_ratio = 0.75   # 0.5 = octave down (-12st), 0.75 = perfect fourth down (-5st)
+  pitch_ratio = 0.5   # 0.5 = octave down (-12st), 0.75 = perfect fourth down (-5st)
   lpf_fc_hz   = 10000.0
-  run_demo("Fourth Test.wav", pitch_ratio=pitch_ratio, lpf_fc_hz=lpf_fc_hz)
+  run_demo("longer bass notes.wav", pitch_ratio=pitch_ratio, lpf_fc_hz=lpf_fc_hz)
   print("\n" + "=" * 60 + "\nDemo complete")

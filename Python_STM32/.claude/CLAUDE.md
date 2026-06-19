@@ -30,41 +30,51 @@ things rebuild). The thin `<graph>.make` just declares `MODULE`/`FAUST_BLOCKS`/
 `python/`) is a separate tool for standalone single-block pybind modules used by
 lab/diagnostic scripts. Full mechanics: `docs/audio_graph_architecture.md`.
 
-## Current state — pitch shifter (native, working)
+## Current state — pitch shifter (native, working; YIN-driven loop)
 
-Output-side pitch shifter; `pitch_ratio` 0.5 = octave-down. Pipeline
+Output-side pitch shifter; `pitch_ratio` 0.5 = octave-down (runtime param via
+`set_param('lc.pitch_ratio', …)` — no recompile). **Validated flawless across all
+the troublesome bass files** (descending-into-low-E, 2H-dominant notes). Pipeline
 (`projects/pitch_shifter/pitch_shifter.graph`):
 
 ```
 audio → lpf (input_lpf, Faust)
-      → atk (attack_detector, Faust)        → loop_controller (trigger + active_gain)
-      → pd  (pitch_detector, C++)           → loop_controller (selected_peak = loop clock)
+      → atk (attack_detector, Faust)   → loop_controller (trigger + active_gain)
+      → yd  (yin_detector, C++)        → loop_controller (P + aperiodicity)
       → dtd (triple_tap_delay, Faust)
-zc (zero_crossing_detector, Faust)          → diagnostic probe only (no longer the loop clock)
 loop_controller → 3 tap delays + 3 gains → dtd → mixer3 (C++ summer) → audio_out_r
 audio_out_l = dry input
 ```
 
-- **attack_detector** (Faust): boosted-threshold edge detector. `fast` (peak-hold
-  + accel release) vs `ref` (two-stage-attack follower of fast); fire on a rising
-  edge of `fast/ref` across a LIVE threshold `k` that rests at `k_nom`, snaps to
-  `k_boost` on each fire, then decays back — an overridable holdoff, no debounce.
-  A parallel dive path (slow/hold envelopes → `dive_strength` → `active_gain`)
-  drives note muting downstream; kept separate from the trigger. Tuned in
-  `attack_detector_lab.py` (pure Python), then ported to Faust (verified lab == Faust).
-- **pitch_detector** (C++): LPF bank + per-filter cleanness scoring → trusted
-  period `P`; also emits `selected_peak` (selected band's one-per-period peak
-  train) as the loop controller's clean, phase-isolated **loop clock**.
+The old peak-clock apparatus (pitch_detector LPF bank, zero_crossing_detector,
+target-latency candidate search) was **deleted** — replaced by YIN's precise
+period. With an accurate P, a read jump of exactly k·P is phase-matched by
+periodicity, so the loop POINT no longer matters, only that the jump length ≈ P.
+
+- **attack_detector** (Faust): boosted-threshold edge detector. `fast` vs `ref`
+  envelopes, fire on a rising edge across a LIVE threshold; parallel dive path →
+  `active_gain` for note muting. Tuned in `attack_detector_lab.py`, ported to Faust.
+- **yin_detector** (C++): decimated brute-force YIN — ÷16 anti-alias FIR decimator
+  → power-of-two decimated ring → difference fn / cumulative-mean-normalized diff
+  / first-below-threshold pick / parabolic interp. Emits `P` (full-rate samples) +
+  `aperiodicity` (low = confident). Robust to weak-fundamental/2H-dominant notes.
+  Built standalone first in `projects/yin/`; pitch_shifter pulls it in cross-
+  project via the graph_build.mk `BLOCK_DIRS` hook (no file move). ~1–2% of a
+  500 MHz M7/voice; chunk-size agnostic.
 - **loop_controller** (C++): owns all delay ramps + tap gains across three taps
   (active / loop-incoming / attack roles, dynamic across {0,1,2}); 1 ms attack
-  fade-in / 10 ms fade-out; gates non-attack taps by `active_gain` (by ROLE, not
-  a fixed index); bailout + loop crossfades. Loop points = `pd.selected_peak`
-  (phase-matched splices); selection is **target-latency** (jump back to the peak
-  nearest the operating point — k=1 holds latency, any k for clawback).
+  fade-in / 10 ms fade-out; gates non-attack taps by `active_gain` (by ROLE).
+  Loop policy: latency past the 50 ms operating point + confident P + lockout
+  expired → jump read by DT−P (**k=1**). Lockout is ABSOLUTE (crossfade + settle,
+  7 ms), NOT a multiple of P. Latch P while aperiodicity≤0.4, hold through dips,
+  invalidate on attack (new note waits ~50 ms for YIN; attack tap covers onset).
+  Tuning knobs = single constants in `loop_controller.h`.
 - **mixer3** (C++): stateless weighted summer — all muting is upstream in loop_controller.
 
 Demos: `pitch_shifter_demo.py` (full pipeline + probe plots, saves WAV),
-`attack_detector_lab.py` (pure-Python detector experimentation, painless to port to Faust).
+`yin_validate.py` (score yd.P vs full-rate YIN truth per note),
+`projects/yin/yin_demo.py` (standalone YIN probe plots),
+`attack_detector_lab.py` (pure-Python detector experimentation).
 
 ## Conventions (Python_STM32-specific)
 
@@ -77,7 +87,13 @@ Demos: `pitch_shifter_demo.py` (full pipeline + probe plots, saves WAV),
 
 ## Next steps
 
-- Listen to the rebuilt pitch-shifter output; optional startup guard for the
-  file-start fire cluster.
-- Distribute per-block docs as sibling `.md` files assembled by `graph_compiler`.
-- STM32 firmware build of the pitch shifter (currently native-only).
+- **STM32 firmware port of the YIN-driven pitch shifter** (currently native-only)
+  — the immediate focus. `CHUNK_SIZE` becomes the real SAI/DMA audio block size
+  (a compile-time choice); `lc.pitch_ratio` stays a runtime control. The DSP is
+  identical across targets; expect work in the thin platform layer + wiring the
+  generated graph into the seed_h750 render callback.
+- Doc debt: `loop_controller.md` (and `pitch_shifter.md`) still describe the old
+  ZC/peak-clock apparatus — rewrite to the k·P policy.
+- Optional startup guard for the file-start fire cluster (note 0 at t=0).
+- Decimator stopband verification (swept-tone script) + per-block `.md` docs
+  assembled by `graph_compiler`.
