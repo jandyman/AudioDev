@@ -67,7 +67,6 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
 
   N = num_samples
   audio_lpf   = ps.get_buffer('lpf.out', N)
-  zc_impulse  = ps.get_buffer('zc.zc_out', N)
   atk_trigger = ps.get_buffer('atk.trigger', N)
   atk_thresh  = ps.get_buffer('atk.threshold', N)        # = ref_env * k_live (boosted threshold)
   atk_fast    = ps.get_buffer('atk.fast_env', N)
@@ -77,9 +76,10 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   atk_keff    = ps.get_buffer('atk.k_effective', N)
   atk_gain    = ps.get_buffer('atk.active_gain', N)      # = 1 - dive_strength
   atk_ref     = ps.get_buffer('atk.ref_env', N)          # trigger reference (two-stage-attack follower of fast)
-  P_samples   = ps.get_buffer('pd.P', N)
-  qualified   = ps.get_buffer('pd.qualified', N)
-  selected    = ps.get_buffer('pd.selected_filter', N)
+  P_samples   = ps.get_buffer('yd.P', N)
+  aperiodic   = np.asarray(ps.get_buffer('yd.aperiodicity', N))
+  confidence  = 1.0 - aperiodic
+  qualified   = (aperiodic <= 0.4).astype(np.float32)   # APERIODICITY_THRESH in loop_controller.h
   tap1_del    = ps.get_buffer('lc.tap1_delay_ms', N)
   tap2_del    = ps.get_buffer('lc.tap2_delay_ms', N)
   tap3_del    = ps.get_buffer('lc.tap3_delay_ms', N)
@@ -96,8 +96,7 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   attack_indices  = np.where(attack_evts > 0.5)[0]
   gated_indices   = np.where(gated_evts  > 0.5)[0]
 
-  print(f"  ZC qualified:   {int((zc_impulse > 0.5).sum())}")
-  print(f"  HR qualified:   {int((qualified > 0.5).sum())}/{N} ({100*int((qualified>0.5).sum())/N:.0f}%)")
+  print(f"  YIN confident:  {int((qualified > 0.5).sum())}/{N} ({100*int((qualified>0.5).sum())/N:.0f}%)")
   print(f"  Loop trans:     {len(loop_indices)} (gate-redirected: {len(gated_indices)})")
   print(f"  Bailouts:       {len(bailout_indices)}")
   if len(bailout_indices):
@@ -188,20 +187,17 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   axes[3].legend(loc='upper right', fontsize=8)
   axes[3].grid(True, alpha=0.3)
 
-  # Panel 5: HR selector + P estimate
-  filter_colors = ['green', 'C1', 'purple']
-  sel = selected.astype(int)
-  boundaries = np.concatenate(([0], np.where(np.diff(sel) != 0)[0] + 1, [len(sel)]))
-  for s, e in zip(boundaries[:-1], boundaries[1:]):
-    fi = sel[s]
-    if 0 <= fi < N_HR_FILTERS:
-      axes[4].axvspan(t[s], t[e-1], color=filter_colors[fi], alpha=0.15, lw=0)
-  P_ms = P_samples / sample_rate * 1000.0
+  # Panel 5: YIN period estimate + confidence
+  P_ms = np.asarray(P_samples) / sample_rate * 1000.0
   P_ms_plot = np.where(qualified > 0.5, P_ms, np.nan)
-  axes[4].plot(t, P_ms_plot, 'k-', linewidth=0.6, alpha=0.85, label='P (ms, qualified only)')
+  axes[4].plot(t, P_ms_plot, 'k-', linewidth=0.6, alpha=0.85, label='P (ms, confident only)')
+  a4b = axes[4].twinx()
+  a4b.plot(t, confidence, color='C2', linewidth=0.6, alpha=0.55, label='confidence')
+  a4b.axhline(0.6, color='C2', linewidth=0.8, linestyle='--', alpha=0.5)   # 1 - APERIODICITY_THRESH
+  a4b.set_ylabel('confidence', color='C2'); a4b.set_ylim(-0.05, 1.05)
   if len(gated_indices):
     axes[4].plot(t[gated_indices], np.full(len(gated_indices), 48.0),
-                 'bv', ms=6, alpha=0.7, label='gate-redirected loop')
+                 'bv', ms=6, alpha=0.7, label='loop suppressed')
   if len(bailout_indices):
     axes[4].plot(t[bailout_indices], np.full(len(bailout_indices), 5.0),
                  'r^', ms=8, alpha=0.7, label='bailout')
@@ -210,7 +206,7 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   axes[4].set_ylim(0, 50)
   axes[4].legend(loc='upper right', fontsize=8)
   axes[4].grid(True, alpha=0.3)
-  axes[4].set_title('HR selector tint (green=0 / orange=1 / purple=2); black=P; markers per legend')
+  axes[4].set_title('YIN period P (black, confident only) + confidence (green, dashed = gate)')
 
   install_x_zoom(fig, x_min=0.0, x_max=t[-1])
   plt.tight_layout(rect=[0, 0, 1, 0.97])

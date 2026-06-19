@@ -41,12 +41,20 @@ FAUST_CPP = $(addprefix build/,$(addsuffix .cpp,$(FAUST_BLOCKS)))
 # hand-written markers in the .cpp).
 BLOCK_DEFS = $(FAUST_DSP) $(DSP_CPP)
 
+# BLOCK_DIRS (optional): extra directories holding shared / cross-project block
+# sources (.cpp + .h). Added to the include path AND to the .cpp search path so a
+# DSP_CPP entry can be a bare basename found in one of these dirs. The graph file
+# still needs a matching (include-dir ...) so the compiler discovers the @block.
+BLOCK_DIRS ?=
+vpath %.cpp $(BLOCK_DIRS)
+
 INCLUDE := $(shell python3 -m pybind11 --includes) \
            -I. \
            -I../../python/bindings \
            -I../../dsp_faust \
            -Ibuild \
-           -Ibuild/generated
+           -Ibuild/generated \
+           $(addprefix -I,$(BLOCK_DIRS))
 CXXFLAGS := -O2 -Wall -std=c++17 -fPIC -DCHUNK_SIZE=$(CHUNK_SIZE)
 LDFLAGS  := -shared -undefined dynamic_lookup
 SUFFIX   := $(shell python3-config --extension-suffix)

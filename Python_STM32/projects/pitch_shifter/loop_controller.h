@@ -8,10 +8,18 @@ using std::string;
 #endif
 
 // loop_controller — pitch-shift loop-point detection + crossfade management.
-// Three-tap variant: owns all delay ramps and tap gains, turning ZC + attack
-// impulses (and the pitch detector's period estimate) into the three tap
-// delays and crossfade gains for the triple tap delay. No dynamic allocation in
-// process(). Design, tap roles, and the active_gain gate: loop_controller.md.
+// Three-tap variant: owns all delay ramps and tap gains, turning a precise
+// period estimate P (from the YIN detector) + the attack impulse into the three
+// tap delays and crossfade gains for the triple tap delay. No dynamic allocation
+// in process(). Design, tap roles, and the active_gain gate: loop_controller.md.
+//
+// Loop policy (YIN-driven): the active tap's delay IS the latency; it grows by
+// dd_ = 1 - pitch_ratio each sample. When latency exceeds the operating point
+// and a confident P is in hand, jump the read back by exactly k*P (k = 1) — a
+// jump of an integer number of periods is phase-matched by periodicity, so loop
+// POINT no longer matters, only that the jump length ≈ P. A fixed lockout (an
+// absolute time ≥ crossfade + settle, independent of P) prevents re-looping
+// before the last crossfade has settled.
 
 class loop_controller {
 public:
@@ -21,13 +29,10 @@ public:
 
   static const int NUM_TAPS = 3;
 
-  // ZC ring buffer size. Worst case: 200 ms / 3.2 ms ≈ 63 records.
-  static const int ZC_HISTORY_SIZE = 128;
-
-  // Latency thresholds. Lower = earliest a loop may fire (operating point, since
-  // per-cycle loops keep latency hovering just above it); upper = bailout ceiling
-  // (decoupled safety, rarely reached). Lower latency = fresher looped material =
-  // less timbral modulation on an evolving note. See loop_controller.md.
+  // Latency thresholds. Lower = operating point (earliest a loop may fire;
+  // per-cycle k=1 loops keep latency hovering just above it); upper = bailout
+  // ceiling (decoupled safety, rarely reached). Lower latency = fresher looped
+  // material = less timbral modulation on an evolving note. See loop_controller.md.
   static constexpr float LOWER_THRESHOLD_MS = 50.0f;
   static constexpr float UPPER_THRESHOLD_MS = 200.0f;
 
@@ -40,6 +45,16 @@ public:
   static constexpr float ATTACK_FADEOUT_MS      = 10.0f;  // slow tail-out of previous note
   static constexpr float BAILOUT_CROSSFADE_MULT = 3.0f;   // bailout = 3× loop crossfade
 
+  // Loop lockout: minimum time between loop fires. Absolute (crossfade + settle
+  // margin), NOT a multiple of P — the jump length must be ≈ P, but the settle
+  // time has nothing to do with the period.
+  static constexpr float LOOP_LOCKOUT_MS = 7.0f;
+
+  // Confidence gate: accept/latch P only when YIN is confident. The detector
+  // emits aperiodicity (d' at the dip); low = confident. Latch P while
+  // aperiodicity <= this, hold the last good P through brief dips.
+  static constexpr float APERIODICITY_THRESH = 0.40f;
+
   // ------------------------------------------------------------------
   // Public interface
   // ------------------------------------------------------------------
@@ -49,7 +64,7 @@ public:
   void set_pitch_ratio(float ratio);
   float get_pitch_ratio() const { return pitch_ratio_; }
 
-  int get_num_inputs()  const { return 6; }
+  int get_num_inputs()  const { return 4; }
   int get_num_outputs() const { return 12; }
   int get_sample_rate() const { return (int)sample_rate_; }
 
@@ -84,12 +99,11 @@ private:
     float& loop_event;
     float& active_tap;
     float& bailout_event;
-    float& gated_event;
+    float& gated_event;     // loop wanted (latency over threshold) but suppressed
     float& attack_event;
   };
 
-  void compute(float zc_impulse, float attack_impulse,
-               float P_samples, float sigma_samples, float qualified,
+  void compute(float attack_impulse, float P_samples, float aperiodicity,
                float& tap1_delay_ms, float& tap2_delay_ms, float& tap3_delay_ms,
                float& gain1, float& gain2, float& gain3,
                Probes& p);
@@ -118,10 +132,14 @@ private:
 
   mode_t mode_;
 
-  // ZC ring buffer: absolute sample-index of each qualified zero crossing.
-  int32_t zc_history_[ZC_HISTORY_SIZE];
-  int     zc_head_;                   // next write position
-  int     zc_count_;                  // number of valid entries
+  // Latched period (full-rate samples) + validity. Updated from P_samples while
+  // confident; held through brief confidence dips. Invalidated on attack so a
+  // new note doesn't loop on the previous note's period before YIN re-converges.
+  float P_latched_;
+  bool  have_P_;
+
+  // Loop lockout countdown (samples). Loops may fire only when this hits 0.
+  int   loop_lockout_counter_;
 
   // Sample counter (absolute, since init)
   int32_t sample_index_;
@@ -133,14 +151,11 @@ private:
   int   attack_fadein_samples_;
   int   attack_fadeout_samples_;
   int   bailout_cf_samples_;
+  int   loop_lockout_samples_;
 
   // ------------------------------------------------------------------
   // Helpers
   // ------------------------------------------------------------------
-  void add_zc_record(int32_t at);
-  void pop_oldest();
-  void flush_zc_history();
-  bool peek_oldest(int32_t& out) const;
   void update_derived_constants();
 
   // Advance per-tap delay/gain one sample. Parks taps that reach gain=0.

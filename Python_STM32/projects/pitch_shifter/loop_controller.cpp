@@ -1,6 +1,6 @@
 /* @block
 (define-block loop_controller
- (inputs zc_impulse attack_impulse P_samples sigma_samples qualified active_gain)
+ (inputs attack_impulse P_samples aperiodicity active_gain)
  (outputs tap1_delay_ms tap2_delay_ms tap3_delay_ms
           gain1 gain2 gain3
           latency_ms loop_event active_tap bailout_event gated_event attack_event)
@@ -8,7 +8,6 @@
 */
 
 #include "loop_controller.h"
-#include <cmath>
 #include <cstring>
 #include <algorithm>
 
@@ -50,8 +49,9 @@ void loop_controller::init(int sample_rate) {
   in_loop_crossfade_ = false;
   mode_              = MODE_LOOP_ONLY;
 
-  zc_head_  = 0;
-  zc_count_ = 0;
+  P_latched_           = 0.0f;
+  have_P_              = false;
+  loop_lockout_counter_ = 0;
 
   set_pitch_ratio(pitch_ratio_);
 }
@@ -60,7 +60,6 @@ void loop_controller::set_pitch_ratio(float ratio) {
   pitch_ratio_ = std::max(0.1f, std::min(ratio, 0.99f));
   dd_          = 1.0f - pitch_ratio_;
   update_derived_constants();
-  flush_zc_history();
 }
 
 void loop_controller::update_derived_constants() {
@@ -70,11 +69,13 @@ void loop_controller::update_derived_constants() {
   attack_fadein_samples_  = (int)(ATTACK_FADEIN_MS    * sample_rate_ / 1000.0f);
   attack_fadeout_samples_ = (int)(ATTACK_FADEOUT_MS   * sample_rate_ / 1000.0f);
   bailout_cf_samples_     = (int)(LOOP_CROSSFADE_MS * BAILOUT_CROSSFADE_MULT * sample_rate_ / 1000.0f);
+  loop_lockout_samples_   = (int)(LOOP_LOCKOUT_MS     * sample_rate_ / 1000.0f);
 
   if (loop_cf_samples_        < 1) loop_cf_samples_        = 1;
   if (attack_fadein_samples_  < 1) attack_fadein_samples_  = 1;
   if (attack_fadeout_samples_ < 1) attack_fadeout_samples_ = 1;
   if (bailout_cf_samples_     < 1) bailout_cf_samples_     = 1;
+  if (loop_lockout_samples_   < 1) loop_lockout_samples_   = 1;
 }
 
 // ============================================================
@@ -85,10 +86,9 @@ void loop_controller::process(const float* const* inputs, float* const* outputs,
   for (int i = 0; i < n; i++) {
     Probes p { outputs[6][i], outputs[7][i], outputs[8][i],     // latency_ms, loop_event, active_tap
                outputs[9][i], outputs[10][i], outputs[11][i] }; // bailout_event, gated_event, attack_event
-    compute(inputs[0][i], inputs[1][i],
-            inputs[2][i], inputs[3][i], inputs[4][i],
-            outputs[0][i], outputs[1][i], outputs[2][i],   // tapN_delay_ms
-            outputs[3][i], outputs[4][i], outputs[5][i],   // gainN
+    compute(inputs[0][i], inputs[1][i], inputs[2][i],           // attack_impulse, P_samples, aperiodicity
+            outputs[0][i], outputs[1][i], outputs[2][i],        // tapN_delay_ms
+            outputs[3][i], outputs[4][i], outputs[5][i],        // gainN
             p);
 
     // Loop-tap gating: multiply every NON-attack tap's gain by active_gain so
@@ -98,7 +98,7 @@ void loop_controller::process(const float* const* inputs, float* const* outputs,
     // drags its 1 ms fade-in out to ~10 ms. Gate by ROLE, not a fixed index:
     // pick_free_tap can place the attack tap on any of {0,1,2}, so gain1/gain2
     // is the wrong thing to key on (attack_tap_ == -1 in LOOP_ONLY → all gated).
-    const float active_gain = inputs[5][i];
+    const float active_gain = inputs[3][i];
     for (int tap = 0; tap < NUM_TAPS; tap++) {
       if (tap == attack_tap_) continue;
       outputs[3 + tap][i] *= active_gain;   // outputs[3..5] = gain1..gain3
@@ -186,29 +186,29 @@ void loop_controller::start_attack_response() {
 
   attack_tap_ = target;
   mode_       = MODE_ATTACK_FADEIN;
-  flush_zc_history();
+
+  // New note: the previous note's period is meaningless now, and YIN needs
+  // ~one window (~50 ms) to converge. Disengage looping until a fresh confident
+  // P arrives; the attack tap (fast fade-in) carries the onset meanwhile.
+  have_P_               = false;
+  loop_lockout_counter_ = 0;
 }
 
 // ============================================================
 // compute() — per-sample logic
 //
 // Order:
-//   1. Advance sample counter.
+//   1. Advance sample counter + lockout countdown.
 //   2. Advance per-tap delay ramp + gain ramp (one sample).
-//   3. Resolve role transitions on fade completion:
-//        loop_incoming reaches 1     → becomes new active_tap
-//        attack tap reaches 1        → mode = ATTACK_FADEOUT (ramp others down)
-//        all non-attack gains = 0    → attack tap becomes new active_tap
-//                                       (mode = LOOP_ONLY)
+//   3. Resolve role transitions on fade completion.
 //   4. Attack impulse (only in LOOP_ONLY) — engage attack tap.
-//   5. Record incoming ZC impulse.
-//   6. Loop check (only in LOOP_ONLY).
+//   5. Latch P while confident.
+//   6. Loop check (only in LOOP_ONLY): k=1 jump by P, gated by lockout.
 //   7. Bailout (only in LOOP_ONLY).
 //   8. Write outputs.
 // ============================================================
 
-void loop_controller::compute(float zc_impulse, float attack_impulse,
-                              float P_samples, float sigma_samples, float qualified,
+void loop_controller::compute(float attack_impulse, float P_samples, float aperiodicity,
                               float& tap1_delay_ms, float& tap2_delay_ms, float& tap3_delay_ms,
                               float& gain1, float& gain2, float& gain3,
                               Probes& p) {
@@ -217,8 +217,9 @@ void loop_controller::compute(float zc_impulse, float attack_impulse,
   p.gated_event   = 0.0f;
   p.attack_event  = 0.0f;
 
-  // 1. Advance sample counter
+  // 1. Advance sample counter + lockout
   sample_index_++;
+  if (loop_lockout_counter_ > 0) loop_lockout_counter_--;
 
   // 2. Per-tap delay + gain ramp
   advance_tap_state();
@@ -266,73 +267,38 @@ void loop_controller::compute(float zc_impulse, float attack_impulse,
     p.attack_event = 1.0f;
   }
 
-  // 5. Record incoming ZC impulse
-  if (zc_impulse > 0.5f) {
-    add_zc_record(sample_index_);
+  // 5. Latch P while YIN is confident (low aperiodicity). Hold the last good P
+  //    through brief dips so a transient un-confidence doesn't drop the loop.
+  if (aperiodicity <= APERIODICITY_THRESH && P_samples > 2.0f * MIN_DELAY_SAMPLES) {
+    P_latched_ = P_samples;
+    have_P_    = true;
   }
 
-  // 6. Loop check (LOOP_ONLY only). Same algorithm as the 2-tap version,
-  //    just operating on active_tap_ ∈ {0,1,2} and firing onto a free tap.
-  if (mode_ == MODE_LOOP_ONLY) {
-    float AT_out = (float)sample_index_ - tap_delay_[active_tap_];
-
-    while (zc_count_ > 0) {
-      int32_t head_at;
-      peek_oldest(head_at);
-      if (AT_out < (float)head_at) break;     // not yet reached this ZC
-
-      if (in_loop_crossfade_) {
-        // Mid loop crossfade — can't fire again; just discard.
-        pop_oldest();
-        continue;
+  // 6. Loop check (LOOP_ONLY only). Once latency passes the operating point and
+  //    a confident P is in hand, jump the read back by exactly one period (k=1).
+  //    Phase is preserved by periodicity, so no peak/splice point is needed —
+  //    only the jump length ≈ P. Lockout (absolute settle time) paces re-fires.
+  if (mode_ == MODE_LOOP_ONLY && !in_loop_crossfade_) {
+    float DT = tap_delay_[active_tap_];
+    if (DT > lower_threshold_) {
+      bool ready = have_P_ && loop_lockout_counter_ == 0;
+      float new_inactive = DT - P_latched_;
+      if (ready && new_inactive >= MIN_DELAY_SAMPLES) {
+        start_loop_crossfade(new_inactive, loop_cf_samples_);
+        loop_lockout_counter_ = loop_lockout_samples_;
+        p.loop_event = 1.0f;
+      } else {
+        // Wanted to loop but couldn't: no confident P yet, still in lockout, or
+        // less than one period of headroom above MIN_DELAY. Hold — bailout is
+        // the safety if latency keeps climbing.
+        p.gated_event = 1.0f;
       }
-
-      float DT_active = tap_delay_[active_tap_];
-
-      bool fired = false;
-      if (DT_active > lower_threshold_ && zc_count_ >= 2) {
-        // Target-latency loop: jump back to whichever peak lands latency closest
-        // to the operating point. In steady state only ~one period has built up,
-        // so this is a single-peak (k=1) step holding latency near the threshold;
-        // if latency overshot (clawback / corner cases) it jumps back as many
-        // peaks as needed, automatically. Candidates are the detector's clean
-        // per-period peak clock, so every one is phase-matched — no period/margin
-        // gate. new_inactive shrinks monotonically with i, so |new_inactive -
-        // target| is U-shaped: stop once it starts rising.
-        const float target  = lower_threshold_;
-        int   head_idx      = (zc_head_ - zc_count_ + ZC_HISTORY_SIZE) % ZC_HISTORY_SIZE;
-        int   best_i        = -1;
-        float best_inactive = 0.0f;
-        float best_err      = 1e30f;
-        for (int i = 1; i < zc_count_; i++) {
-          int   idx           = (head_idx + i) % ZC_HISTORY_SIZE;
-          float delta_samples = (float)(zc_history_[idx] - head_at);
-          float new_inactive  = DT_active - delta_samples;
-          if (new_inactive < MIN_DELAY_SAMPLES) break;   // delta only grows → stop
-          float err = fabsf(new_inactive - target);
-          if (err < best_err) {
-            best_err = err; best_i = i; best_inactive = new_inactive;
-          } else {
-            break;                                       // past the U-shaped minimum
-          }
-        }
-        if (best_i >= 0) {
-          start_loop_crossfade(best_inactive, loop_cf_samples_);
-          p.loop_event = 1.0f;
-          if (best_i > 1) p.gated_event = 1.0f;          // repurposed: multi-peak (k>1) jump
-          pop_oldest();
-          fired = true;
-        }
-        if (fired) break;
-      }
-
-      pop_oldest();
     }
 
-    // 7. Bailout — per-sample, regardless of input ZC.
+    // 7. Bailout — per-sample safety, independent of P.
     if (!in_loop_crossfade_ && tap_delay_[active_tap_] > upper_threshold_) {
       start_loop_crossfade(MIN_DELAY_SAMPLES, bailout_cf_samples_);
-      flush_zc_history();
+      loop_lockout_counter_ = loop_lockout_samples_;
       p.bailout_event = 1.0f;
     }
   }
@@ -347,32 +313,6 @@ void loop_controller::compute(float zc_impulse, float attack_impulse,
   gain3          = gain_[2];
   p.latency_ms   = tap_delay_[active_tap_] * ms_per_sample;
   p.active_tap   = (float)active_tap_;
-}
-
-// ============================================================
-// Ring buffer helpers
-// ============================================================
-
-void loop_controller::add_zc_record(int32_t at) {
-  zc_history_[zc_head_] = at;
-  zc_head_              = (zc_head_ + 1) % ZC_HISTORY_SIZE;
-  if (zc_count_ < ZC_HISTORY_SIZE) zc_count_++;
-}
-
-void loop_controller::pop_oldest() {
-  if (zc_count_ > 0) zc_count_--;
-}
-
-void loop_controller::flush_zc_history() {
-  zc_head_  = 0;
-  zc_count_ = 0;
-}
-
-bool loop_controller::peek_oldest(int32_t& out) const {
-  if (zc_count_ == 0) return false;
-  int idx = (zc_head_ - zc_count_ + ZC_HISTORY_SIZE) % ZC_HISTORY_SIZE;
-  out = zc_history_[idx];
-  return true;
 }
 
 // ============================================================

@@ -12,7 +12,8 @@
 # standalone single-block pybind module; the graph build does not use it.)
 
 MODULE       = pitch_shifter
-FAUST_BLOCKS = input_lpf zero_crossing_detector attack_detector triple_tap_delay
-DSP_CPP      = pitch_detector.cpp loop_controller.cpp mixer3.cpp
+FAUST_BLOCKS = input_lpf attack_detector triple_tap_delay
+DSP_CPP      = loop_controller.cpp mixer3.cpp yin_detector.cpp
+BLOCK_DIRS   = ../yin
 
 include ../../python/graph_build.mk
