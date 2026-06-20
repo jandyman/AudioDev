@@ -29,9 +29,23 @@ LOWER_THRESHOLD_MS = 50.0
 UPPER_THRESHOLD_MS = 200.0
 N_HR_FILTERS       = 3
 
+# Drive intervals from equal-tempered semitones so every interval is consistent:
+# the playback ratio is 2**(st/12). (Hardcoding e.g. 0.75 for a fourth gives the
+# JUST fourth, 3/4; the tempered fourth down is 2**(-5/12) ≈ 0.749.)
+SEMITONE_NAMES = {
+  0: "unison",            -1: "minor 2nd down",   -2: "major 2nd down",
+  -3: "minor 3rd down",   -4: "major 3rd down",   -5: "fourth down",
+  -6: "tritone down",     -7: "fifth down",       -8: "minor 6th down",
+  -9: "major 6th down",  -10: "minor 7th down",  -11: "major 7th down",
+  -12: "octave down",
+}
+
+def semitones_to_ratio(semitones):
+  return 2.0 ** (semitones / 12.0)
+
 def pitch_ratio_label(ratio):
-  return {0.5: "octave down", 0.75: "fourth down", 0.667: "fifth down",
-          0.794: "major third down"}.get(round(ratio, 3), f"ratio {ratio:.3f}")
+  st = int(round(12.0 * np.log2(ratio)))
+  return f"{SEMITONE_NAMES.get(st, f'{st:+d} st')} ({ratio:.4f})"
 
 def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   print("Pitch Shifter (generated pipeline)")
@@ -108,7 +122,7 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
 
   out_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'test_audio_out')
   os.makedirs(out_dir, exist_ok=True)
-  semitones = int(round(12.0 * np.log2(pitch_ratio)))   # 0.5 -> -12, 0.75 -> -5
+  semitones = int(round(12.0 * np.log2(pitch_ratio)))   # tempered: 0.5 -> -12, 0.749 -> -5
   input_stem = os.path.splitext(os.path.basename(input_path))[0]
   out_path = os.path.join(out_dir, f"{input_stem}_pitch_shifted_{semitones:+d}st.wav")
   # audio_out shape: (N, 2)  — column 0 = dry (audio_in), column 1 = pitch-shifted.
@@ -293,7 +307,8 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   return out_path
 
 if __name__ == '__main__':
-  pitch_ratio = 0.5   # 0.5 = octave down (-12st), 0.75 = perfect fourth down (-5st)
+  interval_semitones = -12   # equal-tempered; -5 = fourth, -7 = fifth, -4 = major 3rd
+  pitch_ratio = semitones_to_ratio(interval_semitones)
   lpf_fc_hz   = 10000.0
   run_demo("longer bass notes.wav", pitch_ratio=pitch_ratio, lpf_fc_hz=lpf_fc_hz)
   print("\n" + "=" * 60 + "\nDemo complete")
