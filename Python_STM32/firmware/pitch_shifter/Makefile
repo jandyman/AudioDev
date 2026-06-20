@@ -4,6 +4,13 @@
 #   make         build/pitch_shifter.elf, .bin, .hex, .map
 #   make size    arm-none-eabi-size on the elf
 #   make clean   rm -rf build/
+#
+# PREREQUISITE: run the native graph build first so the generated header, the
+# Faust block .cpp, and the dependency manifest exist:
+#   cd ../../projects/pitch_shifter && make -f pitch_shifter.make
+# The block set (hand-written C++ sources + their include dirs) is then taken
+# from that build's <graph>.deps.mk manifest — NOT re-declared here — so this
+# Makefile cannot drift from the .graph.
 
 TARGET   := pitch_shifter
 BUILDDIR := build
@@ -17,30 +24,49 @@ LD      := $(TOOLCHAIN_PREFIX)g++
 OBJCOPY := $(TOOLCHAIN_PREFIX)objcopy
 SIZE    := $(TOOLCHAIN_PREFIX)size
 
+# ----- graph (native build outputs we consume) -----
+GRAPH         := pitch_shifter
+GRAPH_PROJECT := ../../projects/pitch_shifter
+GRAPH_BUILD   := $(GRAPH_PROJECT)/build
+GRAPH_GEN     := $(GRAPH_BUILD)/generated
+MANIFEST      := $(GRAPH_GEN)/$(GRAPH).deps.mk
+COMMON        := ../common
+
+# Pull GRAPH_CPP_SOURCES + GRAPH_BLOCK_INCLUDE_DIRS from the graph-derived
+# manifest (single source of truth for the block set).
+-include $(MANIFEST)
+ifeq ($(strip $(GRAPH_CPP_SOURCES)),)
+$(warning Manifest $(MANIFEST) not found or empty — run the native build first: cd $(GRAPH_PROJECT) && make -f $(GRAPH).make)
+endif
+
 # ----- paths -----
 CMSIS_CORE_DIR   := ../../../DaisyExamples/libDaisy/Drivers/CMSIS/Include
 CMSIS_DEVICE_DIR := ../../../DaisyExamples/libDaisy/Drivers/CMSIS/Device/ST/STM32H7xx/Include
 
 PLATFORM := ../seed_h750/src
-PYTHON   := ../../python
 
-# include/ MUST come before python bindings so our bare-metal overrides win.
+# include/ MUST come before generated/bare-metal headers so our overrides win.
+# Canonical block-source dirs precede $(GRAPH_BUILD) so the real block headers
+# win over any stale shadow copy sitting in the native build/ tree; $(GRAPH_BUILD)
+# is still needed for the Faust-generated .cpp the header #includes.
 INCLUDES := \
   -Iinclude \
   -Isrc \
+  -I$(COMMON)/include \
   -I$(PLATFORM) \
   -I$(PLATFORM)/rtt \
   -I../seed_h750/include \
-  -I$(PYTHON)/build/generated \
-  -I$(PYTHON)/build \
-  -I$(PYTHON)/pitch_shifter_demo \
+  $(addprefix -I,$(GRAPH_BLOCK_INCLUDE_DIRS)) \
+  -I$(GRAPH_GEN) \
+  -I$(GRAPH_BUILD) \
   -I$(CMSIS_CORE_DIR) \
   -I$(CMSIS_DEVICE_DIR)
 
 # ----- flags -----
 CPU      := -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard
 DEFINES  := -DSTM32H750xx -DHSE_VALUE=16000000 -DSEGGER_RTT_MEMCPY_USE_BYTELOOP=1 \
-            -DBARE_METAL=1 -DCHUNK_SIZE=48 -DBUFFER_SIZE_DOWN=256
+            -DBARE_METAL=1 -DCHUNK_SIZE=48 -DBUFFER_SIZE_DOWN=256 \
+            -DAUDIO_GRAPH_HEADER=\"$(GRAPH).h\"
 WARNINGS := -Wall -Wextra -Wshadow -Wundef
 OPT      := -Og -g3
 
@@ -71,18 +97,13 @@ LDFLAGS  := $(CPU) -nostdlib -nostartfiles \
             -Wl,--print-memory-usage
 
 # ----- sources -----
-# Faust .cpp files are NOT listed here — they are compiled inline via
-# #include directives inside pitch_shifter.h (included by pitch_shifter_audio.cpp).
-#
-# Out-of-tree objects are kept under build/ext/ so that `make clean` (rm -rf build/)
-# removes everything. Each source→object mapping is explicit.
+# Faust .cpp are NOT compiled here — they are #included by the generated header.
+# Out-of-tree objects live under build/ext/ so `make clean` removes everything.
 
-# Local sources (in src/) — object goes in build/src/
-LOCAL_C_SRCS   :=
-LOCAL_CXX_SRCS := src/audio.cpp src/pitch_shifter_audio.cpp src/main.cpp src/libstubs.cpp src/rtt_audio.cpp
-LOCAL_S_SRCS   :=
+# Local sources (src/) — object goes in build/src/
+LOCAL_CXX_SRCS := src/audio.cpp src/main.cpp src/libstubs.cpp src/rtt_audio.cpp
 
-# Platform sources (../seed_h750/src/) — objects go in build/ext/platform/
+# Platform sources (../seed_h750/src/) — objects in build/ext/platform/
 PLAT_C_SRCS    := $(PLATFORM)/rtt/SEGGER_RTT.c
 PLAT_CXX_SRCS  := $(PLATFORM)/clock.cpp $(PLATFORM)/dma.cpp \
                   $(PLATFORM)/gpio.cpp $(PLATFORM)/mpu.cpp \
@@ -90,24 +111,21 @@ PLAT_CXX_SRCS  := $(PLATFORM)/clock.cpp $(PLATFORM)/dma.cpp \
                   $(PLATFORM)/systick.cpp
 PLAT_S_SRCS    := $(PLATFORM)/startup_stm32h750.s
 
-# Python DSP block sources — objects go in build/ext/python/
-PY_CXX_SRCS    := $(PYTHON)/pitch_shifter_demo/pitch_detector.cpp \
-                  $(PYTHON)/pitch_shifter_demo/loop_controller.cpp \
-                  $(PYTHON)/pitch_shifter_demo/mixer3.cpp
+# Shared firmware runner (graph-agnostic glue + metering) — build/ext/common/
+COMMON_CXX_SRCS := $(COMMON)/src/audio_graph_runner.cpp
 
-# Compute object paths — strip the source prefix and put under build/ext/
-LOCAL_OBJS  := $(patsubst %.c,   $(BUILDDIR)/%.o, $(LOCAL_C_SRCS)) \
-               $(patsubst %.cpp, $(BUILDDIR)/%.o, $(LOCAL_CXX_SRCS)) \
-               $(patsubst %.s,   $(BUILDDIR)/%.o, $(LOCAL_S_SRCS))
+# Graph C++ block sources from the manifest (absolute paths) — build/ext/blocks/
+# Found via vpath on their source dirs; objects keyed by basename.
+vpath %.cpp $(sort $(dir $(GRAPH_CPP_SOURCES)))
 
+LOCAL_OBJS  := $(patsubst %.cpp, $(BUILDDIR)/%.o, $(LOCAL_CXX_SRCS))
 PLAT_OBJS   := $(patsubst $(PLATFORM)/%.c,   $(BUILDDIR)/ext/platform/%.o, $(PLAT_C_SRCS)) \
                $(patsubst $(PLATFORM)/%.cpp, $(BUILDDIR)/ext/platform/%.o, $(PLAT_CXX_SRCS)) \
                $(patsubst $(PLATFORM)/%.s,   $(BUILDDIR)/ext/platform/%.o, $(PLAT_S_SRCS))
+COMMON_OBJS := $(patsubst $(COMMON)/src/%.cpp, $(BUILDDIR)/ext/common/%.o, $(COMMON_CXX_SRCS))
+BLOCK_OBJS  := $(addprefix $(BUILDDIR)/ext/blocks/,$(notdir $(GRAPH_CPP_SOURCES:.cpp=.o)))
 
-PY_OBJS     := $(patsubst $(PYTHON)/pitch_shifter_demo/%.cpp, \
-                           $(BUILDDIR)/ext/python/%.o, $(PY_CXX_SRCS))
-
-OBJS := $(LOCAL_OBJS) $(PLAT_OBJS) $(PY_OBJS)
+OBJS := $(LOCAL_OBJS) $(PLAT_OBJS) $(COMMON_OBJS) $(BLOCK_OBJS)
 DEPS := $(OBJS:.o=.d)
 
 # ----- rules -----
@@ -140,8 +158,13 @@ $(BUILDDIR)/ext/platform/%.o: $(PLATFORM)/%.s
 	@mkdir -p $(dir $@)
 	$(AS) $(ASFLAGS) -c $< -o $@
 
-# Python DSP block rules (build/ext/python/)
-$(BUILDDIR)/ext/python/%.o: $(PYTHON)/pitch_shifter_demo/%.cpp
+# Shared runner (build/ext/common/)
+$(BUILDDIR)/ext/common/%.o: $(COMMON)/src/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+
+# Graph block sources (build/ext/blocks/) — basename via vpath over manifest dirs
+$(BUILDDIR)/ext/blocks/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 

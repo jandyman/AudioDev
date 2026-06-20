@@ -17,10 +17,10 @@
 #include <stdint.h>
 
 #include "audio.h"
+#include "audio_graph_runner.h"
 #include "board.h"
 #include "clock.h"
 #include "gpio.h"
-#include "pitch_shifter_audio.h"
 #include "rtt_audio.h"
 #include "sai1.h"
 #include "software_timer.h"
@@ -42,7 +42,7 @@ extern "C" int main(void) {
 
   systick_init();
   rtt_audio_init();
-  pitch_shifter_audio_init(48000);
+  audio_graph_init(48000);
 
   if (!configure_sai1_clock()) {
     fault_blink(100U);                  // 5 Hz — PLL3 lock failed

@@ -11,13 +11,17 @@
 #include "stm32h750xx.h"
 
 #include "audio.h"
+#include "audio_graph_runner.h"
 #include "board.h"
 #include "dma.h"
 #include "gpio.h"
 #include "mpu.h"
-#include "pitch_shifter_audio.h"
 #include "sai1.h"
 #include "systick.h"
+
+// The generated graph header supplies the canonical `audio_graph` type and its
+// kNumInputs/kNumOutputs, used to fan the SAI's stereo frames in/out generically.
+#include AUDIO_GRAPH_HEADER
 
 // ============================================================================
 // DMA buffers — must live in .dma_buffers (non-cacheable, see mpu.c).
@@ -70,22 +74,38 @@ static inline __attribute__((always_inline)) int32_t f2s24(float x) {
 }
 
 // ============================================================================
-// process_audio — one half-buffer through the pitch_shifter graph.
+// process_audio — one half-buffer through the graph, channel-agnostic.
 //
-// Takes left channel input, runs the chunk-based pitch_shifter, writes
-// the mono result to both output channels.
+// The SAI carries 2 interleaved channels; the graph declares kNumInputs /
+// kNumOutputs. We fan the SAI's left channel into graph input 0 (and further
+// SAI channels into further inputs if the graph has them), run the chunk, then
+// write graph outputs back to the 2 SAI channels (output 0 -> L, 1 -> R; a
+// 1-output graph is duplicated to both). For the pitch shifter: 1 in, 2 out
+// (out0 = dry L, out1 = shifted R) — identical to before, now derived.
 // ============================================================================
 static void process_audio(uint32_t offset) {
-  float in_f[AUDIO_BLOCK_FRAMES];
-  float out_l[AUDIO_BLOCK_FRAMES];
-  float out_r[AUDIO_BLOCK_FRAMES];
+  constexpr int NI = audio_graph::kNumInputs;
+  constexpr int NO = audio_graph::kNumOutputs;
+  constexpr int SAI_CH = 2;
+
+  float inbuf[NI][AUDIO_BLOCK_FRAMES];
+  float outbuf[NO][AUDIO_BLOCK_FRAMES];
+  const float* ins[NI];
+  float*       outs[NO];
+  for (int c = 0; c < NI; ++c) ins[c]  = inbuf[c];
+  for (int c = 0; c < NO; ++c) outs[c] = outbuf[c];
+
   for (uint32_t i = 0U; i < AUDIO_BLOCK_FRAMES; ++i)
-    in_f[i] = s242f(rx_buffer[offset + i * 2U]);
-  pitch_shifter_audio_process(in_f, out_l, out_r, AUDIO_BLOCK_FRAMES);
-  for (uint32_t i = 0U; i < AUDIO_BLOCK_FRAMES; ++i) {
-    tx_buffer[offset + i * 2U]     = f2s24(out_l[i]);   // left  = dry
-    tx_buffer[offset + i * 2U + 1] = f2s24(out_r[i]);   // right = shifted
-  }
+    for (int c = 0; c < NI; ++c)
+      inbuf[c][i] = s242f(rx_buffer[offset + i * 2U + (c < SAI_CH ? c : 0)]);
+
+  audio_graph_process(ins, outs, AUDIO_BLOCK_FRAMES);
+
+  for (uint32_t i = 0U; i < AUDIO_BLOCK_FRAMES; ++i)
+    for (int ch = 0; ch < SAI_CH; ++ch) {
+      int g = (ch < NO) ? ch : NO - 1;   // fewer graph outs -> duplicate last
+      tx_buffer[offset + i * 2U + ch] = f2s24(outbuf[g][i]);
+    }
 }
 
 // ============================================================================

@@ -12,7 +12,7 @@
 //   PEAK_READ: [0x01][seq][in_peak f32][out_peak f32]
 
 #include "rtt_audio.h"
-#include "pitch_shifter_audio.h"
+#include "audio_graph_runner.h"
 #include "SEGGER_RTT.h"
 #include "systick.h"
 #include "stm32h750xx.h"
@@ -62,7 +62,7 @@ void rtt_audio_poll(void) {
   if (cmd == CMD_AUDIO_INIT) {
     NVIC_DisableIRQ(DMA1_Stream1_IRQn);
     s_active = true;
-    pitch_shifter_audio_init(48000);
+    audio_graph_init(48000);
     uint8_t ack[2] = {RESP_ACK, seq};
     SEGGER_RTT_Write(RTT_CH, ack, 2u);
     return;
@@ -79,7 +79,7 @@ void rtt_audio_poll(void) {
   if (cmd == CMD_PEAK_READ) {
     float in_peak  = 0.0f;
     float out_peak = 0.0f;
-    pitch_shifter_peaks_read_and_clear(&in_peak, &out_peak);
+    audio_graph_peaks_read_and_clear(&in_peak, &out_peak);
     uint8_t resp[2u + 8u];
     resp[0] = RESP_ACK;
     resp[1] = seq;
@@ -98,7 +98,11 @@ void rtt_audio_poll(void) {
 
     if (!read_exact(raw_in, BLOCK_BYTES, 2000u)) return;
     memcpy(in_f, raw_in, BLOCK_BYTES);
-    pitch_shifter_audio_process(in_f, out_l, out_r, BLOCK_N);
+    // Non-realtime probe path keeps the mono-in / stereo-out wire protocol,
+    // routed through the generic runner (1 input, 2 outputs).
+    const float* ins[1]  = { in_f };
+    float*       outs[2] = { out_l, out_r };
+    audio_graph_process(ins, outs, BLOCK_N);
     resp[0] = RESP_ACK;
     resp[1] = seq;
     // Interleave L/R into resp: [L0][R0][L1][R1]...
