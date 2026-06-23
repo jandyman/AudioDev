@@ -16,7 +16,7 @@ import os
 # Must precede matplotlib.pyplot — diagnostic_plot sets MPLCONFIGDIR and backend.
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'build'))
-from lib.diagnostic_plot import install_x_zoom
+from lib.diagnostic_plot import install_x_zoom, mark_events as draw_events
 
 import numpy as np
 import scipy.io.wavfile as wav
@@ -156,9 +156,9 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
            ha='center', fontsize=9, style='italic', color='#555')
 
   def mark_events(ax, ymax=None):
-    for idx in loop_indices:    ax.axvline(t[idx], color='green',  linewidth=0.8, alpha=0.35)
-    for idx in bailout_indices: ax.axvline(t[idx], color='red',    linewidth=1.0, alpha=0.6)
-    for idx in attack_indices:  ax.axvline(t[idx], color='orange', linewidth=1.0, alpha=0.6)
+    draw_events(ax, t, loop_indices,    color='green',  lw=0.8, alpha=0.35)
+    draw_events(ax, t, bailout_indices, color='red',    lw=1.0, alpha=0.6)
+    draw_events(ax, t, attack_indices,  color='orange', lw=1.0, alpha=0.6)
 
   # Panel 1: input post-LPF
   axes[0].plot(t, audio_lpf, 'b-', linewidth=0.3, alpha=0.7, label='Input (post-LPF)')

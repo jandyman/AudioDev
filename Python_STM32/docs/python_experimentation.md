@@ -104,10 +104,33 @@ first draw so **Home** always returns to the full view even after wheel
 zoom/pan. Optional kwargs: `base_scale` (zoom factor per notch, default 1.3) and
 `pan_frac` (fraction of the visible width moved per notch, default 0.20).
 
-### Useful panel patterns
+### Marking discrete events (triggers)
 
-- **Event markers** — `ax.axvline(t[idx], color='green', lw=0.8, alpha=0.35)` per
-  event index; big, semi-transparent lines read clearly when zoomed out.
+Overlaying discrete events — attack triggers, loop fires, bailouts — as vertical
+lines across every panel is one of the most useful diagnostics: you instantly see
+*when* something fired against *what the signals were doing*. `mark_events` (in
+`lib.diagnostic_plot`) generalizes it:
+
+```python
+from lib.diagnostic_plot import mark_events
+# Pass the whole axes array -> markers land on EVERY panel, time-aligned.
+mark_events(axes, t, atk_trigger, color='orange', lw=1.0, label='attack')
+mark_events(axes, t, loop_evts,   color='green',  lw=0.8, alpha=0.35)
+```
+
+The `events` argument is either a **per-sample 0/1 impulse/flag signal** (the
+common case — e.g. a probe like `atk.trigger` or `lc.loop_event`; rising edges
+are used, so single-sample impulses and held flags both give one marker per
+event) or an **array of sample indices** you've already extracted. `axes` may be
+a single Axes or the whole panel array — pass the array to mark all panels in one
+call. Use a separate call per event *type* so each gets its own color; `label` is
+attached to the first line only, so one legend entry appears. `event_indices(sig,
+thresh)` is exposed separately if you just want the rising-edge indices (e.g. to
+count events or slice around them). Keep lines semi-transparent (`alpha`) so they
+read clearly without burying the waveform when zoomed out.
+
+### Other panel patterns
+
 - **State tinting** — `ax.axvspan(t[a], t[b], color=c, alpha=0.15, lw=0)` to shade
   spans where a selector/mode is active.
 - **Overlay on a twin axis** — put a derived quantity (f0, confidence) on

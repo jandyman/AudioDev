@@ -73,6 +73,39 @@ def install_x_zoom(fig, x_min, x_max, base_scale=1.3, pan_frac=0.20):
   fig.canvas.mpl_connect('draw_event', _seed_home)
 
 
+def event_indices(signal, thresh=0.5):
+  """Rising-edge indices of a 0/1 impulse-or-flag signal — where it crosses up
+  through `thresh`. Works the same for single-sample impulse trains (each spike
+  is one event) and for held flags (one event at each activation, not per sample).
+  """
+  s = np.asarray(signal) > thresh
+  rising = s & ~np.concatenate(([False], s[:-1]))
+  return np.flatnonzero(rising)
+
+
+def mark_events(axes, x, events, thresh=0.5, color='C3', lw=1.0, alpha=0.6, label=None):
+  """Draw vertical markers at discrete events across one or more shared-x axes.
+
+  axes:   a single Axes OR an iterable/array of them — mark every panel in one
+          call so markers line up across the whole figure.
+  x:      the x-coordinate array (e.g. time); events index into it.
+  events: a per-sample 0/1 impulse/flag signal (rising edges are used), OR an
+          array of integer sample indices already extracted.
+  label:  legend label; attached to the first line only so the legend shows once.
+
+  Returns the event index array (handy for counting / reuse).
+  """
+  ev = np.asarray(events)
+  is_signal = ev.dtype == bool or np.issubdtype(ev.dtype, np.floating) or ev.size == len(x)
+  idx = event_indices(ev, thresh) if is_signal else ev.astype(int)
+
+  ax_list = np.asarray(axes, dtype=object).ravel() if hasattr(axes, '__iter__') else [axes]
+  for ax in ax_list:
+    for k, i in enumerate(idx):
+      ax.axvline(x[i], color=color, lw=lw, alpha=alpha, label=(label if k == 0 else None))
+  return idx
+
+
 def load_audio_mono(path):
   """Load a WAV file, return (sample_rate, float64 mono samples in [-1, 1])."""
   sr, raw = wav.read(path)
