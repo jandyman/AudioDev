@@ -27,22 +27,37 @@ import numpy as np
 import scipy.io.wavfile as wav
 
 
-def install_x_zoom(fig, x_min, x_max, base_scale=1.3):
-  """Scroll wheel -> horizontal-only zoom anchored at cursor x.
+def install_x_zoom(fig, x_min, x_max, base_scale=1.3, pan_frac=0.20):
+  """Mouse-wheel navigation on the x axis, no toolbar mode-switching:
 
-  With sharex=True on the figure's axes, changing one xlim propagates.
-  Toolbar Home button resets to the original full range (we seed the
-  toolbar's navigation stack on first draw so Home has a view to return to;
-  scroll-wheel zoom otherwise leaves the stack empty).
+    scroll            zoom x, anchored at the cursor (up = in, down = out)
+    shift + scroll    pan x left / right (down = back, up = forward)
+
+  With sharex=True on the figure's axes, changing one xlim propagates to all.
+  Toolbar Home still resets to the original full range (we seed the toolbar's
+  navigation stack on first draw so Home has a view to return to; wheel
+  zoom/pan otherwise leaves the stack empty). pan_frac is the fraction of the
+  visible width moved per scroll notch.
   """
   def on_scroll(event):
     ax = event.inaxes
     if ax is None or event.xdata is None: return
-    factor = (1.0 / base_scale) if event.step > 0 else base_scale
-    x = event.xdata
     x0, x1 = ax.get_xlim()
-    new_left  = max(x - (x - x0) * factor, x_min)
-    new_right = min(x + (x1 - x) * factor, x_max)
+    width = x1 - x0
+
+    if event.key == 'shift':
+      # Horizontal pan: shift the window, preserving width, clamped to range.
+      shift = event.step * pan_frac * width   # up/away -> forward (right)
+      new_left, new_right = x0 + shift, x1 + shift
+      if new_left  < x_min: new_left,  new_right = x_min, x_min + width
+      if new_right > x_max: new_left,  new_right = x_max - width, x_max
+    else:
+      # Zoom anchored at the cursor (clamped to the full data range).
+      factor = (1.0 / base_scale) if event.step > 0 else base_scale
+      x = event.xdata
+      new_left  = max(x - (x - x0) * factor, x_min)
+      new_right = min(x + (x1 - x) * factor, x_max)
+
     if new_right - new_left < 1e-6: return
     ax.set_xlim(new_left, new_right)
     fig.canvas.draw_idle()
