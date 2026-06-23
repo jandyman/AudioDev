@@ -40,8 +40,29 @@ channel is downmixed to channel 0). Input WAVs live in the repo-root
 **Saving.** Output WAVs go in the repo-root `test_audio_out/` directory, named
 `<input_stem>_<tag>.wav` — the input stem preserved verbatim (spaces, case),
 the tag describing the transform (e.g. `Fourth Test_pitch_shifted_-5st.wav`).
-Never write generic names like `out.wav`. Do **not** save matplotlib PNGs next
-to the audio — use the interactive window.
+Never write generic names like `out.wav`. 
+
+**Multichannel — generated next to a reference.** To A/B processed audio against
+a reference (the dry input, or a known-good render), save them as the channels of
+one WAV: stack into an `(N, n_channels)` array, normalize by the **global** peak
+(not per-channel — that preserves the relative levels you're trying to compare),
+and pass it to `scipy.io.wavfile.write` as int16, which interleaves `(N, ch)` for
+you. Convention: channel 0 = dry/reference, the processed signal(s) in the rest.
+Then you can pan L/R to compare by ear and plot the columns on shared-x panels to
+compare them time-aligned.
+
+```python
+import scipy.io.wavfile as wav
+stereo = np.stack([reference, generated], axis=1)   # (N, 2): col0 = ref, col1 = generated
+peak = np.abs(stereo).max()
+if peak > 0:
+  stereo = stereo / (peak * 1.05)                   # joint normalize, ~5% headroom
+out_i16 = np.clip(stereo * 32767, -32768, 32767).astype(np.int16)
+wav.write(out_path, sr, out_i16)
+```
+
+`pitch_shifter_demo.py` does exactly this (L = dry, R = shifted), so the saved
+WAV is both an ear A/B and the source for its side-by-side input/output panels.
 
 **Buffer-centric play/save.** `projects/pitch_shifter/audio_buf_tools.py` adds
 `load_wav`, `save_wav`, `output_path(input_path, tag)`, and `play(buf, sr)`
@@ -103,7 +124,7 @@ pipeline) and `projects/yin/yin_demo.py` (probes + a lag-domain snapshot).
 
 Quickest for sketching an idea or building ground truth. Per the architecture,
 this is a **temporary prototyping step** before C++/Faust — don't let real DSP
-settle here. Generate a signal, process it in numpy, plot. (Example:
+settle here. Load a wave file or generate a signal, process it in numpy, plot. (Example:
 `yin_validate.py`'s reference YIN is pure numpy used only as ground truth.)
 
 ### 2. A Faust block
