@@ -208,7 +208,8 @@ Two routes:
   a block in isolation:
 
   ```python
-  out = run_faust(input_buf, dsp_path, params={"thresh": 0.3})
+  out = run_faust(input_buf, dsp_path, params={"thresh": 0.3},
+                  sr=sr, bs=128, out_duration=None)   # sr/bs/out_duration are keyword args
   ```
 
   - `input_buf` — mono numpy array of input samples.
@@ -230,7 +231,9 @@ Two routes:
     The value is held constant for the whole render — for time-varying control,
     use the pybind route below. Omit `params` to use the `.dsp`'s declared
     defaults.
-  - `sr` — sample rate in Hz (default 48000).
+  - `sr` — sample rate in Hz (default **48000**). Pass your input audio's rate:
+    the bundled test files are 44.1 kHz, so a bare call would render them at the
+    wrong rate — use `sr=sr` from `load_audio_mono` / `load_wav`.
   - `bs` — render block size in samples (default 128).
   - `out_duration` — render length in seconds; defaults to the input duration.
     For varispeed with ratio < 1, use `len(input_buf) / sr / ratio`.
