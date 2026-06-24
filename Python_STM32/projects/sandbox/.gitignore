@@ -1,6 +1,4 @@
-# Sandbox is scratch — ignore everything by default so experiments stay local.
-# Keep a particular experiment with:  git add -f <file>
-*
-!.gitignore
-!README.md
-!_template.py
+# Sandbox experiments ARE tracked. Ignore only build artifacts.
+# (__pycache__/ and *.pyc are covered by the repo-root .gitignore.)
+build/
+*.so

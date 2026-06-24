@@ -11,9 +11,10 @@ for the STM32H750. Cross-project C++/Python conventions live in the AudioDev-roo
   hand-written C++ block `.cpp/.h`, the `.graph`, the pybind wrapper (generated
   from a template), demo/lab Python, and a thin `<graph>.make`. Active:
   `pitch_shifter/`, `yin/`.
-- `projects/sandbox/` — scratch space for Python experimentation (git-ignored by
-  default; keeps the same 2-levels-deep paths so shared tooling imports work
-  verbatim). Copy `_template.py` to start. See `docs/python_experimentation.md`.
+- `projects/sandbox/` — scratch space for Python experimentation (tracked in git;
+  only build artifacts ignored). Keeps the same 2-levels-deep paths so shared
+  tooling imports work verbatim. Copy `_template.py` to start. See
+  `docs/python_experimentation.md`.
 - `python/` — shared host tooling: `graph_compiler.py`, `graph_build.mk`,
   `faust.make`, `bindings/`, `lib/`, and the RTT hardware-test scripts.
 - `dsp_faust/`, `dsp_cpp/` — shared block libraries (promote here only on real reuse).

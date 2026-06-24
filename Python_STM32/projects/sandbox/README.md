@@ -21,6 +21,5 @@ module (e.g. `from build.pybind_pitch_shifter import pitch_shifter` after
 
 ## Git policy
 
-Scratch is **git-ignored by default** (see `.gitignore`) so experiments don't
-clutter history. Only `README.md`, `.gitignore`, and `_template.py` are tracked.
-To keep a particular experiment, force-add it: `git add -f my_lab.py`.
+Sandbox experiments **are tracked** — commit them like any other file. Only build
+artifacts are ignored (`build/`, `*.so`; `__pycache__/` is handled repo-wide).
