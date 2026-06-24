@@ -77,11 +77,10 @@ wav.write(out_path(f"{stem}_ref_vs_generated.wav"), sr, out_i16)
 `pitch_shifter_demo.py` does exactly this (L = dry, R = shifted), so the saved
 WAV is both an ear A/B and the source for its side-by-side input/output panels.
 
-**Buffer-centric play/save.** `projects/pitch_shifter/audio_buf_tools.py` adds
-`load_wav`, `save_wav`, `output_path(input_path, tag)`, and `play(buf, sr)`
-(in-process audition via `sounddevice`) for slicing and listening to numpy
-buffers without writing files. It's project-local for now (promote to
-`python/lib/` when a second project uses it).
+**Buffer-centric play/save.** `lib.audio_buf_tools` adds `load_wav`, `save_wav`,
+`output_path(input_path, tag)`, and `play(buf, sr)` (in-process audition via
+`sounddevice`) for slicing and listening to numpy buffers without writing files
+(`from lib.audio_buf_tools import load_wav, play, ...`).
 
 ## Plotting — interactive diagnostic figures
 
@@ -200,12 +199,12 @@ settle here. Load a wave file or generate a signal, process it in numpy, plot. (
 
 Two routes:
 
-- **One-shot, no build** — `audio_buf_tools.run_faust(input_buf, dsp_path,
-  params={...})` does a single `dawdreamer` round-trip and returns the output
-  buffer. Params are addressed by short label; `run_faust` sets
-  `faust_libraries_paths` to the `.dsp`'s own directory first so sibling
-  `.lib`/`.dsp` imports resolve regardless of cwd. Best for auditioning a block
-  in isolation.
+- **One-shot, no build** — `from lib.audio_buf_tools import run_faust`, then
+  `run_faust(input_buf, dsp_path, params={...})` does a single `dawdreamer`
+  round-trip and returns the output buffer. Params are addressed by short label;
+  `run_faust` sets `faust_libraries_paths` to the `.dsp`'s own directory first so
+  sibling `.lib`/`.dsp` imports resolve regardless of cwd. Best for auditioning a
+  block in isolation.
 - **A pybind module** — `make -f faust.make DSP=<name> DSP_LIB_DIR=<dir>` from
   `python/` compiles one `.dsp` to a stateful pybind module for chunk-by-chunk
   driving from Python.

@@ -1,10 +1,8 @@
-"""Buffer-centric helpers for Faust+Python experimentation.
+"""Buffer-centric helpers for Faust+Python experimentation (shared tooling).
 
 Load a WAV once, work on numpy buffers, play them in-process via sounddevice,
 save when you want a snapshot. run_faust is a one-shot dawdreamer round-trip.
-
-Lives in pitch_shifter_demo/ per project-first convention. Promote to
-Python_STM32/python/lib/ once a second project starts using it.
+Import as `from lib.audio_buf_tools import run_faust, load_wav, play, output_path`.
 """
 
 import os
@@ -48,10 +46,14 @@ def play(buf, sr=48000):
 def run_faust(input_buf, dsp_path, params=None, sr=48000, bs=128, out_duration=None):
   """Render input_buf through a Faust .dsp, return the output buffer (mono).
 
-  params: dict mapping short parameter name (e.g. "ratio") to value.
-          Dawdreamer addresses are built as /{proc_name}/{name}.
-  out_duration: render seconds. Defaults to input duration; for varispeed
-                with ratio < 1 you'll want len(input_buf)/sr/ratio.
+  input_buf:    mono numpy array of input samples.
+  dsp_path:     path to the Faust .dsp file; its directory is added to the Faust
+                library search path so sibling .lib/.dsp imports resolve.
+  params:       dict {short label: value}, set by label (e.g. {"ratio": 0.5}).
+  sr:           sample rate in Hz.
+  bs:           render block size in samples.
+  out_duration: render length in seconds; defaults to the input duration. For
+                varispeed with ratio < 1, use len(input_buf)/sr/ratio.
   """
   if out_duration is None:
     out_duration = len(input_buf) / sr
