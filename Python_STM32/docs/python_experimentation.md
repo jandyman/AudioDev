@@ -32,23 +32,27 @@ It provides two helpers: `load_audio_mono(path)` (file I/O, below) and
 
 ## File I/O
 
-**Loading.** `load_audio_mono(name)` returns `(sample_rate, samples)` with
-`samples` a float64 mono array in `[-1, 1]` (int16/int32 are scaled; multi-
-channel is downmixed to channel 0). `name` is a **bare filename** resolved under
-the repo-root `test_audio/` directory — the helper finds that folder relative to
-itself, so you don't reconstruct `../../../test_audio` from wherever your script
-lives. Pass `folder=...` to point elsewhere, or a path with a directory part to
-use it as-is.
+**Loading.** `load_audio_mono(name, folder=TEST_AUDIO_DIR)` returns
+`(sample_rate, samples)` with `samples` a float64 mono array in `[-1, 1]`
+(int16/int32 are scaled; multi-channel is downmixed to channel 0).
+
+- `name` — a bare filename, resolved under `folder`; the helper finds that folder
+  relative to itself, so you don't reconstruct `../../../test_audio` from wherever
+  your script lives. A `name` *with* a directory part (or absolute) is used as-is.
+- `folder` — the search directory; defaults to the repo-root `test_audio/`.
 
 ```python
 sr, audio = load_audio_mono("Fourth Test.wav")   # -> <repo>/test_audio/Fourth Test.wav
 ```
 
-**Saving.** `out_path(name)` resolves a bare filename under the repo-root
-`test_audio_out/` directory (creating it) and returns the full path to hand to
-`wav.write`. Use the `<input_stem>_<tag>.wav` convention — input stem verbatim
-(spaces, case), tag describing the transform. Never write generic names like
-`out.wav`.
+**Saving.** `out_path(name, folder=TEST_AUDIO_OUT_DIR)` returns a full path to
+hand to `wav.write`, creating the directory.
+
+- `name` — a bare filename, resolved under `folder`; a path with a directory part
+  is used as-is. Use the `<input_stem>_<tag>.wav` convention — input stem verbatim
+  (spaces, case), tag describing the transform. Never write generic names like
+  `out.wav`.
+- `folder` — the output directory; defaults to the repo-root `test_audio_out/`.
 
 ```python
 import scipy.io.wavfile as wav
@@ -199,12 +203,27 @@ settle here. Load a wave file or generate a signal, process it in numpy, plot. (
 
 Two routes:
 
-- **One-shot, no build** — `from lib.audio_buf_tools import run_faust`, then
-  `run_faust(input_buf, dsp_path, params={...})` does a single `dawdreamer`
-  round-trip and returns the output buffer. Params are addressed by short label;
-  `run_faust` sets `faust_libraries_paths` to the `.dsp`'s own directory first so
-  sibling `.lib`/`.dsp` imports resolve regardless of cwd. Best for auditioning a
-  block in isolation.
+- **One-shot, no build** — `from lib.audio_buf_tools import run_faust`, then a
+  single `dawdreamer` round-trip returns the output buffer. Best for auditioning
+  a block in isolation:
+
+  ```python
+  out = run_faust(input_buf, dsp_path, params={"thresh": 0.3})
+  ```
+
+  - `input_buf` — mono numpy array of input samples.
+  - `dsp_path` — **a path to the `.dsp` file**, not a bare name resolved under a
+    default folder (unlike `load_audio_mono`). It's passed to Faust as-is, so a
+    bare filename resolves against the *current working directory*; give a path
+    that locates the file unambiguously (absolute, or built from the script dir,
+    e.g. `os.path.join(os.path.dirname(__file__), "peak_detector.dsp")`). Its
+    directory is added to Faust's library search path so sibling `.lib`/`.dsp`
+    imports resolve regardless of cwd.
+  - `params` — `dict {short label: value}`, set by label (e.g. `{"ratio": 0.5}`).
+  - `sr` — sample rate in Hz (default 48000).
+  - `bs` — render block size in samples (default 128).
+  - `out_duration` — render length in seconds; defaults to the input duration.
+    For varispeed with ratio < 1, use `len(input_buf) / sr / ratio`.
 - **A pybind module** — `make -f faust.make DSP=<name> DSP_LIB_DIR=<dir>` from
   `python/` compiles one `.dsp` to a stateful pybind module for chunk-by-chunk
   driving from Python.
