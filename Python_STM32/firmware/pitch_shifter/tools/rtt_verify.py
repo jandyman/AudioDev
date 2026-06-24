@@ -187,7 +187,8 @@ def main(wav_in, python_dir, out_dir, n_verify_seconds, pitch_ratio, lpf_fc):
 # ---- configuration ----
 _here       = os.path.dirname(os.path.abspath(__file__))
 wav_in      = os.path.join(_here, "..", "..", "..", "..", "test_audio", "Longer Bass Notes.wav")
-python_dir  = os.path.join(_here, "..", "..", "..", "python")
+# Reorg moved the pybind reference build into the project folder; import it from there.
+python_dir  = os.path.join(_here, "..", "..", "..", "projects", "pitch_shifter")
 out_dir     = os.path.join(_here, "..", "..", "..", "..", "test_audio_out")
 
 n_verify_seconds = 1.0
