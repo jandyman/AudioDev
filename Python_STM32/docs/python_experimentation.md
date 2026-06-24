@@ -219,7 +219,17 @@ Two routes:
     e.g. `os.path.join(os.path.dirname(__file__), "peak_detector.dsp")`). Its
     directory is added to Faust's library search path so sibling `.lib`/`.dsp`
     imports resolve regardless of cwd.
-  - `params` — `dict {short label: value}`, set by label (e.g. `{"ratio": 0.5}`).
+  - `params` — a dict that sets the block's Faust UI controls **by label**. The
+    key is the label string from the Faust declaration — the first argument of
+    `hslider`/`nentry`/`button`/`checkbox`/… — and the value is the raw value in
+    that control's own range (not normalized). For a `.dsp` line
+    `thresh = hslider("thresh", 0.3, 0.0, 1.0, 0.001);` you pass
+    `params={"thresh": 0.3}`. Keys match the *leaf* label, not the full group
+    path; an unknown key raises an error that **lists the available labels**, so a
+    deliberate wrong guess (`params={"?": 0}`) is a quick way to discover them.
+    The value is held constant for the whole render — for time-varying control,
+    use the pybind route below. Omit `params` to use the `.dsp`'s declared
+    defaults.
   - `sr` — sample rate in Hz (default 48000).
   - `bs` — render block size in samples (default 128).
   - `out_duration` — render length in seconds; defaults to the input duration.

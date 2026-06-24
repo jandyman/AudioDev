@@ -49,7 +49,11 @@ def run_faust(input_buf, dsp_path, params=None, sr=48000, bs=128, out_duration=N
   input_buf:    mono numpy array of input samples.
   dsp_path:     path to the Faust .dsp file; its directory is added to the Faust
                 library search path so sibling .lib/.dsp imports resolve.
-  params:       dict {short label: value}, set by label (e.g. {"ratio": 0.5}).
+  params:       dict setting the .dsp's Faust UI controls BY LABEL — key = the
+                label string from hslider/nentry/button/... (the leaf label, not
+                the full group path), value = the raw value in that control's
+                range, held for the whole render. e.g. hslider("thresh",0.3,...)
+                -> {"thresh": 0.3}. Unknown keys raise, listing valid labels.
   sr:           sample rate in Hz.
   bs:           render block size in samples.
   out_duration: render length in seconds; defaults to the input duration. For
