@@ -26,6 +26,20 @@ matplotlib.use('TkAgg')
 import numpy as np
 import scipy.io.wavfile as wav
 
+# Repo-root audio folders, resolved relative to THIS file so callers pass a bare
+# filename ("Fourth Test.wav") instead of reconstructing "../../../test_audio"
+# from wherever the script happens to live. lib/ is python/lib/, three levels
+# under the repo root.
+_REPO_ROOT         = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+TEST_AUDIO_DIR     = os.path.join(_REPO_ROOT, 'test_audio')
+TEST_AUDIO_OUT_DIR = os.path.join(_REPO_ROOT, 'test_audio_out')
+
+
+def _resolve(name, folder):
+  """A bare filename (no directory part) resolves under `folder`; anything with
+  a path component or an absolute path is used exactly as given."""
+  return name if os.path.dirname(name) else os.path.join(folder, name)
+
 
 def install_x_zoom(fig, x_min, x_max, base_scale=1.3, pan_frac=0.20):
   """Mouse-wheel navigation on the x axis, no toolbar mode-switching:
@@ -106,9 +120,13 @@ def mark_events(axes, x, events, thresh=0.5, color='C3', lw=1.0, alpha=0.6, labe
   return idx
 
 
-def load_audio_mono(path):
-  """Load a WAV file, return (sample_rate, float64 mono samples in [-1, 1])."""
-  sr, raw = wav.read(path)
+def load_audio_mono(name, folder=TEST_AUDIO_DIR):
+  """Load a WAV, return (sample_rate, float64 mono samples in [-1, 1]).
+
+  `name` may be a bare filename — resolved under `folder` (default the repo-root
+  test_audio/) — or a full/relative path with a directory part, used as given.
+  """
+  sr, raw = wav.read(_resolve(name, folder))
   if raw.dtype == np.int16:
     x = raw.astype(np.float64) / 32768.0
   elif raw.dtype == np.int32:
@@ -117,3 +135,13 @@ def load_audio_mono(path):
     x = raw.astype(np.float64)
   if x.ndim > 1: x = x[:, 0]
   return sr, x
+
+
+def out_path(name, folder=TEST_AUDIO_OUT_DIR):
+  """Resolve an output WAV path: a bare filename lands in `folder` (default the
+  repo-root test_audio_out/); a path with a directory part passes through. The
+  target directory is created. Build the name with the usual <stem>_<tag>.wav
+  convention, e.g. out_path(f'{stem}_pitch_shifted_{st:+d}st.wav')."""
+  path = _resolve(name, folder)
+  os.makedirs(os.path.dirname(path), exist_ok=True)
+  return path

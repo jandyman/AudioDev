@@ -29,8 +29,7 @@ def make_detector(sr, fmin, fmax, threshold):
   return yd
 
 def run_file(fn, fmin, fmax, threshold):
-  here = os.path.dirname(__file__)
-  sr, audio = load_audio_mono(os.path.join(here, '..', '..', '..', 'test_audio', fn))
+  sr, audio = load_audio_mono(fn)   # bare name -> repo-root test_audio/
   N = len(audio)
   yd = make_detector(sr, fmin, fmax, threshold)
   yd.process_chunk(audio.astype(np.float32))

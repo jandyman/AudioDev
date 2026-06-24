@@ -11,7 +11,7 @@ import sys, os
 # header every demo uses works verbatim. Must precede `import matplotlib.pyplot`
 # (lib.diagnostic_plot sets the backend + cache dir).
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'python'))
-from lib.diagnostic_plot import install_x_zoom, load_audio_mono, mark_events
+from lib.diagnostic_plot import install_x_zoom, load_audio_mono, mark_events, out_path
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,8 +22,7 @@ import matplotlib.pyplot as plt
 #   from build.pybind_pitch_shifter import pitch_shifter
 
 def run(in_file):
-  here = os.path.dirname(__file__)
-  sr, audio = load_audio_mono(os.path.join(here, '..', '..', '..', 'test_audio', in_file))
+  sr, audio = load_audio_mono(in_file)           # bare name -> repo-root test_audio/
   N = len(audio); t = np.arange(N) / sr
 
   # ---- your experiment here -------------------------------------------------
@@ -32,6 +31,9 @@ def run(in_file):
   #   out = ps.process_chunk(audio.astype(np.float32))
   #   trig = ps.get_buffer('atk.trigger', N)
   result = audio
+  # Save a result under test_audio_out/ with:
+  #   import scipy.io.wavfile as wav
+  #   wav.write(out_path(f'{os.path.splitext(in_file)[0]}_result.wav'), sr, result)
   # ---------------------------------------------------------------------------
 
   fig, ax = plt.subplots(2, 1, figsize=(14, 7), sharex=True)

@@ -32,15 +32,28 @@ It provides two helpers: `load_audio_mono(path)` (file I/O, below) and
 
 ## File I/O
 
-**Loading.** `load_audio_mono(path)` returns `(sample_rate, samples)` with
+**Loading.** `load_audio_mono(name)` returns `(sample_rate, samples)` with
 `samples` a float64 mono array in `[-1, 1]` (int16/int32 are scaled; multi-
-channel is downmixed to channel 0). Input WAVs live in the repo-root
-`test_audio/` directory.
+channel is downmixed to channel 0). `name` is a **bare filename** resolved under
+the repo-root `test_audio/` directory — the helper finds that folder relative to
+itself, so you don't reconstruct `../../../test_audio` from wherever your script
+lives. Pass `folder=...` to point elsewhere, or a path with a directory part to
+use it as-is.
 
-**Saving.** Output WAVs go in the repo-root `test_audio_out/` directory, named
-`<input_stem>_<tag>.wav` — the input stem preserved verbatim (spaces, case),
-the tag describing the transform (e.g. `Fourth Test_pitch_shifted_-5st.wav`).
-Never write generic names like `out.wav`. 
+```python
+sr, audio = load_audio_mono("Fourth Test.wav")   # -> <repo>/test_audio/Fourth Test.wav
+```
+
+**Saving.** `out_path(name)` resolves a bare filename under the repo-root
+`test_audio_out/` directory (creating it) and returns the full path to hand to
+`wav.write`. Use the `<input_stem>_<tag>.wav` convention — input stem verbatim
+(spaces, case), tag describing the transform. Never write generic names like
+`out.wav`.
+
+```python
+import scipy.io.wavfile as wav
+wav.write(out_path("Fourth Test_pitch_shifted_-5st.wav"), sr, out_i16)
+```
 
 **Multichannel — generated next to a reference.** To A/B processed audio against
 a reference (the dry input, or a known-good render), save them as the channels of
@@ -58,7 +71,7 @@ peak = np.abs(stereo).max()
 if peak > 0:
   stereo = stereo / (peak * 1.05)                   # joint normalize, ~5% headroom
 out_i16 = np.clip(stereo * 32767, -32768, 32767).astype(np.int16)
-wav.write(out_path, sr, out_i16)
+wav.write(out_path(f"{stem}_ref_vs_generated.wav"), sr, out_i16)
 ```
 
 `pitch_shifter_demo.py` does exactly this (L = dry, R = shifted), so the saved
