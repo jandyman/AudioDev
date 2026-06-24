@@ -97,26 +97,38 @@ def event_indices(signal, thresh=0.5):
   return np.flatnonzero(rising)
 
 
-def mark_events(axes, x, events, thresh=0.5, color='C3', lw=1.0, alpha=0.6, label=None):
-  """Draw vertical markers at discrete events across one or more shared-x axes.
+def mark_events(axes, x, events, thresh=0.5, color='C3', lw=1.0, alpha=0.6,
+                label=None, marker=None, y=None, ms=7):
+  """Draw markers at discrete events across one or more shared-x axes.
 
   axes:   a single Axes OR an iterable/array of them — mark every panel in one
           call so markers line up across the whole figure.
   x:      the x-coordinate array (e.g. time); events index into it.
   events: a per-sample 0/1 impulse/flag signal (rising edges are used), OR an
           array of integer sample indices already extracted.
-  label:  legend label; attached to the first line only so the legend shows once.
+  label:  legend label (shown once).
 
-  Returns the event index array (handy for counting / reuse).
+  By default each event is a full-height vertical line (axvline). Pass `marker`
+  (e.g. '^', 'v', 'o') plus `y` (a data coordinate) to instead drop a point
+  marker at that height — useful for placing different event types at different
+  levels so they don't overlap, or tagging just the top/bottom of a panel.
+
+  Returns the event index array (handy for counting / reuse). No-op on no events.
   """
   ev = np.asarray(events)
   is_signal = ev.dtype == bool or np.issubdtype(ev.dtype, np.floating) or ev.size == len(x)
   idx = event_indices(ev, thresh) if is_signal else ev.astype(int)
+  if len(idx) == 0:
+    return idx
 
   ax_list = np.asarray(axes, dtype=object).ravel() if hasattr(axes, '__iter__') else [axes]
   for ax in ax_list:
-    for k, i in enumerate(idx):
-      ax.axvline(x[i], color=color, lw=lw, alpha=alpha, label=(label if k == 0 else None))
+    if marker is None:
+      for k, i in enumerate(idx):
+        ax.axvline(x[i], color=color, lw=lw, alpha=alpha, label=(label if k == 0 else None))
+    else:
+      ax.plot(x[idx], np.full(len(idx), 0.0 if y is None else y),
+              linestyle='none', marker=marker, color=color, ms=ms, alpha=alpha, label=label)
   return idx
 
 

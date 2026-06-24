@@ -209,12 +209,8 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   a4b.plot(t, confidence, color='C2', linewidth=0.6, alpha=0.55, label='confidence')
   a4b.axhline(0.6, color='C2', linewidth=0.8, linestyle='--', alpha=0.5)   # 1 - APERIODICITY_THRESH
   a4b.set_ylabel('confidence', color='C2'); a4b.set_ylim(-0.05, 1.05)
-  if len(gated_indices):
-    axes[4].plot(t[gated_indices], np.full(len(gated_indices), 48.0),
-                 'bv', ms=6, alpha=0.7, label='loop suppressed')
-  if len(bailout_indices):
-    axes[4].plot(t[bailout_indices], np.full(len(bailout_indices), 5.0),
-                 'r^', ms=8, alpha=0.7, label='bailout')
+  draw_events(axes[4], t, gated_indices,   marker='v', y=48.0, color='b', ms=6, alpha=0.7, label='loop suppressed')
+  draw_events(axes[4], t, bailout_indices, marker='^', y=5.0,  color='r', ms=8, alpha=0.7, label='bailout')
   axes[4].set_xlabel('Time (s)')
   axes[4].set_ylabel('P (ms)')
   axes[4].set_ylim(0, 50)

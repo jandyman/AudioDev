@@ -142,14 +142,47 @@ thresh)` is exposed separately if you just want the rising-edge indices (e.g. to
 count events or slice around them). Keep lines semi-transparent (`alpha`) so they
 read clearly without burying the waveform when zoomed out.
 
+**Lines vs. point markers.** By default each event is a full-height vertical
+line. To tag events at a specific height instead — handy for putting *different*
+event types at different levels so they don't pile up — pass `marker` (`'^'`,
+`'v'`, `'o'`, …) plus a `y` (data coordinate):
+
+```python
+mark_events(axes[4], t, gated_idx,   marker='v', y=48.0, color='b', label='loop suppressed')
+mark_events(axes[4], t, bailout_idx, marker='^', y=5.0,  color='r', label='bailout')
+```
+
+Under the hood that's `ax.plot(t[idx], <constant y>, marker=...)` — point markers
+at the event times — versus `axvline` for full-height lines. `pitch_shifter_demo.py`
+uses exactly this to stack "loop suppressed" (▽, high) and "bailout" (△, low)
+markers in one panel.
+
 ### Other panel patterns
 
 - **State tinting** — `ax.axvspan(t[a], t[b], color=c, alpha=0.15, lw=0)` to shade
   spans where a selector/mode is active.
-- **Overlay on a twin axis** — put a derived quantity (f0, confidence) on
-  `ax.twinx()` so it shares the time axis but keeps its own y scale.
 - **Probe panels** — plot any internal node tapped by name (next section); e.g.
   the YIN period gated by confidence, or the loop controller's latency.
+
+### Overlay on a twin axis
+
+To show a derived quantity (f0, confidence, a gain) against a panel's waveform
+without squashing either, put it on a twin axis — it shares x but keeps its own
+y scale:
+
+```python
+ax = axes[0]
+ax.plot(t, audio, lw=0.5, color='0.6'); ax.set_ylabel('input')
+axb = ax.twinx()                                  # shares x, independent y
+axb.plot(t, f0, lw=1.2, color='C0')
+axb.set_ylabel('f0 (Hz)', color='C0'); axb.set_ylim(0, 400)
+```
+
+Because the twin shares x (via the panels' `sharex=True` group), it zooms and
+pans right along with everything else. One gotcha: `twinx()` axes aren't in the
+array `subplots` returned, so `mark_events(axes, …)` draws onto the base panels
+only — which is usually what you want (the line still spans the column); mark a
+twin explicitly if you need markers on its scale.
 
 Worked examples: `projects/pitch_shifter/pitch_shifter_demo.py` (5-panel
 pipeline) and `projects/yin/yin_demo.py` (probes + a lag-domain snapshot).
