@@ -43,8 +43,9 @@ def play(buf, sr=48000):
   sd.wait()
 
 
-def run_faust(input_buf, dsp_path, params=None, sr=48000, bs=128, out_duration=None):
-  """Render input_buf through a Faust .dsp, return the output buffer (mono).
+def run_faust(input_buf, dsp_path, params=None, sr=48000, bs=128, out_duration=None,
+              all_outputs=False):
+  """Render input_buf through a Faust .dsp and return the output.
 
   input_buf:    mono numpy array of input samples.
   dsp_path:     path to the Faust .dsp file; its directory is added to the Faust
@@ -58,6 +59,10 @@ def run_faust(input_buf, dsp_path, params=None, sr=48000, bs=128, out_duration=N
   bs:           render block size in samples.
   out_duration: render length in seconds; defaults to the input duration. For
                 varispeed with ratio < 1, use len(input_buf)/sr/ratio.
+  all_outputs:  if False (default), return the first output channel as a 1-D
+                array. If True, return ALL output channels as a 2-D array of
+                shape (n_outputs, n_samples) — e.g. for a `process` that emits
+                several probes, unpack them as `a, b = run_faust(..., all_outputs=True)`.
   """
   if out_duration is None:
     out_duration = len(input_buf) / sr
@@ -90,5 +95,7 @@ def run_faust(input_buf, dsp_path, params=None, sr=48000, bs=128, out_duration=N
 
   engine.render(out_duration)
 
-  out = engine.get_audio()
+  out = engine.get_audio()              # (n_outputs, n_samples)
+  if all_outputs:
+    return out
   return out[0] if out.ndim > 1 else out

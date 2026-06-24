@@ -237,6 +237,10 @@ Two routes:
   - `bs` — render block size in samples (default 128).
   - `out_duration` — render length in seconds; defaults to the input duration.
     For varispeed with ratio < 1, use `len(input_buf) / sr / ratio`.
+  - `all_outputs` — `False` (default) returns the first output channel as a 1-D
+    array; `True` returns **all** output channels as a `(n_outputs, n_samples)`
+    2-D array, so a `process` that emits several probes can be unpacked:
+    `smoothed, slope = run_faust(..., all_outputs=True)`.
 - **A pybind module** — `make -f faust.make DSP=<name> DSP_LIB_DIR=<dir>` from
   `python/` compiles one `.dsp` to a stateful pybind module for chunk-by-chunk
   driving from Python.
