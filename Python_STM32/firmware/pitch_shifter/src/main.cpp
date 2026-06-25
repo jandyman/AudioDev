@@ -16,6 +16,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "build_id.h"      // generated: BUILD_ID_HASH (source fingerprint)
 #include "audio.h"
 #include "audio_graph_runner.h"
 #include "board.h"
@@ -27,6 +28,12 @@
 #include "systick.h"
 
 static constexpr uint32_t kLedBlinkHalfPeriodMs = 500U;
+
+// Build-ID published for the host telemetry handshake: the host reads this via
+// READ_MEM and compares it to the .buildid sidecar to confirm the running
+// firmware matches the .map it's resolving symbols from. Non-static → clean .map
+// symbol; the boot-time store both keeps it (gc-sections) and proves liveness.
+volatile uint32_t audio_build_id = 0u;
 
 static void fault_blink(uint32_t half_period_ms) {
   for (;;) {
@@ -43,6 +50,8 @@ extern "C" int main(void) {
   systick_init();
   rtt_audio_init();
   audio_graph_init(48000);
+  audio_graph_profile_init();              // DWT cycle counter for DSP timing
+  audio_build_id = BUILD_ID_HASH;          // publish build id for the host handshake
 
   if (!configure_sai1_clock()) {
     fault_blink(100U);                  // 5 Hz — PLL3 lock failed

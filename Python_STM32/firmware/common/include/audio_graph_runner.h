@@ -13,13 +13,35 @@ extern "C" {
 
 void audio_graph_init(int sample_rate);
 
-// Process one chunk: ins[kNumInputs] and outs[kNumOutputs], n frames each.
-// Updates the input/output peak meters as a side effect.
-void audio_graph_process(const float* const* ins, float* const* outs, int n);
+// ---- DSP profiling -------------------------------------------------------
+// Cycle accounting for process_chunk, captured per audio block on BARE_METAL.
+// The runner keeps a rolling ring of the last AUDIO_PROFILE_RING block costs
+// (the time-series) plus these summary scalars.
+#define AUDIO_PROFILE_RING 128
 
-// Peak |x| since the last call (input channel 0 / last output channel), then
-// clear to zero. Briefly disables IRQs; safe from foreground while audio runs.
-void audio_graph_peaks_read_and_clear(float* in_peak, float* out_peak);
+typedef struct {
+  uint32_t last_cycles;    // process_chunk cost of the most recent block
+  uint32_t max_cycles;     // worst-case block; host zeroes it via WRITE_MEM to window
+  uint32_t block_count;    // total blocks processed (monotonic; also ring write pos)
+} audio_profile;
+
+// Telemetry symbols — the host reads these straight from target memory by name
+// (resolved from the .map) via the RTT READ_MEM command; the CPU does the access
+// so it is D-cache coherent. WRITE_MEM zeroes the peaks/max for windowed meters.
+// Global (non-static) so they appear as clean symbols in the .map.
+extern volatile float         audio_in_peak;
+extern volatile float         audio_out_peak;
+extern volatile audio_profile audio_dsp_profile;                  // BARE_METAL
+extern volatile uint32_t      audio_dsp_cycle_ring[AUDIO_PROFILE_RING];  // BARE_METAL
+
+// Enable the DWT cycle counter so audio_graph_process can time the DSP. Call
+// once at boot after the core clock is up. No-op off-target (non-BARE_METAL).
+void audio_graph_profile_init(void);
+
+// Process one chunk: ins[kNumInputs] and outs[kNumOutputs], n frames each.
+// Updates the input/output peak meters as a side effect, and on BARE_METAL
+// records the cycle cost of the DSP (process_chunk only, not the metering).
+void audio_graph_process(const float* const* ins, float* const* outs, int n);
 
 #ifdef __cplusplus
 }

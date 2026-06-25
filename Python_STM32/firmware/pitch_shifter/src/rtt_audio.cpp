@@ -1,15 +1,22 @@
-// rtt_audio.cpp — non-realtime audio block verification via RTT.
+// rtt_audio.cpp — RTT command channel: non-realtime audio-block verification
+// plus generic target-memory read/write (used for telemetry).
 //
 // Protocol (host → target):
 //   CMD_AUDIO_INIT  0x10: [cmd][seq]                   disables DMA ISR, re-inits graph
 //   CMD_AUDIO_BLOCK 0x11: [cmd][seq][48×4 float32 in]  one chunk in / interleaved L/R out
 //   CMD_AUDIO_END   0x12: [cmd][seq]                   re-enables DMA ISR
-//   CMD_PEAK_READ   0x20: [cmd][seq]                   read+clear input/output peak
+//   CMD_READ_MEM    0x20: [cmd][seq][addr u32][len u16]            read len bytes @ addr
+//   CMD_WRITE_MEM   0x21: [cmd][seq][addr u32][len u16][len bytes] write len bytes @ addr
 //
 // Responses (target → host):
-//   INIT/END:  [0x01][seq]
-//   BLOCK:     [0x01][seq][48 × (L_f32, R_f32) interleaved]   = 2 + 384 bytes
-//   PEAK_READ: [0x01][seq][in_peak f32][out_peak f32]
+//   INIT/END/WRITE_MEM: [0x01][seq]
+//   BLOCK:              [0x01][seq][48 × (L_f32, R_f32) interleaved]   = 2 + 384 bytes
+//   READ_MEM:           [0x01][seq][len bytes]
+//
+// The CPU performs the memory access, so reads of cacheable RAM are D-cache
+// coherent (unlike a debugger reading SRAM directly). The host resolves the
+// telemetry symbol addresses (cycle profile struct, cycle ring, peaks, build id)
+// from the .map. See docs/telemetry.md.
 
 #include "rtt_audio.h"
 #include "audio_graph_runner.h"
@@ -27,8 +34,10 @@
 #define CMD_AUDIO_INIT   0x10u
 #define CMD_AUDIO_BLOCK  0x11u
 #define CMD_AUDIO_END    0x12u
-#define CMD_PEAK_READ    0x20u
+#define CMD_READ_MEM     0x20u
+#define CMD_WRITE_MEM    0x21u
 #define RESP_ACK         0x01u
+#define MAX_MEM_LEN      1000u   // fits the 1 KB RTT up-buffer with header
 
 static bool s_active = false;
 
@@ -76,16 +85,33 @@ void rtt_audio_poll(void) {
     return;
   }
 
-  if (cmd == CMD_PEAK_READ) {
-    float in_peak  = 0.0f;
-    float out_peak = 0.0f;
-    audio_graph_peaks_read_and_clear(&in_peak, &out_peak);
-    uint8_t resp[2u + 8u];
+  if (cmd == CMD_READ_MEM) {
+    uint8_t req[6];
+    if (!read_exact(req, 6u, 500u)) return;
+    uint32_t addr; uint16_t len;
+    memcpy(&addr, req,      4u);
+    memcpy(&len,  req + 4u, 2u);
+    if (len > MAX_MEM_LEN) len = MAX_MEM_LEN;
+    static uint8_t resp[2u + MAX_MEM_LEN];
     resp[0] = RESP_ACK;
     resp[1] = seq;
-    memcpy(resp + 2u,     &in_peak,  4u);
-    memcpy(resp + 2u + 4u, &out_peak, 4u);
-    SEGGER_RTT_Write(RTT_CH, resp, sizeof(resp));
+    memcpy(resp + 2u, (const void*)(uintptr_t)addr, len);   // CPU read → cache-coherent
+    SEGGER_RTT_Write(RTT_CH, resp, 2u + len);
+    return;
+  }
+
+  if (cmd == CMD_WRITE_MEM) {
+    uint8_t req[6];
+    if (!read_exact(req, 6u, 500u)) return;
+    uint32_t addr; uint16_t len;
+    memcpy(&addr, req,      4u);
+    memcpy(&len,  req + 4u, 2u);
+    if (len > MAX_MEM_LEN) len = MAX_MEM_LEN;
+    static uint8_t data[MAX_MEM_LEN];
+    if (len && !read_exact(data, len, 2000u)) return;
+    memcpy((void*)(uintptr_t)addr, data, len);
+    uint8_t ack[2] = {RESP_ACK, seq};
+    SEGGER_RTT_Write(RTT_CH, ack, 2u);
     return;
   }
 

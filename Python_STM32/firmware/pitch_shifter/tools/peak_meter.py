@@ -1,39 +1,26 @@
 """
 peak_meter.py — live peak/clip readout for pitch_shifter firmware.
 
-Polls the running STM32 via RTT for the input and output absolute peaks
-since the last read, prints them as dBFS with a small ASCII bar.
+Polls the monitor registry for the input and output absolute peaks
+("audio.peak.in" / "audio.peak.out"), resetting them each poll for a windowed
+"peak since last read", and prints them as dBFS with a small ASCII bar.
 
-Works while live audio is running (no need to suspend the DMA path).
+Works while live audio is running (no halt).  Run from PyCharm.
 
-Run from PyCharm.  Edit the configuration variables at the bottom.
-
-Requires: pylink-square (pip install pylink-square)
-J-Link connected via SWD.  Firmware must be running.
+Requires: pylink-square.  J-Link connected, firmware running.
 """
 
+import math
 import os
-import struct
 import sys
 import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'tools'))
-from rtt_common import connect, disconnect, rtt_read_exact, rtt_write, RESP_ACK
-
-CMD_PEAK_READ = 0x20
-
-def read_peaks(jlink, seq):
-  rtt_write(jlink, bytes([CMD_PEAK_READ, seq & 0xFF]))
-  resp = rtt_read_exact(jlink, 2 + 8, timeout_s=1.0)
-  if resp is None or resp[0] != RESP_ACK or resp[1] != (seq & 0xFF):
-    raise RuntimeError(f"PEAK_READ failed: {resp!r}")
-  in_peak, out_peak = struct.unpack('<ff', resp[2:])
-  return in_peak, out_peak
+from rtt_common import connect, disconnect
+from mem import Mem, check_build_id
 
 def dbfs(x):
-  if x <= 0.0: return float('-inf')
-  import math
-  return 20.0 * math.log10(x)
+  return 20.0 * math.log10(x) if x > 0.0 else float('-inf')
 
 def bar(db, db_min=-60.0, width=30):
   if db == float('-inf'): return ' ' * width
@@ -47,21 +34,25 @@ def format_line(label, peak, clip_threshold=0.99):
   clip = ' CLIP' if peak >= clip_threshold else '     '
   return f'{label}: [{bar(db)}] {db_str} dBFS{clip}'
 
-def run(refresh_hz):
+def run(map_file, buildid_file, refresh_hz):
   jlink = connect()
+  mem = Mem(jlink, map_file)
+  check_build_id(mem, buildid_file)
+  in_addr  = mem.sym('audio_in_peak')
+  out_addr = mem.sym('audio_out_peak')
   print()
   print('Polling peaks — Ctrl+C to stop')
   print()
   period = 1.0 / refresh_hz
-  seq = 0
   try:
     while True:
       t0 = time.monotonic()
-      in_peak, out_peak = read_peaks(jlink, seq)
-      seq = (seq + 1) & 0xFF
+      in_peak  = mem.read_f32(in_addr)
+      out_peak = mem.read_f32(out_addr)
+      mem.zero_u32(in_addr)                          # windowed: peak since last poll
+      mem.zero_u32(out_addr)
       line_in  = format_line('IN ', in_peak)
       line_out = format_line('OUT', out_peak)
-      # Two-line refresh: \033[F moves cursor up one line, \r returns to col 0.
       sys.stdout.write(f'\r\033[K{line_in}\n\r\033[K{line_out}\033[F')
       sys.stdout.flush()
       dt = time.monotonic() - t0
@@ -73,5 +64,8 @@ def run(refresh_hz):
     disconnect(jlink)
 
 if __name__ == '__main__':
+  _build       = os.path.join(os.path.dirname(__file__), '..', 'build')
+  map_file     = os.path.join(_build, 'pitch_shifter.map')
+  buildid_file = os.path.join(_build, 'pitch_shifter.buildid')
   REFRESH_HZ = 10
-  run(REFRESH_HZ)
+  run(map_file, buildid_file, REFRESH_HZ)

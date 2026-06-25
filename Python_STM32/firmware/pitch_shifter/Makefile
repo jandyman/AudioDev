@@ -52,6 +52,7 @@ PLATFORM := ../seed_h750/src
 INCLUDES := \
   -Iinclude \
   -Isrc \
+  -I$(BUILDDIR) \
   -I$(COMMON)/include \
   -I$(PLATFORM) \
   -I$(PLATFORM)/rtt \
@@ -128,9 +129,33 @@ BLOCK_OBJS  := $(addprefix $(BUILDDIR)/ext/blocks/,$(notdir $(GRAPH_CPP_SOURCES:
 OBJS := $(LOCAL_OBJS) $(PLAT_OBJS) $(COMMON_OBJS) $(BLOCK_OBJS)
 DEPS := $(OBJS:.o=.d)
 
+# ----- build-id (source fingerprint for the monitor-registry handshake) -----
+# 32-bit hash of HEAD + uncommitted diff + new-untracked-source names, SCOPED to
+# the trees that determine firmware layout (so test-audio / output churn doesn't
+# move the id). Stable across no-op rebuilds, unique whenever firmware source
+# changes. Emits build_id.h (compiled in) and a .buildid sidecar the host reads
+# to verify the running firmware matches this .map. See docs/monitor_registry.md.
+FINGERPRINT_PATHS := ../../firmware ../../projects ../../dsp_cpp ../../dsp_faust
+BUILD_ID := $(shell ( git rev-parse HEAD; \
+                      git diff HEAD -- $(FINGERPRINT_PATHS); \
+                      git ls-files --others --exclude-standard -- $(FINGERPRINT_PATHS) \
+                    ) 2>/dev/null | shasum -a 1 | cut -c1-8)
+BUILD_ID := $(if $(strip $(BUILD_ID)),$(BUILD_ID),deadbeef)
+
 # ----- rules -----
-.PHONY: all clean size
+.PHONY: all clean size force
 all: $(BUILDDIR)/$(TARGET).elf $(BUILDDIR)/$(TARGET).bin $(BUILDDIR)/$(TARGET).hex size
+
+# Regenerated every build but rewritten only on change, so main.o (its only
+# consumer) recompiles exactly when the id changes. The sidecar is always refreshed.
+$(BUILDDIR)/build_id.h: force
+	@mkdir -p $(BUILDDIR)
+	@printf '#pragma once\n#define BUILD_ID_HASH 0x%su\n' '$(BUILD_ID)' > $@.tmp
+	@if ! cmp -s $@.tmp $@; then mv $@.tmp $@; else rm -f $@.tmp; fi
+	@printf '0x%s\n' '$(BUILD_ID)' > $(BUILDDIR)/$(TARGET).buildid
+
+# main.cpp #includes build_id.h for monitor_commit().
+$(BUILDDIR)/src/main.o: $(BUILDDIR)/build_id.h
 
 # Local source rules
 $(BUILDDIR)/%.o: %.c
