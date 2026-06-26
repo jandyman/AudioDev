@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'tools'))
 from rtt_common import connect, disconnect
-from mem import Mem, check_build_id
+from mem import Mem, check_image_crc
 
 RING_LEN = 128   # AUDIO_PROFILE_RING
 
@@ -66,11 +66,11 @@ def analyze_and_plot(ring, mx, block_count, core_clock_hz, sample_rate, block_fr
   plt.tight_layout()
   plt.show()
 
-def main(map_file, buildid_file, core_clock_hz, sample_rate, block_frames):
+def main(map_file, bin_file, core_clock_hz, sample_rate, block_frames):
   jlink = connect()
   try:
     mem = Mem(jlink, map_file)
-    check_build_id(mem, buildid_file)
+    check_image_crc(mem, bin_file)
     last, mx, block_count = struct.unpack('<III', mem.read(mem.sym('audio_dsp_profile'), 12))
     words = mem.read_u32_array(mem.sym('audio_dsp_cycle_ring'), RING_LEN)
   finally:
@@ -82,8 +82,8 @@ def main(map_file, buildid_file, core_clock_hz, sample_rate, block_frames):
 if __name__ == '__main__':
   _build       = os.path.join(os.path.dirname(__file__), '..', 'build')
   map_file     = os.path.join(_build, 'pitch_shifter.map')
-  buildid_file = os.path.join(_build, 'pitch_shifter.buildid')
+  bin_file     = os.path.join(_build, 'pitch_shifter.bin')
   CORE_CLOCK_HZ = 480_000_000   # H750 SYSCLK (clock.cpp: PLL1 → 480 MHz)
   SAMPLE_RATE   = 48000
   BLOCK_FRAMES  = 48
-  main(map_file, buildid_file, CORE_CLOCK_HZ, SAMPLE_RATE, BLOCK_FRAMES)
+  main(map_file, bin_file, CORE_CLOCK_HZ, SAMPLE_RATE, BLOCK_FRAMES)

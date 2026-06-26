@@ -69,7 +69,13 @@ DEFINES  := -DSTM32H750xx -DHSE_VALUE=16000000 -DSEGGER_RTT_MEMCPY_USE_BYTELOOP=
             -DBARE_METAL=1 -DCHUNK_SIZE=48 -DBUFFER_SIZE_DOWN=256 \
             -DAUDIO_GRAPH_HEADER=\"$(GRAPH).h\"
 WARNINGS := -Wall -Wextra -Wshadow -Wundef
-OPT      := -Og -g3
+# Single committed optimization level — both command-line `make` and CubeIDE's
+# build-before-launch use this Makefile, so this is the one source of truth for
+# what lands on the board. Flip to `-Og -g3` for interactive debugging; the
+# $(MAKEFILE_LIST) prerequisite below forces a full rebuild when you change it,
+# and the image-CRC handshake then reflects the new binary. Do NOT override OPT
+# on the command line — that reintroduces builder-vs-builder divergence.
+OPT      := -O3 -g3
 
 CFLAGS  := $(CPU) $(OPT) $(WARNINGS) $(DEFINES) $(INCLUDES) \
            -ffreestanding -nostdlib -nostartfiles -fno-common \
@@ -129,33 +135,23 @@ BLOCK_OBJS  := $(addprefix $(BUILDDIR)/ext/blocks/,$(notdir $(GRAPH_CPP_SOURCES:
 OBJS := $(LOCAL_OBJS) $(PLAT_OBJS) $(COMMON_OBJS) $(BLOCK_OBJS)
 DEPS := $(OBJS:.o=.d)
 
-# ----- build-id (source fingerprint for the monitor-registry handshake) -----
-# 32-bit hash of HEAD + uncommitted diff + new-untracked-source names, SCOPED to
-# the trees that determine firmware layout (so test-audio / output churn doesn't
-# move the id). Stable across no-op rebuilds, unique whenever firmware source
-# changes. Emits build_id.h (compiled in) and a .buildid sidecar the host reads
-# to verify the running firmware matches this .map. See docs/monitor_registry.md.
-FINGERPRINT_PATHS := ../../firmware ../../projects ../../dsp_cpp ../../dsp_faust
-BUILD_ID := $(shell ( git rev-parse HEAD; \
-                      git diff HEAD -- $(FINGERPRINT_PATHS); \
-                      git ls-files --others --exclude-standard -- $(FINGERPRINT_PATHS) \
-                    ) 2>/dev/null | shasum -a 1 | cut -c1-8)
-BUILD_ID := $(if $(strip $(BUILD_ID)),$(BUILD_ID),deadbeef)
-
 # ----- rules -----
-.PHONY: all clean size force
+.PHONY: all clean size
 all: $(BUILDDIR)/$(TARGET).elf $(BUILDDIR)/$(TARGET).bin $(BUILDDIR)/$(TARGET).hex size
 
-# Regenerated every build but rewritten only on change, so main.o (its only
-# consumer) recompiles exactly when the id changes. The sidecar is always refreshed.
-$(BUILDDIR)/build_id.h: force
-	@mkdir -p $(BUILDDIR)
-	@printf '#pragma once\n#define BUILD_ID_HASH 0x%su\n' '$(BUILD_ID)' > $@.tmp
-	@if ! cmp -s $@.tmp $@; then mv $@.tmp $@; else rm -f $@.tmp; fi
-	@printf '0x%s\n' '$(BUILD_ID)' > $(BUILDDIR)/$(TARGET).buildid
+# Every object depends on the makefiles themselves, so editing OPT (or any flag
+# or rule) forces a full rebuild rather than silently reusing objects compiled
+# with the old flags. MAKEFILE_LIST covers this Makefile plus graph_build.mk and
+# anything else it includes. The image-CRC handshake then tracks the new binary.
+$(OBJS): $(MAKEFILE_LIST)
 
-# main.cpp #includes build_id.h for monitor_commit().
-$(BUILDDIR)/src/main.o: $(BUILDDIR)/build_id.h
+# libstubs.cpp hand-implements memset/memcpy for the -nostdlib build. At -O3 GCC's
+# loop-idiom recognition (-ftree-loop-distribute-patterns) rewrites the byte loop
+# *inside* memset into a call to memset — infinite recursion → stack overflow at
+# boot (the g_graph static ctor's memset never returns). Disable that pass and the
+# builtin assumption for this one TU so the loops stay loops. Other TUs keep the
+# optimization; their distributed memset/memcpy calls resolve to these real loops.
+$(BUILDDIR)/src/libstubs.o: CXXFLAGS += -fno-tree-loop-distribute-patterns -fno-builtin
 
 # Local source rules
 $(BUILDDIR)/%.o: %.c

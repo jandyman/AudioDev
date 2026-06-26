@@ -17,7 +17,7 @@ import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'tools'))
 from rtt_common import connect, disconnect
-from mem import Mem, check_build_id
+from mem import Mem, check_image_crc
 
 def dbfs(x):
   return 20.0 * math.log10(x) if x > 0.0 else float('-inf')
@@ -34,10 +34,10 @@ def format_line(label, peak, clip_threshold=0.99):
   clip = ' CLIP' if peak >= clip_threshold else '     '
   return f'{label}: [{bar(db)}] {db_str} dBFS{clip}'
 
-def run(map_file, buildid_file, refresh_hz):
+def run(map_file, bin_file, refresh_hz):
   jlink = connect()
   mem = Mem(jlink, map_file)
-  check_build_id(mem, buildid_file)
+  check_image_crc(mem, bin_file)
   in_addr  = mem.sym('audio_in_peak')
   out_addr = mem.sym('audio_out_peak')
   print()
@@ -66,6 +66,6 @@ def run(map_file, buildid_file, refresh_hz):
 if __name__ == '__main__':
   _build       = os.path.join(os.path.dirname(__file__), '..', 'build')
   map_file     = os.path.join(_build, 'pitch_shifter.map')
-  buildid_file = os.path.join(_build, 'pitch_shifter.buildid')
+  bin_file     = os.path.join(_build, 'pitch_shifter.bin')
   REFRESH_HZ = 10
-  run(map_file, buildid_file, REFRESH_HZ)
+  run(map_file, bin_file, REFRESH_HZ)

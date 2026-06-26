@@ -30,7 +30,7 @@ Global (non-`static`) so they appear as clean symbols in the `.map`:
 | `audio_in_peak` / `audio_out_peak` | `float` | running peak \|x\|; host zeroes to window |
 | `audio_dsp_profile` | `{u32 last, u32 max, u32 block_count}` | per-block DSP cycle cost (DWT) |
 | `audio_dsp_cycle_ring` | `u32[128]` | per-block cost time-series (circular; head = `block_count`) |
-| `audio_build_id` | `u32` | source-fingerprint, published at boot (handshake + liveness) |
+| `audio_image_crc` | `u32` | CRC-32 of the firmware's own flash image, computed at boot (handshake + liveness) |
 
 `audio_dsp_profile` / `audio_dsp_cycle_ring` are `BARE_METAL`-only (DWT is absent
 off-target). The cycle counters are written in `audio_graph_process` around
@@ -43,23 +43,32 @@ read/writes target memory via the commands (`read`, `write`, `read_u32`,
 `read_f32`, `read_u32_array`, `zero_u32`). Uses `pylink` over RTT — no halt.
 
 The host knows the struct layouts from the code (e.g. `audio_dsp_profile` is
-three `u32`s). That coupling is made safe by the build-ID handshake.
+three `u32`s). That coupling is made safe by the image-CRC handshake.
 
-## Build-ID handshake
+## Image-CRC handshake
 
-`check_build_id(mem, buildid_file)` reads `audio_build_id` from the target and
-compares it to the `.buildid` sidecar emitted next to the `.map`:
+`check_image_crc(mem, bin_file)` reads `audio_image_crc` from the target and
+compares it to a CRC of the local `build/<graph>.bin`:
 
 - `0` → firmware not booted past init (or not running) — liveness fail.
-- `!= sidecar` → the `.map` is from a different build → wrong addresses; **abort**
-  ("reflash or rebuild").
-- `==` → safe: the running firmware matches the `.map` the host is resolving from.
+- `!= bin CRC` → the running firmware is a different binary than this `.map`/`.bin`
+  → wrong addresses; **abort** ("reflash or rebuild").
+- `==` → safe: the running firmware IS this build, so the `.map` addresses are valid.
 
-The build id is a **source fingerprint** computed in the Makefile: a 32-bit hash
-of `HEAD` + uncommitted diff + new untracked source names, scoped to the firmware
-source trees (so test-audio/output churn doesn't move it). It is emitted to
-`build/build_id.h` (compiled in) and `build/<graph>.buildid` (the sidecar), which
-are always produced together with the `.map`.
+The id is a **CRC of the actual binary image**, not a source fingerprint. At boot
+the firmware CRCs its own flash image — exactly the bytes `objcopy` emits as
+`<graph>.bin`, the range `[ORIGIN(FLASH), _eidata)` from the linker script — using
+CRC-32/ISO-HDLC (`crc32_iso_hdlc()` in `main.cpp`, bit-for-bit identical to Python's
+`zlib.crc32`). The result lives in `.bss` (RAM), so it is not part of the CRC'd
+image — no self-reference. The host CRCs `<graph>.bin` the same way and compares.
+
+Because the id is the binary itself, it tracks **everything** that changes the
+binary — source, compiler flags, optimization level, toolchain version — and is
+idempotent: rerunning `make` with no changes yields the same binary, same CRC, no
+spurious mismatch. There is no compiled-in `build_id.h` and no `.buildid` sidecar;
+the `.bin` is the single artifact the host needs. (The opt level is fixed in the
+Makefile's `OPT`; because every object depends on `$(MAKEFILE_LIST)`, editing it
+forces a full rebuild and the CRC follows.)
 
 ## Tools
 

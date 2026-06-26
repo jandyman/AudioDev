@@ -16,7 +16,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "build_id.h"      // generated: BUILD_ID_HASH (source fingerprint)
 #include "audio.h"
 #include "audio_graph_runner.h"
 #include "board.h"
@@ -29,11 +28,33 @@
 
 static constexpr uint32_t kLedBlinkHalfPeriodMs = 500U;
 
-// Build-ID published for the host telemetry handshake: the host reads this via
-// READ_MEM and compares it to the .buildid sidecar to confirm the running
-// firmware matches the .map it's resolving symbols from. Non-static → clean .map
-// symbol; the boot-time store both keeps it (gc-sections) and proves liveness.
-volatile uint32_t audio_build_id = 0u;
+// Image CRC published for the host telemetry handshake. At boot the firmware
+// CRCs its own flash image (the exact bytes objcopy emits as pitch_shifter.bin)
+// and stores the result here; the host CRCs build/pitch_shifter.bin the same way
+// and compares, confirming the running binary IS this build — opt level, flags,
+// toolchain and all. Lives in .bss (RAM), so it is NOT part of the CRC'd image
+// (no self-reference). Non-static → clean .map symbol; the store proves liveness.
+volatile uint32_t audio_image_crc = 0u;
+
+// Image bounds from the linker script. _eidata is the end of the .data LMA =
+// end of the flash image; the start is the vector table at ORIGIN(FLASH).
+extern "C" uint8_t  _eidata;
+extern "C" uint32_t g_pfnVectors;
+
+// CRC-32/ISO-HDLC (poly 0xEDB88320 reflected, init/xorout 0xFFFFFFFF) — bit-for-
+// bit identical to Python's zlib.crc32. Bitwise, no table; runs once at boot over
+// ~24 KB (a few µs at 480 MHz), so a lookup table in flash isn't worth the bytes.
+static uint32_t crc32_iso_hdlc(const uint8_t* p, uint32_t n) {
+  uint32_t crc = 0xFFFFFFFFu;
+  for (uint32_t i = 0u; i < n; ++i) {
+    crc ^= p[i];
+    for (int b = 0; b < 8; ++b) {
+      uint32_t mask = 0u - (crc & 1u);          // 0x00000000 or 0xFFFFFFFF
+      crc = (crc >> 1) ^ (0xEDB88320u & mask);
+    }
+  }
+  return ~crc;
+}
 
 static void fault_blink(uint32_t half_period_ms) {
   for (;;) {
@@ -51,7 +72,11 @@ extern "C" int main(void) {
   rtt_audio_init();
   audio_graph_init(48000);
   audio_graph_profile_init();              // DWT cycle counter for DSP timing
-  audio_build_id = BUILD_ID_HASH;          // publish build id for the host handshake
+
+  // Publish the running image's CRC for the host handshake.
+  const uint8_t* img     = reinterpret_cast<const uint8_t*>(&g_pfnVectors);
+  const uint32_t img_len = static_cast<uint32_t>(&_eidata - img);
+  audio_image_crc        = crc32_iso_hdlc(img, img_len);
 
   if (!configure_sai1_clock()) {
     fault_blink(100U);                  // 5 Hz — PLL3 lock failed

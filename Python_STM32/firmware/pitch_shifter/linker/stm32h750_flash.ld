@@ -76,6 +76,11 @@ SECTIONS
         _edata = .;
     } > DTCMRAM AT > FLASH
     _sidata = LOADADDR(.data);
+    /* End of the flash image (LMA). The .bin spans [ORIGIN(FLASH), _eidata):
+     * vector table + .text/.rodata + .init_array + .data LMA. The host CRCs the
+     * .bin over exactly this range and the firmware self-CRCs the same bytes at
+     * boot (see crc32 in main.cpp) to verify the running image. */
+    _eidata = LOADADDR(.data) + SIZEOF(.data);
 
     /* Stack check: .data must leave room for the stack in DTCMRAM. */
     _min_stack = 4K;
