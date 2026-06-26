@@ -33,6 +33,10 @@ void audio_graph_init(int sample_rate) {
   g_graph.init(sample_rate);
 }
 
+void audio_graph_set_param(const char* path, float value) {
+  g_graph.set_param(path, value);
+}
+
 void audio_graph_profile_init(void) {
 #if defined(BARE_METAL)
   CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;

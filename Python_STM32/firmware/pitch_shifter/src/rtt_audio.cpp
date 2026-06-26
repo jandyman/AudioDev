@@ -7,9 +7,10 @@
 //   CMD_AUDIO_END   0x12: [cmd][seq]                   re-enables DMA ISR
 //   CMD_READ_MEM    0x20: [cmd][seq][addr u32][len u16]            read len bytes @ addr
 //   CMD_WRITE_MEM   0x21: [cmd][seq][addr u32][len u16][len bytes] write len bytes @ addr
+//   CMD_SET_PARAM   0x22: [cmd][seq][nlen u8][name nlen][value f32] set graph param live
 //
 // Responses (target → host):
-//   INIT/END/WRITE_MEM: [0x01][seq]
+//   INIT/END/WRITE_MEM/SET_PARAM: [0x01][seq]
 //   BLOCK:              [0x01][seq][48 × (L_f32, R_f32) interleaved]   = 2 + 384 bytes
 //   READ_MEM:           [0x01][seq][len bytes]
 //
@@ -36,6 +37,7 @@
 #define CMD_AUDIO_END    0x12u
 #define CMD_READ_MEM     0x20u
 #define CMD_WRITE_MEM    0x21u
+#define CMD_SET_PARAM    0x22u
 #define RESP_ACK         0x01u
 #define MAX_MEM_LEN      1000u   // fits the 1 KB RTT up-buffer with header
 
@@ -110,6 +112,27 @@ void rtt_audio_poll(void) {
     static uint8_t data[MAX_MEM_LEN];
     if (len && !read_exact(data, len, 2000u)) return;
     memcpy((void*)(uintptr_t)addr, data, len);
+    uint8_t ack[2] = {RESP_ACK, seq};
+    SEGGER_RTT_Write(RTT_CH, ack, 2u);
+    return;
+  }
+
+  if (cmd == CMD_SET_PARAM) {
+    uint8_t nlen;
+    if (!read_exact(&nlen, 1u, 500u)) return;
+    static char name[256];                         // nlen is u8, so always fits
+    if (nlen && !read_exact((uint8_t*)name, nlen, 500u)) return;
+    name[nlen] = '\0';
+    uint8_t valbuf[4];
+    if (!read_exact(valbuf, 4u, 500u)) return;
+    float value;
+    memcpy(&value, valbuf, 4u);
+    // The audio ISR reads loop_controller's pitch_ratio/derived constants; bracket
+    // the live update so it can't observe a half-applied set. The store is a few
+    // float ops, so the interrupt-off window is sub-microsecond.
+    __disable_irq();
+    audio_graph_set_param(name, value);
+    __enable_irq();
     uint8_t ack[2] = {RESP_ACK, seq};
     SEGGER_RTT_Write(RTT_CH, ack, 2u);
     return;

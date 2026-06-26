@@ -43,6 +43,12 @@ void audio_graph_profile_init(void);
 // records the cycle cost of the DSP (process_chunk only, not the metering).
 void audio_graph_process(const float* const* ins, float* const* outs, int n);
 
+// Set a graph parameter at runtime. `path` routes through the generated graph's
+// set_param (e.g. "lc.pitch_ratio", "lpf.fc"). Called from the foreground loop;
+// the caller guards against the audio ISR (the RTT handler brackets it with a
+// brief interrupt disable) since the DSP block reads these values concurrently.
+void audio_graph_set_param(const char* path, float value);
+
 #ifdef __cplusplus
 }
 #endif
