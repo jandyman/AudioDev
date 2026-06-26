@@ -114,6 +114,7 @@ LOCAL_CXX_SRCS := src/audio.cpp src/main.cpp src/libstubs.cpp src/rtt_audio.cpp
 PLAT_C_SRCS    := $(PLATFORM)/rtt/SEGGER_RTT.c
 PLAT_CXX_SRCS  := $(PLATFORM)/clock.cpp $(PLATFORM)/dma.cpp \
                   $(PLATFORM)/gpio.cpp $(PLATFORM)/mpu.cpp \
+                  $(PLATFORM)/rgb_led.cpp \
                   $(PLATFORM)/sai1.cpp $(PLATFORM)/system_init.cpp \
                   $(PLATFORM)/systick.cpp
 PLAT_S_SRCS    := $(PLATFORM)/startup_stm32h750.s
