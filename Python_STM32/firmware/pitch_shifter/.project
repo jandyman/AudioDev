@@ -26,14 +26,29 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>python_src</name>
+			<name>platform</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/python</locationURI>
-		</link>
-		<link>
-			<name>platform_src</name>
-			<type>2</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/seed_h750/src</locationURI>
+			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/platform</locationURI>
 		</link>
 	</linkedResources>
+	<filteredResources>
+		<filter>
+			<id>1718000000001</id>
+			<name>platform</name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-tools</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1718000000003</id>
+			<name></name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-tools</arguments>
+			</matcher>
+		</filter>
+	</filteredResources>
 </projectDescription>

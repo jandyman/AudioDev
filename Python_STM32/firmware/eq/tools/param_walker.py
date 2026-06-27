@@ -3,7 +3,7 @@
 param_walker.py — Discover and manipulate firmware parameters via OpenOCD telnet.
 
 Usage (PyCharm):
-  Just run the script — it defaults to ../build/seed_h750.map
+  Just run the script — it defaults to ../build/eq.map
 
 Usage (CLI):
   python3 param_walker.py [map_file] [--host localhost] [--port 4444]
@@ -319,7 +319,7 @@ def write_parameter(ocd, param_addr, new_value, params_dirty_flag_addr, wait_for
 def main():
     # Default to .map file in ../build/ (relative to this script)
     script_dir = Path(__file__).parent.parent
-    default_map = script_dir / "build" / "seed_h750.map"
+    default_map = script_dir / "build" / "eq.map"
 
     map_file = default_map
     host = "localhost"

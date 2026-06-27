@@ -35,13 +35,13 @@ Info : clock speed 1800 kHz
 
 3. Open the `tools/` folder as a PyCharm project:
    ```bash
-   cd seed_h750/tools/
+   cd eq/tools/
    open . # or just open this folder in PyCharm
    ```
 
 4. Right-click `param_walker.py` → **Run 'param_walker.py'**
 
-   Or hit the ▶ button — the script defaults to `../build/seed_h750.map` and `localhost:4444`.
+   Or hit the ▶ button — the script defaults to `../build/eq.map` and `localhost:4444`.
 
 #### Run from CLI
 
@@ -49,7 +49,7 @@ Alternatively, run directly:
    ```bash
    python3 param_walker.py
    # or with a custom .map file:
-   python3 param_walker.py /path/to/seed_h750.map --host localhost --port 4444
+   python3 param_walker.py /path/to/eq.map --host localhost --port 4444
    ```
 
 ### Expected output

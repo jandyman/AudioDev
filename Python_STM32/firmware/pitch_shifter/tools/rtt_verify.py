@@ -18,7 +18,7 @@ import numpy as np
 import scipy.io.wavfile as wavfile
 from scipy.signal import resample_poly
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'tools'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'platform', 'tools'))
 from rtt_common import connect, disconnect, rtt_read_exact, rtt_write, RESP_ACK
 
 # ---- protocol constants ----

@@ -16,7 +16,7 @@ import struct
 import sys
 import time
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'tools'))
+sys.path.insert(0, os.path.dirname(__file__))            # shared tools live here
 from rtt_common import connect, disconnect
 from mem import Mem, check_image_crc
 
@@ -61,9 +61,10 @@ def run(map_file, bin_file, refresh_hz, core_clock_hz, sample_rate, block_frames
     disconnect(jlink)
 
 if __name__ == '__main__':
-  _build       = os.path.join(os.path.dirname(__file__), '..', 'build')
-  map_file     = os.path.join(_build, 'pitch_shifter.map')
-  bin_file     = os.path.join(_build, 'pitch_shifter.bin')
+  PROJECT      = 'pitch_shifter'                          # which firmware build to meter
+  _build       = os.path.join(os.path.dirname(__file__), '..', '..', PROJECT, 'build')
+  map_file     = os.path.join(_build, f'{PROJECT}.map')
+  bin_file     = os.path.join(_build, f'{PROJECT}.bin')
   REFRESH_HZ    = 10
   CORE_CLOCK_HZ = 480_000_000
   SAMPLE_RATE   = 48000

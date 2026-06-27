@@ -36,7 +36,7 @@ Global (non-`static`) so they appear as clean symbols in the `.map`:
 off-target). The cycle counters are written in `audio_graph_process` around
 `process_chunk`; peaks are metered there too.
 
-## Host (`firmware/tools/mem.py`)
+## Host (`firmware/platform/tools/mem.py`)
 
 `Mem(jlink, map_file)` resolves a symbol from the `.map` (`sym(name)`) and
 read/writes target memory via the commands (`read`, `write`, `read_u32`,

@@ -18,7 +18,10 @@ for the STM32H750. Cross-project C++/Python conventions live in the AudioDev-roo
 - `python/` — shared host tooling: `graph_compiler.py`, `graph_build.mk`,
   `faust.make`, `bindings/`, `lib/`, and the RTT hardware-test scripts.
 - `dsp_faust/`, `dsp_cpp/` — shared block libraries (promote here only on real reuse).
-- `firmware/` — STM32 firmware (seed_h750).
+- `firmware/` — STM32 firmware. `platform/` is the shared board-driver +
+  audio-graph-runner library layer (flat, no src/include split; host telemetry
+  tools in `platform/tools/`); `pitch_shifter/` and `eq/` are peer app projects,
+  each with its own hand-written Makefile pulling the platform from `../platform`.
 - `docs/audio_graph_architecture.md` — the framework reference (graph format, build, conventions).
 
 ## Build (native, from a project folder)
@@ -96,7 +99,7 @@ Demos: `pitch_shifter_demo.py` (full pipeline + probe plots, saves WAV),
   — the immediate focus. `CHUNK_SIZE` becomes the real SAI/DMA audio block size
   (a compile-time choice); `lc.pitch_ratio` stays a runtime control. The DSP is
   identical across targets; expect work in the thin platform layer + wiring the
-  generated graph into the seed_h750 render callback.
+  generated graph into the platform render callback.
 - Doc debt: `loop_controller.md` (and `pitch_shifter.md`) still describe the old
   ZC/peak-clock apparatus — rewrite to the k·P policy.
 - Optional startup guard for the file-start fire cluster (note 0 at t=0).

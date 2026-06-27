@@ -1,5 +1,5 @@
 # Firmware build artifacts
-firmware/seed_h750/build/
+firmware/eq/build/
 firmware/pitch_shifter/build/
 firmware/dsp_cpp/src/*.o
 firmware/dsp_cpp/src/*.d

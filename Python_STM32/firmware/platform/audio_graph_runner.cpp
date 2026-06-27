@@ -11,6 +11,10 @@
 #include "stm32h750xx.h"   // DWT / CoreDebug
 #include <math.h>
 
+#if defined(BARE_METAL)
+#include "level_meter.h"   // platform RGB level meter (LEDs absent off-target)
+#endif
+
 static audio_graph g_graph;
 
 // Telemetry — global (non-static) so the host resolves them by symbol from the
@@ -31,6 +35,9 @@ volatile uint32_t      audio_dsp_cycle_ring[AUDIO_PROFILE_RING] = {0u};
 
 void audio_graph_init(int sample_rate) {
   g_graph.init(sample_rate);
+#if defined(BARE_METAL)
+  level_meter_init();          // platform owns the Pod meter; no per-project glue
+#endif
 }
 
 void audio_graph_set_param(const char* path, float value) {
@@ -47,14 +54,16 @@ void audio_graph_profile_init(void) {
 }
 
 void audio_graph_process(const float* const* ins, float* const* outs, int n) {
-  // Input meter on channel 0.
-  float in_peak = audio_in_peak;
+  // Input level — block-local peak on channel 0, folded into the running
+  // telemetry maximum (the host clears it via WRITE_MEM to window each poll).
+  float in_blk = 0.0f;
   if (ins && ins[0]) {
     for (int i = 0; i < n; ++i) {
       float a = fabsf(ins[0][i]);
-      if (a > in_peak) in_peak = a;
+      if (a > in_blk) in_blk = a;
     }
   }
+  if (in_blk > audio_in_peak) audio_in_peak = in_blk;
 
 #if defined(BARE_METAL)
   uint32_t cyc0 = DWT->CYCCNT;
@@ -69,17 +78,34 @@ void audio_graph_process(const float* const* ins, float* const* outs, int n) {
   audio_dsp_profile.block_count++;
 #endif
 
-  // Output meter on the last output channel (the processed one — e.g. the
-  // shifted channel for the pitch shifter, whose dry channel is output 0).
-  float out_peak = audio_out_peak;
+  // Output level — block-local peak on the last output channel (the processed
+  // one — e.g. the shifted channel for the pitch shifter; dry is output 0).
+  float out_blk = 0.0f;
   const float* last = outs[audio_graph::kNumOutputs - 1];
   if (last) {
     for (int i = 0; i < n; ++i) {
       float a = fabsf(last[i]);
-      if (a > out_peak) out_peak = a;
+      if (a > out_blk) out_blk = a;
     }
   }
+  if (out_blk > audio_out_peak) audio_out_peak = out_blk;
 
-  audio_in_peak  = in_peak;
-  audio_out_peak = out_peak;
+#if defined(BARE_METAL)
+  // Drive the Pod LEDs from here so every graph project gets the meter for free
+  // with zero per-project glue. Off the update beat the only added cost is two
+  // float compares to accumulate the windowed peak; the actual LED refresh runs
+  // every kMeterUpdateBlocks blocks (~50 Hz at 1 ms blocks) — a handful of GPIO
+  // writes ~50x/s, negligible against the audio budget. The meter keeps its own
+  // window so it never disturbs the host's telemetry peaks above.
+  static constexpr uint32_t kMeterUpdateBlocks = 20U;
+  static float s_meter_in  = 0.0f;
+  static float s_meter_out = 0.0f;
+  if (in_blk  > s_meter_in)  s_meter_in  = in_blk;
+  if (out_blk > s_meter_out) s_meter_out = out_blk;
+  if (audio_dsp_profile.block_count % kMeterUpdateBlocks == 0U) {
+    level_meter_update(s_meter_in, s_meter_out);
+    s_meter_in  = 0.0f;
+    s_meter_out = 0.0f;
+  }
+#endif
 }

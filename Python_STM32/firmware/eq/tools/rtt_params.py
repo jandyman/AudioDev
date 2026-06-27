@@ -30,7 +30,7 @@ import os
 import struct
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'tools'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'platform', 'tools'))
 from rtt_common import connect, disconnect, rtt_read_exact, rtt_write, RESP_ACK, RESP_NAK
 
 # --- Protocol constants (mirror rtt_protocol.h) ---

@@ -21,7 +21,6 @@
 #include "board.h"
 #include "clock.h"
 #include "gpio.h"
-#include "rgb_led.h"
 #include "rtt_audio.h"
 #include "sai1.h"
 #include "software_timer.h"
@@ -57,41 +56,6 @@ static uint32_t crc32_iso_hdlc(const uint8_t* p, uint32_t n) {
   return ~crc;
 }
 
-// ---- Pod RGB level meter ----------------------------------------------------
-// LED1 = input drive, LED2 = shifted output. Color zones by peak magnitude:
-// green (nominal) → yellow (hot) → red (near clip). A decaying hold per LED
-// keeps transients from flickering the color and gives a soft clip-hold.
-static constexpr uint32_t kMeterPeriodMs = 20U;     // 50 Hz update
-static constexpr float    kVuYellow      = 0.501f;  // -6 dBFS
-static constexpr float    kVuRed         = 0.891f;  // -1 dBFS
-static constexpr float    kVuFloor       = 0.0032f; // ~-50 dBFS → LED off
-static constexpr float    kVuDecay       = 0.90f;   // ~250 ms fall at 50 Hz
-
-static rgb_color vu_color(float level) {
-  if (level < kVuFloor)  return RGB_OFF;
-  if (level < kVuYellow) return RGB_GREEN;
-  if (level < kVuRed)    return RGB_YELLOW;
-  return RGB_RED;
-}
-
-static void meter_update(void) {
-  // Read-and-clear the running peaks atomically vs the audio ISR (it does a
-  // read-modify-write of these each block). Sub-µs interrupt-off window.
-  // Note: shares the peaks with the RTT peak_meter tool — whichever reads a
-  // given window first claims it; harmless for a visual meter.
-  __disable_irq();
-  float in_pk  = audio_in_peak;   audio_in_peak  = 0.0f;
-  float out_pk = audio_out_peak;  audio_out_peak = 0.0f;
-  __enable_irq();
-
-  static float in_disp = 0.0f, out_disp = 0.0f;
-  in_disp  = (in_pk  > in_disp)  ? in_pk  : in_disp  * kVuDecay;
-  out_disp = (out_pk > out_disp) ? out_pk : out_disp * kVuDecay;
-
-  rgb_led_set(RGB_LED1, vu_color(in_disp));
-  rgb_led_set(RGB_LED2, vu_color(out_disp));
-}
-
 static void fault_blink(uint32_t half_period_ms) {
   for (;;) {
     gpio_toggle(LED_USER_PORT, LED_USER_PIN);
@@ -103,7 +67,6 @@ extern "C" int main(void) {
   gpio_enable_port(LED_USER_PORT);
   gpio_set_mode(LED_USER_PORT, LED_USER_PIN, GPIO_MODE_OUTPUT_PP);
   gpio_write(LED_USER_PORT, LED_USER_PIN, false);
-  rgb_led_init();
 
   systick_init();
   rtt_audio_init();
@@ -134,15 +97,11 @@ extern "C" int main(void) {
   }
 
   SoftwareTimer led_timer(kLedBlinkHalfPeriodMs);
-  SoftwareTimer meter_timer(kMeterPeriodMs);
 
   for (;;) {
     rtt_audio_poll();
     if (led_timer.expired()) {
       gpio_toggle(LED_USER_PORT, LED_USER_PIN);
-    }
-    if (meter_timer.expired()) {
-      meter_update();
     }
   }
 }

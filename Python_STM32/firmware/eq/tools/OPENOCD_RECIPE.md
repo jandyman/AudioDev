@@ -10,7 +10,7 @@ This is the complete workflow discovered for running param_walker.py and inspect
 
 ## Software Requirements
 
-1. **Firmware built:** `seed_h750/build/seed_h750.elf` (and corresponding `seed_h750.map`)
+1. **Firmware built:** `eq/build/eq.elf` (and corresponding `eq.map`)
 2. **OpenOCD installed:** `brew install openocd` (or STM32CubeIDE's bundled openocd)
 3. **Python 3.12+** in the scipy conda environment
 
@@ -19,7 +19,7 @@ This is the complete workflow discovered for running param_walker.py and inspect
 ### 1. Build and Flash the Firmware
 
 ```bash
-cd seed_h750
+cd eq
 make clean && make
 # Flash via CubeIDE or command-line
 ```

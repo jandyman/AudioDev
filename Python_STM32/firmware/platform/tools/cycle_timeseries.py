@@ -25,7 +25,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'tools'))
+sys.path.insert(0, os.path.dirname(__file__))            # shared tools live here
 from rtt_common import connect, disconnect
 from mem import Mem, check_image_crc
 
@@ -80,9 +80,10 @@ def main(map_file, bin_file, core_clock_hz, sample_rate, block_frames):
   analyze_and_plot(ring, mx, block_count, core_clock_hz, sample_rate, block_frames)
 
 if __name__ == '__main__':
-  _build       = os.path.join(os.path.dirname(__file__), '..', 'build')
-  map_file     = os.path.join(_build, 'pitch_shifter.map')
-  bin_file     = os.path.join(_build, 'pitch_shifter.bin')
+  PROJECT      = 'pitch_shifter'                          # which firmware build to meter
+  _build       = os.path.join(os.path.dirname(__file__), '..', '..', PROJECT, 'build')
+  map_file     = os.path.join(_build, f'{PROJECT}.map')
+  bin_file     = os.path.join(_build, f'{PROJECT}.bin')
   CORE_CLOCK_HZ = 480_000_000   # H750 SYSCLK (clock.cpp: PLL1 → 480 MHz)
   SAMPLE_RATE   = 48000
   BLOCK_FRAMES  = 48

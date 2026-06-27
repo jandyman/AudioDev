@@ -115,7 +115,7 @@ Param IDs (must match `rtt_protocol.h`):
 ## Protocol overview
 
 Binary protocol over RTT channel 0, exposed as a raw TCP stream by JLinkGDBServer.
-See `firmware/seed_h750/src/rtt_protocol.h` for the authoritative definition.
+See `firmware/eq/src/rtt_protocol.h` for the authoritative definition.
 
 | Command          | Opcode | Host → STM32               | STM32 → Host              |
 |------------------|--------|----------------------------|---------------------------|

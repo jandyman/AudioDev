@@ -1,24 +1,21 @@
-# Daisy_Claude — STM32H750 bare-metal build
+# eq — STM32H750 bare-metal build
 #
 # Targets:
-#   make         build/<project>.elf, .bin, .hex, .map
+#   make         build/eq.elf, .bin, .hex, .map
 #   make size    arm-none-eabi-size on the elf
 #   make clean   rm -rf build/
 #
 # No `make upload` target — flashing is done from STM32CubeIDE's debug launcher,
-# which loads build/<project>.elf into internal flash (0x08000000) over SWD.
-# See docs/spec/02_step1_startup_and_clock.md §11 and §12.
+# which loads build/eq.elf into internal flash (0x08000000) over SWD.
+#
+# The EQ app (src/) links against the shared platform driver layer in ../platform
+# (clock/dma/gpio/mpu/sai1/systick/system_init/rgb_led + SEGGER RTT + startup).
+# Platform objects live under build/ext/platform/ so `make clean` removes them.
 
-# Derive the target name from the project folder so the ELF matches the
-# CubeIDE project name, regardless of which archive is open.
 TARGET   := $(notdir $(CURDIR))
 BUILDDIR := build
 
 # ----- toolchain -----
-# We use g++ as the linker driver because it knows about C++ ABI bits
-# (init_array iteration via crtbegin/crtend isn't relevant here — we call
-# constructors explicitly from Reset path — but g++ won't add anything we
-# don't ask for, and gets the right multilib for -mfpu=fpv5-d16).
 TOOLCHAIN_PREFIX ?= arm-none-eabi-
 CC      := $(TOOLCHAIN_PREFIX)gcc
 CXX     := $(TOOLCHAIN_PREFIX)g++
@@ -28,25 +25,20 @@ OBJCOPY := $(TOOLCHAIN_PREFIX)objcopy
 SIZE    := $(TOOLCHAIN_PREFIX)size
 
 # ----- paths -----
-# CMSIS headers are provided by the libDaisy checkout next door. We do NOT
-# vendor them into this repo — only these two include paths are needed.
 CMSIS_CORE_DIR   := ../../../DaisyExamples/libDaisy/Drivers/CMSIS/Include
 CMSIS_DEVICE_DIR := ../../../DaisyExamples/libDaisy/Drivers/CMSIS/Device/ST/STM32H7xx/Include
 DSP_CPP_DIR      := ../../dsp_cpp
+PLATFORM         := ../platform
 
 INCLUDES := \
-  -Iinclude \
   -Isrc \
-  -Isrc/rtt \
+  -I$(PLATFORM) \
+  -I$(PLATFORM)/rtt \
   -I$(DSP_CPP_DIR)/include \
   -I$(CMSIS_CORE_DIR) \
   -I$(CMSIS_DEVICE_DIR)
 
 # ----- flags -----
-# -ffreestanding -nostdlib -nostartfiles : no libc/newlib, our startup owns entry.
-# -fno-common                            : every uninitialized global gets its own .bss slot.
-# -DSTM32H750xx                          : selects the right device block in stm32h7xx.h.
-# -DHSE_VALUE=16000000                   : irreducible hardware fact from spec 01 §1.
 CPU      := -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard
 DEFINES  := -DSTM32H750xx -DHSE_VALUE=16000000 -DSEGGER_RTT_MEMCPY_USE_BYTELOOP=1
 WARNINGS := -Wall -Wextra -Wshadow -Wundef
@@ -57,12 +49,6 @@ CFLAGS  := $(CPU) $(OPT) $(WARNINGS) $(DEFINES) $(INCLUDES) \
            -fdata-sections -ffunction-sections \
            -std=c11
 
-# C++ flags mirror C flags, plus bare-metal-friendly disables:
-#   -fno-exceptions          : no unwind tables, no eh_personality, smaller .text
-#   -fno-rtti                : no typeinfo, no dynamic_cast
-#   -fno-use-cxa-atexit      : don't register static-object dtors with __cxa_atexit
-#                              (we never destruct globals on this target)
-#   -fno-threadsafe-statics  : skip __cxa_guard_* (pulls in pthread on newlib)
 CXXFLAGS := $(CPU) $(OPT) $(WARNINGS) $(DEFINES) $(INCLUDES) \
             -ffreestanding -nostdlib -nostartfiles -fno-common \
             -fdata-sections -ffunction-sections \
@@ -70,11 +56,6 @@ CXXFLAGS := $(CPU) $(OPT) $(WARNINGS) $(DEFINES) $(INCLUDES) \
             -fno-exceptions -fno-rtti \
             -fno-use-cxa-atexit -fno-threadsafe-statics \
             -Wno-register
-# -Wno-register: CMSIS headers (cmsis_gcc.h, core_cm7.h) use the C `register`
-# storage-class specifier on a few intrinsics. C++17 deprecated `register`,
-# so g++ warns whenever those intrinsics are pulled in via stm32h750xx.h.
-# It's vendor code we don't control; silencing the warning is the standard
-# workaround. (Doesn't affect codegen — the keyword is a no-op anyway.)
 
 ASFLAGS := $(CPU) $(OPT) -x assembler-with-cpp
 
@@ -86,25 +67,39 @@ LDFLAGS  := $(CPU) -nostdlib -nostartfiles \
             -Wl,--print-memory-usage
 
 # ----- sources -----
-# Discover sources automatically so renaming .c → .cpp doesn't touch the
-# Makefile. This is the only place in the project that uses wildcards;
-# everything else is explicit.
-C_SRCS   := $(wildcard src/*.c) $(wildcard src/rtt/*.c)
-CXX_SRCS := $(wildcard src/*.cpp)
-S_SRCS   := $(wildcard src/*.s)
+# Local app sources (src/) — objects in build/src/
+LOCAL_CXX_SRCS := $(wildcard src/*.cpp)
+LOCAL_C_SRCS   := $(wildcard src/*.c)
 
-DSP_CPP_OBJS := $(BUILDDIR)/dsp_cpp/eq_design.o
+# Platform driver sources (../platform/) — objects in build/ext/platform/
+PLAT_C_SRCS    := $(PLATFORM)/rtt/SEGGER_RTT.c
+PLAT_CXX_SRCS  := $(PLATFORM)/clock.cpp $(PLATFORM)/dma.cpp \
+                  $(PLATFORM)/gpio.cpp $(PLATFORM)/mpu.cpp \
+                  $(PLATFORM)/rgb_led.cpp \
+                  $(PLATFORM)/sai1.cpp $(PLATFORM)/system_init.cpp \
+                  $(PLATFORM)/systick.cpp
+PLAT_S_SRCS    := $(PLATFORM)/startup_stm32h750.s
 
-OBJS := $(C_SRCS:%.c=$(BUILDDIR)/%.o) \
-        $(CXX_SRCS:%.cpp=$(BUILDDIR)/%.o) \
-        $(S_SRCS:%.s=$(BUILDDIR)/%.o) \
-        $(DSP_CPP_OBJS)
+# Shared DSP design code — object in build/dsp_cpp/
+DSP_CPP_OBJS   := $(BUILDDIR)/dsp_cpp/eq_design.o
+
+LOCAL_OBJS  := $(patsubst %.cpp, $(BUILDDIR)/%.o, $(LOCAL_CXX_SRCS)) \
+               $(patsubst %.c,   $(BUILDDIR)/%.o, $(LOCAL_C_SRCS))
+PLAT_OBJS   := $(patsubst $(PLATFORM)/%.c,   $(BUILDDIR)/ext/platform/%.o, $(PLAT_C_SRCS)) \
+               $(patsubst $(PLATFORM)/%.cpp, $(BUILDDIR)/ext/platform/%.o, $(PLAT_CXX_SRCS)) \
+               $(patsubst $(PLATFORM)/%.s,   $(BUILDDIR)/ext/platform/%.o, $(PLAT_S_SRCS))
+
+OBJS := $(LOCAL_OBJS) $(PLAT_OBJS) $(DSP_CPP_OBJS)
 DEPS := $(OBJS:.o=.d)
 
 # ----- rules -----
 .PHONY: all clean size
 all: $(BUILDDIR)/$(TARGET).elf $(BUILDDIR)/$(TARGET).bin $(BUILDDIR)/$(TARGET).hex size
 
+# Editing any makefile forces a full rebuild so stale objects can't linger.
+$(OBJS): $(MAKEFILE_LIST)
+
+# Local source rules (build/src/)
 $(BUILDDIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
@@ -113,13 +108,23 @@ $(BUILDDIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
-$(BUILDDIR)/dsp_cpp/%.o: $(DSP_CPP_DIR)/src/%.cpp
+# Platform source rules (build/ext/platform/)
+$(BUILDDIR)/ext/platform/%.o: $(PLATFORM)/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
-$(BUILDDIR)/%.o: %.s
+$(BUILDDIR)/ext/platform/%.o: $(PLATFORM)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
+
+$(BUILDDIR)/ext/platform/%.o: $(PLATFORM)/%.s
 	@mkdir -p $(dir $@)
 	$(AS) $(ASFLAGS) -c $< -o $@
+
+# Shared DSP design code (build/dsp_cpp/)
+$(BUILDDIR)/dsp_cpp/%.o: $(DSP_CPP_DIR)/src/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
 $(BUILDDIR)/$(TARGET).elf: $(OBJS) $(LDSCRIPT)
 	$(LD) $(OBJS) $(LDFLAGS) -lm -lgcc -o $@

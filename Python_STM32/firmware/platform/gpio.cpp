@@ -51,8 +51,17 @@ void gpio_write(GPIO_TypeDef *port, uint32_t pin, bool value) {
 }
 
 void gpio_toggle(GPIO_TypeDef *port, uint32_t pin) {
-  // ODR is writable, and for a one-liner toggle the XOR is clean enough.
-  port->ODR ^= (1U << pin);
+  // Toggle via BSRR (atomic set/reset), NOT an ODR read-modify-write: the audio
+  // ISR drives RGB-LED pins that share a port with callers here (LED1's red is
+  // PC1, the user heartbeat is PC7), so an ODR RMW could clobber a concurrent
+  // ISR pin write landing between the read and the write-back. Read the current
+  // level, then issue one atomic BSRR write that touches only this pin.
+  const uint32_t mask = 1U << pin;
+  if (port->ODR & mask) {
+    port->BSRR = mask << 16U;   // currently high → reset
+  } else {
+    port->BSRR = mask;          // currently low  → set
+  }
 }
 
 bool gpio_read(GPIO_TypeDef *port, uint32_t pin) {

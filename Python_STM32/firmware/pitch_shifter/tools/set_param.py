@@ -17,7 +17,7 @@ import os
 import struct
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'tools'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'platform', 'tools'))
 from rtt_common import connect, disconnect, rtt_write, rtt_read_exact, RESP_ACK
 
 CMD_SET_PARAM = 0x22

@@ -30,7 +30,6 @@ GRAPH_PROJECT := ../../projects/pitch_shifter
 GRAPH_BUILD   := $(GRAPH_PROJECT)/build
 GRAPH_GEN     := $(GRAPH_BUILD)/generated
 MANIFEST      := $(GRAPH_GEN)/$(GRAPH).deps.mk
-COMMON        := ../common
 
 # Pull GRAPH_CPP_SOURCES + GRAPH_BLOCK_INCLUDE_DIRS from the graph-derived
 # manifest (single source of truth for the block set).
@@ -43,20 +42,19 @@ endif
 CMSIS_CORE_DIR   := ../../../DaisyExamples/libDaisy/Drivers/CMSIS/Include
 CMSIS_DEVICE_DIR := ../../../DaisyExamples/libDaisy/Drivers/CMSIS/Device/ST/STM32H7xx/Include
 
-PLATFORM := ../seed_h750/src
+PLATFORM := ../platform
 
 # include/ MUST come before generated/bare-metal headers so our overrides win.
 # Canonical block-source dirs precede $(GRAPH_BUILD) so the real block headers
 # win over any stale shadow copy sitting in the native build/ tree; $(GRAPH_BUILD)
-# is still needed for the Faust-generated .cpp the header #includes.
+# is still needed for the Faust-generated .cpp the header #includes. The platform
+# layer (drivers + audio_graph_runner + board.h) is now a flat library dir.
 INCLUDES := \
   -Iinclude \
   -Isrc \
   -I$(BUILDDIR) \
-  -I$(COMMON)/include \
   -I$(PLATFORM) \
   -I$(PLATFORM)/rtt \
-  -I../seed_h750/include \
   $(addprefix -I,$(GRAPH_BLOCK_INCLUDE_DIRS)) \
   -I$(GRAPH_GEN) \
   -I$(GRAPH_BUILD) \
@@ -110,17 +108,15 @@ LDFLAGS  := $(CPU) -nostdlib -nostartfiles \
 # Local sources (src/) — object goes in build/src/
 LOCAL_CXX_SRCS := src/audio.cpp src/main.cpp src/libstubs.cpp src/rtt_audio.cpp
 
-# Platform sources (../seed_h750/src/) — objects in build/ext/platform/
+# Platform sources (../platform/) — objects in build/ext/platform/. Includes the
+# graph-agnostic firmware runner (audio_graph_runner), now part of the platform layer.
 PLAT_C_SRCS    := $(PLATFORM)/rtt/SEGGER_RTT.c
 PLAT_CXX_SRCS  := $(PLATFORM)/clock.cpp $(PLATFORM)/dma.cpp \
                   $(PLATFORM)/gpio.cpp $(PLATFORM)/mpu.cpp \
-                  $(PLATFORM)/rgb_led.cpp \
+                  $(PLATFORM)/rgb_led.cpp $(PLATFORM)/level_meter.cpp \
                   $(PLATFORM)/sai1.cpp $(PLATFORM)/system_init.cpp \
-                  $(PLATFORM)/systick.cpp
+                  $(PLATFORM)/systick.cpp $(PLATFORM)/audio_graph_runner.cpp
 PLAT_S_SRCS    := $(PLATFORM)/startup_stm32h750.s
-
-# Shared firmware runner (graph-agnostic glue + metering) — build/ext/common/
-COMMON_CXX_SRCS := $(COMMON)/src/audio_graph_runner.cpp
 
 # Graph C++ block sources from the manifest (absolute paths) — build/ext/blocks/
 # Found via vpath on their source dirs; objects keyed by basename.
@@ -130,10 +126,9 @@ LOCAL_OBJS  := $(patsubst %.cpp, $(BUILDDIR)/%.o, $(LOCAL_CXX_SRCS))
 PLAT_OBJS   := $(patsubst $(PLATFORM)/%.c,   $(BUILDDIR)/ext/platform/%.o, $(PLAT_C_SRCS)) \
                $(patsubst $(PLATFORM)/%.cpp, $(BUILDDIR)/ext/platform/%.o, $(PLAT_CXX_SRCS)) \
                $(patsubst $(PLATFORM)/%.s,   $(BUILDDIR)/ext/platform/%.o, $(PLAT_S_SRCS))
-COMMON_OBJS := $(patsubst $(COMMON)/src/%.cpp, $(BUILDDIR)/ext/common/%.o, $(COMMON_CXX_SRCS))
 BLOCK_OBJS  := $(addprefix $(BUILDDIR)/ext/blocks/,$(notdir $(GRAPH_CPP_SOURCES:.cpp=.o)))
 
-OBJS := $(LOCAL_OBJS) $(PLAT_OBJS) $(COMMON_OBJS) $(BLOCK_OBJS)
+OBJS := $(LOCAL_OBJS) $(PLAT_OBJS) $(BLOCK_OBJS)
 DEPS := $(OBJS:.o=.d)
 
 # ----- rules -----
@@ -179,11 +174,6 @@ $(BUILDDIR)/ext/platform/%.o: $(PLATFORM)/%.c
 $(BUILDDIR)/ext/platform/%.o: $(PLATFORM)/%.s
 	@mkdir -p $(dir $@)
 	$(AS) $(ASFLAGS) -c $< -o $@
-
-# Shared runner (build/ext/common/)
-$(BUILDDIR)/ext/common/%.o: $(COMMON)/src/%.cpp
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
 # Graph block sources (build/ext/blocks/) — basename via vpath over manifest dirs
 $(BUILDDIR)/ext/blocks/%.o: %.cpp

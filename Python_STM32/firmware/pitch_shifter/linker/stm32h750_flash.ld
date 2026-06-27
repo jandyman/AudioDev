@@ -1,6 +1,6 @@
 /* pitch_shifter — STM32H750IBK6 linker script
  *
- * Same as seed_h750 but with .bss placed in RAM_D1 (512KB AXI SRAM) rather
+ * Same as the platform/eq linker script but with .bss placed in RAM_D1 (512KB AXI SRAM) rather
  * than DTCMRAM, because the pitch_shifter graph state + 128KB bump allocator
  * exceeds the 128KB DTCMRAM limit.
  *
