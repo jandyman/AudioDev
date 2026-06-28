@@ -59,6 +59,12 @@ BLOCK_DEFS = $(FAUST_DSP) $(DSP_CPP)
 BLOCK_DIRS ?=
 vpath %.cpp ../../dsp_cpp/src $(BLOCK_DIRS)
 
+# Shared Faust blocks live under dsp_faust/ — the standing source location for
+# .dsp (the peer of dsp_cpp/src for C++). A project uses one by listing its
+# basename in FAUST_BLOCKS and adding (include-dir ../../dsp_faust) to its .graph.
+# Project-local .dsp still win via make's cwd-first search.
+vpath %.dsp ../../dsp_faust $(BLOCK_DIRS)
+
 INCLUDE := $(shell python3 -m pybind11 --includes) \
            -I. \
            -I../../python/bindings \

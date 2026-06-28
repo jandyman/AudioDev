@@ -5,6 +5,7 @@
 
 (graph pitch_shifter
  (include-dir ../../dsp_cpp/src)
+ (include-dir ../../dsp_faust)
 
  (port input audio_in lpf.in)
  (port output audio_out_l audio_in)

@@ -12,10 +12,12 @@
 //   1 env      = ADSR envelope 0..1                       (probe)
 //   2 cutoff   = filter cutoff in Hz                       (probe)
 //   3 gate     = note gate 0/1                             (probe)
+
 import("stdfaust.lib");
 
 // One-shot note from the sample clock: a single long note shows attack/decay,
 // sustain across the hold, then release.
+
 gate_on  = nentry("gate_on", 0.2, 0.0, 20.0, 0.001);    // s, note start
 note_len = nentry("note_len", 5.0, 0.1, 20.0, 0.001);   // s, gate held high
 tsec = ba.time / ma.SR;
@@ -31,6 +33,7 @@ env = en.adsre(att, dec, sus, rel, gate);
 // Env -> cutoff, EXPONENTIAL (V/oct): `offset` is the resting/base cutoff in Hz,
 // the envelope adds `env_oct` octaves on top. Clamped to the filter's stable
 // range, then smoothed (~2 ms) to de-zipper fast modulation.
+
 offset  = nentry("cutoff_offset", 120.0, 20.0, 4000.0, 0.1);  // Hz, base/offset
 env_oct = nentry("env_octaves", 4.0, 0.0, 8.0, 0.01);         // sweep depth, oct
 cutoff  = min(ma.SR / 6.5, offset * pow(2.0, env_oct * env))
@@ -40,12 +43,14 @@ cutoff  = min(ma.SR / 6.5, offset * pow(2.0, env_oct * env))
 // because it modulates cleanly (moog_vcf's instantaneous unity-gain rescaling
 // spikes badly on a fast cutoff sweep). NB: its `res` is the 4th root of
 // moog_vcf's, i.e. more resonant for the same number.
+
 res = nentry("resonance", 0.7, 0.0, 0.999, 0.001);
 
 // VCA amplitude envelope — this is what starts/stops the note. A lowpass alone
 // can't: it always passes the fundamental (a 24 dB slope only attenuates it), so
 // without a VCA the steady pulse drones from t=0 and the note has no clean onset.
 // Separate ADSR from the filter sweep (VCF env shapes timbre, VCA env articulates).
+
 amp_a = nentry("amp_attack",  0.005, 0.0, 2.0, 0.0001);
 amp_d = nentry("amp_decay",   0.30,  0.0, 5.0, 0.0001);
 amp_s = nentry("amp_sustain", 0.80,  0.0, 1.0, 0.001);

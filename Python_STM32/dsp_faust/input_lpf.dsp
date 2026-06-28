@@ -10,6 +10,6 @@
 
 import("stdfaust.lib");
 
-fc = hslider("fc", 10000, 100, 20000, 1);
+fc = nentry("fc", 10000, 100, 20000, 1);
 
 process = fi.lowpass(2, fc);

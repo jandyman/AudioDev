@@ -23,6 +23,9 @@ for the STM32H750. Cross-project C++/Python conventions live in the AudioDev-roo
   tools in `platform/tools/`); `pitch_shifter/` and `eq/` are peer app projects,
   each with its own hand-written Makefile pulling the platform from `../platform`.
 - `docs/audio_graph_architecture.md` — the framework reference (graph format, build, conventions).
+- `docs/coding_standards.md` — C++ **and Faust** style (1TBS, 2-space, snake_case,
+  vertical rhythm). The vertical-rhythm rules apply to `.dsp` too — multi-line
+  paragraph comments heading a definition/constant block get a blank line beneath.
 
 ## Build (native, from a project folder)
 

@@ -9,6 +9,7 @@
 //   0 voice = env * bandlimited saw  (audition)
 //   1 env   = the raw envelope       (probe)
 //   2 gate  = the note gate          (probe)
+
 import("stdfaust.lib");
 
 note_rate = nentry("note_rate", 2.0, 0.1, 10.0, 0.01);    // notes / second
