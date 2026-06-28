@@ -38,8 +38,15 @@ def output_path(input_path, tag, out_dir=DEFAULT_OUT_DIR):
   return os.path.join(out_dir, f"{stem}_{tag}.wav")
 
 
-def play(buf, sr=48000):
-  sd.play(buf, sr)
+def play(buf, sr=48000, device=None):
+  """Play a buffer and block until done.
+
+  device: PortAudio output device — an index or a name substring (e.g.
+          "MacBook Pro Speakers", "Scarlett"). Pass one explicitly: the system
+          default may be a virtual loopback (e.g. BlackHole) that makes no sound.
+          `python -c "import sounddevice as sd; print(sd.query_devices())"` lists them.
+  """
+  sd.play(buf, sr, device=device)
   sd.wait()
 
 

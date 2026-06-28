@@ -231,6 +231,16 @@ Two routes:
     The value is held constant for the whole render — for time-varying control,
     use the pybind route below. Omit `params` to use the `.dsp`'s declared
     defaults.
+
+    **Author parameters with `nentry`, not `hslider`/`vslider`.** All three
+    declare the same thing — a named control with `default, min, max, step` — but
+    `hslider`/`vslider` bake a *UI-layout suggestion* (a horizontal/vertical
+    slider) into the DSP source, conflating signal logic with widget choice.
+    `nentry` ("numeric entry") is the UI-neutral form: it just says "this is a
+    parameter." These blocks are driven programmatically anyway — `run_faust`
+    sets controls by label, and on the embedded target they wire to real I/O — so
+    the widget metaphor is noise. `nentry("label", default, min, max, step)` is a
+    drop-in for `hslider` with the identical signature and the same label lookup.
   - `sr` — sample rate in Hz (default **48000**). Pass your input audio's rate:
     the bundled test files are 44.1 kHz, so a bare call would render them at the
     wrong rate — use `sr=sr` from `load_audio_mono` / `load_wav`.
@@ -244,6 +254,28 @@ Two routes:
 - **A pybind module** — `make -f faust.make DSP=<name> DSP_LIB_DIR=<dir>` from
   `python/` compiles one `.dsp` to a stateful pybind module for chunk-by-chunk
   driving from Python.
+
+**Testbench pattern — time-varying control inside the block.** `run_faust` holds
+its `params` constant for the whole render, so to exercise *modulation* (an ADSR
+sweeping a filter cutoff, an LFO, a gate) without building a pybind module,
+generate the control signal **inside the `.dsp`** and expose it as an extra probe
+output. The numpy side supplies the audio source and reads the probes back with
+`all_outputs=True`. `projects/keybass_1/filter_sweep.dsp` is the worked example: a
+steady numpy pulse is the input; the `.dsp` derives a one-shot gate from the
+sample clock (`(ba.time/ma.SR) >= t_on & …`), runs `en.adsre`, maps it to a cutoff
+(`offset * pow(2, env_oct*env)` — see the exponential/V-oct note below), and emits
+`(filtered, env, cutoff, gate)` so `filter_sweep_demo.py` plots every stage
+time-aligned with the shared-x toolset. Reach for the pybind route only when the
+control itself must originate in Python (true sample-by-sample external drive).
+
+Two conventions this pattern leans on: **testbenches use the diagnostic toolset**
+(shared-x panels + `install_x_zoom` + `mark_events`), not ad-hoc matplotlib, and
+they **return the rendered audio buffer** so it can be auditioned with `play()` at
+a breakpoint. **Control→cutoff is exponential**: synth filter envelopes modulate
+in the log-frequency (semitone/octave) domain — sum all modulation in
+semitones/octaves, then `* pow(2, …)` to Hz just before the filter (Faust filters
+take `fc` in Hz). A `min(ma.SR/6.5, …)` clamp keeps `moog_vcf`-family cutoffs in
+their stable range.
 
 ### 3. A compiled C++ block or full graph (pybind)
 
