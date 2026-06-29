@@ -13,6 +13,26 @@ later). `freq` may be a scalar or a per-sample array, so glides drive it directl
 """
 import numpy as np
 
+def pulse_shape(phase, duty, w):
+  """Raised-cosine pulse shape in [0,1] from a phase in [0,1).
+
+  phase  per-sample phase, 0..1 over one period
+  duty   high fraction of the period
+  w      raised-cosine edge width in phase units (scalar or per-sample array)
+
+  Shared by the free-running pulse() and the event-synced builder, so the edge
+  geometry is defined in exactly one place.
+  """
+  phase = np.asarray(phase, dtype=float)
+  w = np.broadcast_to(np.asarray(w, dtype=float), phase.shape)
+  shape = np.zeros_like(phase)
+  rise = phase < w
+  shape[rise] = 0.5 * (1.0 - np.cos(np.pi * phase[rise] / w[rise]))
+  shape[(phase >= w) & (phase < duty)] = 1.0
+  fall = (phase >= duty) & (phase < duty + w)
+  shape[fall] = 0.5 * (1.0 + np.cos(np.pi * (phase[fall] - duty) / w[fall]))
+  return shape
+
 def pulse(freq, n, sr=48000, duty=0.5, transition=5, low=-1.0, high=1.0):
   """Generate a raised-cosine-edged duty-cycle pulse.
 
@@ -42,17 +62,4 @@ def pulse(freq, n, sr=48000, duty=0.5, transition=5, low=-1.0, high=1.0):
     # Transitions eat the plateaus -> degrades toward a ramp/triangle.
     print("pulse: transition too wide for this freq/duty — plateaus collapse")
 
-  # Piecewise within the period, normalized to [0,1] then scaled to [low,high]:
-  #   [0, w)        rising raised cosine   0 -> 1
-  #   [w, duty)     high plateau                1
-  #   [duty, duty+w) falling raised cosine 1 -> 0
-  #   [duty+w, 1)   low plateau                 0
-  shape = np.zeros(n)
-  rise = phase < w
-  shape[rise] = 0.5 * (1.0 - np.cos(np.pi * phase[rise] / w[rise]))
-  shape[(phase >= w) & (phase < duty)] = 1.0
-  fall = (phase >= duty) & (phase < duty + w)
-  shape[fall] = 0.5 * (1.0 + np.cos(np.pi * (phase[fall] - duty) / w[fall]))
-  # remaining region stays 0 (low plateau)
-
-  return low + (high - low) * shape
+  return low + (high - low) * pulse_shape(phase, duty, w)

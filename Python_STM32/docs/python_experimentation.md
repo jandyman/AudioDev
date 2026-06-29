@@ -118,7 +118,7 @@ Zoom is anchored at the cursor's x; pan preserves the current width and clamps
 to the data range. `install_x_zoom` seeds the toolbar's navigation stack on the
 first draw so **Home** always returns to the full view even after wheel
 zoom/pan. Optional kwargs: `base_scale` (zoom factor per notch, default 1.3) and
-`pan_frac` (fraction of the visible width moved per notch, default 0.20).
+`pan_frac` (fraction of the visible width moved per notch, default 0.40).
 
 ### Marking discrete events (triggers)
 

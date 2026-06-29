@@ -54,7 +54,9 @@ def run_faust(input_buf, dsp_path, params=None, sr=48000, bs=128, out_duration=N
               all_outputs=False):
   """Render input_buf through a Faust .dsp and return the output.
 
-  input_buf:    mono numpy array of input samples.
+  input_buf:    input samples — a 1-D mono array, OR a 2-D (n_channels, n_samples)
+                array to drive a multi-input `process` (channel i -> input i), e.g.
+                np.stack([pulse, gate, amp]) for a 3-input voice.
   dsp_path:     path to the Faust .dsp file; its directory is added to the Faust
                 library search path so sibling .lib/.dsp imports resolve.
   params:       dict setting the .dsp's Faust UI controls BY LABEL — key = the
@@ -71,13 +73,15 @@ def run_faust(input_buf, dsp_path, params=None, sr=48000, bs=128, out_duration=N
                 shape (n_outputs, n_samples) — e.g. for a `process` that emits
                 several probes, unpack them as `a, b = run_faust(..., all_outputs=True)`.
   """
+  buf = np.asarray(input_buf, dtype=np.float32)
+  if buf.ndim == 1:
+    buf = buf[np.newaxis, :]                 # (1, N) mono — unchanged behavior
   if out_duration is None:
-    out_duration = len(input_buf) / sr
+    out_duration = buf.shape[1] / sr
 
   engine = daw.RenderEngine(sr, bs)
 
-  in_2d = np.expand_dims(input_buf.astype(np.float32), axis=0)
-  src = engine.make_playback_processor("src", in_2d)
+  src = engine.make_playback_processor("src", buf)
 
   faust = engine.make_faust_processor("faust")
   # Let Faust resolve sibling .dsp imports (e.g. triple_tap_delay.dsp) regardless of cwd.

@@ -24,18 +24,29 @@ bass, not run open-loop.
 ## Pipeline
 
 ```
-bass in → input_lpf → attack_detector ─┬─ trigger, fast_env, active_gain
-                                        │
-                       extremum / period+phase estimator (NEW)  ← fast_env, trigger
-                       yin_detector ────┘  P, aperiodicity
-                                        │
-        estimator → synced pulse → resonant LP (cutoff ← VCF env)
-                                 → × amplitude follow (fast_env) → out
+bass in → input_lpf ─┬─ yin_detector ─────────────── P, aperiodicity   (full band)
+                     └─ detection LP ─┬─ attack_detector ── trigger, fast_env
+                                      └─ extremum / period+phase estimator (NEW)
+
+  estimator (+ real-attack splice, below) → synced pulse → resonant LP (cutoff ← VCF env)
+                                                          → × amplitude follow (fast_env) → out
 ```
 
 Reuses the now-shared blocks: `dsp_faust/input_lpf`, `dsp_faust/attack_detector`
-(gives `trigger`, `fast_env`, `active_gain` for free), `dsp_cpp/yin_detector`
-(gives `P`, `aperiodicity`).
+(gives `trigger`, `fast_env` for free), `dsp_cpp/yin_detector` (gives `P`,
+`aperiodicity`).
+
+**Two filters, different jobs (design insight).** The attack detector and the
+period detector want *different* pre-filtering, so they sit behind a dedicated
+**detection low-pass** that is far more aggressive than the broad audio-path
+`input_lpf`: bass attacks carry ~2 kHz hash that spawns false extrema and
+over-eager triggers, and the period detector only needs the fundamental region.
+YIN keeps the full-band `input_lpf` (it wants the harmonics). The detection LP must
+be **causal** — its group delay is part of the latency budget, and is hidden under
+the real-attack splice anyway. Cost asymmetry that justifies a *conservative*
+trigger: a false trigger here fires a pulse + ADSR + filter sweep (loud, obvious),
+versus the pitch-shifter's benign mis-splice — so err toward missing late, not
+firing early.
 
 ## Two estimators, distinct jobs
 
@@ -113,14 +124,31 @@ absolute-polarity assumption → works on any bass / pickup / preamp inversion.
   polarity half-period for octave errors. Once YIN is up,
   `agreement(P_peak, P_yin)` is the high-confidence signal.
 
-## The first pulse (the guess)
+## Attack handling — splice, not guess
 
-At t0 there is no period. Width is `duty × P`, and P is unknown. Options to
-evaluate: carry the previous note's P (good for legato/repeats), a default register
-P, or fire only the leading edge at t0 and commit the width at t2 when P arrives.
-Guiding principle from the threads: **continuity > accuracy** — the ear is itself
-pitch-ambiguous this early, and the VCA attack + filter sweep mask the guess; we
-re-anchor cleanly at t2.
+This is the spine of the whole project: **keybass is fundamentally a latency
+problem, and the answer is to splice the real bass attack onto a synthesized
+body.** Rather than guess a first pulse at t0 with no period, pass the *actual*
+bass signal through for the attack front and **crossfade into the synced pulse
+once the period is known** (around t2). That dissolves the first-pulse-guess
+entirely — the front edge is real by construction — and it hides every latency in
+the chain (the ~5 ms trigger→first-extremum gap, the detection LP's group delay,
+the period not being known until t2) underneath the genuine attack transient.
+
+Why it should work: the attack transient is largely pitch-ambiguous noise/thud to
+the ear anyway, so the real signal *is* the most plausible thing to play there;
+the synthesized body takes over once it's trustworthy. The crossfade window is the
+tuning knob — short enough to commit to the synth tone, long enough to bury the
+seam, ideally timed into the filter sweep where both signals are spectrally
+intermediate.
+
+**Open / to evaluate once the synthesis path exists** (needs to be *heard*):
+- Is the gap even perceptible without the splice? (Can't know until we can listen.)
+- Crossfade shape and length; where in the filter sweep to place it.
+- Fallback when there's no clean attack to splice (legato, ghost notes): carry the
+  previous note's P, or a default register P, as the pulse-width seed.
+
+Learn this early — it's the technique the project lives or dies on.
 
 ## Fractional pulse placement (Step 2)
 
@@ -193,23 +221,26 @@ fractional placement are Step 2 (they refine precision once we make sound and do
 change whether the basic idea works). Step 1 measures everything at sample
 resolution.
 
-Build a Python diagnostic (using the `diagnostic_plot` toolset — shared-x panels,
-`mark_events`, zoom) that runs the bass files through `input_lpf` +
-`attack_detector` and a Python extremum detector, and overlays:
-
-- the filtered signal with **qualified anchor extrema marked by polarity**,
-- the (LP'd) derivative,
-- `fast_env` (the amplitude-follow source) and the `fast_env × k_qual`
-  qualification threshold,
-- the running peak-to-peak period estimate,
-- `yd.P` for comparison.
+Built as `period_sense_demo.py` (`diagnostic_plot` toolset — shared-x panels,
+`mark_events`, zoom). Chain: `input_lpf` → **detection LP** → `attack_detector` +
+extremum detector; YIN on `input_lpf`. Overlays the detection signal with qualified
+extrema by polarity, the smoothed derivative, `fast_env` + the `fast_env × k_qual`
+band, and peak-to-peak f0 per polarity vs YIN f0. A per-note table prints the
+1st→2nd same-polarity interval (the first-period claim) against YIN.
 
 **Starting file:** `Bass Notes Bad Trigger 2.wav` (good variety). Expand to the
 descending-into-low-E / 2H-dominant files once the detector behaves.
 
-Goal: eyeball how reliably "the 2nd same-polarity extremum = the period" holds,
-confirm YIN-before-2H, and tune the qualifiers (k_qual, refractory, derivative LP)
-across files — **before** any DSP moves into Faust/C++.
+Tuning knobs (config vars): `det_fc` / `det_order` (detection LP — the main lever
+for the ~2 kHz attack hash), `k_qual`, `refractory_ms`, `deriv_lp_ms`, `conf_gate`.
+
+Goal: eyeball how reliably "the 2nd same-polarity extremum = the period" holds and
+confirm YIN-before-2H. **Early findings (2026-06-29):** on *settled* notes
+peak-to-peak f0 matches YIN tightly (e.g. 117 vs 116 Hz); the residual junk is
+concentrated at note onsets (this file's multi-fire triggers + attack hash) where
+the *literal-first* extremum after the trigger isn't yet on the fundamental — which
+is exactly what the real-attack splice sidesteps (we don't need a good period at
+sample 1).
 
 ## Open questions
 
@@ -221,3 +252,19 @@ across files — **before** any DSP moves into Faust/C++.
   to `loop_controller`); what it emits (P, anchor impulses, polarity, confidence).
 - **Terminology** — using "extremum / extrema"; "anchor extremum" for the sync
   points. (Open to a better word.)
+- **First-peak magnitude as an attack clue.** We want an earlier trigger but don't
+  yet know the attack's strength at that point; the magnitude of the first
+  qualified extremum is the first available clue to it. Use TBD — record/surface it
+  now, figure out what it drives later (likely velocity / VCF depth / how hard to
+  hit the pulse).
+- **Dead / damped notes** (muted plucks) — they have no clean periodic body, so the
+  sync technique has little to lock to. Known weak spot; faced later.
+
+## Listen path (Step 1.5)
+
+`keybass_synth_demo.py` is the first end-to-end audition: estimators → hard-synced
+pulse → `keybass_synth.dsp` (the real `en.adsre` → exp cutoff → `moog_vcf_2b` → VCA,
+driven by numpy-built pulse/gate/amp via multi-input `run_faust`). Sample
+resolution, no fractional placement, **no real-attack splice yet** — so onsets are
+soft (synth silent during the trigger→first-anchor gap). It's for ear-checking the
+core idea; the splice is the first upgrade.

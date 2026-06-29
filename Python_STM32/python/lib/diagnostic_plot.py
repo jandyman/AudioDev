@@ -41,7 +41,7 @@ def _resolve(name, folder):
   return name if os.path.dirname(name) else os.path.join(folder, name)
 
 
-def install_x_zoom(fig, x_min, x_max, base_scale=1.3, pan_frac=0.20):
+def install_x_zoom(fig, x_min, x_max, base_scale=1.3, pan_frac=0.40):
   """Mouse-wheel navigation on the x axis, no toolbar mode-switching:
 
     scroll            zoom x, anchored at the cursor (up = in, down = out)
