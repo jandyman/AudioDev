@@ -50,6 +50,12 @@ public:
   // time has nothing to do with the period.
   static constexpr float LOOP_LOCKOUT_MS = 7.0f;
 
+  // Gate smoothing: the per-tap active_gain gate is ramped, not applied as a hard
+  // per-sample multiply. Without this, promoting the (gate-exempt) attack tap to
+  // the active role steps its gain from 1.0 straight to the gate value in one
+  // sample — an audible click. The ramp turns that into a short glide.
+  static constexpr float GATE_SMOOTH_MS = 10.0f;
+
   // Confidence gate: accept/latch P only when YIN is confident. The detector
   // emits aperiodicity (d' at the dip); low = confident. Latch P while
   // aperiodicity <= this, hold the last good P through brief dips.
@@ -132,6 +138,7 @@ private:
   float gain_[NUM_TAPS];              // current gain (per-sample)
   float gain_target_[NUM_TAPS];       // 0.0 or 1.0
   float gain_rate_[NUM_TAPS];         // per-sample gain step magnitude
+  float tap_gate_[NUM_TAPS];          // smoothed active_gain gate applied per tap
 
   // Role indices. -1 means "no tap currently holds this role".
   int active_tap_;                    // {0,1,2}
@@ -169,6 +176,7 @@ private:
   int   attack_fadeout_samples_;
   int   bailout_cf_samples_;
   int   loop_lockout_samples_;
+  float gate_smooth_rate_;            // per-sample step for the tap-gate ramp
 
   // ------------------------------------------------------------------
   // Helpers

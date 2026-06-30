@@ -38,6 +38,7 @@ void loop_controller::init(int sample_rate) {
     gain_[i]        = 0.0f;
     gain_target_[i] = 0.0f;
     gain_rate_[i]   = 0.0f;
+    tap_gate_[i]    = 1.0f;
   }
   tap_delay_[0]   = MIN_DELAY_SAMPLES;
   live_[0]        = true;
@@ -77,6 +78,7 @@ void loop_controller::update_derived_constants() {
   attack_fadeout_samples_ = (int)(ATTACK_FADEOUT_MS   * sample_rate_ / 1000.0f);
   bailout_cf_samples_     = (int)(LOOP_CROSSFADE_MS * BAILOUT_CROSSFADE_MULT * sample_rate_ / 1000.0f);
   loop_lockout_samples_   = (int)(LOOP_LOCKOUT_MS     * sample_rate_ / 1000.0f);
+  gate_smooth_rate_       = 1000.0f / (GATE_SMOOTH_MS * sample_rate_);
 
   if (loop_cf_samples_        < 1) loop_cf_samples_        = 1;
   if (attack_fadein_samples_  < 1) attack_fadein_samples_  = 1;
@@ -109,12 +111,22 @@ void loop_controller::process(const float* const* inputs, float* const* outputs,
     // Use the period-synchronous MEAN of active_gain, not the raw sample: on low
     // notes active_gain ripples at the fundamental, which would amplitude-
     // modulate the looped taps. The one-period running mean nulls that ripple.
+    //
+    // Apply it through a per-tap SMOOTHED gate. The attack tap targets 1.0
+    // (exempt — its fresh transient must play at full level); every other tap
+    // targets `gate`. Ramping (not a hard multiply) means a tap that loses the
+    // attack role glides from 1.0 down to the gate rather than stepping — no
+    // click on promotion. Fresh taps are snapped to 1.0 at assignment (gain 0).
     const float gate = active_gain_mean(inputs[3][i]);
     for (int tap = 0; tap < NUM_TAPS; tap++) {
-      if (tap == attack_tap_) continue;
-      outputs[3 + tap][i] *= gate;          // outputs[3..5] = gain1..gain3
+      float tgt = (tap == attack_tap_) ? 1.0f : gate;
+      float gp  = tap_gate_[tap];
+      if      (gp < tgt) gp = std::min(tgt, gp + gate_smooth_rate_);
+      else if (gp > tgt) gp = std::max(tgt, gp - gate_smooth_rate_);
+      tap_gate_[tap] = gp;
+      outputs[3 + tap][i] *= gp;            // outputs[3..5] = gain1..gain3
     }
-    outputs[12][i] = gate;                   // probe: smoothed gate
+    outputs[12][i] = gate;                   // probe: period-mean gate (pre-smoothing target)
   }
 }
 
@@ -219,6 +231,7 @@ void loop_controller::start_loop_crossfade(float inactive_delay, int cf_samples)
   gain_[target]        = 0.0f;
   gain_target_[target] = 1.0f;
   gain_rate_[target]   = 1.0f / (float)cf_samples;
+  tap_gate_[target]    = 1.0f;   // fresh tap (gain 0) — snap gate, then ramp toward live gate
 
   // Active tap fades out at the same rate.
   gain_target_[active_tap_] = 0.0f;
@@ -241,6 +254,7 @@ void loop_controller::start_attack_response() {
   gain_[target]        = 0.0f;
   gain_target_[target] = 1.0f;
   gain_rate_[target]   = 1.0f / (float)attack_fadein_samples_;
+  tap_gate_[target]    = 1.0f;   // attack tap is gate-exempt; snap so the eventual promotion glides, not steps
 
   attack_tap_ = target;
   mode_       = MODE_ATTACK_FADEIN;
@@ -250,6 +264,13 @@ void loop_controller::start_attack_response() {
   // P arrives; the attack tap (fast fade-in) carries the onset meanwhile.
   have_P_               = false;
   loop_lockout_counter_ = 0;
+
+  // Flush the active_gain running mean: the previous note's gate history (incl.
+  // its note-end dip) is meaningless for the new note. Without this the gate
+  // stays artificially low for ~one period after the attack, so the attack
+  // tap's promotion would glide down to a wrong (too-low) level.
+  ag_mean_stored_ = 0;
+  ag_mean_sum_    = 0.0;
 }
 
 // ============================================================
