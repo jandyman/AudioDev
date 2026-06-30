@@ -3,7 +3,8 @@
  (inputs attack_impulse P_samples aperiodicity active_gain)
  (outputs tap1_delay_ms tap2_delay_ms tap3_delay_ms
           gain1 gain2 gain3
-          latency_ms loop_event active_tap bailout_event gated_event attack_event)
+          latency_ms loop_event active_tap bailout_event gated_event attack_event
+          active_gain_mean)
  (params (pitch_ratio :default 0.5)))
 */
 
@@ -53,6 +54,12 @@ void loop_controller::init(int sample_rate) {
   have_P_              = false;
   loop_lockout_counter_ = 0;
 
+  for (int i = 0; i < MEAN_MAX_SAMPLES; i++) ag_ring_[i] = 1.0f;
+  ag_mean_w_      = 0;
+  ag_mean_len_    = 1;
+  ag_mean_stored_ = 0;
+  ag_mean_sum_    = 0.0;
+
   set_pitch_ratio(pitch_ratio_);
 }
 
@@ -98,11 +105,16 @@ void loop_controller::process(const float* const* inputs, float* const* outputs,
     // drags its 1 ms fade-in out to ~10 ms. Gate by ROLE, not a fixed index:
     // pick_free_tap can place the attack tap on any of {0,1,2}, so gain1/gain2
     // is the wrong thing to key on (attack_tap_ == -1 in LOOP_ONLY → all gated).
-    const float active_gain = inputs[3][i];
+    //
+    // Use the period-synchronous MEAN of active_gain, not the raw sample: on low
+    // notes active_gain ripples at the fundamental, which would amplitude-
+    // modulate the looped taps. The one-period running mean nulls that ripple.
+    const float gate = active_gain_mean(inputs[3][i]);
     for (int tap = 0; tap < NUM_TAPS; tap++) {
       if (tap == attack_tap_) continue;
-      outputs[3 + tap][i] *= active_gain;   // outputs[3..5] = gain1..gain3
+      outputs[3 + tap][i] *= gate;          // outputs[3..5] = gain1..gain3
     }
+    outputs[12][i] = gate;                   // probe: smoothed gate
   }
 }
 
@@ -130,6 +142,52 @@ void loop_controller::advance_tap_state() {
       }
     }
   }
+}
+
+// ============================================================
+// active_gain_mean() — running mean of active_gain over one period (≈round P).
+// A boxcar of length P is a comb that nulls the per-period gate ripple (f0 and
+// harmonics) while passing the slow note-end envelope. O(1) per sample via a
+// running sum; rebuilds only when the window length changes (rare — held notes
+// have a stable P, and a 2-sample hysteresis absorbs round(P) jitter).
+// ============================================================
+
+float loop_controller::active_gain_mean(float active_gain) {
+  // Target window = one period when a confident P is in hand; hold otherwise.
+  int L = ag_mean_len_;
+  if (have_P_) {
+    int target = (int)(P_latched_ + 0.5f);
+    if (target < 1)                 target = 1;
+    if (target > MEAN_MAX_SAMPLES)  target = MEAN_MAX_SAMPLES;
+    if (target > ag_mean_len_ + 1 || target < ag_mean_len_ - 1) L = target;
+  }
+
+  // Write newest sample into the ring.
+  ag_ring_[ag_mean_w_] = active_gain;
+  int w = ag_mean_w_;
+  ag_mean_w_ = (ag_mean_w_ + 1) % MEAN_MAX_SAMPLES;
+  if (ag_mean_stored_ < MEAN_MAX_SAMPLES) ag_mean_stored_++;
+
+  int eff = (L < ag_mean_stored_) ? L : ag_mean_stored_;   // window capped by history
+
+  if (L != ag_mean_len_) {
+    // Window length changed: rebuild the sum over the newest `eff` samples.
+    double s = 0.0;
+    for (int k = 0; k < eff; k++) {
+      int idx = w - k; if (idx < 0) idx += MEAN_MAX_SAMPLES;
+      s += ag_ring_[idx];
+    }
+    ag_mean_sum_ = s;
+    ag_mean_len_ = L;
+  } else {
+    // Same length: add the newest, drop the sample that fell out of the window.
+    ag_mean_sum_ += active_gain;
+    if (ag_mean_stored_ > eff) {
+      int idx = w - eff; if (idx < 0) idx += MEAN_MAX_SAMPLES;
+      ag_mean_sum_ -= ag_ring_[idx];
+    }
+  }
+  return (float)(ag_mean_sum_ / (double)eff);
 }
 
 // ============================================================

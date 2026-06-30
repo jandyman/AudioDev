@@ -107,6 +107,7 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   gated_evts  = ps.get_buffer('lc.gated_event', N)
   attack_evts = ps.get_buffer('lc.attack_event', N)
   splice_mix  = ps.get_buffer('splice.dry_mix', N)   # 1 = dry live, 0 = full wet
+  gate_mean   = ps.get_buffer('lc.active_gain_mean', N)  # period-mean of active_gain (wet-tap gate)
 
   loop_indices    = np.where(loop_evts   > 0.5)[0]
   bailout_indices = np.where(bailout_evt > 0.5)[0]
@@ -201,10 +202,14 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   axes[2].legend(loc='upper right', fontsize=8)
   axes[2].set_title('Tap delays')
 
-  # Panel 4: tap gains
+  # Panel 4: tap gains + wet-tap gate (raw active_gain vs its period-mean).
+  # The raw trace ripples at the note fundamental on low notes; the period-mean
+  # (applied to the non-attack taps) nulls that ripple.
   axes[3].plot(t, gain1_arr, 'b-',  linewidth=0.8, alpha=0.9, label='Gain 1')
   axes[3].plot(t, gain2_arr, 'C1-', linewidth=0.8, alpha=0.9, label='Gain 2')
   axes[3].plot(t, gain3_arr, 'm-',  linewidth=0.8, alpha=0.9, label='Gain 3 (attack)')
+  axes[3].plot(t, atk_gain,  color='#bbb', linewidth=0.5, alpha=0.8, label='active_gain (raw)')
+  axes[3].plot(t, gate_mean, 'k-',  linewidth=0.8, alpha=0.8, label='gate (active_gain period-mean)')
   mark_events(axes[3])
   axes[3].set_ylabel('Gain')
   axes[3].set_ylim(-0.05, 1.1)

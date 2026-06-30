@@ -55,6 +55,15 @@ public:
   // aperiodicity <= this, hold the last good P through brief dips.
   static constexpr float APERIODICITY_THRESH = 0.40f;
 
+  // Period-synchronous mean of active_gain (the wet-tap gate). active_gain
+  // ripples at the note fundamental on low notes; a running mean over exactly
+  // one period P is a comb that nulls f0 and all its harmonics, removing the
+  // gate ripple while passing the slow note-end envelope (~P/2 group delay).
+  // Ring sized for the longest expected period: ~23 Hz at 48 kHz (low notes
+  // below the bass range never occur; if P exceeds this the window is clamped,
+  // giving partial rejection). Tied to sample_rate only through the index.
+  static const int MEAN_MAX_SAMPLES = 2048;
+
   // ------------------------------------------------------------------
   // Public interface
   // ------------------------------------------------------------------
@@ -65,7 +74,7 @@ public:
   float get_pitch_ratio() const { return pitch_ratio_; }
 
   int get_num_inputs()  const { return 4; }
-  int get_num_outputs() const { return 12; }
+  int get_num_outputs() const { return 13; }
   int get_sample_rate() const { return (int)sample_rate_; }
 
   void process(const float* const* inputs, float* const* outputs, int n);
@@ -141,6 +150,14 @@ private:
   // Loop lockout countdown (samples). Loops may fire only when this hits 0.
   int   loop_lockout_counter_;
 
+  // Period-synchronous running mean of active_gain. Ring of recent samples +
+  // running sum over a window of ag_mean_len_ (≈ round(P)). See active_gain_mean().
+  float  ag_ring_[MEAN_MAX_SAMPLES];
+  int    ag_mean_w_;            // ring write index
+  int    ag_mean_len_;          // current window length (samples)
+  int    ag_mean_stored_;       // valid history depth (warmup)
+  double ag_mean_sum_;          // running sum over the current window
+
   // Sample counter (absolute, since init)
   int32_t sample_index_;
 
@@ -160,6 +177,10 @@ private:
 
   // Advance per-tap delay/gain one sample. Parks taps that reach gain=0.
   void advance_tap_state();
+
+  // Push one active_gain sample and return its running mean over a window of
+  // ≈ round(P_latched_) samples (one period). Nulls the per-period ripple.
+  float active_gain_mean(float active_gain);
 
   // Pick the lowest-index tap not currently bound to a role. `exclude_loop_incoming`
   // controls whether to exclude loop_incoming_tap_ (true for picking an attack tap

@@ -8,8 +8,8 @@ using std::string;
 
 // output_splicer — dry/wet crossfade on the output, driven by the attack
 // detector's two events. The unprocessed (dry) signal is made live on a note
-// end (the dive detector) and on an attack; in both cases the output blends
-// back to the shifted (wet) signal. Doc: output_splicer.md.
+// end and on an attack; in both cases the output blends back to the shifted
+// (wet) signal. Doc: output_splicer.md.
 //
 //   out = dry * m + wet * (1 - m),   m in [0,1]  (1 = dry live, 0 = full wet)
 //
@@ -19,16 +19,27 @@ using std::string;
 //               attack transient by letting the natural pluck through; it does
 //               NOT mask the YIN/loop latency — with a longer crossfade the
 //               shifted note is audibly arriving underneath the dry tail.
-//   e_noteend — slews toward dive_strength at note_end_fade_ms; reveals the
-//               natural dry decay as a note dies.
-// During the pluck dive is low so e_attack dominates; as the note dies e_attack
-// is long gone so e_noteend dominates; mid-sustain both ~0 → full wet.
+//   e_noteend — a LATCHED one-shot, NOT a continuous follower of dive_strength.
+//               A rising edge of dive_strength past NOTE_END_THRESH latches the
+//               note-end state; e_noteend then ramps up to full dry over
+//               note_end_fade_ms and HOLDS there until the next attack clears
+//               the latch. (A continuous follower would let dive_strength's
+//               per-period ripple modulate the mix during a live note — the
+//               latch + threshold makes note-end a discrete event instead.)
+// During a live note neither envelope is engaged (dive stays below threshold),
+// so the output is steady full wet. On attack the latch is cleared and its dry
+// level is handed to e_attack, so the crossfade back to wet is governed solely
+// by attack_to_wet_ms (no coupling to the note-end ramp).
 
 class output_splicer {
 public:
   // Fast rise to full-dry on an attack edge — short enough to keep the natural
   // transient, long enough to avoid a coefficient-jump click.
   static constexpr float ATTACK_RISE_MS = 1.0f;
+
+  // dive_strength rising past this latches the note-end one-shot. Comfortably
+  // above the sustain-time ripple floor, well below a real note-end (~0.8-1.0).
+  static constexpr float NOTE_END_THRESH = 0.5f;
 
   output_splicer();
 
@@ -63,15 +74,17 @@ private:
   float note_end_fade_ms_;
   float attack_rise_rate_;     // per-sample step, 0->1 over ATTACK_RISE_MS
   float attack_fall_rate_;     // per-sample step, 1->0 over attack_to_wet_ms
-  float note_end_rate_;        // per-sample slew cap toward dive_strength
+  float note_end_rate_;        // per-sample step for the note-end ramp
 
   // Attack envelope state.
   atk_phase_t atk_phase_;
   float e_attack_;
 
-  // Note-end envelope state.
+  // Note-end envelope state (latched one-shot).
+  bool  note_end_latched_;
   float e_noteend_;
 
-  // Rising-edge detection on the attack impulse.
+  // Rising-edge detection.
   float prev_trigger_;
+  float prev_dive_;
 };

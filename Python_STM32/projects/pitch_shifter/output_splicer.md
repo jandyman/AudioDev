@@ -19,14 +19,21 @@ envelopes that, by construction, don't fight:
   effect is a transient sharpener, not a latency hider. Keep the crossfade short
   for a crisp attack; lengthen it only if you want the dry character to bleed
   further into the note.
-- **`e_noteend`** — slews toward `dive_strength` (the note-end detector, 0→1 as a
-  note dies) at a rate set by `note_end_fade_ms`, revealing the natural dry decay.
+- **`e_noteend`** — a **latched one-shot**, not a continuous follower. A rising
+  edge of `dive_strength` past `NOTE_END_THRESH` (0.5) latches the note-end state;
+  `e_noteend` then ramps to full dry over `note_end_fade_ms` and **holds** there
+  until the next attack clears the latch. Tracking `dive_strength` continuously
+  would let its per-period ripple (worst on low notes, where the detector's RMS
+  window is shorter than a period) modulate the mix during a live note; the
+  threshold + latch makes note-end a discrete event, so a live note — where
+  `dive_strength` sits well below 0.5 — never engages the dry path at all.
 
 During the pluck `dive_strength` is low, so `e_attack` dominates; as the note dies
-`e_attack` is long gone, so `e_noteend` dominates; mid-sustain both sit near 0 and
-the output is full wet. When a new attack lands while the previous note is still
-diving, `e_noteend` legitimately holds dry live a little longer past the attack
-crossfade — the `max()` doing its job, not a glitch.
+the latch fires and `e_noteend` takes over; mid-sustain both sit at 0 and the
+output is full wet. On an attack the latch is cleared and its current dry level is
+handed to `e_attack` (`e_attack = max(e_attack, e_noteend)`, then `e_noteend = 0`):
+no dip, and the crossfade back to wet is governed solely by `attack_to_wet_ms`
+rather than being coupled to the note-end ramp.
 
 ## Inputs / outputs
 

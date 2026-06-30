@@ -22,11 +22,13 @@ output_splicer::output_splicer() {
 }
 
 void output_splicer::init(int sample_rate) {
-  sample_rate_  = (float)sample_rate;
-  atk_phase_    = ATK_IDLE;
-  e_attack_     = 0.0f;
-  e_noteend_    = 0.0f;
-  prev_trigger_ = 0.0f;
+  sample_rate_      = (float)sample_rate;
+  atk_phase_        = ATK_IDLE;
+  e_attack_         = 0.0f;
+  note_end_latched_ = false;
+  e_noteend_        = 0.0f;
+  prev_trigger_     = 0.0f;
+  prev_dive_        = 0.0f;
   update_derived_constants();
 }
 
@@ -53,9 +55,15 @@ void output_splicer::process(const float* const* inputs, float* const* outputs, 
         float* dry_mix = outputs[1];
 
   for (int i = 0; i < n; i++) {
-    // Attack envelope: rising edge of the impulse re-arms the fast rise to full
-    // dry, then a slow crossfade back to wet.
-    if (trigger[i] > 0.5f && prev_trigger_ <= 0.5f) atk_phase_ = ATK_RISING;
+    // Attack edge: re-arm the fast rise to full dry and clear the note-end
+    // latch. Hand the latch's current dry level to e_attack so there is no dip
+    // and the crossfade back to wet is governed solely by attack_to_wet_ms.
+    if (trigger[i] > 0.5f && prev_trigger_ <= 0.5f) {
+      e_attack_         = std::max(e_attack_, e_noteend_);
+      atk_phase_        = ATK_RISING;
+      note_end_latched_ = false;
+      e_noteend_        = 0.0f;
+    }
     prev_trigger_ = trigger[i];
 
     if (atk_phase_ == ATK_RISING) {
@@ -66,10 +74,15 @@ void output_splicer::process(const float* const* inputs, float* const* outputs, 
       if (e_attack_ <= 0.0f) { e_attack_ = 0.0f; atk_phase_ = ATK_IDLE; }
     }
 
-    // Note-end envelope: slew toward dive_strength, capped at the note-end rate.
-    float target = dive[i];
-    if (target > e_noteend_) e_noteend_ = std::min(target, e_noteend_ + note_end_rate_);
-    else                     e_noteend_ = std::max(target, e_noteend_ - note_end_rate_);
+    // Note-end: latch on a rising edge of dive_strength past the threshold (a
+    // discrete event — held until the next attack clears it). e_noteend ramps
+    // toward full dry while latched, back toward wet once cleared.
+    if (dive[i] > NOTE_END_THRESH && prev_dive_ <= NOTE_END_THRESH) note_end_latched_ = true;
+    prev_dive_ = dive[i];
+
+    float ne_target = note_end_latched_ ? 1.0f : 0.0f;
+    if (ne_target > e_noteend_) e_noteend_ = std::min(ne_target, e_noteend_ + note_end_rate_);
+    else                        e_noteend_ = std::max(ne_target, e_noteend_ - note_end_rate_);
 
     float m = std::max(e_attack_, e_noteend_);
     out[i]     = dry[i] * m + wet[i] * (1.0f - m);
