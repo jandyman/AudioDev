@@ -100,18 +100,22 @@ Demos: `pitch_shifter_demo.py` (full pipeline + probe plots, saves WAV),
 
 `output_splicer` adds an attack/note-end dry-wet crossfade on the output
 (`audio_out_r`); the low-note gain modulation is fixed (latched note-end +
-period-mean gate, commit 372ff79). Sustains are clean, attacks crisp. Open:
+period-mean gate, commit 372ff79). Sustains are clean, attacks crisp.
 
-- **Click on some attacks.** Intermittent — not yet root-caused. Candidates:
-  the 1 ms `ATTACK_RISE_MS` dry snap in `output_splicer`, the attack-tap
-  engagement in `loop_controller`, or a dry/wet level discontinuity at the
-  crossfade. Track down with the demo probes (zoom an offending attack).
-- **`active_gain` dips during sustained low notes.** The dive detector reads a
-  *live* low note as partially ending (`dive_strength` rises → `active_gain`
-  dips), pulling the wet gate down mid-note. The period-mean removes the ripple
-  but not this slow dip — it's a dive-detector tuning issue. Revisit
+- **Attack clicks — FIXED** (commit b7c1d22, user confirms all gone). Cause: the
+  gate-exempt attack tap, on promotion to the active role, stepped its gain from
+  1.0 to the (lagging, too-low) gate in one sample. Fix: per-tap *smoothed* gate
+  (`GATE_SMOOTH_MS`) so promotion glides, plus flushing the active_gain running
+  mean on attack so the gate tracks the fresh note.
+- **OPEN — `active_gain` dips during sustained low notes.** The dive detector
+  reads a *live* low note as partially ending (`dive_strength` rises →
+  `active_gain` dips), pulling the wet gate down mid-note (and leaving a residual
+  level dip — not a click — into the note onset). The period-mean removes the
+  ripple but not this slow dip — it's a dive-detector tuning issue. Revisit
   `attack_detector` (dive path: `slow_env`/`hold_env`, RMS/hold windows) against
-  "longer bass notes.wav" via `attack_detector_lab.py`.
+  "longer bass notes.wav" via `attack_detector_lab.py`. NOTE: `active_gain` /
+  `dive_strength` now feeds BOTH the wet gate AND the splice note-end latch
+  (threshold 0.5), so a dive-path retune must not disturb note-end latching.
 
 ## Next steps
 
