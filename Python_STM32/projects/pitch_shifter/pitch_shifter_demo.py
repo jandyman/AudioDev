@@ -74,6 +74,8 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   ps.init(sample_rate)
   ps.set_param('lpf.fc', lpf_fc_hz)
   ps.set_param('lc.pitch_ratio', pitch_ratio)
+  ps.set_param('splice.attack_to_wet_ms', 10.0)   # attack → wet crossfade time
+  ps.set_param('splice.note_end_fade_ms', 50.0)   # note-end fade-to-dry time
 
   audio_in = audio_raw.astype(np.float32)
   print("\nProcessing...")
@@ -104,6 +106,7 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   bailout_evt = ps.get_buffer('lc.bailout_event', N)
   gated_evts  = ps.get_buffer('lc.gated_event', N)
   attack_evts = ps.get_buffer('lc.attack_event', N)
+  splice_mix  = ps.get_buffer('splice.dry_mix', N)   # 1 = dry live, 0 = full wet
 
   loop_indices    = np.where(loop_evts   > 0.5)[0]
   bailout_indices = np.where(bailout_evt > 0.5)[0]
@@ -125,15 +128,16 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   semitones = int(round(12.0 * np.log2(pitch_ratio)))   # tempered: 0.5 -> -12, 0.749 -> -5
   input_stem = os.path.splitext(os.path.basename(input_path))[0]
   out_path = os.path.join(out_dir, f"{input_stem}_pitch_shifted_{semitones:+d}st.wav")
-  # audio_out shape: (N, 2)  — column 0 = dry (audio_in), column 1 = pitch-shifted.
-  # Normalize jointly so the L/R level relationship is preserved.
+  # audio_out shape: (N, 2)  — column 0 = dry (audio_in), column 1 = spliced
+  # (dry/wet crossfade from output_splicer). Normalize jointly so the L/R level
+  # relationship is preserved.
   ao = np.asarray(audio_out, dtype=np.float64)
   peak = np.abs(ao).max()
   if peak > 0: ao /= peak * 1.05
   out_int16 = np.clip(ao * 32767, -32768, 32767).astype(np.int16)
   wav.write(out_path, sample_rate, out_int16)
-  print(f"\nOutput saved (stereo, L=dry / R=shifted): {out_path}")
-  # Extract the shifted channel for in-script plotting/analysis below.
+  print(f"\nOutput saved (stereo, L=dry / R=spliced): {out_path}")
+  # Extract the spliced output channel for in-script plotting/analysis below.
   audio_shifted = ao[:, 1]
 
   if not show_plot:
@@ -169,13 +173,19 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   axes[0].grid(True, alpha=0.3)
   axes[0].set_xlim(0, t[-1])
 
-  # Panel 2: output audio (shifted)
-  axes[1].plot(t, audio_shifted, 'b-', linewidth=0.3, alpha=0.7, label='Output audio (R = shifted)')
+  # Panel 2: spliced output + dry-mix envelope (1 = dry live, 0 = full wet).
+  axes[1].plot(t, audio_shifted, 'b-', linewidth=0.3, alpha=0.7, label='Output audio (R = spliced)')
   mark_events(axes[1])
   axes[1].set_ylabel('Output amplitude')
   axes[1].grid(True, alpha=0.3)
-  axes[1].legend(loc='upper right', fontsize=8)
-  axes[1].set_title('Output (shifted)')
+  a1b = axes[1].twinx()
+  a1b.plot(t, splice_mix, color='#c4007a', linewidth=0.8, alpha=0.8, label='dry_mix (1=dry, 0=wet)')
+  a1b.set_ylabel('dry_mix', color='#c4007a'); a1b.set_ylim(-0.05, 1.05)
+  a1b.tick_params(axis='y', labelcolor='#c4007a')
+  l1, lab1 = axes[1].get_legend_handles_labels()
+  l2, lab2 = a1b.get_legend_handles_labels()
+  axes[1].legend(l1 + l2, lab1 + lab2, loc='upper right', fontsize=8)
+  axes[1].set_title('Spliced output + dry/wet mix envelope')
 
   # Panel 3: tap delays
   axes[2].plot(t, tap1_del, 'b-',  linewidth=0.7, alpha=0.9, label='Tap 1 delay (ms)')
@@ -303,8 +313,8 @@ def run_demo(filename, pitch_ratio=0.5, lpf_fc_hz=10000.0, show_plot=True):
   return out_path
 
 if __name__ == '__main__':
-  interval_semitones = -12   # equal-tempered; -5 = fourth, -7 = fifth, -4 = major 3rd
+  interval_semitones = -5   # equal-tempered; -5 = fourth, -7 = fifth, -4 = major 3rd
   pitch_ratio = semitones_to_ratio(interval_semitones)
   lpf_fc_hz   = 10000.0
-  run_demo("longer bass notes.wav", pitch_ratio=pitch_ratio, lpf_fc_hz=lpf_fc_hz)
+  run_demo("Fourth test.wav", pitch_ratio=pitch_ratio, lpf_fc_hz=lpf_fc_hz)
   print("\n" + "=" * 60 + "\nDemo complete")
