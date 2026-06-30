@@ -96,6 +96,23 @@ Demos: `pitch_shifter_demo.py` (full pipeline + probe plots, saves WAV),
 - `audio-graph-python/` (a sibling of Python_STM32) is DEPRECATED reference code —
   do not place new work there.
 
+## Output splice — known issues (2026-06-30)
+
+`output_splicer` adds an attack/note-end dry-wet crossfade on the output
+(`audio_out_r`); the low-note gain modulation is fixed (latched note-end +
+period-mean gate, commit 372ff79). Sustains are clean, attacks crisp. Open:
+
+- **Click on some attacks.** Intermittent — not yet root-caused. Candidates:
+  the 1 ms `ATTACK_RISE_MS` dry snap in `output_splicer`, the attack-tap
+  engagement in `loop_controller`, or a dry/wet level discontinuity at the
+  crossfade. Track down with the demo probes (zoom an offending attack).
+- **`active_gain` dips during sustained low notes.** The dive detector reads a
+  *live* low note as partially ending (`dive_strength` rises → `active_gain`
+  dips), pulling the wet gate down mid-note. The period-mean removes the ripple
+  but not this slow dip — it's a dive-detector tuning issue. Revisit
+  `attack_detector` (dive path: `slow_env`/`hold_env`, RMS/hold windows) against
+  "longer bass notes.wav" via `attack_detector_lab.py`.
+
 ## Next steps
 
 - **STM32 firmware port of the YIN-driven pitch shifter** (currently native-only)
