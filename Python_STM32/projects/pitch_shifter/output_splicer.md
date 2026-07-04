@@ -35,6 +35,12 @@ handed to `e_attack` (`e_attack = max(e_attack, e_noteend)`, then `e_noteend = 0
 no dip, and the crossfade back to wet is governed solely by `attack_to_wet_ms`
 rather than being coupled to the note-end ramp.
 
+> **Planned direction (2026-07-03):** the design goal is for the output to be
+> live *before* the next attack in the common cases (damped note → note-end
+> fade; rung-out note → a leaky "last note amplitude" reference), leaving the
+> reactive attack-time snap as the fallback rather than the design point. See
+> `pitch_shifter.md` § "Design notes — splice policy and pitch layers".
+
 ## Inputs / outputs
 
 | Port | Dir | Meaning |
