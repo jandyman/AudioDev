@@ -107,15 +107,16 @@ period-mean gate, commit 372ff79). Sustains are clean, attacks crisp.
   1.0 to the (lagging, too-low) gate in one sample. Fix: per-tap *smoothed* gate
   (`GATE_SMOOTH_MS`) so promotion glides, plus flushing the active_gain running
   mean on attack so the gate tracks the fresh note.
-- **OPEN — `active_gain` dips during sustained low notes.** The dive detector
-  reads a *live* low note as partially ending (`dive_strength` rises →
-  `active_gain` dips), pulling the wet gate down mid-note (and leaving a residual
-  level dip — not a click — into the note onset). The period-mean removes the
-  ripple but not this slow dip — it's a dive-detector tuning issue. Revisit
-  `attack_detector` (dive path: `slow_env`/`hold_env`, RMS/hold windows) against
-  "longer bass notes.wav" via `attack_detector_lab.py`. NOTE: `active_gain` /
-  `dive_strength` now feeds BOTH the wet gate AND the splice note-end latch
-  (threshold 0.5), so a dive-path retune must not disturb note-end latching.
+- **`active_gain` dips during sustained low notes — SOLVED IN LAB, port
+  pending** (commit 0ca1005, 2026-07-03). The rev-3 dive redesign
+  (period-commensurate energy window + log-slope damp evidence + soft
+  memberships) holds the gate at ~1.0 through sustained notes in
+  `attack_detector_lab.py`; the Faust block still carries the old path until
+  ported. Design + port plan (incl. the evidence-vs-policy split — pin and
+  gate smoothing move to `loop_controller`; new `yd.P → atk` edge):
+  `projects/pitch_shifter/attack_detector_design_notes.md`. NOTE: `active_gain`
+  / `dive_strength` feeds BOTH the wet gate AND the splice note-end latch
+  (threshold 0.5), so the port must preserve note-end latching semantics.
 
 ## Next steps
 
