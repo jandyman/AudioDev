@@ -385,6 +385,36 @@ def onset_ref_track(p_db, fires, capture_s, cap_tau_s, up_tau_s, down_tau_s,
     out[i] = ref
   return out
 
+@njit
+def residue_track(p_db, down_tau_s, up_slow_db_s, up_fast_db_s, fast_gap_db,
+                  sr=48000.0):
+  """Trough-averaging residue-level anchor (dB) — the data-derived BOTTOM of
+     the level bracket (onset_ref is the top).  One-pole DOWN into troughs:
+     fast enough to settle within a between-note gap, slow enough not to
+     chase one lucky deep mute.  Slew-limited UP in dB/s (a one-pole would
+     converge most of the way to note level during a long sustain; a slew
+     drifts only rate x duration), switching to a fast slew when p_db sits
+     far above the anchor — recovery after prolonged silence is imperfect
+     but quick, by design.  The asymmetry is deliberate: anchor-too-HIGH is
+     the dangerous error (derived floors could gate real quiet notes) and
+     recovers via the fast down pole; anchor-too-low is benign (floors
+     merely under-protective, i.e. today's status quo) and may recover
+     slowly."""
+  c_down = tau_to_c(down_tau_s, sr)
+  up_slow = up_slow_db_s / sr
+  up_fast = up_fast_db_s / sr
+  out = np.empty_like(p_db)
+  ref = p_db[0]
+  for i in range(len(p_db)):
+    v = p_db[i]
+    if v < ref:
+      ref += (1.0 - c_down) * (v - ref)
+    else:
+      step = up_fast if v - ref > fast_gap_db else up_slow
+      ref = min(ref + step, v)
+    out[i] = ref
+  return out
+
 
 # ============================================================
 # Detector  — EDIT THIS
@@ -550,6 +580,20 @@ def compute(audio, sr):
   onset_ref = onset_ref_track(p_db, fires_arr, 0.030, 0.008, 0.5, 10.0,
                               -50.0, 15.0, sr)
 
+  # Residue anchor (PROTOTYPE — probe-only, feeds nothing yet): trough-
+  # averaging tracker of p_db, the data-derived bottom of the level bracket
+  # (lab.md "Absolute floors").  Measured residue sits ~20 dB below note
+  # level; once trusted, the four absolute floors become offsets from this.
+  res_down_s   = 0.2     # settles into a between-note trough in ~one gap
+  res_up_slow  = 0.5     # dB/s — a 10 s sustain drifts the anchor up 5 dB
+  res_up_fast  = 30.0    # dB/s — post-silence recovery, ~1 s per 30 dB
+  res_fast_gap = 25.0    # gap that flips to fast recovery — just above the
+                         # ~20 dB note-to-residue separation, so it lands
+                         # near the right place after silence and ordinary
+                         # sustains never trigger it
+  residue_ref = residue_track(p_db, res_down_s, res_up_slow, res_up_fast,
+                              res_fast_gap, sr)
+
   # Soft memberships → active_gain (product; nothing hardens into a mode).
   s_edge   = -60.0    # slope ≥ this → decaying naturally (dB/s)
   s_damp   = -240.0   # slope ≤ this → certainly damped
@@ -582,8 +626,8 @@ def compute(audio, sr):
   # crossing the knee repeatedly) reads as one descent, not flutter. The pin
   # SNAPS the smoother state open (see gate_smooth_pin): no sag-and-recover
   # handoff after onset.
-  active_gain = gate_smooth_pin(alive_decay * alive_level * alive_floor, pin,
-                                0.050, 0.002, sr)
+  alive_raw = alive_decay * alive_level * alive_floor    # evidence: pre-policy product
+  active_gain = gate_smooth_pin(alive_raw, pin, 0.050, 0.002, sr)
   dive_strength = 1.0 - active_gain
 
   # Previous dive path (fast/slow RMS envelope ratio) for the A/B overlay.
@@ -607,6 +651,7 @@ def compute(audio, sr):
     'frame_ok':           f_conf < yin_accept,
     'p_db':               p_db,
     'onset_ref':          onset_ref,
+    'residue_ref':        residue_ref,             # trough anchor (prototype)
     'level_hi':           onset_ref - drop_hi,     # alive_level = 1 above this
     'level_lo':           onset_ref - drop_lo,     # alive_level = 0 below this
     'slope':              slope,
@@ -615,6 +660,7 @@ def compute(audio, sr):
     'alive_decay':        alive_decay,
     'alive_level':        alive_level,
     'alive_floor':        alive_floor,
+    'alive_raw':          alive_raw,                # evidence product, pre-policy
     'onset_pin':          pin,
     'active_gain':        active_gain,
     'dive_strength':      dive_strength,
@@ -671,10 +717,11 @@ def plot_panels(axes, sigs, t):
   ax = axes[4]
   ax.plot(t, sigs['p_db'], 'b-', lw=0.7, label='period-commensurate power (dB)')
   ax.plot(t, sigs['onset_ref'], 'r-', lw=1.0, label='onset reference')
+  ax.plot(t, sigs['residue_ref'], color='darkorange', lw=1.0, label='residue anchor (troughs)')
   ax.plot(t, sigs['level_hi'], 'r--', lw=0.6, alpha=0.6, label='alive_level 1 → 0 band')
   ax.plot(t, sigs['level_lo'], 'r--', lw=0.6, alpha=0.6)
   ax.set_ylim(-90, 0); ax.set_ylabel('dB')
-  ax.set_title('Commensurate-window energy vs leaky onset reference')
+  ax.set_title('Commensurate-window energy — onset reference (top anchor) vs residue anchor (bottom)')
   ax.legend(loc='upper right', fontsize=8)
 
   ax = axes[5]
@@ -690,10 +737,11 @@ def plot_panels(axes, sigs, t):
   ax.plot(t, sigs['alive_level'], 'c-', lw=0.7, alpha=0.7, label='alive_level (vs onset)')
   ax.plot(t, sigs['alive_floor'], 'y-', lw=0.7, alpha=0.7, label='alive_floor (abs)')
   ax.plot(t, sigs['onset_pin'], 'r-', lw=0.6, alpha=0.5, label='onset pin')
-  ax.plot(t, sigs['active_gain'], 'g-', lw=1.4, label='active_gain (new = product)')
+  ax.plot(t, sigs['alive_raw'], 'k-', lw=0.9, alpha=0.8, label='raw product (evidence)')
+  ax.plot(t, sigs['active_gain'], 'g-', lw=1.4, label='active_gain (smooth + pin)')
   ax.plot(t, sigs['active_gain_old'], '--', color='0.5', lw=0.9, label='active_gain (old ratio)')
   ax.set_ylim(-0.05, 1.05); ax.set_ylabel('gain')
-  ax.set_title('Note-end gate — soft memberships and their product, vs old fast/slow ratio')
+  ax.set_title('Note-end gate — memberships, raw evidence product, policy-smoothed gate, old ratio')
   ax.legend(loc='upper right', fontsize=8)
 
 
