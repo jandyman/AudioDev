@@ -23,6 +23,10 @@ for the STM32H750. Cross-project C++/Python conventions live in the AudioDev-roo
   tools in `platform/tools/`); `pitch_shifter/` and `eq/` are peer app projects,
   each with its own hand-written Makefile pulling the platform from `../platform`.
 - `docs/audio_graph_architecture.md` — the framework reference (graph format, build, conventions).
+- `docs/multichannel-audio-board-plan.md` — active hardware plan: custom PCB with a
+  discrete STM32H7 + dual TLV320ADC5140 (8-ch TDM) running the AudioDev ecosystem.
+  Has explicit **"Review gate (Claude)"** checkpoints (netlist, placement, routing).
+  Read it before any work on the board bring-up / schematic / layout.
 - `docs/coding_standards.md` — C++ **and Faust** style (1TBS, 2-space, snake_case,
   vertical rhythm). The vertical-rhythm rules apply to `.dsp` too — multi-line
   paragraph comments heading a definition/constant block get a blank line beneath.
