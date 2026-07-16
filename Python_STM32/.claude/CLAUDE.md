@@ -1,5 +1,10 @@
 # Python_STM32 — Claude Context
 
+> **Session start:** Connect the local **AudioDev** folder (`~/Dropbox/Developer/AudioDev`,
+> or this `Python_STM32` subfolder) before doing any work. The local copy is the single
+> source of truth — there is no GitHub mirror to fall back on. If the folder isn't
+> connected, request it first and don't answer from memory or stale caches.
+
 Active hub for STM32 audio-DSP development. Shared C++/Faust DSP blocks build two
 ways from one source: natively via pybind11 (fast iteration) and arm-none-eabi
 for the STM32H750. Cross-project C++/Python conventions live in the AudioDev-root
@@ -23,10 +28,13 @@ for the STM32H750. Cross-project C++/Python conventions live in the AudioDev-roo
   tools in `platform/tools/`); `pitch_shifter/` and `eq/` are peer app projects,
   each with its own hand-written Makefile pulling the platform from `../platform`.
 - `docs/audio_graph_architecture.md` — the framework reference (graph format, build, conventions).
-- `docs/multichannel-audio-board-plan.md` — active hardware plan: custom PCB with a
-  discrete STM32H7 + dual TLV320ADC5140 (8-ch TDM) running the AudioDev ecosystem.
-  Has explicit **"Review gate (Claude)"** checkpoints (netlist, placement, routing).
-  Read it before any work on the board bring-up / schematic / layout.
+- `docs/DSP board HW/` — active hardware design (worked on in the Claude app,
+  cowork mode): custom PCB with a discrete STM32H7 + dual TLV320ADC5140 (8-ch TDM)
+  running the AudioDev ecosystem. `multichannel-audio-board-plan.md` is the master
+  plan, with explicit **"Review gate (Claude)"** checkpoints (netlist, placement,
+  routing); alongside it: `dac-selection.md`, `pin-allocation.md`,
+  `power-supply.md`, `power-supply-netlist.md`, and the MCU KiCad symbol.
+  Read the plan before any work on the board bring-up / schematic / layout.
 - `docs/coding_standards.md` — C++ **and Faust** style (1TBS, 2-space, snake_case,
   vertical rhythm). The vertical-rhythm rules apply to `.dsp` too — multi-line
   paragraph comments heading a definition/constant block get a blank line beneath.

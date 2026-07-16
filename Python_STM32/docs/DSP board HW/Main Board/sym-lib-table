@@ -1,0 +1,7 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "Device_Audio_Electrosmith_Daisy_Seed") (type "KiCad") (uri "/Users/andy/Documents/KiCad/Libraries/symbols/Device_Audio_Electrosmith_Daisy_Seed.kicad_sym") (options "") (descr ""))
+	(lib (name "MCP73832T-4ADI_OT") (type "KiCad") (uri "/Users/andy/Downloads/MCP73832T-4ADI_OT/MCP73832T-4ADI_OT.kicad_sym") (options "") (descr ""))
+	(lib (name "XLV320ADC5140") (type "KiCad") (uri "/Users/andy/Documents/KiCad/Libraries/symbols/XLV320ADC5140.kicad_sym") (options "") (descr ""))
+	(lib (name "TPS63020") (type "KiCad") (uri "/Users/andy/Documents/KiCad/Libraries/symbols/TPS63020.kicad_sym") (options "") (descr ""))
+)
