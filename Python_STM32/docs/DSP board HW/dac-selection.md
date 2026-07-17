@@ -1,13 +1,13 @@
 # DAC Selection & Output Stage — Multichannel Audio Board
 
 **Status:** In discussion (rev 2, clean-slate survey) — **leaning PCM5102A**, with PCM5100A as the cost-down and WM8524 as the alternate. Supersedes the rev-1 discussion that leaned ES9023P; that lean rested on two datasheet errors (see §7). Resolves Phase 0 item 3 of `multichannel-audio-board-plan.md` once open items close.
-**Scope:** the stereo playback DAC on **SAI1 block B** (I2S TX) and its analog output stage down to the offboard jack.
+**Scope:** the stereo playback DAC on **I2S1** (SPI1 in I2S master-TX mode) and its analog output stage down to the offboard jack.
 
 ---
 
 ## 1. Requirements
 
-- Stereo I2S DAC, slave-clocked from **SAI1_B** (BCLK + LRCLK; MCLK available on PF7 if a part needs it, but fewer clocks routed is better), sample-rate-locked to the SAI1_A codec capture (`pin-allocation.md` §1).
+- Stereo I2S DAC, slave-clocked from **I2S1** (BCLK + LRCLK only; no MCLK is routed — and none is available without cost, since I2S1_MCK shares PC4 with `BATT_SENSE`), sample-rate-locked to the SAI4_B codec capture via the shared PLL3 kernel clock (`pin-allocation.md` §1).
 - **Space-constrained** board → minimize external parts. No external buffer op-amp if avoidable.
 - **Battery / single 3.3 V supply** — no 5 V or boost rail.
 - Output goes **offboard through a 10 kΩ audio-taper pot with integrated on/off switch** to an instrument input. The pot sits at the DAC/output-stage output.
@@ -48,9 +48,9 @@ So the target category is: **strap-configured stereo DAC with integrated charge 
 
 ## 4. Why PCM5102A
 
-- **Only category member with no MCLK at all**: SCK tied low → internal PLL runs from BCK. Three wires from SAI1_B, PF7 stays DNP, no 12 MHz clock trace near the analog section.
+- **Only category member with no MCLK at all**: SCK tied low → internal PLL runs from BCK. Three wires from I2S1, no MCLK trace near the analog section — and on this MCU an MCLK-requiring part would cost the battery-sense pin (I2S1_MCK = PC4).
 - **1 kΩ min load** → the L-pad can sit at Rs = 1.2 k / Rsh = 62 Ω → **~59 Ω source feeding the pot** (rev 1's ES9023 could not do better than ~250–330 Ω within its load spec).
-- Ground-centered charge-pump output → fully DC-coupled chain, no caps, no thump mechanism; **XSMT** soft-mute pin for controlled ramp (GPIO PD15, or RC delay).
+- Ground-centered charge-pump output → fully DC-coupled chain, no caps, no thump mechanism; **XSMT** soft-mute pin for controlled ramp (GPIO PC9, net `DAC_XSMT`, or RC delay).
 - Strap-configured, deep TI documentation, RPi-ecosystem-proven no-MCLK operation.
 - Good LCSC stock at ~$1; **PCM5100A is pin-identical on the same footprint** — 100 dB SNR is still ~30 dB more than a bass rig can use at 0.1 V, so the footprint carries a built-in cost-down (and 5101A/5102A upgrade) option with zero layout risk.
 
@@ -79,13 +79,13 @@ Four 0402 resistors total (2/channel). TI's recommended RC output filter (470 Ω
 
 ## 6. Board / pin integration
 
-- **I2S:** SAI1_B — BCLK=PF8, LRCLK/WS=PF9, DIN=PF6 (AF6). **PF7 (MCLK): DNP.** PCM5102A SCK pin strapped to DGND.
-- **XSMT (soft-mute):** drive from reserved GPIO **PD15** — hold low until rails/clocks stable, release to un-mute. The pot-switch topology already covers worst-case thump (power toggles at pot minimum), so this is belt-and-suspenders.
+- **I2S:** I2S1 — BCLK=PA5 (`I2S1_CK`), LRCLK/WS=PA4 (`I2S1_WS`), DIN=PA7 (`I2S1_SDO`), all AF5. **No MCLK routed.** PCM5102A SCK pin strapped to DGND.
+- **XSMT (soft-mute):** drive from GPIO **PC9** (net `DAC_XSMT`) — hold low until rails/clocks stable, release to un-mute. The pot-switch topology already covers worst-case thump (power toggles at pot minimum), so this is belt-and-suspenders.
 - **Straps:** FLT, DEMP, FMT per datasheet defaults (normal latency, no de-emphasis, I2S).
 - **Not on I2C** — I2C1 remains the two ADC5140s only.
 - **Analog supply:** AVCC/CPVDD from the shared low-noise analog LDO (same rail family as ADC5140 AVDD); charge-pump caps local to the DAC.
 
-No new MCU pins beyond what `pin-allocation.md` already reserves; PF7 is freed.
+No new MCU pins beyond what `pin-allocation.md` already allocates.
 
 ### PCM5102A pin-by-pin (TSSOP-20, per datasheet SLAS859C pin table + Fig. 33)
 
@@ -103,16 +103,16 @@ No new MCU pins beyond what `pin-allocation.md` already reserves; PF7 is freed.
 | 10 | DEMP | GND (de-emphasis off) |
 | 11 | FLT | GND (normal-latency filter) |
 | 12 | SCK | GND (selects BCK-PLL / no-MCLK mode) |
-| 13 | BCK | MCU PF8 (SAI1_SCK_B) |
-| 14 | DIN | MCU PF6 (SAI1_SD_B) |
-| 15 | LRCK | MCU PF9 (SAI1_FS_B) |
+| 13 | BCK | MCU PA5 (`I2S1_CK`) |
+| 14 | DIN | MCU PA7 (`I2S1_SDO`) |
+| 15 | LRCK | MCU PA4 (`I2S1_WS`) |
 | 16 | FMT | GND (I2S) |
-| 17 | XSMT | MCU PD15 (low = soft-mute; would tie to AVDD if unused) |
+| 17 | XSMT | MCU PC9, net `DAC_XSMT` (low = soft-mute; would tie to AVDD if unused) |
 | 18 | LDOO | 0.1 µF to GND — internal 1.8 V LDO output, **no supply connection** (external 1.8 V only if bypassing the LDO; not done here) |
 | 19 | DGND | GND |
 | 20 | DVDD | 3.3 V **digital** rail — 0.1 µF to GND at pin; bulk folds into the digital rail's existing 10 µF nearby (internal LDO derives the 1.8 V core from DVDD; keeps digital current off the analog LDO) |
 
-Notes: **single GND net board-wide** — no AGND/DGND nets in the schematic (TI: one common ground plane, no split; same for the ADC5140s, whose AVSS and thermal pad both go "directly to the board ground plane"). Zoning is by placement and the 3V3A net, not by ground nets. Assumes the 6-layer stackup (solid GND on L2): every cap and ground pin takes its own via(s) tight to its pads; the plane closes all loops underneath. Decoupling-cap ordering on CPVDD/AVDD: pin → cap tap → via to 3V3A, so the cap junctions the trace and the rail via hangs beyond it (trace inductance to the rail is free filtering). Cap set: 4× 0.1 µF at pins (CPVDD, AVDD, DVDD, LDOO), 2× 2.2 µF charge pump (flying + VNEG) on L1 at the chip, 1× shared 10 µF on the 3V3A pour near the DAC (CPVDD side); DVDD bulk shared with the digital rail. Charge-pump caps (2, 4, 5) closest to the device. Free bonus from the auto power modes: BCK+LRCK held low >1 s → full power-down (~0.2 mA), and restart is automatic when SAI clocks resume — firmware gets DAC power management just by stopping/starting SAI1_B.
+Notes: **single GND net board-wide** — no AGND/DGND nets in the schematic (TI: one common ground plane, no split; same for the ADC5140s, whose AVSS and thermal pad both go "directly to the board ground plane"). Zoning is by placement and the 3V3A net, not by ground nets. Assumes the 6-layer stackup (solid GND on L2): every cap and ground pin takes its own via(s) tight to its pads; the plane closes all loops underneath. Decoupling-cap ordering on CPVDD/AVDD: pin → cap tap → via to 3V3A, so the cap junctions the trace and the rail via hangs beyond it (trace inductance to the rail is free filtering). Cap set: 4× 0.1 µF at pins (CPVDD, AVDD, DVDD, LDOO), 2× 2.2 µF charge pump (flying + VNEG) on L1 at the chip, 1× shared 10 µF on the 3V3A pour near the DAC (CPVDD side); DVDD bulk shared with the digital rail. Charge-pump caps (2, 4, 5) closest to the device. Free bonus from the auto power modes: BCK+LRCK held low >1 s → full power-down (~0.2 mA), and restart is automatic when the I2S clocks resume — firmware gets DAC power management just by stopping/starting I2S1.
 
 ---
 
@@ -143,4 +143,4 @@ Notes: **single GND net board-wide** — no AGND/DGND nets in the schematic (TI:
 - ES9023 datasheet v0.72 (ESS) — https://www.esstech.com/wp-content/uploads/2022/09/ES9023-Datasheet-v0.72.pdf — MCLK modes p.4, RL min 5 kΩ p.10
 - diyAudio: "ES9023: Lowest possible output using R8?" — https://www.diyaudio.com/community/threads/es9023-lowest-possible-output-using-r8.389217/ — bench-measured collapse below ~1.15–1.35 Vrms
 
-*Rev 2 captured 2026-07-13 from the clean-slate survey. Decision not yet locked — see §8.*
+*Decision not yet locked — see §8.*

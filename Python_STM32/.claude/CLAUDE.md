@@ -33,7 +33,8 @@ for the STM32H750. Cross-project C++/Python conventions live in the AudioDev-roo
   running the AudioDev ecosystem. `multichannel-audio-board-plan.md` is the master
   plan, with explicit **"Review gate (Claude)"** checkpoints (netlist, placement,
   routing); alongside it: `dac-selection.md`, `pin-allocation.md`,
-  `power-supply.md`, `power-supply-netlist.md`, and the MCU KiCad symbol.
+  `adc-netlist.md`, `power-supply.md`, `power-supply-netlist.md`, and the MCU KiCad symbol.
+  MCU: STM32H725RGV6 (VFQFPN68) — SAI4_B TDM capture + I2S1 DAC out, 400 MHz SMPS-direct.
   Read the plan before any work on the board bring-up / schematic / layout.
 - `docs/coding_standards.md` — C++ **and Faust** style (1TBS, 2-space, snake_case,
   vertical rhythm). The vertical-rhythm rules apply to `.dsp` too — multi-line

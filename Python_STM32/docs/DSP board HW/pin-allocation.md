@@ -1,158 +1,127 @@
-# Pin Allocation — STM32H725ZGT6 (LQFP-144)
+# Pin Allocation — STM32H725RGV6 (VFQFPN68)
 
-**Status:** Proposed (Phase 0 → Phase 2 input). Feeds the schematic symbol pin assignment and the netlist review gate.
-**Target MCU:** STM32H725ZGT6, LQFP-144, per `power-supply.md` §4 (amended from H723ZGT6).
-**Sibling:** H735ZGT6 (+crypto) is expected pin-identical (both SMPS variants) — verify before relying on it. **Note:** the H723/H733 (LDO-only) are **not** pin-compatible in LQFP-144 — see the banner.
+**Status:** As-built (schematic entered; netlist review gate items marked ⚠).
+**Target MCU:** STM32H725RGV6 — VFQFPN68, 8×8 mm, 0.4 mm pitch, exposed pad = VSS. 46 GPIO. JLCPCB [C5271073](https://jlcpcb.com/partdetail/STMicroelectronics-STM32H725RGV6/C5271073) (~$10–12; low stock — 10 pcs secured; DigiKey/ST eStore fallback). **Sibling:** H735RGV6 (+crypto) if ever needed.
 
-> ⚠️ **MCU amended to STM32H725ZGT6 (2026-07-13, see `power-supply.md` §4).** The H723 and
-> H725 are **NOT pin-compatible in LQFP-144** — verified pad-by-pad against the KiCad
-> `STM32H723ZGTx` vs `STM32H725ZGTx` symbols (2026-07-13):
-> - The **peripheral/AF allocation carries over by *name*** — every signal used in §2/§4
->   (PE4/5/6, PF6/7/8/9, PB8/9/13/14, PD8/9/10/14/15, PA8/11/12/13/14, PC4, PB3, PH0/1,
->   PE1/7/8) exists on both parts, so the logical plan is unchanged.
-> - But **pin *numbers* shift on ~138 of 144 pads.** The H725 bonds out `VSSSMPS`/`VLXSMPS`/
->   `VDDSMPS`/`VFBSMPS` (pins 14–17) + three `VDDLDO` + `VDD50USB`, renumbering everything
->   after them (e.g. PC4 44→47, VBAT 6→8, VREF+ 32→35, PDR_ON 143→142).
-> - **15 GPIOs do not exist on the H725:** PF0–PF5, PF12, PF13, PG0–PG5, PG15 (consumed by the
->   new power pins). None were allocated, but they're gone from the headroom (§5).
-> - **Schematic impact:** swapping the symbol H723ZGTx→H725ZGTx preserves net *intent* but
->   moves every pin — reconnect the symbol, and add the new MCU power section (SMPS inductor,
->   VDDLDO ×3, VDD50USB, 3rd VCAP). Power map redone in §7 below.
+**Package consequences (drive the whole allocation):**
 
-**Source of truth for pin/AF mappings:** SAI block/AF names cross-checked against the CubeMX-derived `PeripheralPins.c` for the `H723Z(E-G)T` (LQFP-144) variant in STM32duino for I2C / USART / ADC / USB (AF names are identical on the H725), and the STM32H72x datasheets (DS13313 for H723, **DS13311 for H725**). **The power-pin map (§7) and all pin *numbers* are taken from the KiCad `MCU_ST_STM32H7:STM32H725ZGTx` symbol** — do not use the H723 numbers, the parts are not pin-compatible (banner).
+- Bonded GPIO: **all of Port A, Port B minus PB11, Port C = PC0/1/4/5/6/7/9/10/11/12/14/15, PD2, PH0/PH1.** Ports D (except PD2), E, F, G do not exist.
+- **SAI1 has no pins on this package** — CubeMX lists only **SAI4** as an available SAI, and SAI4 block A has no SCK/FS pins here, so **SAI4_B is the only peripheral that can master the 8-slot TDM bus**. The DAC therefore rides an SPI-I2S peripheral (I2S1). See §1.
+- **SMPS-direct is the only core supply mode** (VDDLDO bonded internally; ST-confirmed) → **400 MHz hard ceiling**, no board-level recovery to 550 MHz. Plan of record was already 400 MHz for power (`power-supply.md` §4); the ceiling makes the DSP-headroom analysis and YIN burst rework load-bearing. Exit if they fail: respin to LQFP-144 H725ZGT6 with SMPS→LDO cascade.
+- **No VREF+ pin** (internal to VDDA → `MCU_VDDA` is the ADC reference), no PDR_ON, no VDD33USB/VDD50USB. Simplifies the power section (§7).
 
-> ⚠️ Package / part notes:
-> - **Port I is not bonded out on LQFP-144** — ignore any Port-I "default" pins from generic H7 references.
-> - **The H723 has no SAI2/SAI3.** Its full serial-audio blocks are **SAI1** and **SAI4** (plus SPI-based I2S1/2/3). Both audio streams here use the two sub-blocks of **SAI1** (A = codec RX, B = DAC TX).
+**Sources of truth:** pad-by-pad pinout cross-checked between the KiCad `MCU_ST_STM32H7:STM32H725RGVx` symbol and the CubeMX `STM32H725RGVx.xml` (ST open pin data — identical); AFs from the CubeMX-derived stm32duino `H725R(E-G)V_H735RGV` `PeripheralPins.c` and Zephyr `stm32h725rgvx-pinctrl.dtsi` (two independent derivations, agreeing). ⚠ spot-check the six audio-pin AFs against DS13311 Table 8 at the netlist gate.
 
 ---
 
-## 1. Audio topology (matches Phase 0 clocking scheme)
+## 1. Audio topology (clocking scheme — resolved)
 
-Two sub-blocks of **one SAI (SAI1)**, both **masters**, both fed from the **same SAI1 kernel clock (PLL3)**, each dividing down to its own bit clock — so both frame-syncs are locked to 48 kHz off a common source:
+Capture and playback are **frequency-locked by construction**: both peripherals' kernel-clock muxes select **PLL3_P** (RCC `D3CCIPR.SAI4BSEL`, `D2CCIP1R.SPI123SEL` — both offer pll3_p). HSE = **24.576 MHz** (Y1) → PLL3 integer-N (e.g. VCO 393.216 MHz, PLL3_P = 49.152 MHz).
 
-| Bus | SAI | Role | Bit clock | Notes |
+| Bus | Peripheral | Role | Bit clock | Notes |
 |---|---|---|---|---|
-| Codec capture | **SAI1_A** | Master, TDM **receiver** | ~12.288 MHz (8 slots × 32 bit × 48 kHz) | Generates BCLK + FSYNC to both ADC5140s; single shared serial-data input (both codecs on one DOUT bus, per-device slot assignment). No MCLK distributed — codecs derive internal clocks from BCLK via their on-chip PLL. |
-| DAC playback | **SAI1_B** | Master, I2S **transmitter** | ~3.072 MHz (2 ch × 32 bit × 48 kHz) | Generates BCLK + LRCLK to the PCM5102A. **No MCLK** — DAC's internal PLL runs from BCLK (SCK pin strapped low); PF7 stays DNP. |
+| Codec capture | **SAI4_B** | Master, TDM **receiver** | 12.288 MHz (8 slots × 32 bit × 48 kHz) | Generates BCLK + FSYNC to both ADC5140s; single shared serial-data input (both codecs on one bus, per-device slot assignment). No MCLK distributed — codecs derive internal clocks from BCLK via their on-chip PLL. |
+| DAC playback | **I2S1** (SPI1, I2S master TX) | Master, I2S **transmitter** | 3.072 MHz (2 ch × 32 bit × 48 kHz; I2SDIV = 16 from 49.152 MHz) | Generates BCK + LRCK to the PCM5102A. **No MCLK** — DAC's internal PLL runs from BCK (SCK pin strapped low). |
 
-> **Note (STM32H723):** this part has **no SAI2** — its full serial-audio blocks are **SAI1** and **SAI4** (plus SPI-based I2S1/2/3). The DAC uses **SAI1 block B**, the second sub-block of the same peripheral that runs the codec capture on block A — not a separate SAI. The two sub-blocks are independent masters sharing one SAI1 kernel clock (PLL3): block A ÷ to 12.288 MHz, block B ÷ to 3.072 MHz, both frame-syncs at exactly 48 kHz from the common source, so the capture and playback sample rates are **frequency-locked by construction** (no drift, nothing to coordinate across clock trees). This is the standard full-duplex SAI configuration (block A in, block B out), stays in the D2 domain on DMA1/2, and reuses one driver for both directions. SAI4 (PD11/12/13/PE0, D3 domain, BDMA+SRAM4) and I2S2/SPI2 (PB12/13) were the alternatives — rejected as higher-risk for the clock-sync requirement.
+**Why two different peripherals:** SAI4_B is the only sub-block with clock pins on this package, and one sub-block provides one master bit clock — the two streams need different rates (12.288 vs 3.072 MHz), so the DAC uses I2S1. SAI4 block A (SD_A on **PB2**, AF8) remains available as an internal-synchronous slave sharing block B's 12.288 MHz TDM clock — a future TDM-playback option, no clock pins needed.
+
+**Firmware note — SAI4 is D3-domain:** capture DMA via **BDMA**, buffers in **SRAM4** (16 KB; 8 ch × 48 samples × 4 B double-buffered ≈ 3 KB/ms-block — comfortable). D-cache coherency for that region handled in the platform layer. The DAC side (I2S1, D2 domain) uses regular DMA. ⚠ verify SAI4_B master-receiver TDM config + BDMA request routing against RM0468 at firmware bring-up.
 
 ---
 
 ## 2. Primary peripheral allocation
 
-| Function | Signal | Pin | AF | Direction | Connects to |
-|---|---|---|---|---|---|
-| **SAI1 (codec TDM RX)** | SAI1_FS_A | **PE4** | AF6 | out | ADC5140 ×2 — FSYNC |
-| | SAI1_SCK_A | **PE5** | AF6 | out | ADC5140 ×2 — BCLK |
-| | SAI1_SD_A | **PE6** | AF6 | in | ADC5140 ×2 — shared DOUT bus |
-| | SAI1_MCLK_A *(reserve)* | PE2 | AF6 | out | test point / DNP — no MCLK in baseline scheme |
-| **SAI1_B (DAC I2S TX)** | SAI1_SCK_B | **PF8** | AF6 | out | PCM5102A — BCK |
-| | SAI1_FS_B | **PF9** | AF6 | out | PCM5102A — LRCK |
-| | SAI1_SD_B | **PF6** | AF6 | out | PCM5102A — DIN |
-| | SAI1_MCLK_B | PF7 | AF6 | out | **DNP / test point** — PCM5102A needs no MCLK (SCK strapped to DGND) |
-| **I2C1 (control)** | I2C1_SCL | **PB8** | AF4 | OD | ADC5140 ×2 — 2.2–4.7 kΩ pull-ups to 3V3 (DAC not on I2C: PCM5102A is strap-configured — see `dac-selection.md`) |
-| | I2C1_SDA | **PB9** | AF4 | OD | " |
-| **USART3 (BT — reserved)** | USART3_TX | **PD8** | AF7 | out | BT module RX |
-| | USART3_RX | **PD9** | AF7 | in | BT module TX |
-| | USART3_RTS | **PB14** | AF7 | out | BT module CTS (HW flow control) |
-| | USART3_CTS | **PB13** | AF7 | in | BT module RTS |
-| **USB_OTG_FS (reserve)** | OTG_FS_DM | **PA11** | AF10 | bidir | USB-C D− (data reserved; charge-only baseline) |
-| | OTG_FS_DP | **PA12** | AF10 | bidir | USB-C D+ |
-| **Battery sense** | ADC1_INP4 | **PC4** | analog | in | battery voltage divider (`BATT_SENSE` net) |
-| **Control pot 1** | ADC1_INP11 | **PC1** | analog | in | net `Pot2` — RV1 wiper (pot: `3V3_A` ↔ GND) |
-| **Control pot 2** | ADC1_INP8 | **PC5** | analog | in | net `Pot3` — RV2 wiper (pot: `3V3_A` ↔ GND) |
-| *(spare pot input)* | ADC1_INP10 | **PC0** | analog | in | reserved — net `Pot1` label present on the MCU sheet, nothing attached (was "control pot 1" before the 2026-07-15 two-pot amendment, §6 item 6) |
-| **Clock verify** | MCO1 | **PA8** | AF0 | out | test point (HSE/PLL health) |
+| Function | Signal / net | Pin | Pad | AF | Direction | Connects to |
+|---|---|---|---|---|---|---|
+| **SAI4_B (codec TDM RX)** | `SAI4_FS_B` | **PC0** | 13 | AF8 | out | ADC5140 ×2 — FSYNC |
+| | `SAI4_SCK_B` | **PA2** | 19 | AF8 | out | ADC5140 ×2 — BCLK |
+| | `SAI4_SD_B` | **PA0** | 17 | AF10 | in | ADC5140 ×2 — shared SDOUT bus |
+| | SAI4_MCLK_B *(reserve)* | PA1 | 18 | AF10 | out | test point / DNP — no MCLK in the clocking scheme |
+| **I2S1 (DAC TX)** | `I2S1_CK` | **PA5** | 24 | AF5 | out | PCM5102A — BCK |
+| | `I2S1_WS` | **PA4** | 23 | AF5 | out | PCM5102A — LRCK |
+| | `I2S1_SDO` | **PA7** | 26 | AF5 | out | PCM5102A — DIN |
+| | *(no MCLK reserve)* | — | — | — | — | I2S1_MCK = PC4 collides with `BATT_SENSE`; DAC needs none |
+| **I2C1 (control)** | `I2C1_SCL` | **PB8** | 64 | AF4 | OD | ADC5140 ×2 — R2 pull-up to `3V45_D` ⚠ value unset (2.2–4.7 kΩ). DAC not on I2C (strap-configured, `dac-selection.md`) |
+| | `I2C1_SDA` | **PB9** | 65 | AF4 | OD | " (R1 pull-up) |
+| **USART3 (BT — reserved)** | `USART3_TX` | **PC10** | 54 | AF7 | out | BT module RX |
+| | `USART3_RX` | **PC11** | 55 | AF7 | in | BT module TX |
+| | `USART3_RTS` | **PB14** | 38 | AF7 | out | BT module CTS (HW flow control) |
+| | `USART3_CTS` | **PB13** | 37 | AF7 | in | BT module RTS |
+| **USB (reserve)** | `OTG_FS_DM` | **PA11** | 46 | — | bidir | USB data reserved; charge is via jack ring, no USB connector on spin 1 (this part's OTG_HS in FS-PHY mode) |
+| | `OTG_FS_DP` | **PA12** | 47 | — | bidir | " |
+| **Battery sense** | `BATT_SENSE` = ADC1_INP4 | **PC4** | 27 | analog | in | battery voltage divider |
+| **Control pot 1** | `Pot2` = ADC1_INP11 | **PC1** | 14 | analog | in | RV1 wiper (pot: `3V3_A` ↔ GND, ratiometric vs VDDA) |
+| **Control pot 2** | `Pot3` = ADC1_INP8 | **PC5** | 28 | analog | in | RV2 wiper |
+| **Clock verify** | MCO1 | **PA8** | 43 | AF0 | out | test point (HSE/PLL health) |
+
+Pots are **PCB-mounted** (they mechanically support the board; knobs go right-angle through the panel), so wiper runs are short traces. Wiper RC filters judged unnecessary — firmware uses a long ADC sampling time (10 k pot ≈ 2.5 kΩ worst-case source) plus normal control-value smoothing; an optional 100 nF at each wiper is the only candidate if bench noise ever suggests it. The third panel pot is **RV3, the volume pot** (chassis-style but PCB-mounted, integrated switch = hard battery-line switch `bat+`→`VBAT`) — not an MCU input.
 
 ---
 
-## 3. Fixed-function pins (no mux choice — reserve on symbol)
+## 3. Fixed-function pins
 
-| Function | Pin(s) | Notes |
-|---|---|---|
-| SWD debug | **PA13** (SWDIO), **PA14** (SWCLK) | 10-pin Cortex header for J-Link |
-| SWO (optional trace) | **PB3** | Reserve as test point; RTT is the baseline, SWO is a bonus |
-| HSE crystal | **PH0** (OSC_IN), **PH1** (OSC_OUT) | Keep loop tight; source of PLL3 SAI clock |
-| Boot | **BOOT0** (dedicated pin) | 10 kΩ pull-down strap; SWD-only programming |
-| Reset | **NRST** | 100 nF + optional header |
-| Core supply | **VCAP ×3** + **V*SMPS** + **VDDLDO ×3** (see §7) | H725 SMPS-direct: cap/strap treatment per AN5419 / **Nucleo-H725** (not H723ZG — supply mode differs) |
-| Analog ref | **VREF+** (pin 35 on H725) | **no VREF− pin** — bonded internally to VSSA. Tie VREF+ per Nucleo crib (to VDDA or a reference) |
-| Power | see §7 power-pin map | full decoupling per Nucleo crib |
+| Function | Pin(s) | Pad | As-built |
+|---|---|---|---|
+| SWD debug | **PA13** (`SWDIO`), **PA14** (`SWCLK`) | 48, 52 | **J5**: 2×5 1.27 mm ARM Cortex Debug header — 1 VTref=`3V45_D`, 2 SWDIO, 4 SWCLK, 6 SWO, 10 NRST, 3/5/9 GND, 7 KEY, 8 NC |
+| SWO | **PB3** (`SWO`) | 58 | wired to J5 pin 6; RTT is the logging baseline, SWO a bonus |
+| HSE crystal | **PH0/PH1** | 10, 11 | **Y1 = 24.576 MHz** + C93/C94 load caps (15 pF placeholder — ⚠ set to 2×(CL−C_stray) for the chosen part; if a 3225 4-pad crystal, pads 2/4 = GND in the footprint) |
+| Boot | **BOOT0** | 63 | R14 10 kΩ pull-down; SWD-only programming |
+| Reset | **NRST** | 12 | C2 100 nF to GND + J5 pin 10 (⚠ MCU-sheet net needs its global `NRST` label restored to reach J5) |
+| Analog ref | VDDA | 16 | `MCU_VDDA` = `3V3_A` via FB1; **VREF+ is internal to VDDA on this package** — no pin, no strap |
+| Power | see §7 | | |
 
 ---
 
-## 4. Control / housekeeping GPIO (reserve; final port pick at schematic)
+## 4. Control / housekeeping GPIO (as-built)
 
-| Function | Suggested pin | Notes |
-|---|---|---|
-| Codec SHDNZ / reset (shared) — net `CODEC_SHDNZ` | **PD10** | drives both ADC5140 SHDNZ (net `CODEC_SHDNZ`, per schematic + `adc-netlist.md`); add per-codec split only if bring-up needs it |
-| Codec spare reset / 2nd line | **PD14** | keep free for independent codec control |
-| DAC soft-mute (PCM5102A **XSMT**) | **PD15** | hold **low** through power-up until rails + BCLK stable, drive high to un-mute (ramped) — see `dac-selection.md` §6 |
-| BT module reset / enable | **PE7** | matches chosen module's control pin |
-| BT status / wake | **PE8** | LP/host-wake if module provides it |
-| Status LED | **PE1** | debug heartbeat |
+| Function | Pin | Pad | As-built |
+|---|---|---|---|
+| Codec SHDNZ (shared) — `CODEC_SHDNZ` | **PC6** | 40 | drives both ADC5140 SHDNZ; R18 10 kΩ pull-down holds reset until MCU drives |
+| Codec spare reset / 2nd line | **PC7** | 41 | reserved (unwired) — split only if bring-up needs it |
+| DAC soft-mute — `DAC_XSMT` | **PC9** | 42 | PCM5102A XSMT: hold **low** through power-up until rails + BCK stable (`dac-selection.md` §6) |
+| BT module reset/enable — `BT1` | **PB12** | 36 | reserved (label only, spin 2) |
+| BT status/wake — `BT2` | **PB15** | 39 | reserved (label only, spin 2) |
+| Status LED — `LED` | **PD2** | 57 | PD2 → D1 anode, cathode → R15 → GND (active-high, off during reset by Hi-Z default) ⚠ R15 value unset — 1 kΩ ≈ 1.5 mA |
 
-ADC5140 I2C addresses are set by hardware **ADDR** strap resistors (not GPIO) — the two codecs must strap to distinct addresses; verify at the netlist review gate.
+ADC5140 I2C addresses are set by hardware ADDR straps: U3 = GND/GND, U4 = IOVDD/GND. ⚠ confirm against the SBAS892A strap→address table at the gate (`adc-netlist.md` §6).
 
 ---
 
 ## 5. Utilization
 
-~28 of **~99** available GPIO used (H725 LQFP-144 — the H725 has ~15 fewer GPIO than the H723; see below). Still generous headroom for spin-2 additions. Freed by the SAI1_B move: **PD11/PD12/PD13/PE0** (the former mis-labeled SAI2 pins) are available, as is SAI4 entirely.
-
-> ⚠️ **Headroom reduced by the H725 swap.** The H725 does **not** bond out **PF0–PF5, PF12, PF13, PG0–PG5, PG15** (15 GPIO consumed by the SMPS/VDDLDO pins). None are allocated, but the earlier "most of ports F and G remain free" no longer holds. Surviving Port F = PF6–PF11, PF14, PF15; surviving Port G = PG6–PG14. Confirm any spin-2 pin pick exists on the H725 (§7 / the `STM32H725ZGTx` symbol), not the H723.
+**29 of 46 GPIO used.** Free: PA1 (MCLK reserve/TP), PA3, PA6, PA9, PA10, PA15, PB0, PB1, PB2 (SAI4_SD_A option), PB4, PB5, PB6, PB7, PB10, PC12, PC14/PC15 (LSE pair — usable as GPIO, no 32 kHz crystal planned). Headroom is real but thin vs the LQFP — check any spin-2 pin pick against this list and the package pinout (ports D/E/F/G largely don't exist).
 
 ---
 
-## 6. Open items to resolve before finalizing the symbol
+## 6. Open items (netlist-gate checklist)
 
-1. ~~**DAC MCLK.**~~ **Resolved 2026-07-13:** DAC decided = **PCM5102A** (`dac-selection.md` rev 2). PF7 = DNP/test point; DAC not on I2C. DAC-side straps for the schematic: **SCK→DGND** (enables internal PLL / no-MCLK mode), **FMT→GND** (I2S), **DEMP→GND**, **FLT→GND** (normal latency), **XSMT→PD15**.
-2. **BT module.** UART3 + RTS/CTS is reserved; confirm the chosen module actually uses HW flow control and whether it needs the reset/wake GPIOs above (Phase 0 item 5).
-3. **USB.** Baseline is charge-only, so PA11/PA12 are reserved but need not route to the connector's data pair on spin 1. Decide whether to route them anyway (near-zero cost, keeps the door open).
-4. **Battery-sense pin vs. layout.** PC4/ADC1_INP4 chosen arbitrarily among free ADC1 inputs — pick the one nearest the power section at placement to keep the divider trace short.
-5. **Cross-check at netlist review gate:** SAI pin-mux validity (done here), I2C address straps, codec DOUT bus-hold/pull, BCLK/FSYNC test points, decoupling counts.
-6. **Control pots (amended 2026-07-15, later the same day: three → two).** **Two** MCU-read panel pots (RV1 → net `Pot2` → PC1, RV2 → net `Pot3` → PC5), each wiped between `3V3_A` and GND — `3V3_A` because VREF+ ties to VDDA_MCU = `3V3_A` (through FB1), making the reading ratiometric; fed from *before* the ferrite so wiper current/noise stays off the reference net. Suggested: 10 kΩ linear (~330 µA each), wiper → ~1 kΩ series → 100 nF to GND at the MCU pin (LPF + S/H charge reservoir; use a long ADC sampling time) — **RC not yet entered in the schematic**. The **third pot is not an MCU input**: it is the volume pot (RV3, chassis) on the DAC output path, and it carries the integrated on/off switch — now a **hard battery-line switch** (`bat+` → switch → `VBAT`), not an EN signal; see `power-supply-netlist.md` §2. PC0 = ADC1_INP10 is a free spare (a `Pot1` label sits unattached on the MCU sheet). Channel numbers **verified 2026-07-15** against the CubeMX-derived `PeripheralPins.c` for the `H725Z(E-G)T` variant: PC0 = ADC1_INP10, PC1 = ADC1_INP11, PC5 = ADC1_INP8. **PC2 was rejected** — on the H72x it exists only as PC2_C = ADC3_INP0 (no ADC1/2 path; the ADC123_INP12 mapping is an H74x-ism), and ADC3 lives in the D3 domain.
+1. ⚠ **Crystal load caps** — C93/C94 = 15 pF placeholder; finalize against the chosen 24.576 MHz part's CL (2×(CL−C_stray)); footprint choice for 2-pad vs 4-pad crystal.
+2. ⚠ **DS13311 AF spot-check** for the six audio pins (machine-derived AFs above; two sources agree).
+3. ⚠ **I2C pull-up values** (R1/R2) and **ADDR strap values** — parts placed, values unset.
+4. ⚠ **R15 (LED) value** — suggest 1 kΩ.
+5. ⚠ **NRST label** on the MCU sheet so J5 pin 10 actually reaches the reset pin.
+6. **USB routing** — PA11/PA12 reserved; decide whether to route to any pads on spin 1 (near-zero cost; no connector planned). If USB data is ever activated, ⚠ verify how the transceiver is supplied on VFQFPN68 (no VDD33USB/VDD50USB pins — DS13311).
+7. **BT module** — confirm the chosen module uses HW flow control and matches the PB12/PB15 control lines (Phase 0 item 5).
+8. **SDOUT bus pull-down** — 100 kΩ DNP on `SAI4_SD_B` (populate only if bench shows float; `adc-netlist.md` §5).
+9. **Test points** — power: GND ×2–3, `3V45_D`, `3V3_A`, VCORE (any VCAP), `MCU_VDDA`, `bat+`/`VBAT`; clocks: MCO1, `SAI4_SCK_B`, `SAI4_FS_B`, `I2S1_CK`, `I2S1_WS`; data/control: `SAI4_SD_B`, `I2S1_SDO`, `CODEC_SHDNZ`, `DAC_XSMT`; analog: MICBIAS ×2, DAC OUTL post-pad; reserve pad on PA1.
 
 ---
 
-## 7. Power / ground pin map (verified from the KiCad `STM32H725ZGTx` symbol)
+## 7. Power / ground pin map (as-built)
 
-**Redone for the H725 (2026-07-13).** Pin numbers below are the H725 pinout and **differ from the H723** — see the banner at the top. Verified pad-by-pad from the KiCad `MCU_ST_STM32H7:STM32H725ZGTx` symbol; ⚠ still cross-check the SMPS / VDDLDO / VCAP treatment against **DS13311 + AN5419 + the Nucleo-H725 reference** before the netlist gate — the correct wiring is supply-mode-dependent (SMPS-direct here).
-
-| Net | Pins | Count | Notes |
+| Net | Pads | Count | As-built |
 |---|---|---|---|
-| VDD (3V3 digital) | 7, 13, 19, 32, 42, 56, 71, 79, 92, 106, 119, 129, 144 | 13 | decouple each (0.1 µF/pin + bulk) |
-| VDDLDO | 70, 105, 143 | 3 | **new on H725** — core-LDO input; in SMPS-direct mode tie per AN5419 (typically to VDD) ⚠ |
-| VDDSMPS | 16 | 1 | **new** — core-SMPS input, from `3V45_D` + local decoupling |
-| VLXSMPS | 15 | 1 | **new** — SMPS inductor node → 2.2 µH → VFBSMPS (keep loop tight) |
-| VFBSMPS | 17 | 1 | **new** — SMPS output/feedback; 4.7 µF to GND at pin ⚠ |
-| VSSSMPS | 14 | 1 | **new** — SMPS ground |
-| VCAP | 68, 103, 140 | 3 | **3 on H725 (was 2)** — cap value/treatment per AN5419 for SMPS-direct ⚠ |
-| VDD33USB | 91 | 1 | USB FS 3.3 V (reserve; charge-only baseline) |
-| VDD50USB | 90 | 1 | **new** — USB transceiver supply; tie per Nucleo-H725 even on charge-only ⚠ |
-| VDDA | 36 | 1 | `VDDA_MCU` (3V3_A via ferrite) |
-| VREF+ | 35 | 1 | see §3 |
-| VBAT (MCU backup domain) | 8 | 1 | **not** the `BATT` cell net — see note below |
-| VSS | 6, 12, 18, 33, 41, 55, 69, 80, 89, 104, 118, 128, 141 | 13 | single GND plane |
-| VSSA | 34 | 1 | analog ground |
-| PDR_ON | 142 | 1 | tie to VDD (internal power-down reset OK) |
+| `3V45_D` (VDD digital) | 9, 22, 35, 51, 68 | 5 | decoupling section: C96–C99 100 nF (one per pin at layout) + C101 4.7 µF bulk |
+| VBAT (backup domain) | 1 | 1 | tied to `3V45_D` (no coin cell) — **not** the battery `VBAT` net; shares name only |
+| VDDSMPS | 6 | 1 | `3V45_D` ⚠ add local 100 nF + 4.7 µF at pin during layout |
+| VLXSMPS → VFBSMPS | 5 → 7 | | **L2 2.2 µH** between them; **C95 4.7 µF** at VFBSMPS (AN5419 direct-SMPS) — keep this hot loop tight; VSSSMPS (pad 4) is two pads away |
+| VCAP | 33, 49, 66 | 3 | **100 nF each** (C90/C91/C92) — LDO permanently disabled on this package (ST-confirmed) |
+| VDDA / VSSA | 16 / 15 | 1/1 | `MCU_VDDA` (FB1 from `3V3_A`) + C102 100 nF / C103 1 µF |
+| VSS | 8, 21, 34, 50, 67 + **exposed pad (69)** | 6 | single ground plane; pad soldered, thermal-via stitch at layout |
+| NRST / BOOT0 | 12 / 63 | | C2 100 nF / R14 10 kΩ pull-down |
 
-No VREF− pin (internally VSSA). The H725 **does** break out the core SMPS (`V*SMPS`) and `VDDLDO` — that is the whole reason for the H723→H725 amendment (`power-supply.md` §4). Take the SMPS / VCAP / VDDLDO strap-and-cap treatment verbatim from AN5419 / Nucleo-H725; it is supply-mode-dependent.
-
-> ⚠️ **VBAT pin (8 on H725) ≠ the `BATT` cell net.** The MCU VBAT pin is the RTC/backup-domain supply (≤3.6 V op). Do **not** connect it to the 3.0–4.2 V `BATT` cell net — that would exceed its rating. With no coin-cell backup in use, tie it to **VDD / `3V45_D`** per the Nucleo crib. The board's battery is the `BATT` net (sensed via `BATT_SENSE` → PC4); the two share no copper. Renamed from `VBAT`→`BATT` on 2026-07-13 specifically to remove this name collision. Flag at the netlist gate.
+Pins that exist on other H725 packages but **not here** (nothing to wire): VDDLDO ×3 (internal — SMPS-only supply mode), VREF+ (internal to VDDA), PDR_ON (internal), VDD33USB/VDD50USB.
 
 ---
 
-*Updated 2026-07-15 (later): control pots reduced **three → two** (RV1 = `Pot2` → PC1/INP11, RV2 = `Pot3` → PC5/INP8; PC0/INP10 spare). The third panel pot is the volume pot RV3 on the DAC output — chassis part, no MCU pin — and its integrated switch is now a hard battery-line switch (`bat+` → `VBAT`), not `EN_3V45`; see `power-supply-netlist.md` §2/§3a. Schematic-entry status: sheets connected via global labels (2026-07-15 conversion pass); pot wiper RCs not yet entered.*
-
-*Updated 2026-07-15: added three control pots on PC0/PC1/PC5 (ADC1_INP10/11/8) — same ADC1 as `BATT_SENSE` (4-channel scan) and adjacent to the VREF+/VDDA corner. Pots wipe `3V3_A` ↔ GND (ratiometric vs VREF+); pot 1's integrated switch is SW1 (`EN_3V45`). Initial pick of PC2 corrected: on the H72x PC2 is PC2_C = ADC3_INP0 only (user caught via the KiCad symbol; confirmed against the `H725Z(E-G)T` PeripheralPins.c). See §6 item 6.*
-
-*Updated 2026-07-13: DAC finalized to PCM5102A per `dac-selection.md` rev 2 — PF7 MCLK → DNP, PD15 → XSMT, strap notes added.*
-
-*Updated 2026-07-13: cell/system net renamed `VBAT`→`BATT` (sense midpoint `VBAT_SENSE`→`BATT_SENSE`) across power docs to match the schematic and remove the collision with the MCU's backup-domain VBAT pin. The MCU VBAT pin keeps its name and ties to VDD/`3V45_D`.*
-
-*Updated 2026-07-13: **H725 pinout correction.** Verified pad-by-pad against the KiCad `STM32H725ZGTx` vs `STM32H723ZGTx` symbols that the two are **not pin-compatible** in LQFP-144 (~138/144 pads differ; 15 GPIO — PF0–5, PF12/13, PG0–5, PG15 — dropped for the SMPS/VDDLDO pins). Corrected the amendment banner, §3 (VREF+ 32→35, VCAP/SMPS/VDDLDO), §5 (headroom), and rewrote §7's power map from the H725 symbol. All §2/§4 signal allocations were already H725-safe (no used pin lost). Numbers still to be cross-checked vs DS13311/AN5419/Nucleo-H725 at the netlist gate.*
-
-*SAI/I2C/UART/ADC/USB pin+AF verified 2026-07-12 against the CubeMX-derived `PeripheralPins.c` (LQFP-144 variant) and the STM32H723ZG datasheet; SAI block/AF names and the power-pin map verified directly against the KiCad `MCU_ST_STM32H7:STM32H723ZGTx` symbol. Correction log: the DAC was originally mis-assigned to "SAI2" (H743 carryover) — the H723 has no SAI2; moved to SAI1 block B.*
+*Pinout verified pad-by-pad: KiCad `STM32H725RGVx` symbol ↔ CubeMX `STM32H725RGVx.xml` (identical). AF numbers from stm32duino `H725R(E-G)V_H735RGV` `PeripheralPins.c` + Zephyr `stm32h725rgvx-pinctrl.dtsi`. SMPS/VCAP/VDDLDO treatment per AN5419 + ST community confirmation (VFQFPN68 = SMPS-only, VCAP 100 nF). Kernel-clock muxes (`SAI4BSEL`, `SPI123SEL` → pll3_p) confirmed against RM0468-derived ChibiOS/Zephyr clock definitions. ADC channel numbers (PC0=INP10 spare, PC1=INP11, PC5=INP8, PC4=INP4) from the same pin data.*

@@ -15,9 +15,9 @@
 | `VBAT` | **Post-switch** system node: `bat+` → RV3 integrated switch → `VBAT` → regulator inputs + battery-sense divider. Note: shares its *name* with the MCU's backup-domain VBAT pin but not copper — MCU pin 8 ties to VDD/`3V45_D` (§7 of `pin-allocation.md`) |
 | `3V45_D` | Digital rail, 3.45 V (buck-boost output) |
 | `3V3_A` | Analog rail, 3.30 V (LDO output) |
-| `VDDA_MCU` | 3V3_A after ferrite, MCU VDDA/VREF+ only |
+| `MCU_VDDA` | 3V3_A after ferrite, MCU VDDA only (no VREF+ pin on the VFQFPN68 — internally tied to VDDA, so this net *is* the ADC reference) |
 | `BATT_SENSE` | Divider midpoint → MCU ADC pin |
-| ~~`EN_3V45`~~ | **Removed as-built (2026-07-15):** the on/off switch moved into the battery line (see `VBAT`), so U2 EN ties directly to `VBAT` (always enabled when powered); R11 1 MΩ remains as a bleed to GND |
+| *(no EN net)* | The on/off switch is in the battery line (see `VBAT`), so U2 EN ties directly to `VBAT` (always enabled when powered); R11 1 MΩ is a bleed to GND |
 | `FB_3V45` | TPS63020 feedback divider midpoint |
 | `SW_L1`, `SW_L2` | Buck-boost inductor nodes (keep tight, no other loads) |
 | `nCHG` | TP4054 CHRḠ open-drain → charge-indicator LED |
@@ -80,7 +80,7 @@ Place in the analog island next to the codecs (board plan); 3V3_A distribution c
 
 ### VDDA feed (MCU analog supply + ADC reference)
 
-`3V3_A` → FB1 (ferrite, 600 Ω @ 100 MHz, 0603) → `VDDA_MCU` → H725 VDDA + VREF+; C10 1 µF + C11 0.1 µF to GND at the pins.
+`3V3_A` → FB1 (ferrite, 600 Ω @ 100 MHz, 0603) → `MCU_VDDA` → H725 VDDA (pin 16); C103 1 µF + C102 0.1 µF to GND at the pin (entered on the MCU sheet's decoupling section).
 
 ### Battery sense
 
@@ -99,7 +99,7 @@ This block is deliberately under-specified — it is the one part I could not fu
 
 ### Test points (per board plan)
 
-TP: `CHG_IN`, `BATT`, `3V45_D`, `3V3_A`, `VDDA_MCU`, `BATT_SENSE`, `EN_3V45`.
+TP: `CHG_IN`, `bat+`/`VBAT`, `3V45_D`, `3V3_A`, `MCU_VDDA`, `BATT_SENSE`, VCORE (at any VCAP).
 
 ## 3. BOM
 
@@ -114,7 +114,7 @@ TP: `CHG_IN`, `BATT`, `3V45_D`, `3V3_A`, `VDDA_MCU`, `BATT_SENSE`, `EN_3V45`.
 | L1 | 1.5 µH, ≥3 A sat, shielded | 4×4 mm (XFL4020/SWPA4030 class) | pick at order | buck-boost inductor |
 | L2 | 2.2 µH, ≥0.5 A sat, low DCR | 2520/3030 | pick per AN5419 | H725 core SMPS |
 | FB1 | Ferrite 600 Ω @ 100 MHz | 0603 | basic | VDDA feed |
-| SW1 | integrated switch on control pot 1 | chassis | — | on/off (`BATT` → `EN_3V45`); pot itself is a chassis part, see `pin-allocation.md` §6 |
+| SW1 | integrated switch on volume pot RV3 | chassis | — | hard on/off in the battery line (`bat+` → `VBAT`); pot itself is a chassis part, see `pin-allocation.md` §6 |
 | C1, C3 | 1 µF X7R 25 V | 0603 | basic | U1 IN/BAT |
 | C2, C4 | 10 µF X7R ≥10 V | 0805 | basic | BATT bulk / U2 VIN |
 | C5, C11, C12 | 0.1 µF X7R | 0402 | basic | |
@@ -153,4 +153,4 @@ Entered in the schematic with these deltas from §2 above (validated topology �
 
 ---
 
-*Updated 2026-07-15 (as-built pass after schematic entry): cell node renamed `BATT`→`bat+`; added post-switch `VBAT` node (RV3 volume-pot switch in the battery line, replacing the `EN_3V45` scheme — U2 EN tied to `VBAT`, R11 = bleed); battery sense moved to post-switch `VBAT` (closes the off-drain / disconnect-FET question); charger section as-built deltas captured in §3a (R17 30 k PROG ⚠, no TVS, no charge LED, U8 = MCP73811 symbol standing in for TP4054). Still missing from the schematic vs. this doc: U2 VIN caps (C4 10 µF + C5 0.1 µF), 3V45_D output caps (C6/C7 22 µF ×2), LDO in/out caps (C8/C9 1 µF), VDDA caps (C10/C11), R12/R13 value typo, all H725 core-SMPS externals, and all test points.*
+*Schematic-entry status: rails, switch-in-battery-line (RV3), charger (§3a as-built deltas: R17 30 k PROG ⚠, no TVS, no charge LED, U8 = MCP73811 symbol standing in for TP4054), battery-sense divider, FB1 + VDDA caps, and the MCU core-SMPS externals (L2 2.2 µH + 4.7 µF, MCU sheet) are entered. Still missing vs. this doc: U2 VIN caps (C4 10 µF + C5 0.1 µF), 3V45_D output caps (C6/C7 22 µF ×2), LDO in/out caps (C8/C9 1 µF), R12/R13 value typo, test points.*

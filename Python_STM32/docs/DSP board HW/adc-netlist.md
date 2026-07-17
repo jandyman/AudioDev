@@ -2,7 +2,7 @@
 
 **Status:** Draft for schematic entry (started 2026-07-14). Implements the codec section of Phase 2 in `multichannel-audio-board-plan.md`; consumes the SAI/I2C/GPIO allocation from `pin-allocation.md` §1–§4 and the `3V3_A` / `3V45_D` rails from `power-supply-netlist.md`. Connections are given **by pin name** — take pin *numbers* from the KiCad symbol / datasheet at entry, don't trust memory. Items marked ⚠ go on the netlist-review-gate checklist. Datasheet: TI **SBAS892A** (TLV320ADC5140), 24-pin WQFN.
 
-**Scope:** two TLV320ADC5140 codecs, each configured as **4× single-ended, AC-coupled** analog inputs → 8 channels on one shared TDM bus into `SAI1_A` (RX). Analog input conditioning, coupling/blocking caps, shared clock/data bus, distinct I²C addresses, per-device power + decoupling. The stereo DAC (`SAI1_B` TX) is a separate section — see `dac-selection.md`.
+**Scope:** two TLV320ADC5140 codecs, each configured as **4× single-ended, AC-coupled** analog inputs → 8 channels on one shared TDM bus into `SAI4_B` (RX). Analog input conditioning, coupling/blocking caps, shared clock/data bus, distinct I²C addresses, per-device power + decoupling. The stereo DAC (`I2S1` TX) is a separate section — see `dac-selection.md`.
 
 ---
 
@@ -56,11 +56,11 @@ With **C_in = 4.7 µF** fixed, the impedance setting directly picks the corner a
 |---|---|
 | `IN1_SIG`…`IN8_SIG` | Per-channel buffer signal lines (from the `J1`/`J2` connectors): each JFET buffer's audio output → blocking cap → INxP. Buffers are powered separately from the MICBIAS rail |
 | `MICBIAS_A` / `MICBIAS_B` | Per-device buffer supply rail (3.014 V) — feeds that device's 4 buffers directly through connector `J1`/`J2`, no series resistor; **not** interconnected |
-| `BCLK_ADC` | SAI1_SCK_A bit clock, MCU → both codecs (shared) |
-| `FSYNC_ADC` | SAI1_FS_A frame sync, MCU → both codecs (shared) |
-| `SDOUT_ADC` | Shared TDM data bus, both codecs → SAI1_SD_A (per-device slot assignment + unused-slot tri-state) |
+| `BCLK_ADC` | `SAI4_SCK_B` bit clock (PA2), MCU → both codecs (shared) |
+| `FSYNC_ADC` | `SAI4_FS_B` frame sync (PC0), MCU → both codecs (shared) |
+| `SDOUT_ADC` | Shared TDM data bus, both codecs → `SAI4_SD_B` (PA0) (per-device slot assignment + unused-slot tri-state) |
 | `I2C_SCL` / `I2C_SDA` | I2C1 control bus (shared with nothing else — DAC is strap-configured) |
-| `CODEC_SHDNZ` | Active-low shutdown/reset, MCU PD10 → both codecs (shared) |
+| `CODEC_SHDNZ` | Active-low shutdown/reset, MCU PC6 → both codecs (shared) |
 | `3V3_A` | Analog rail (AVDD) — from `power-supply-netlist.md` LDO |
 | `3V45_D` | Digital rail (IOVDD) — see §7 IOVDD note ⚠ |
 | `GND` | Single ground plane (AVSS + thermal pad direct to plane; no AGND/DGND split) |
@@ -69,7 +69,7 @@ With **C_in = 4.7 µF** fixed, the impedance setting directly picks the corner a
 
 ## 4. Per-device connections (both codecs identical except ADDR strap + slot map)
 
-Refs: **U10 = ADC-A**, **U11 = ADC-B**. Pin numbers per the 24-WQFN pinout (SBAS892A pin table).
+Refs: **U3 = ADC-A**, **U4 = ADC-B**. Pin numbers per the 24-WQFN pinout (SBAS892A pin table).
 
 | Pin | Name | Net / connection |
 |---|---|---|
@@ -86,16 +86,16 @@ Refs: **U10 = ADC-A**, **U11 = ADC-B**. Pin numbers per the 24-WQFN pinout (SBAS
 | 11 | IN3M_GPO3 | 1 µF X7R to GND (4.7 µF as drawn) |
 | 12 | IN4P_GPI4 | from buffer-4 signal line via 4.7 µF tantalum |
 | 13 | IN4M_GPO4 | 1 µF X7R to GND (4.7 µF as drawn) — ⚠ **U4 (ADC-B) IN4M cap missing in schematic** |
-| 14 | SHDNZ | `CODEC_SHDNZ` (MCU PD10, shared); 10 kΩ pull-down to GND so the part holds in reset until the MCU drives it ⚠ |
+| 14 | SHDNZ | `CODEC_SHDNZ` (MCU PC6, shared); 10 kΩ pull-down to GND (R18, on the MCU sheet) holds the part in reset until the MCU drives it |
 | 15 | ADDR1_MISO | I²C address strap A1 — **device-distinct** (see §6) |
 | 16 | ADDR0_SCLK | I²C address strap A0 — **device-distinct** (see §6) |
 | 17 | SCL_MOSI | `I2C_SCL` (PB8); 2.2–4.7 kΩ pull-up to IOVDD (one pair for the bus) |
 | 18 | SDA_SSZ | `I2C_SDA` (PB9); 2.2–4.7 kΩ pull-up to IOVDD |
 | 19 | IOVDD | `3V45_D` (recommended, see §7 ⚠) + 0.1 µF to GND at pin |
 | 20 | GPIO1 | **unused** — leave as configured Hi-Z / optional test point (interrupt option for spin 2) |
-| 21 | SDOUT | `SDOUT_ADC` (PE6, shared bus; tri-state unused slots — §5) |
-| 22 | BCLK | `BCLK_ADC` (PE5, shared, input/slave) |
-| 23 | FSYNC | `FSYNC_ADC` (PE4, shared, input/slave) |
+| 21 | SDOUT | `SAI4_SD_B` (PA0, shared bus; tri-state unused slots — §5) |
+| 22 | BCLK | `SAI4_SCK_B` (PA2, shared, input/slave) |
+| 23 | FSYNC | `SAI4_FS_B` (PC0, shared, input/slave) |
 | 24 | DREG | 1.5 V digital core reg output → **1 µF to GND at pin**, no external supply |
 | EPAD | Thermal Pad / exposed pad (VSS) | `GND` — direct to plane (device ground; labeled "EPAD"/EP on the KiCad symbol) |
 
@@ -103,7 +103,7 @@ Refs: **U10 = ADC-A**, **U11 = ADC-B**. Pin numbers per the 24-WQFN pinout (SBAS
 
 ## 5. Shared TDM bus (both codecs on one SDOUT)
 
-Both codecs are ASI **slaves**: `BCLK`/`FSYNC` are inputs driven by the MCU SAI1_A master (`pin-allocation.md` §1). Both `SDOUT` pins tie to the single `SDOUT_ADC` net → PE6.
+Both codecs are ASI **slaves**: `BCLK`/`FSYNC` are inputs driven by the MCU SAI4_B master (`pin-allocation.md` §1). Both `SDOUT` pins tie to the single shared net `SAI4_SD_B` → PA0.
 
 - **Slot map:** ADC-A drives slots **0–3**, ADC-B drives slots **4–7** (`CHx_SLOT`, P0_R11–R18). 8 slots × 32-bit × 48 kHz → ~12.288 MHz BCLK.
 - **Bus contention:** each device **tri-states the slots it does not own** (SBAS892A: "tri-state feature for the unused audio data slots"). Enable tri-state on both so only the owning device drives each slot; the rest of the frame is high-Z. No hard external bus keeper is required.
@@ -118,7 +118,7 @@ Control bus = **I2C1** (PB8 SCL / PB9 SDA), the two codecs only (the PCM5102A DA
 
 The 7-bit address is set by the **ADDR0 (pin 16)** and **ADDR1 (pin 15)** strap pins. The two devices must strap to **distinct addresses** — e.g. ADC-A and ADC-B differ in the ADDR0/ADDR1 tie (GND vs. IOVDD, and the further SDA/SCL-referenced options the part allows).
 
-⚠ **Take the exact strap→address table from SBAS892A at entry** and assign U10/U11 two non-conflicting addresses; verify no clash with any other I²C device. (Not transcribing specific hex here — memory is not trustworthy for the address map; this is a review-gate item.)
+⚠ **Take the exact strap→address table from SBAS892A at entry** and confirm U3/U4's straps (U3: ADDR0+ADDR1→GND; U4: ADDR0→IOVDD, ADDR1→GND) land on two non-conflicting addresses; verify no clash with any other I²C device. (Not transcribing specific hex here — memory is not trustworthy for the address map; this is a review-gate item.)
 
 ---
 
@@ -164,7 +164,7 @@ The 7-bit address is set by the **ADDR0 (pin 16)** and **ADDR1 (pin 15)** strap 
 
 | Ref | Value / Part | Package | LCSC | Notes |
 |---|---|---|---|---|
-| U10, U11 | TLV320ADC5140 | 24-WQFN 4×4 (RTW) | pick | ⚠ confirm LCSC stock at order (board plan risk register) |
+| U3, U4 | TLV320ADC5140 | 24-WQFN 4×4 (RTW) | pick | ⚠ confirm LCSC stock at order (board plan risk register) |
 | C_in ×8 | 4.7 µF **tantalum**, blocking (INxP) | pick | pick | ⚠ **polarity/reverse-voltage** (§2/§11); low-swing → distortion non-issue; 4.7 µF sets ~1.7 Hz corner for near-DC finger-pressure sensing |
 | C_inm ×8 | 1 µF **X7R** preferred (4.7 µF as drawn OK), matching (INxM→GND) | 0402/0603 | basic | not signal-carrying; reconcile value doc↔schematic |
 | C_avdd ×2 | 0.1 µF X7R | 0402 | basic | AVDD at pin |
@@ -175,7 +175,7 @@ The 7-bit address is set by the **ADDR0 (pin 16)** and **ADDR1 (pin 15)** strap 
 | C_bulk ×1–2 | 10 µF X7R ≥10 V | 0805 | basic | shared AVDD/3V3_A bulk near the pair |
 | C_micbias ×2 | 1 µF X7R | 0402/0603 | basic | MICBIAS decoupling to AVSS (preamp supply — **populated**) |
 | R_scl, R_sda | 2.2–4.7 kΩ | 0402 | basic | I²C pull-ups to IOVDD (one pair for the bus) |
-| R_shdnz | 10 kΩ | 0402 | basic | SHDNZ pull-down (hold reset until MCU drives) ⚠ shared vs. per-device |
+| R_shdnz | 10 kΩ | 0402 | basic | SHDNZ pull-down R18 (entered, shared, on MCU sheet) |
 | R_addr ×? | per address strap | 0402 | basic | ADDR0/ADDR1 straps — value/tie per §6 table ⚠ |
 | C_emi ×8 | 100–330 pF | 0402 | — | **DNP** optional RF shunt at each buffer signal line (external cable entry) |
 | R_sdout | 100 kΩ | 0402 | — | **DNP** optional SDOUT bus pull-down |
@@ -189,10 +189,10 @@ Passives JLCPCB basic-class; C-numbers at order time.
 1. **Input impedance `CHx_IMP`** — **20 kΩ (≈1.7 Hz corner) recommended** to meet the near-DC finger-pressure goal; 10 kΩ (≈3.4 Hz) only if more dynamic range is wanted. ⚠ user-confirm; must match the register setting.
 2. **Signal-cap tantalum polarity** (dielectric decided: 4.7 µF tantalum on INxP, 1 µF/4.7 µF X7R on INxM) — confirm the DC across each INxP tantalum (**buffer output bias** vs. internal common-mode) and that it **never reverses** across power-up/down and MICBIAS-off; orient `+` to the higher side, or use a non-polar part if the sign can't be guaranteed. Needs the ADC5140 input common-mode voltage (datasheet/EVM) + the buffer output bias. ⚠
 3. **IOVDD source** — `3V45_D` (recommended, keeps digital current off analog LDO) vs. `3V3_A`. ⚠ confirm at gate.
-4. **I²C addresses** — take the ADDR0/ADDR1 strap→address table from SBAS892A; assign U10/U11 distinct, non-conflicting addresses; check no bus clash. ⚠
+4. **I²C addresses** — take the ADDR0/ADDR1 strap→address table from SBAS892A; confirm the drawn straps (U3: GND/GND, U4: IOVDD/GND) give distinct, non-conflicting addresses; check no bus clash. ⚠
 5. **SDOUT bus discipline** — confirm both devices' unused-slot tri-state is enabled; decide whether to populate the optional 100 kΩ SDOUT pull-down. ⚠
 6. **AREG treatment** — confirm AREG decoupling / that it is *not* externally supplied in 3.3 V AVDD mode (AREG abs-max 2.0 V — never tie to 3V3_A). ⚠
-7. **SHDNZ strap** — shared pull-down value and whether a per-codec reset split is wanted for bring-up (`pin-allocation.md` §4 PD14 spare). ⚠
+7. **SHDNZ strap** — shared pull-down value and whether a per-codec reset split is wanted for bring-up (`pin-allocation.md` §4 PC7 spare). ⚠
 8. **Coupling-cap charge (`INCAP_QCHG`)** — firmware must set it for 4.7 µF; note in the driver bring-up.
 9. **Gain characterization** — measure JFET-buffer output level, then set PGA/digital/DRE gain; verify no clip at 1 Vrms FS.
 10. **MICBIAS supply-current budget** — the JFET buffers now run directly off the MICBIAS rail (no `RL`, they are designed to run off a rail); confirm the 4 buffers' combined supply current stays **< 20 mA/device** (30 mA OCP). ⚠
@@ -200,8 +200,4 @@ Passives JLCPCB basic-class; C-numbers at order time.
 
 ---
 
-*Updated 2026-07-15 (later — preamp-powering revision).* **Buffer powering changed to direct MICBIAS-rail feed, `RL` scheme dropped.** The 4 JFET string-preamp buffers are designed to run off a rail, so MICBIAS drives their Vdd **directly through connector `J1` (ADC-A) / `J2` (ADC-B) with no series `RL`** (confirmed in `Main Board.net`: U3 pin 5 → `Net-(J1-Pin_1)` → C35 1 µF + J1; U4 pin 5 → `Net-(J2-Pin_1)` → C36 1 µF + J2). Signal returns on per-channel lines through the 4.7 µF blocking caps into INxP. This removes §11's old `RL`-value question — only the ≤20 mA/device supply-current budget remains. **Blocking caps confirmed 4.7 µF (C4/C5/C6/C8 on U3), chosen for near-DC finger-pressure onset sensing (~1.7 Hz at 20 k).**
-
-*Updated 2026-07-15 — schematic-entry status.* Net-name mapping as drawn: refs are **U3/U4** (not U10/U11); the MICBIAS rails are now the auto-named connector nets **`Net-(J1-Pin_1)`/`Net-(J2-Pin_1)`** (the earlier `FET_PWR1`/`FET_PWR2` global labels were removed — this was the stale mapping); `BCLK_ADC`/`FSYNC_ADC`/`SDOUT_ADC` = **`SAI1_SCK_A`/`SAI1_FS_A`/`SAI1_SD_A`**; `I2C_SCL`/`I2C_SDA` = **`I2C1_SCL`/`I2C1_SDA`**; `CODEC_SHDNZ` as planned. Entered and verified: all 8 input channels (4.7 µF polarized blocking caps → INxP), AREG/VREF/DREG/MICBIAS 1 µF caps, distinct ADDR straps (U3: ADDR0+ADDR1→GND; U4: ADDR0→IOVDD, ADDR1→GND — resistor values unset), IOVDD on `3V45_D`, shared TDM bus + SHDNZ to MCU PD10. **Not yet entered:** SHDNZ 10 k pull-down, per-pin 0.1 µF AVDD/IOVDD decoupling + 10 µF bulk, I2C pull-up values. **Deviations to reconcile:** INxM matching caps drawn at **4.7 µF** (C15/C16/C17/C9 on U3) vs. the 1 µF preferred in §2 — either is fine (4.7 µF gives slightly better CMR), just make doc and schematic agree; **U4 (ADC-B) IN4M cap missing entirely** (net `unconnected-(U4-IN4M_GPO4-Pad13)`); **part value entered as "XLV320ADC5140IRTWR" (both U3/U4) — typo for TLV, will corrupt BOM lookup.**
-
-*Draft 2026-07-14, superseded by the powering revision above. Input-stage decisions from the planning thread: 1 kΩ JFET-buffered pickups, <0.1 Vpp, in-device gain, 4.7 µF AC-coupling, and MICBIAS-powered preamps at 3.014 V (originally drafted as a 2-wire `RL` scheme — now a direct rail feed, see the revision note above). Pin map, input architecture, and MICBIAS specs verified against TI SBAS892A. Coupling caps: 4.7 µF tantalum (INxP) + 1 µF/4.7 µF X7R (INxM). Open decisions: §11 items 1 (input-Z), 3 (IOVDD rail), 10 (MICBIAS budget), 11 (cable protection); verify item 2 (tantalum polarity).*
+*Schematic-entry status.* Entered and verified: all 8 input channels (4.7 µF polarized blocking caps → INxP, incl. U4 IN4M matching cap), AREG/VREF/DREG/MICBIAS 1 µF caps, distinct ADDR straps (U3: ADDR0+ADDR1→GND; U4: ADDR0→IOVDD, ADDR1→GND — resistor values unset), IOVDD on `3V45_D`, shared TDM bus, SHDNZ to PC6 with R18 10 k pull-down. MICBIAS rails are the auto-named connector nets `Net-(J1-Pin_1)`/`Net-(J2-Pin_1)` feeding the buffers directly through J1/J2 (no series RL — the JFET buffers are designed to run off a rail; confirmed U3 pin 5 → C35 1 µF + J1, U4 pin 5 → C36 1 µF + J2). **Not yet entered:** per-pin 0.1 µF AVDD/IOVDD decoupling + 10 µF bulk, I2C pull-up values (R1/R2 present, values unset), ADDR strap resistor values. **To reconcile:** INxM matching caps drawn at 4.7 µF vs. 1 µF preferred in §2 (either fine — make doc and schematic agree); **part value entered as "XLV320ADC5140IRTWR" (both U3/U4) — typo for TLV, will corrupt BOM lookup.**

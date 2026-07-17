@@ -1,7 +1,7 @@
 # Power Supply — 3V3_A / 3V3_D from 1S Li-ion
 
 **Status:** In discussion — topology recommended, parts proposed but not finalized. Resolves the regulator portion of Phase 0 item 4 of `multichannel-audio-board-plan.md`, and **§4 amends Phase 0 item 1** (MCU variant: H723 → H725 for the internal core SMPS). Charger/power-path and on/off strategy are touched on but decided separately.
-**Scope:** everything between the battery/charger system node and the two 3.3 V-class rails: the digital rail (MCU, codec IOVDD/DVDD, future BT module) and the analog rail (ADC5140 AVDD ×2, PCM5102A CPVDD/AVDD, MCU VDDA/VREF+) — plus the MCU core-domain supply choice, which turns out to be the biggest battery-life lever on the board.
+**Scope:** everything between the battery/charger system node and the two 3.3 V-class rails: the digital rail (MCU, codec IOVDD/DVDD, future BT module) and the analog rail (ADC5140 AVDD ×2, PCM5102A CPVDD/AVDD, MCU VDDA) — plus the MCU core-domain supply choice, which turns out to be the biggest battery-life lever on the board.
 
 ---
 
@@ -33,7 +33,8 @@ BATT (3.0–4.2 V; TP4054 charges this node from the jack-ring input)
    ├─ TPS63020 buck-boost ──► 3V45_D  (3.45 V, digital: H7 VDD, codec IOVDD/DVDD, BT, pull-ups)
    │                             │        └─ (on-die SMPS ──► VCORE, §4)
    │                             └─ TPS7A20 3.3 V LDO ──► 3V3_A  (ADC5140 AVDD ×2, PCM5102A CPVDD/AVDD,
-   │                                                              H7 VDDA/VREF+ via ferrite)
+   │                                                              H7 VDDA via ferrite — VREF+ is internal
+   │                                                              to VDDA on the VFQFPN68)
    └─ battery sense divider ──► ADC pin
 ```
 
@@ -44,12 +45,12 @@ BATT (3.0–4.2 V; TP4054 charges this node from the jack-ring input)
 - **Simple/small:** two ICs, one inductor (plus the small SMPS inductor at the MCU, §4). No intermediate rail, no second board-level switcher.
 - **Efficient:** the switcher (~90 % over the load range) carries *all* the current; the only linear loss is 3.3/3.45 = **96 %** on the small analog share. Buck-boost quiescent is ~25–50 µA in power-save mode; the LDO adds ~8 µA.
 - **Quiet where it matters:** 3V3_A sits behind a dedicated low-noise LDO (10 µVrms, high PSRR) whose input is already a regulated rail — it never sees the battery sag or charger switchover. Constant 3.3 V AVDD from full charge to empty, so codec full-scale and the PCM5102A output level never drift.
-- **Bonus:** feeding H7 **VDDA/VREF+ from 3V3_A** (through a ferrite) gives the battery-sense ADC a clean, known 3.300 V reference for free.
+- **Bonus:** feeding H7 **VDDA from 3V3_A** (through a ferrite) gives the battery-sense ADC a clean, known 3.300 V reference for free (VREF+ has no pin on the VFQFPN68 — it is internally tied to VDDA, so VDDA *is* the ADC reference).
 - **Discharge-curve behavior:** with Vout = 3.45 V the converter is in clean buck mode for nearly the whole discharge (cell above ~3.5 V ≈ 85 % of capacity); the noisier buck-boost transition region only occurs near empty — and 3V3_A is behind the LDO anyway.
 
 ## 4. MCU core supply — H725 (internal SMPS) instead of H723 (LDO-only)
 
-**Amends Phase 0 item 1 of the board plan.** The H72x line splits by part number: **H723/H733 are LDO-only; H725/H735 add an on-die buck (SMPS) for the core domain** — same die, same LQFP-144, similar price. With the LDO, core power drawn from the rail is VDD × I_core regardless of core voltage; the SMPS converts instead of burning. Constraint (per DS13311/AN5419 — reverify on the datasheet pass): **SMPS-direct mode maxes out at VOS1 / 400 MHz**; VOS0 / 550 MHz requires the LDO in the loop (SMPS→LDO cascade, buck pre-drops to 1.8 V, LDO finishes).
+**Amends Phase 0 item 1 of the board plan.** The H72x line splits by part number: **H723/H733 are LDO-only; H725/H735 add an on-die buck (SMPS) for the core domain** — same die, similar price. With the LDO, core power drawn from the rail is VDD × I_core regardless of core voltage; the SMPS converts instead of burning. Constraint (AN5419, confirmed by ST): **SMPS-direct mode maxes out at VOS1 / 400 MHz**; VOS0 / 550 MHz requires the LDO in the loop (SMPS→LDO cascade, buck pre-drops to 1.8 V, LDO finishes).
 
 Rough numbers, ~200 mA core-domain current at 550 MHz as baseline:
 
@@ -60,13 +61,13 @@ Rough numbers, ~200 mA core-domain current at 550 MHz as baseline:
 | H725, 550 MHz, SMPS→LDO cascade | ~400 mW | −42 % |
 | **H725, 400 MHz, SMPS direct** | **~175 mW** | **−75 %** |
 
-**Decision: STM32H725ZGT6, wired for SMPS, plan of record 400 MHz SMPS-direct.** The MCU was ~⅔ of the board power budget; this roughly **halves total draw → double the runtime, or a half-size cell** — the point of the exercise. An SMPS-wired H725 board can still fall back to LDO mode (and cascade recovers 550 MHz if ever needed); an H723-wired board can never gain the SMPS, so this must be decided before schematic — hence now.
+**Decision: STM32H725RGV6 (VFQFPN68, 8×8 mm), SMPS-direct, plan of record 400 MHz.** The MCU was ~⅔ of the board power budget; this roughly **halves total draw → double the runtime, or a half-size cell** — the point of the exercise. The VFQFPN68 package does not bond out VDDLDO (the connections are made internally; ST-confirmed) — **SMPS-direct is the only supply configuration it supports, making 400 MHz a hard ceiling on this package**. There is no board-level recovery to 550 MHz; the exit, if DSP headroom ever proves insufficient, is a respin to the LQFP-144 sibling (H725ZGT6) wired for SMPS→LDO cascade. The §5 headroom analysis below and the YIN burst rework are therefore load-bearing. The package buys ~6× less board area, an exposed ground pad under the die, and a tight SMPS hot loop (VSSSMPS two pads from the inductor pins).
 
 **DSP headroom at 400 MHz** (why this is safe): YIN measured ~1–2 % of a 500 MHz M7 per voice. Pickup summing happens **before** any serious DSP, so the serious path is 4 channels, not 8; voice allocation can reduce further. Known work item: **YIN is bursty** — its compute lands in spikes, and the 27 % clock cut shrinks the burst budget, so it needs reworking (spread the difference-function accumulation across chunks, or similar — several ways to go). Tracked as an open item.
 
-**Board cost:** one 2.2 µH inductor + caps at the MCU (per AN5419), SMPS pins wired at schematic time. VCAP configuration differs by supply mode — take it from AN5419/the H725 Nucleo reference, not the H723ZG Nucleo.
+**Board cost:** one 2.2 µH inductor VLXSMPS→VFBSMPS + 4.7 µF at VFBSMPS (entered on the MCU sheet, per AN5419). With the LDO permanently disabled on this package, **VCAP treatment is 100 nF per pin ×3** (ST-confirmed) — also entered.
 
-**Availability (checked 2026-07-13):** LCSC lists STM32H725ZGT6 as [C730156](https://lcsc.com/product-detail/Pre-ordered-MCUs_STMicroelectronics-STM32H725ZGT6_C730156.html) (~$11–13.5) — but in the **pre-order** category. Same gate as before: confirm lead time early; JLCPCB consignment or global sourcing as fallback. H735ZGT6 is the +crypto sibling.
+**Availability:** JLCPCB stocks STM32H725RGV6 as [C5271073](https://jlcpcb.com/partdetail/STMicroelectronics-STM32H725RGV6/C5271073) (~$10–12, low stock — 10 pcs secured 2026-07-15); DigiKey/ST eStore carry it as fallback. H735RGV6 is the +crypto sibling.
 
 ## 5. Rejected alternatives (rail topology)
 
@@ -86,7 +87,7 @@ Rough numbers, ~200 mA core-domain current at 550 MHz as baseline:
 | **TPS7A2033PDBVR** ([C2862740](https://www.lcsc.com/product-detail/voltage-regulators-linear-low-drop-out-ldo-regulators_texas-instruments-tps7a2033pdbvr_C2862740.html)) | LDO → 3V3_A | 300 mA, 10 µVrms noise, PSRR ~65 dB @ 100 kHz, dropout 110 mV typ @ 300 mA, IQ 8.5 µA, SOT-23-5 | ~$0.10–0.15 | **Leaning choice.** 20 k+ in stock. No noise-bypass cap needed. |
 | LP5907MFX-3.3 | LDO alt | 250 mA, similar noise class | ~$0.30 | Fine substitute. |
 | **TP4054** ([C382138](https://www.lcsc.com/product-detail/C382138.html)) | Charger (upstream) | Linear CC/CV, ≤500 mA (RPROG-set), CHRḠ status, reverse-blocking, SOT-23-5 | ~$0.05 | **Chosen 2026-07-13** — proven on the prior active-electronics board; replaces the BQ2407x-class pick. No power path/TS/timer — acceptable because audio and charging are mutually exclusive (shared jack) and the convention is power-off while charging (§8). BQ24075 remains the upgrade path if spin-2 BT wants charge-while-on. |
-| **STM32H725ZGT6** ([C730156](https://lcsc.com/product-detail/Pre-ordered-MCUs_STMicroelectronics-STM32H725ZGT6_C730156.html)) | MCU (core SMPS, §4) | LQFP-144, 550 MHz-capable, on-die core buck | ~$11–13.5 | **Pre-order at LCSC — check lead time early.** |
+| **STM32H725RGV6** ([C5271073](https://jlcpcb.com/partdetail/STMicroelectronics-STM32H725RGV6/C5271073)) | MCU (core SMPS, §4) | VFQFPN68 8×8 mm, on-die core buck (SMPS-only package → 400 MHz), 1 MB flash / 564 KB RAM | ~$10–12 | **Chosen.** Low JLCPCB stock — 10 pcs secured; DigiKey fallback. |
 
 ## 7. Power budget (draft — verify against datasheets)
 
@@ -99,7 +100,7 @@ Rough numbers, ~200 mA core-domain current at 550 MHz as baseline:
 | | **Design capacity** | **500 mA** (TPS63020 has ≥3× margin) |
 | 3V3_A | 2× ADC5140 AVDD | ~30–40 mA |
 | | PCM5102A CPVDD/AVDD/DVDD (incl. charge pump) | ~10–15 mA (⚠ verify) |
-| | H725 VDDA/VREF+ | ~2–4 mA |
+| | H725 VDDA | ~2–4 mA |
 | | **Design capacity** | **150 mA** (TPS7A20 = 300 mA) |
 
 Rough runtime: total draw drops from ~1 W (H723/LDO/550 baseline) to **~0.5 W** → ~140 mA at 3.7 V → a 1000 mAh cell gives ~6–7 h, a 2000 mAh cell ~13 h. **This is what enables the cell downsize.** Real number still depends on the final cell pick (open in the plan) and BT duty cycle on spin 2.
@@ -109,25 +110,20 @@ Rough runtime: total draw drops from ~1 W (H723/LDO/550 baseline) to **~0.5 W** 
 - **Charge input (jack ring):** the ring node sees the world — ground shorts from TS plugs (fine), driven/cold pins from balanced TRS gear (fine, low voltage), ESD from cable handling. The TVS is the **primary** protection — the TP4054's abs-max headroom is modest (~11 V claimed on ports; verify on the exact vendor's datasheet — the part is multi-sourced). Route the ring trace away from the tip (audio) net.
 - **Run-while-charging caveat (TP4054, no power path):** if the system is left ON while charging, load current flows through the charger's current/termination sensing — charge may terminate late or never, floating the cell at 4.2 V (longevity cost, not a safety event). Convention: **power off while charging** — natural anyway since the jack can't carry audio and charge power at once. Revisit if spin-2 BT wants charge-while-on; that's when a power-path part (BQ24075) earns its cost and board space.
 - **On/off:** switch on TPS63020 **EN** — the volume pot's integrated switch (`dac-selection.md`) is the natural SW1, since EN carries only µA. Off-state draw ≈ converter shutdown (<1 µA) + LDO (dies with its input) + charger reverse leakage (µA-class) + sense divider. Charging works with the system off — which per the caveat above is also the *correct* way to charge.
-- **Battery sense:** high-value divider (e.g. 1 MΩ/1 MΩ + 100 nF) from BAT to an ADC pin — ~2 µA standing drain; accept it, or high-side-switch the divider from a GPIO if off-state drain matters. Accuracy is good because VREF+ is the LDO's 3.300 V.
-- **Sequencing:** 3V3_A rises after 3V45_D by construction (LDO fed from the switcher). Verify the ADC5140 has no AVDD-before-IOVDD requirement (believed relaxed — confirm in datasheet). PCM5102A **XSMT** soft-mute (GPIO PD15) is held low until rails + BCLK are stable, then released to un-mute; its auto power-down also restarts on SAI clock resume (see `dac-selection.md`).
+- **Battery sense:** high-value divider (e.g. 1 MΩ/1 MΩ + 100 nF) from BAT to an ADC pin — ~2 µA standing drain; accept it, or high-side-switch the divider from a GPIO if off-state drain matters. Accuracy is good because VDDA — the ADC reference on this package — is the LDO's 3.300 V.
+- **Sequencing:** 3V3_A rises after 3V45_D by construction (LDO fed from the switcher). Verify the ADC5140 has no AVDD-before-IOVDD requirement (believed relaxed — confirm in datasheet). PCM5102A **XSMT** soft-mute (GPIO PC9, net `DAC_XSMT`) is held low until rails + BCLK are stable, then released to un-mute; its auto power-down also restarts on SAI clock resume (see `dac-selection.md`).
 - **Mixed levels:** the PCM5102A digital inputs (BCK/LRCK/DIN/XSMT) are driven by 3.45 V SAI logic — confirm VIH and input abs-max (≈ DVDD + 0.5 V) on the final datasheet pass.
 - **Ripple modes:** enable TPS63020 power-save (PFM) for light-load efficiency; PFM ripple lands only on the digital rail. If it ever bothers something, the mode pin can force PWM at a battery-life cost.
 - **Layout:** per the plan's partitioning — buck-boost inductor loop minimized, in the charger/buck zone, far from codec inputs. The MCU SMPS inductor is a second small switching loop: keep it tight to its pins and away from the codec island too. TPS7A20 local to the codec/DAC analog island; ferrite + local caps at H7 VDDA.
-- **H725 core:** SMPS externals (2.2 µH + caps) and VCAP configuration per AN5419 and the **H725/735 Nucleo reference** (not the H723ZG Nucleo — supply mode differs). Supply-mode selection is latched at boot via PWR config — get it into the platform init early.
+- **H725 core:** SMPS externals (2.2 µH + caps) and VCAP configuration per AN5419; on the VFQFPN68 only SMPS-direct exists (VDDLDO internal), VCAP = 100 nF ×3. Supply-mode selection is latched at boot via PWR config — get it into the platform init early.
 
 ## 9. Open items
 
 1. **Cell capacity + connector** (plan Phase 0 item 4) — re-run with the ~0.5 W budget; a smaller cell is now on the table.
-2. **H725ZGT6 sourcing** — LCSC shows pre-order; confirm lead time / JLCPCB consignment early (long-lead risk, same as the old H723 gate).
-3. **Verify SMPS/VOS rules in DS13311** — confirm 400 MHz VOS1 SMPS-direct and the cascade path to 550 MHz; confirm SMPS external component values.
-4. **YIN burst rework** — spread the bursty difference-function work so worst-case chunk load fits the 400 MHz budget (several viable approaches; tracked in the DSP roadmap, not here).
-5. Verify ADC5140 AVDD current and supply-sequencing requirements from the datasheet (budget above is an estimate).
-6. Confirm PCM5102A supply mins (CPVDD/AVDD/DVDD) and 3.45 V-logic input tolerance on the datasheet (VIH / input abs-max check).
-7. Tolerance stack check: TPS63020 FB accuracy + 1 % divider vs. TPS7A20 worst-case dropout at actual analog load — confirm ≥50 mV headroom at worst case, else nudge 3V45_D up (ceiling: H7 VDD 3.6 V max).
-8. Decide on/off scheme (EN switch vs. SYSOFF) and whether the sense divider needs a disconnect.
-9. Re-confirm LCSC stock of all ICs at order time.
+2. **YIN burst rework** — spread the bursty difference-function work so worst-case chunk load fits the 400 MHz budget (several viable approaches; tracked in the DSP roadmap, not here).
+3. Verify ADC5140 AVDD current and supply-sequencing requirements from the datasheet (budget above is an estimate).
+4. Confirm PCM5102A supply mins (CPVDD/AVDD/DVDD) and 3.45 V-logic input tolerance on the datasheet (VIH / input abs-max check).
+5. Tolerance stack check: TPS63020 FB accuracy + 1 % divider vs. TPS7A20 worst-case dropout at actual analog load — confirm ≥50 mV headroom at worst case, else nudge 3V45_D up (ceiling: H7 VDD 3.6 V max).
+6. Decide on/off scheme (EN switch vs. SYSOFF) and whether the sense divider needs a disconnect.
+7. Re-confirm LCSC stock of all ICs at order time.
 
----
-
-*Updated 2026-07-13: DAC references corrected ES9023 → **PCM5102A** (finalized in `dac-selection.md` rev 2) throughout §2/§3/§7/§8 and the budget/open-items — analog supplies are CPVDD/AVDD on 3V3_A, mute via XSMT (PD15). Cell/system net renamed `VBAT`→`BATT` to match the schematic and avoid the MCU pin-6 VBAT collision (see `pin-allocation.md` §7).*
