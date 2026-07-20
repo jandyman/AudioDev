@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     pybind_filters.cpython-312-darwin.so
+relocations:     []
+...

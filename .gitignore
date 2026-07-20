@@ -17,3 +17,12 @@ test_audio_out/
 # KiCad lock files
 *.lck
 ~*.lck
+
+# OS / IDE cruft
+.DS_Store
+.idea/
+.vscode/
+
+# Python bytecode
+__pycache__/
+*.pyc

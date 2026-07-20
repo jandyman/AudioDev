@@ -1,0 +1,6 @@
+# Archived project — track source (and WAV fixtures), skip build artifacts
+# and the stray renamed-git-internals directory.
+*.so
+*.a
+*.o
+Hide .git/

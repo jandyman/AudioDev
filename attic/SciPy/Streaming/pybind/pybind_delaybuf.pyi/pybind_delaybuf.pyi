@@ -1,0 +1,29 @@
+from __future__ import annotations
+import numpy
+__all__ = ['DelayBuf', 'DelayBufState', 'test_modify_numpy_list']
+class DelayBuf:
+    state: DelayBufState
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self) -> None:
+        ...
+    def get_values(self, delay: int, output: numpy.ndarray[numpy.float32]) -> None:
+        ...
+    def push(self, samples: numpy.ndarray[numpy.float32]) -> None:
+        ...
+class DelayBufState:
+    wr_idx: int
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    def __init__(self) -> None:
+        ...
+    @property
+    def data(self) -> numpy.ndarray:
+        ...
+    @data.setter
+    def data(self, arg1: numpy.ndarray[numpy.float32]) -> None:
+        ...
+def test_modify_numpy_list(x: list) -> None:
+    ...

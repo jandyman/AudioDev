@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     pybind_math_and_logic.cpython-312-darwin.so
+relocations:     []
+...
