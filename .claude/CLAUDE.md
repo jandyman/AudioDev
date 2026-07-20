@@ -35,12 +35,20 @@ The `scipy` environment has numpy, matplotlib, dawdreamer, pybind11, and other a
 
 ## Project Structure
 
+Live work sits at the top level; older material is swept into two archive folders
+(`git mv`'d, full history preserved) to keep the root uncluttered:
+
 - **Python_STM32/** - ACTIVE hub: shared C++/Faust DSP blocks, built native (pybind11) and for the STM32H750; per-algorithm work lives in `projects/<algo>/`. See `Python_STM32/.claude/CLAUDE.md`.
-- **max_externals/** - Max/MSP external objects (C++)
-- **dsp_library/** - Shared DSP code including Faust modules
-- **audio-graph-python/** - DEPRECATED reference framework (superseded by Python_STM32); no new work here
-- **Max Experiments/** - Max patchers and documentation
-- **PitchShifter/** - Pitch shifter algorithm development
+- **Daisy_Claude/** - active EQ-on-STM32 + `DaisyControl` macOS SwiftUI app (app ↔ DSP-on-hardware over RTT).
+- **Signal Generator App/** - active macOS sine/sweep generator.
+- **test_audio/**, **test_audio_out/** - shared input fixtures and output WAVs.
+- **attic/** - kept-for-reference, may return: `DaisyExamples`, `SciPy`,
+  `SimpleEQ` (native macOS EQ app + in-process AudioUnit DSP), `dsp_library`
+  (shared Faust/C++ modules), `Embedded DSP DevSystem` (the conceptual-ancestor
+  design docs — vision still broadly holds, but diverged on SciPy-first workflow,
+  multichannel signals, and pre-Faust).
+- **deprecated/** - safety store only, not expected to return: `audio-graph-python`,
+  `Max Experiments`, `max_externals`, `Old GenericDsp Approach`, `PitchShifter`.
 
 ## Implementation Architecture
 
