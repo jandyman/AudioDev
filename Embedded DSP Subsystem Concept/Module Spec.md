@@ -1,5 +1,12 @@
 # Module Specification
 
+> **Status: historical.** This describes the runtime Python `Module`/`Graph`
+> framework (see `core.py`) that was later replaced by a static S-expression graph
+> compiled into C++ at design time. The module/port/graph *abstraction* carried
+> forward; these concrete class specs did not. Kept as a record of the reasoning.
+> See `README.md` for what became real, and
+> `Python_STM32/docs/audio_graph_architecture.md` for the current system.
+
 ## Overview
 This document provides detailed specifications for classes in the DSP module framework, intended to guide code generation and implementation.
 

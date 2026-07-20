@@ -41,12 +41,15 @@ Live work sits at the top level; older material is swept into two archive folder
 - **Python_STM32/** - ACTIVE hub: shared C++/Faust DSP blocks, built native (pybind11) and for the STM32H750; per-algorithm work lives in `projects/<algo>/`. See `Python_STM32/.claude/CLAUDE.md`.
 - **Daisy_Claude/** - active EQ-on-STM32 + `DaisyControl` macOS SwiftUI app (app ↔ DSP-on-hardware over RTT).
 - **Signal Generator App/** - active macOS sine/sweep generator.
+- **Embedded DSP Subsystem Concept/** - platform-neutral concept/design docs for the
+  DSP ecosystem (ancestor of Python_STM32, curated to reflect what was actually
+  built). Read its `README.md` for the concept-vs-current reconciliation; holds the
+  still-live target-neutral thinking (dev lifecycles, signal-spec propagation,
+  buffer-reuse algorithms, visual-designer concept, Python coding standards).
 - **test_audio/**, **test_audio_out/** - shared input fixtures and output WAVs.
 - **attic/** - kept-for-reference, may return: `DaisyExamples`, `SciPy`,
   `SimpleEQ` (native macOS EQ app + in-process AudioUnit DSP), `dsp_library`
-  (shared Faust/C++ modules), `Embedded DSP DevSystem` (the conceptual-ancestor
-  design docs — vision still broadly holds, but diverged on SciPy-first workflow,
-  multichannel signals, and pre-Faust).
+  (shared Faust/C++ modules).
 - **deprecated/** - safety store only, not expected to return: `audio-graph-python`,
   `Max Experiments`, `max_externals`, `Old GenericDsp Approach`, `PitchShifter`.
 

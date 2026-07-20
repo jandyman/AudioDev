@@ -1,9 +1,10 @@
 # Python_STM32 — Claude Context
 
 > **Session start:** Connect the local **AudioDev** folder (`~/Dropbox/Developer/AudioDev`,
-> or this `Python_STM32` subfolder) before doing any work. The local copy is the single
-> source of truth — there is no GitHub mirror to fall back on. If the folder isn't
-> connected, request it first and don't answer from memory or stale caches.
+> or this `Python_STM32` subfolder) before doing any work. The local working copy is the
+> authoritative source; the repo does have remotes (GitHub `jandyman/AudioDev` and a
+> Bitbucket mirror), but they may lag local, so don't treat them as the current truth.
+> If the folder isn't connected, request it first and don't answer from memory or stale caches.
 
 Active hub for STM32 audio-DSP development. Shared C++/Faust DSP blocks build two
 ways from one source: natively via pybind11 (fast iteration) and arm-none-eabi

@@ -1,5 +1,13 @@
 # Project Concept: Audio DSP Development Ecosystem
 
+> **Status note.** The goals, the module/graph abstraction, the development
+> lifecycles, and the system-state taxonomy below still stand. Two mechanisms
+> were inverted by what the project learned, and are flagged inline: the
+> **SciPy-first → generate-C++** workflow became **C++/Faust-first with Python as
+> test harness only**, and the **multichannel Signal** model became single-rate/
+> single-channel (though 8-channel per-string work is bringing it back). See
+> `README.md` for the full reconciliation.
+
 ## Top Level Project Goals
 
 ### Primary Goal

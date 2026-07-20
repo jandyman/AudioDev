@@ -1,5 +1,12 @@
 # Project: Embedded DSP Development System
 
+> **Status.** This is now the platform-neutral **concept** folder for the AudioDev
+> embedded-DSP ecosystem; the working system lives in `Python_STM32/`. Read
+> `README.md` first — it reconciles this original vision against what was actually
+> built (C++/Faust-first, static graph compiler, one-source-two-targets). The
+> iterative documentation workflow described below is the *original* working style,
+> retained for context.
+
 ## Project Overview
 
 Create an ecosystem for Audio algorithms created in Python to be painlessly ported to realtime (low latency) embedded platform. Also facilitate the reuse of DSP blocks in the algorithms
