@@ -10,3 +10,10 @@ test_audio_out/
 
 # Xcode user state
 *.xcuserstate
+
+# KiCad local-history snapshots (auto-generated backup dir with its own git repo)
+.history/
+
+# KiCad lock files
+*.lck
+~*.lck
