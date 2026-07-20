@@ -97,9 +97,9 @@ Place in the analog island next to the codecs (board plan); 3V3_A distribution c
 
 This block is deliberately under-specified — it is the one part I could not fully verify from memory, and mode-strapping (LDO vs SMPS-direct vs cascade) changes the VCAP wiring. Take it verbatim from the Nucleo-H725 schematic during Phase 2. Belongs physically in the MCU island, not the power corner.
 
-### Test points (per board plan)
+### Test points
 
-TP: `CHG_IN`, `bat+`/`VBAT`, `3V45_D`, `3V3_A`, `MCU_VDDA`, `BATT_SENSE`, VCORE (at any VCAP).
+See `test-points.md` (single source of truth; categorized by access type). Power-section signals — `CHG_IN`, `bat+`/`VBAT`, `3V45_D`, `3V3_A`, `MCU_VDDA`, `BATT_SENSE`, VCORE (at any VCAP) — are all Cat 3 (touch at a decoupling cap / divider / connector), except GND loops (Cat 1).
 
 ## 3. BOM
 
@@ -127,7 +127,7 @@ TP: `CHG_IN`, `bat+`/`VBAT`, `3V45_D`, `3V3_A`, `MCU_VDDA`, `BATT_SENSE`, VCORE 
 | R10 | 100 kΩ 1 % | 0402 | basic | FB bottom |
 | R11 | 1 MΩ | 0402 | basic | EN pull-down |
 | R12, R13 | 1 MΩ 1 % | 0402 | basic | battery sense |
-| TP1–7 | test point | — | — | see list above |
+| TP (GND loops) | test point | — | — | Cat 1 only; see `test-points.md` |
 
 Passives are JLCPCB basic-class; exact C-numbers at order time. The three ICs were stock-checked 2026-07-13 (`power-supply.md` §6).
 

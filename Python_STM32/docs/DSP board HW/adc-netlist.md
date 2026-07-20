@@ -154,9 +154,9 @@ The 7-bit address is set by the **ADDR0 (pin 16)** and **ADDR1 (pin 15)** strap 
 
 ---
 
-## 9. Test points (per board plan Phase 2)
+## 9. Test points
 
-`BCLK_ADC`, `FSYNC_ADC`, `SDOUT_ADC`, `I2C_SCL`, `I2C_SDA`, `CODEC_SHDNZ`, `MICBIAS_A`, `MICBIAS_B`, and one buffer signal line per device for input-path probing.
+See `test-points.md` (single source of truth; categorized by access type). Codec-side signals: `BCLK_ADC`/`FSYNC_ADC`/`SDOUT_ADC` (SAI4 bus) are Cat 2 probe pads; `I2C_SCL`/`I2C_SDA`, `CODEC_SHDNZ`, `MICBIAS_A`/`MICBIAS_B`, and the per-device input line are Cat 3 (touch at a passive).
 
 ---
 

@@ -103,7 +103,7 @@ ADC5140 I2C addresses are set by hardware ADDR straps: U3 = GND/GND, U4 = IOVDD/
 6. **USB routing** — PA11/PA12 reserved; decide whether to route to any pads on spin 1 (near-zero cost; no connector planned). If USB data is ever activated, ⚠ verify how the transceiver is supplied on VFQFPN68 (no VDD33USB/VDD50USB pins — DS13311).
 7. **BT module** — confirm the chosen module uses HW flow control and matches the PB12/PB15 control lines (Phase 0 item 5).
 8. **SDOUT bus pull-down** — 100 kΩ DNP on `SAI4_SD_B` (populate only if bench shows float; `adc-netlist.md` §5).
-9. **Test points** — power: GND ×2–3, `3V45_D`, `3V3_A`, VCORE (any VCAP), `MCU_VDDA`, `bat+`/`VBAT`; clocks: MCO1, `SAI4_SCK_B`, `SAI4_FS_B`, `I2S1_CK`, `I2S1_WS`; data/control: `SAI4_SD_B`, `I2S1_SDO`, `CODEC_SHDNZ`, `DAC_XSMT`; analog: MICBIAS ×2, DAC OUTL post-pad; reserve pad on PA1.
+9. **Test points** — see `test-points.md` (single source of truth; categorized by access type). Reserve pad on PA1 (`SAI4_MCLK_B`) noted there as Cat 3 / DNP.
 
 ---
 

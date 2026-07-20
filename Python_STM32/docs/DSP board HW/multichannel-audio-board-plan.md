@@ -4,6 +4,8 @@
 
 **Goal:** Custom PCB with a discrete STM32H7, two TLV320ADC5140 codecs (8-ch TDM capture), optional Bluetooth, running the existing AudioDev firmware ecosystem (libDaisy already replaced).
 
+> **Layout (Phase 2):** placement, stackup, grounding, and the analog-interface calls live in `layout-notes.md`; physical test points in `test-points.md`.
+
 **Locked decisions:**
 
 - Discrete STM32H7 on board (not Daisy Seed): **STM32H725RGV6** — VFQFPN68 8×8 mm, on-die core SMPS (H735RGV6 is the +crypto sibling if ever needed); see Phase 0 item 1 and `power-supply.md` §4
