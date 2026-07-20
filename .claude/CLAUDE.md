@@ -41,6 +41,11 @@ Live work sits at the top level; older material is swept into two archive folder
 - **Python_STM32/** - ACTIVE hub: shared C++/Faust DSP blocks, built native (pybind11) and for the STM32H750; per-algorithm work lives in `projects/<algo>/`. See `Python_STM32/.claude/CLAUDE.md`.
 - **Daisy_Claude/** - active EQ-on-STM32 + `DaisyControl` macOS SwiftUI app (app ↔ DSP-on-hardware over RTT).
 - **Signal Generator App/** - active macOS sine/sweep generator.
+- **Onboard DSP Board HW/** - active custom-PCB hardware design (worked on in the
+  Claude app, cowork mode): discrete STM32H725RGV6 + dual TLV320ADC5140 (8-ch TDM),
+  DSP onboard the bass/guitar, running the AudioDev ecosystem. KiCad project +
+  netlist/pin/power docs; `multichannel-audio-board-plan.md` is the master plan with
+  **"Review gate (Claude)"** checkpoints. Read the plan before schematic/layout work.
 - **Embedded DSP Subsystem Concept/** - platform-neutral concept/design docs for the
   DSP ecosystem (ancestor of Python_STM32, curated to reflect what was actually
   built). Read its `README.md` for the concept-vs-current reconciliation; holds the
