@@ -14,7 +14,7 @@
 - Both ADC5140s share one TDM bus on **SAI4_B** (master RX — the only TDM-capable SAI on the VFQFPN68); DAC on **I2S1** (master TX), both kernel-clocked from PLL3 so capture and playback are frequency-locked by construction
 - Stereo DAC for audio output (one channel required; stereo is the natural granularity)
 - Lithium battery power, onboard cell. **No USB connector.** Charging via the **ring of the 1/4″ TRS output jack**: normal audio cable → audio sink; special charge cable → 5 V on the ring into the charger IC. Proven on a prior active-electronics board. (Amended 2026-07-13 from "USB charging"; see `power-supply.md`)
-- Bluetooth: footprint/space reserved for a pre-certified module, unpopulated on spin 1
+- Bluetooth: **moved off the main board to a future mezzanine daughterboard** (amended 2026-07; see `layout-notes.md` §1.2). The main board reserves only a small board-to-board connector footprint (UART + power + ground); the module and its antenna live on the daughterboard, populated in a later spin. Relocating it off-board is what enables single-sided fit. (Was: reserved on-board pre-certified-module footprint + antenna keep-out, unpopulated on spin 1.)
 - Debug: SWD via 10-pin Cortex header for Segger J-Link; RTT for logging (no UART console needed)
 - Budget: one respin expected; plan structured to make spin 2 small
 
@@ -26,7 +26,7 @@
 2. **Clocking scheme — RESOLVED.** HSE = 24.576 MHz crystal → PLL3 (integer-N for the 48 kHz family, e.g. VCO 393.216 MHz, PLL3_P = 49.152 MHz). SAI4_B masters the TDM capture bus (BCLK 12.288 MHz + FSYNC to both codecs; codecs slave via their on-chip PLL from BCLK — no MCLK distribution); I2S1 masters the DAC (BCLK 3.072 MHz, I2SDIV = 16). Both kernel muxes (`SAI4BSEL`, `SPI123SEL`) select PLL3_P → capture and playback frequency-locked by construction. MCO1 (PA8) reserved as a clock test point. Note SAI4 is D3-domain: capture DMA via BDMA with buffers in SRAM4.
 3. **DAC selection — RESOLVED: PCM5102A**, line-out (no headphone amp), on I2S1, no MCLK, strap-configured; L-pad to instrument level + volume pot. Full rationale in `dac-selection.md`.
 4. **Battery/power details — IN DISCUSSION, see `power-supply.md`.** Regulator topology recommended there (buck-boost → 3.45 V digital rail, low-noise LDO → 3V3_A; TPS63020 + TPS7A20 leaning; **TP4054 linear charger** — no power path, power-off-while-charging convention, per that doc's §8) — note this supersedes the plain "buck" wording here, since the 1S cell straddles 3.3 V. Still open: cell size and connector; on/off strategy (load switch vs. always-on with sleep); battery-sense divider disconnect; plus the datasheet verifications listed in that doc.
-5. **Bluetooth module target.** Pick the module now (even though DNP on spin 1) so the reserved footprint, UART routing, and antenna keep-out match a real part.
+5. **Bluetooth module target.** Pick the module now (even though DNP on spin 1) so the reserved footprint, UART routing, and antenna keep-out match a real part. **Amended (2026-07): BT relocated to a future mezzanine daughterboard — the main board carries only the board-to-board connector, so module/antenna selection now sizes the daughterboard (and its Z-height in the instrument cavity), not a main-board keep-out. See `layout-notes.md` §1.2.**
 6. **Boot/programming.** BOOT0 strap; programming and debug exclusively via J-Link SWD. No USB on the board at all — charge power arrives via the output-jack ring (see locked decisions).
 
 ## Phase 1 — Optional firmware pre-validation (parallel with Phases 2–3)

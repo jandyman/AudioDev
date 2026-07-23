@@ -1,6 +1,6 @@
 # Layout Notes — Multichannel ADC/DAC Board
 
-**Status:** Pre-layout decisions and rationale, captured from the placement/stackup discussion. Feeds the Phase 2 board layout. ⚠ items still need a bench/datasheet/layout call. Companion to `pin-allocation.md`, `adc-netlist.md`, `power-supply.md`/`-netlist.md`, `dac-selection.md`, and `test-points.md`.
+**Status:** Pre-layout decisions and rationale, captured from the placement/stackup discussion. Feeds the Phase 2 board layout. ⚠ items still need a bench/datasheet/layout call. Companion to `pin-allocation.md`, `adc-netlist.md`, `power-supply.md`/`-netlist.md`, `dac-selection.md`, and `test-points.md`. This is the **canonical layout doc**; part-level footprint/BOM choices (packages, dielectrics, JLC part numbers) live in the separate **assignments doc** — cross-referenced here, not duplicated.
 
 **Read first for a fresh session:** this file assumes the schematic is entered (netlist-gate items tracked in the per-section docs) and captures how the board should be *placed and stacked up*, plus the analog-interface decisions that drive it.
 
@@ -29,6 +29,18 @@ End-to-end placement along the long axis:
 - **\*`3V3_A` LDO placed mid-board (near its load), not at the power end.** Put the LDO close to the analog load so its PSRR isn't undone by a long *post*-LDO trace re-acquiring noise; let the noisier pre-LDO `3V45_D` do the long haul (the LDO rejects it). Local analog bulk stays at the ADC pair (`C_bulk` + `FB1` for `MCU_VDDA`).
 - **MICBIAS never goes toward the power end.** It's generated *inside* each ADC and only leaves the board via `J1`/`J2` to the offboard pickup preamps.
 
+### 1.1 Fits on one side (validated against the KiCad layout, 2026-07)
+
+With the ADC section placed for real, the whole board is tracking to a **single-sided, single-board** layout on the ~90×30 mm target — no back-side components required. Three moves make it fit; back-side placement and board-splitting are held in reserve only (§8):
+
+- **Output jack off-board.** The ¼″ TRS lives off the PCB (charge-ring wiring runs out to it), freeing the edge it would otherwise own.
+- **Tag-Connect debug, not a header** (§4) — reclaims the 2×5 header footprint and its probe keep-out.
+- **Bluetooth off the main board** — deferred to a future daughterboard (below), so no on-board module footprint or antenna keep-out on the single-sided budget.
+
+### 1.2 Bluetooth — future mezzanine daughterboard, not on the main board
+
+BT moves from the master plan's "reserved DNP module footprint + antenna keep-out on the main board" to a **mezzanine daughterboard over the power section**, populated in a later spin. The main board reserves only a small **board-to-board/mezzanine connector footprint** (UART + power + ground); the module and its antenna live on the daughterboard, with the antenna at the daughterboard's own edge — away from the main-board planes (cleaner than an on-board antenna) and keeping the ~150 mm² module + keep-out off the main board. This relocation is what makes single-sided fit realistic, and it **amends the locked BT decision** in `multichannel-audio-board-plan.md` (locked decisions / Phase 0 item 5). ⚠ **Z-height:** the daughterboard must clear the instrument cavity's height budget — confirm before committing the mezzanine.
+
 ## 2. Grounding — one unified plane
 
 **Single ground plane for analog + digital (TI-recommended, and current mixed-signal best practice).** Do **not** split analog/digital grounds — the old split-plane guidance has been walked back for ~15 years because a return current forced to detour around a gap radiates/couples worse than the split ever prevented. Partition by **placement** (§1), not by cutting copper.
@@ -55,6 +67,8 @@ Notes:
 ## 4. Test points
 
 See `test-points.md` (single source of truth, categorized by access type). Summary: Cat 1 wire loops = GND ×2–3 + MCO1; Cat 2 probe pads = the ADC SAI4 bus; DAC I2S bus + XSMT pending the ⚠ TSSOP-probe call; everything else Cat 3 (touch a passive). GND loops one per region (MCU / analog / DAC out).
+
+**Debug connector — Tag-Connect TC2030, no header.** SWD/RTT via a Tag-Connect **TC2030** footprint (six pads + three locating holes, no connector body) rather than a 2×5 1.27 mm Cortex header — this reclaims the header footprint and its probe-clearance keep-out, part of what buys single-sided fit (§1.1). Signals: SWDIO, SWCLK, NRST, VCC (sense), GND (+ one spare); RTT rides over SWD, so no UART pin is needed. Program/debug with the J-Link via Segger's Tag-Connect adapter. Legged (TC2030-IDC) vs. no-leg (TC2030-IDC-NL + retaining clip) is a mechanical/assembly call — NL drops the through-holes but needs the clip held during bring-up.
 
 ## 5. MCU power routing — `3V45_D` island on L3 (not L2)
 
@@ -101,3 +115,13 @@ No fundamental issue — the buffering (low-Z source) is what makes single-ended
 6. **Pickup ribbon width** — stay at 6-conductor vs widen to ground-interleaved (cost call).
 7. **MICBIAS star-route** to the 4 buffer feeds (no common impedance).
 8. Existing netlist-gate ⚠ items in the per-section docs still stand (crystal load caps, I2C pull-up/ADDR values, VCAP/AN5419 SMPS-direct wiring, tantalum polarity, etc.).
+9. ⚠ **Layer-count reconciliation** — `multichannel-audio-board-plan.md` says 6-layer; this doc (§3) argues 4. The single-sided, routing-light result strengthens the 4-layer case. Resolve between the two docs — a separate call from the fit/sidedness decision.
+10. ⚠ **BT daughterboard Z-height** (§1.2) — confirm the mezzanine clears the instrument-cavity height budget before committing the connector.
+
+## 8. Contingency architectures (held in reserve)
+
+The plan of record is **single-board, single-sided** (§1.1). These are documented fallbacks only — to reach for if the layout stops fitting (scope growth, a bigger connector set, or pulling BT back on-board):
+
+- **Components on both sides.** Push the decoupling sea, the input clamp diodes, and small passives to the back, directly under the pins they serve (where decoupling wants to be anyway); keep the ICs, inductors, crystal, and connectors on top. Roughly doubles usable area at the cost of double-sided assembly.
+- **Split / mezzanine board along the SI partition.** The analog/digital/power zoning of §1 is already a physical partition — promote it to separate boards on a board-to-board stack (power at the bottom, MCU/DAC main, analog capture as its own board/wing). Improves analog/digital isolation as a side effect. The one constraint: the 12.288 MHz TDM bus (BCLK/FSYNC/SDOUT) crossing the connector must be short and flanked by ground pins. A rigid-flex version folds flat for bring-up (all components probeable) and folds into the stack for install.
+- **Biggest single area lever, only if desperate:** drop to one ADC / 4 channels — halves the analog front end but changes what the instrument senses. That's a concept cut, not a layout tweak.
