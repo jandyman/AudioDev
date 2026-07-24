@@ -113,7 +113,7 @@ See `test-points.md` (single source of truth; categorized by access type). Power
 | U3 | TPS7A2033PDBVR | SOT-23-5 | [C2862740](https://www.lcsc.com/product-detail/voltage-regulators-linear-low-drop-out-ldo-regulators_texas-instruments-tps7a2033pdbvr_C2862740.html) | 3.3 V low-noise LDO |
 | L1 | 1.5 µH, ≥3 A sat, shielded | 4×4 mm (XFL4020/SWPA4030 class) | pick at order | buck-boost inductor |
 | L2 | 2.2 µH, ≥0.5 A sat, low DCR | 2520/3030 | pick per AN5419 | H725 core SMPS |
-| FB1 | Ferrite 600 Ω @ 100 MHz | 0603 | basic | VDDA feed |
+| FB1 | Ferrite 600 Ω @ 100 MHz (Sunlord GZ1608D601TF) | 0603 | [C1002](https://jlcpcb.com/partdetail/Sunlord-GZ1608D601TF/C1002) | VDDA feed; basic-class, ~200 mA / 450 mΩ DCR (VDDA draws ~2–4 mA) |
 | SW1 | integrated switch on volume pot RV3 | chassis | — | hard on/off in the battery line (`bat+` → `VBAT`); pot itself is a chassis part, see `pin-allocation.md` §6 |
 | C1, C3 | 1 µF X7R 25 V | 0603 | basic | U1 IN/BAT |
 | C2, C4 | 10 µF X7R ≥10 V | 0805 | basic | BATT bulk / U2 VIN |

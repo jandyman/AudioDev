@@ -78,6 +78,8 @@ See `test-points.md` (single source of truth, categorized by access type). Summa
 
 **Do NOT** carve this island into L2. L2 is the unified ground plane, and the MCU is the single worst place to gap it (SAI/I2S/USB/SWD/I2C all fan out there → every return current would detour around the hole). There's also a hard conflict: the MCU exposed pad's thermal/ground via array must land in L2 ground right where the island would go. Island on L3, exposed pad → L2 ground, and the two never fight.
 
+**No matching 3V3_A plane/island under the ADC/DAC — deliberate.** The island trick is justified *only* at the MCU, and for a routing reason, not a performance one: the H725's clustered VDD pins would be a rat's nest otherwise. Neither condition holds at the analog end — `3V3_A` is low-current (~150 mA for the whole analog rail, §7 of `power-supply-netlist.md`) and the codecs have only a few supply pins each, so it needs a clean *reference*, not a low-impedance delivery plane. Carving a `3V3_A` island into L3 under the front end would gap the ground pour directly beneath the most sensitive signals — the opposite of the §2/§3 intent that L3 stay solid ground fill under the analog end (so the mid-board→analog L1 returns, and any L4 crossover, always reference ground). Deliver `3V3_A` to the codec/DAC AVDD pins as a fat trace or a **small local top-side pour** (e.g. tying the two ADC5140 AVDD pins together) plus per-pin decoupling — never a plane that chops L3 ground.
+
 ## 6. Analog interface decisions (settled this pass)
 
 ### 6.1 MICBIAS drive — OK for 4 buffers/device
