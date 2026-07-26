@@ -70,13 +70,15 @@ Power switch **(superseded as-built 2026-07-15)**: the switch is the integrated 
 
 | Pin | Net / connection |
 |---|---|
-| IN (1) | `3V45_D` + C8 1 µF to GND |
+| IN (1) | `3V45_D` + local 1 µF to GND (at the pin) |
 | GND (2) | `GND` |
 | EN (3) | `3V45_D` (always on with its input) |
 | NC (4) | — |
-| OUT (5) | `3V3_A` + C9 1 µF to GND |
+| OUT (5) | `3V3_A` + local 1 µF to GND |
 
-Place in the analog island next to the codecs (board plan); 3V3_A distribution caps at each load are in the codec/DAC sections, not here.
+**Fed directly from `3V45_D` — no boundary filter.** `3V45_D` is already routed into the analog zone to power the codec digital supplies (ADC IOVDD, DAC DVDD), so the LDO simply taps it there. Its PSRR plus the local 1 µF input cap reject the rail's switcher/island noise. A series ferrite + shunt cap was considered and **dropped** — with `3V45_D` present in the zone regardless, it added parts and routing difficulty for negligible gain.
+
+**Place the LDO near its analog loads** (board plan §1: keep the *post*-LDO `3V3_A` run short so the regulated output doesn't re-acquire noise). Feed it from the same `3V45_D` entry that serves the codec IOVDD/DVDD pins; decouple those digital pins locally (per the codec sections) so their switching current loops at the pin. The partition that protects analog performance is at the *signal* level — pickup inputs, MICBIAS, and the AVDD reference kept clear of the digital rails and their returns — not the physical presence of `3V45_D`. 3V3_A distribution caps at each load are in the codec/DAC sections, not here.
 
 ### VDDA feed (MCU analog supply + ADC reference)
 
@@ -84,7 +86,7 @@ Place in the analog island next to the codecs (board plan); 3V3_A distribution c
 
 ### Battery sense
 
-`VBAT` → R12 1 MΩ → `BATT_SENSE` → R13 1 MΩ → GND; C12* 0.1 µF `BATT_SENSE` → GND. `BATT_SENSE` → MCU PC4 = ADC1_INP4 (pin 47, per `pin-allocation.md` §2). Divide-by-2, full-scale 4.4 V → 2.2 V at ADC, ~2 µA standing drain. **As-built notes (2026-07-15):** the divider hangs on the **post-switch `VBAT`** node, so it reads only while the unit is switched on — no off-state drain, and no high-side disconnect FET needed (closes open item 8 of `power-supply.md`); ⚠ the schematic currently has R12/R13 entered as "121M"/"131M" — should be 1 MΩ 1 % each (entry typo, on the fix list). *(Schematic filter cap ref is C1, value not yet set.)*
+`VBAT` → R12 1 MΩ → `BATT_SENSE` → R13 1 MΩ → GND; C12* 0.1 µF `BATT_SENSE` → GND. `BATT_SENSE` → MCU PC4 = ADC1_INP4 (pin 47, per `pin-allocation.md` §2). Divide-by-2, full-scale 4.4 V → 2.2 V at ADC, ~2 µA standing drain. **As-built notes (2026-07-15):** the divider hangs on the **post-switch `VBAT`** node, so it reads only while the unit is switched on — no off-state drain, and no high-side disconnect FET needed (closes open item 8 of `power-supply.md`); R12/R13 = **1 MΩ as-built** (entry typo fixed 2026-07-23). *(Filter cap ref is C1 — value still unset, 0.1 µF per this doc.)*
 
 ### H725 core-SMPS externals ⚠ (verify wiring against AN5419 / Nucleo-H725 before entry)
 
@@ -153,4 +155,4 @@ Entered in the schematic with these deltas from §2 above (validated topology �
 
 ---
 
-*Schematic-entry status: rails, switch-in-battery-line (RV3), charger (§3a as-built deltas: R17 30 k PROG ⚠, no TVS, no charge LED, U8 = MCP73811 symbol standing in for TP4054), battery-sense divider, FB1 + VDDA caps, and the MCU core-SMPS externals (L2 2.2 µH + 4.7 µF, MCU sheet) are entered. Still missing vs. this doc: U2 VIN caps (C4 10 µF + C5 0.1 µF), 3V45_D output caps (C6/C7 22 µF ×2), LDO in/out caps (C8/C9 1 µF), R12/R13 value typo, test points.*
+*Schematic-entry status: rails, switch-in-battery-line (RV3), charger (§3a as-built deltas: R17 30 k PROG ⚠, no TVS, no charge LED, U8 = MCP73811 symbol standing in for TP4054), battery-sense divider, FB1 + VDDA caps, and the MCU core-SMPS externals (L2 2.2 µH + 4.7 µF, MCU sheet) are entered. Still missing vs. this doc (re-verified against the netlist 2026-07-24): **U2 VIN caps** (10 µF + 0.1 µF at the pins — `VBAT` net currently has zero capacitance, and it sits *after* the switch, so the switcher's input loop has no local reservoir), **3V45_D output capacitance** (as-built C101/C104 = 2×4.7 µF vs the 2×22 µF the TPS63020 datasheet assumes — upgrade or justify), the **LDO input cap** (1 µF at the IN pin, fed directly from `3V45_D` — no boundary filter), sense-filter cap value, per-pin AVDD/IOVDD 0.1 µF + analog 10 µF bulk, remaining test points. R12/R13 fixed.*

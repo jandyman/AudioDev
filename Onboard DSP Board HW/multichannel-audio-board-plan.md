@@ -14,7 +14,7 @@
 - Both ADC5140s share one TDM bus on **SAI4_B** (master RX — the only TDM-capable SAI on the VFQFPN68); DAC on **I2S1** (master TX), both kernel-clocked from PLL3 so capture and playback are frequency-locked by construction
 - Stereo DAC for audio output (one channel required; stereo is the natural granularity)
 - Lithium battery power, onboard cell. **No USB connector.** Charging via the **ring of the 1/4″ TRS output jack**: normal audio cable → audio sink; special charge cable → 5 V on the ring into the charger IC. Proven on a prior active-electronics board. (Amended 2026-07-13 from "USB charging"; see `power-supply.md`)
-- Bluetooth: **moved off the main board to a future mezzanine daughterboard** (amended 2026-07; see `layout-notes.md` §1.2). The main board reserves only a small board-to-board connector footprint (UART + power + ground); the module and its antenna live on the daughterboard, populated in a later spin. Relocating it off-board is what enables single-sided fit. (Was: reserved on-board pre-certified-module footprint + antenna keep-out, unpopulated on spin 1.)
+- Bluetooth: **u-blox ANNA-B112 on the main board, corner-mounted** (amended 2026-07-24, supersedes the interim daughterboard plan; see `layout-notes.md` §1.2 and `bluetooth-anna-b112.md`). The 6.5×6.5 mm SiP is small enough to tuck into a board corner; it needs a corner ground-plane cutout + antenna tuning strip, **copy-exact from the u-blox internal-antenna reference design — modular certification depends on reproducing it**. Interface already reserved: USART3 + RTS/CTS + BT1/BT2 + `3V45_D` + GND. Plan of record: at minimum carve the corner keep-out so the rest of the layout is compatible; full footprint prep is optional depending on effort. Sourcing caveat: not in the JLC assembly library and intermittently OOS at LCSC → consign or hand-reflow. (Prior revisions: on-board generic DNP module + keep-out; then a mezzanine daughterboard — both superseded.)
 - Debug: SWD via 10-pin Cortex header for Segger J-Link; RTT for logging (no UART console needed)
 - Budget: one respin expected; plan structured to make spin 2 small
 
@@ -26,7 +26,7 @@
 2. **Clocking scheme — RESOLVED.** HSE = 24.576 MHz crystal → PLL3 (integer-N for the 48 kHz family, e.g. VCO 393.216 MHz, PLL3_P = 49.152 MHz). SAI4_B masters the TDM capture bus (BCLK 12.288 MHz + FSYNC to both codecs; codecs slave via their on-chip PLL from BCLK — no MCLK distribution); I2S1 masters the DAC (BCLK 3.072 MHz, I2SDIV = 16). Both kernel muxes (`SAI4BSEL`, `SPI123SEL`) select PLL3_P → capture and playback frequency-locked by construction. MCO1 (PA8) reserved as a clock test point. Note SAI4 is D3-domain: capture DMA via BDMA with buffers in SRAM4.
 3. **DAC selection — RESOLVED: PCM5102A**, line-out (no headphone amp), on I2S1, no MCLK, strap-configured; L-pad to instrument level + volume pot. Full rationale in `dac-selection.md`.
 4. **Battery/power details — IN DISCUSSION, see `power-supply.md`.** Regulator topology recommended there (buck-boost → 3.45 V digital rail, low-noise LDO → 3V3_A; TPS63020 + TPS7A20 leaning; **TP4054 linear charger** — no power path, power-off-while-charging convention, per that doc's §8) — note this supersedes the plain "buck" wording here, since the 1S cell straddles 3.3 V. Still open: cell size and connector; on/off strategy (load switch vs. always-on with sleep); battery-sense divider disconnect; plus the datasheet verifications listed in that doc.
-5. **Bluetooth module target.** Pick the module now (even though DNP on spin 1) so the reserved footprint, UART routing, and antenna keep-out match a real part. **Amended (2026-07): BT relocated to a future mezzanine daughterboard — the main board carries only the board-to-board connector, so module/antenna selection now sizes the daughterboard (and its Z-height in the instrument cavity), not a main-board keep-out. See `layout-notes.md` §1.2.**
+5. **Bluetooth module — RESOLVED: u-blox ANNA-B112 on the main board, corner-mounted.** (2026-07-24, supersedes the interim daughterboard amendment.) The 6.5×6.5 mm SiP fits a board corner using the u-blox internal-antenna reference layout (corner ground cutout + tuning strip, copy-exact for cert). Interface already reserved (USART3 + RTS/CTS + BT1/BT2 + `3V45_D` + GND). Sourcing caveat: not in the JLC assembly library and intermittently OOS at LCSC → consign reels or hand-reflow (hot air + preheater, leaded-paste rework). Full rationale, performance, and reference links in `bluetooth-anna-b112.md`.
 6. **Boot/programming.** BOOT0 strap; programming and debug exclusively via J-Link SWD. No USB on the board at all — charge power arrives via the output-jack ring (see locked decisions).
 
 ## Phase 1 — Optional firmware pre-validation (parallel with Phases 2–3)
@@ -39,7 +39,7 @@ Daisy-based validation is dropped — no throwaway carrier for a platform that i
 - Power section: TP4054 charger (fed from output-jack ring), buck-boost for digital, LDO for analog, battery sense — netlist draft in `power-supply-netlist.md`
 - Codec section: 2× ADC5140, shared TDM, distinct I2C addresses, analog input conditioning, AVDD filtering
 - DAC section: stereo I2S DAC on its own SAI block, output filter/buffer
-- BT module footprint + UART, DNP, antenna keep-out per module datasheet
+- ANNA-B112 footprint + USART3/flow-control + BT1/BT2, corner ground-plane cutout + antenna tuning strip per the u-blox ANNA-B112 System Integration Manual (UBX-18009821)
 - 10-pin Cortex debug header (J-Link), oriented for probe clearance
 - Test points: all rails, battery sense, BCLK/FSYNC/DOUT/DIN, I2C, plus a spare GPIO header
 - **Review gate (Claude):** netlist review against checklist — power sequencing, charger straps/protection (the ⚠ list in `power-supply-netlist.md` §4), SMPS/VCAP wiring vs. AN5419, boot pins, SAI pin mux validity, I2C address conflicts, codec strap pins, clock tree vs. the recommended scheme, decoupling counts
@@ -92,7 +92,7 @@ Log every anomaly for the spin-2 list even if worked around.
 
 **Layout in-house, not outsourced.** Low routed content (most LQFP144 pins unused); $25–40/hr vendors supply labor, not the mixed-signal placement judgment that was the concern — that lives in the constraint doc and review gates either way. 6-layer stackup (sig/gnd/sig/pwr/gnd/sig) makes return paths correct by construction and buys out most noise-craft risk for a modest upcharge. Estimated 25–40 hours; skill transfers to productization.
 
-**Other:** no USB on the board — charging via the output-jack ring (special charge cable). Debug is J-Link SWD + RTT exclusively. BT module footprint reserved but DNP on spin 1 — pick the real module now so routing/keep-out match. One respin budgeted; plan structured so spin 2 is small.
+**Other:** no USB on the board — charging via the output-jack ring (special charge cable). Debug is J-Link SWD + RTT exclusively. BT is the u-blox ANNA-B112 corner-mounted on the main board (copy-exact antenna reference layout; consign or hand-reflow since it's outside JLC assembly). One respin budgeted; plan structured so spin 2 is small.
 
 **Open item:** clocking scheme from prior thread (claude.ai/share/d6f60836-1338-4660-b872-9f7a08425532) not yet transcribed — Phase 0 item 2 holds a placeholder assumption (H7 SAI master via PLL3 from HSE; codecs slave from BCLK via internal PLL; no MCLK distribution). Verify against the thread before schematic.
 
@@ -105,4 +105,5 @@ Log every anomaly for the spin-2 list even if worked around.
 | Power sequencing / VCAP error | Copy Nucleo values exactly; review gate |
 | Buck/charger noise into codec inputs | LDO for AVDD, partitioned placement, minimized switch loops; spin-2 budget |
 | Firmware + hardware debugged simultaneously | Optional Nucleo pre-validation; RTT logging from first power-up; DAC-first audio bring-up isolates TX from RX |
-| BT footprint doesn't fit real module later | Pick the target module now; route UART + antenna keep-out per its datasheet |
+| ANNA-B112 antenna underperforms / cert invalid | Reproduce the u-blox internal-antenna reference layout copy-exact (corner cutout + tuning strip); keep its keep-out clear of copper and analog nets |
+| ANNA-B112 not in JLC assembly / OOS at LCSC | Consign reels or hand-reflow (hot air + preheater, leaded paste, ~200 °C peak); order 3–5 spares |

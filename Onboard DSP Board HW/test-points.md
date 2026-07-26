@@ -37,7 +37,7 @@ Consequence: an MCU-only net with no series/pull passive is unreachable and need
 
 ## Category 2 — probe pad / via (otherwise unreachable)
 
-The ADC TDM bus runs from the leadless MCU to the leadless ADC pair — **no probeable endpoint anywhere on the net.** These need pads.
+The ADC TDM bus runs from the leadless MCU to the leadless ADC pair — **no probeable endpoint anywhere on the net.** These need pads. ⚠ **Not yet in the schematic** (netlist check 2026-07-24): entered so far are TP1 (MCO1), TP11 (MICBIAS_A), TP12–14 (GND) — add TP symbols for the three bus nets below before layout completion.
 
 | # | Signal / net | Pin · Pad | Runs | Also called |
 |---|---|---|---|---|
@@ -64,12 +64,12 @@ Reachable without dedicated board area. Recorded here so nothing is lost from th
 
 | Signal / net | Where to touch it |
 |---|---|
-| `3V45_D` (digital rail) | C6 / C7 22 µF output caps |
-| `3V3_A` (analog rail) | LDO (U3) output cap C9 |
-| `MCU_VDDA` | C10 / FB1 |
-| VCORE | VCAP decoupling cap (near MCU) |
-| `bat+` / `VBAT` | BATT bulk cap C2 / connector J3 |
-| `CHG_IN` | Charger input cap C4 / TVS D1 / jack ring J4 |
+| `3V45_D` (digital rail) | C101 / C104 4.7 µF output caps (⚠ 2×22 µF per power doc still pending) |
+| `3V3_A` (analog rail) | LDO **U1** output side — C12/C13 as-built (1 µF output cap still to add) |
+| `MCU_VDDA` | C37 / C38 / FB1 |
+| VCORE | VCAP caps C90–C92 (near MCU) |
+| `bat+` / `VBAT` | bulk cap C23 / connector J3; post-switch `VBAT` at U2 VIN (⚠ VIN caps still to add) |
+| `CHG_IN` | charger input cap C30 / jack ring J4.2 (no TVS as-built; D1 is the *status* LED, not a TVS) |
 | `BATT_SENSE` | R12/R13 divider midpoint |
 | `I2C1_SCL` | R2 pull-up (to 3V45_D) |
 | `I2C1_SDA` | R1 pull-up |

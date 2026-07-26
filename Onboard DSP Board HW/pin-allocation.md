@@ -99,7 +99,7 @@ ADC5140 I2C addresses are set by hardware ADDR straps: U3 = GND/GND, U4 = IOVDD/
 2. ⚠ **DS13311 AF spot-check** for the six audio pins (machine-derived AFs above; two sources agree).
 3. ⚠ **I2C pull-up values** (R1/R2) and **ADDR strap values** — parts placed, values unset.
 4. ⚠ **R15 (LED) value** — suggest 1 kΩ.
-5. ⚠ **NRST label** on the MCU sheet so J5 pin 10 actually reaches the reset pin.
+5. ~~**NRST label**~~ **Resolved** — verified from the netlist 2026-07-24: `NRST` = U7 pin 12 + C2 + J5 pin 10, one net.
 6. **USB routing** — PA11/PA12 reserved; decide whether to route to any pads on spin 1 (near-zero cost; no connector planned). If USB data is ever activated, ⚠ verify how the transceiver is supplied on VFQFPN68 (no VDD33USB/VDD50USB pins — DS13311).
 7. **BT module** — confirm the chosen module uses HW flow control and matches the PB12/PB15 control lines (Phase 0 item 5).
 8. **SDOUT bus pull-down** — 100 kΩ DNP on `SAI4_SD_B` (populate only if bench shows float; `adc-netlist.md` §5).
@@ -113,10 +113,10 @@ ADC5140 I2C addresses are set by hardware ADDR straps: U3 = GND/GND, U4 = IOVDD/
 |---|---|---|---|
 | `3V45_D` (VDD digital) | 9, 22, 35, 51, 68 | 5 | decoupling section: C96–C99 100 nF (one per pin at layout) + C101 4.7 µF bulk |
 | VBAT (backup domain) | 1 | 1 | tied to `3V45_D` (no coin cell) — **not** the battery `VBAT` net; shares name only |
-| VDDSMPS | 6 | 1 | `3V45_D` ⚠ add local 100 nF + 4.7 µF at pin during layout |
+| VDDSMPS | 6 | 1 | `3V45_D` — **coverage rule, not per-pin caps** (2026-07-24, see `layout-notes.md` §5.1): pin vias into the island; ≥1 100 nF island↔GND cap within ~2 mm of the pin-6 via (on the near side of the VDD cluster — this is the noisy consumer), 4.7 µF within ~5 mm |
 | VLXSMPS → VFBSMPS | 5 → 7 | | **L2 2.2 µH** between them; **C95 4.7 µF** at VFBSMPS (AN5419 direct-SMPS) — keep this hot loop tight; VSSSMPS (pad 4) is two pads away |
 | VCAP | 33, 49, 66 | 3 | **100 nF each** (C90/C91/C92) — LDO permanently disabled on this package (ST-confirmed) |
-| VDDA / VSSA | 16 / 15 | 1/1 | `MCU_VDDA` (FB1 from `3V3_A`) + C102 100 nF / C103 1 µF |
+| VDDA / VSSA | 16 / 15 | 1/1 | `MCU_VDDA` (FB1 from `3V3_A`) + C38 100 nF / C37 1 µF *(schematic refs)* |
 | VSS | 8, 21, 34, 50, 67 + **exposed pad (69)** | 6 | single ground plane; pad soldered, thermal-via stitch at layout |
 | NRST / BOOT0 | 12 / 63 | | C2 100 nF / R14 10 kΩ pull-down |
 
