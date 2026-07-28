@@ -10,7 +10,7 @@
 
 - **Source per channel:** low-impedance magnetic pickups, each **buffered at the pickup by a JFET source-follower**. Buffer output impedance is known and low, **~1 kΩ**. Signal level is **< 0.1 V peak-to-peak** (≈ 35 mVpp ≈ 12 mVrms) — roughly **30–40 dB below** the ADC's single-ended full scale.
 - **Gain:** the required gain is not yet known and is deliberately handled **inside the ADC5140** (analog channel PGA + digital channel volume, optionally DRE up to 24 dB). Flexible in-device gain was a **primary reason for choosing this part**. The analog board path stays **unity** — no external gain stage; all level-setting is a register choice, characterized once the buffer output level is measured.
-- **Preamp powering:** each pickup preamp is powered from the codec's **MICBIAS** output used as a **supply rail**. The four JFET source-follower buffers are designed to run directly off a rail, so MICBIAS feeds their Vdd **directly — no series load resistor**. Wiring is **multi-conductor** (one MICBIAS power line + one signal line per channel + ground) through a per-device connector (`J1` for ADC-A, `J2` for ADC-B): MICBIAS on one conductor powers all four buffers, and each buffer's audio returns on its own signal conductor, AC-coupled into `INxP`. **MICBIAS = 3.014 V** (VREF×1.096, `MBIAS_VAL = 001`), regulated, 1.6 µVRMS noise, up to **20 mA per device** (30 mA over-current trip) — the four buffers' combined supply current must stay inside that budget (§11). Each device's MICBIAS powers **its own 4 buffers only** — the two MICBIAS outputs are **never tied together** (separate regulators).
+- **Preamp powering:** each pickup preamp is powered from the codec's **MICBIAS** output used as a **supply rail**. The four JFET source-follower buffers are designed to run directly off a rail, so MICBIAS feeds their Vdd **directly — no series load resistor**. Wiring is **multi-conductor** (one MICBIAS power line + one signal line per channel + ground) through a per-device pickup connector (one for ADC-A, one for ADC-B): MICBIAS on one conductor powers all four buffers, and each buffer's audio returns on its own signal conductor, AC-coupled into `INxP`. **MICBIAS = 3.014 V** (VREF×1.096, `MBIAS_VAL = 001`), regulated, 1.6 µVRMS noise, up to **20 mA per device** (30 mA over-current trip) — the four buffers' combined supply current must stay inside that budget (§11). Each device's MICBIAS powers **its own 4 buffers only** — the two MICBIAS outputs are **never tied together** (separate regulators).
 - **Coupling:** **AC-coupled** to reject each buffer's DC output bias while passing near-DC audio. **Signal blocking cap (INxP) = 4.7 µF tantalum** — sized to push the high-pass corner as low as practical (~1.7 Hz at 20 kΩ input impedance) so the **onset transient of finger pressure** on the string is captured; see §2. It taps the buffer's signal line into INxP. **Matching cap (INxM) = 1 µF X7R preferred** (the 4.7 µF currently drawn is also fine — it carries no signal; see §2).
 - **Channels:** all 8 identical single-ended AC-coupled, MICBIAS-powered, unless a per-channel exception is called out later.
 
@@ -42,7 +42,7 @@ With **C_in = 4.7 µF** fixed, the impedance setting directly picks the corner a
 
 **Blocking-cap charge time.** 4.7 µF exceeds the device's default coupling-cap quick-charge window (default sized for **≤ 1 µF**). No hardware cost — firmware raises `INCAP_QCHG` (P0_R5_D[5:4]) so the caps charge to the common-mode at power-up without a long settle (SBAS892A §8.3.3). Captured in §8.
 
-**Matching cap (INxM) = 1 µF X7R preferred; 4.7 µF as currently drawn is also acceptable.** INxM carries no signal (it's only the AC-ground reference for the internally-differential front end), so its value does not enter the signal transfer — the passband and the ~1.7 Hz corner are set entirely by the INxP cap. At **4.7 µF** it simply matches the signal cap and gives the best low-frequency common-mode reference (its own AC-ground corner also ~1.7 Hz). At **1 µF** that node's AC-ground corner rises to ~8 Hz (at 20 k `R_imp`), slightly reducing common-mode rejection below ~8 Hz — subsonic, negligible common-mode content from instrument pickups, so **inaudible** — in exchange for a smaller/cheaper part. X7R is fine either way (low swing). **The schematic currently uses 4.7 µF (C15/C16/C17/C9 on ADC-A, and the ADC-B set);** pick one value and make doc + schematic agree.
+**Matching cap (INxM) = 1 µF X7R preferred; 4.7 µF as currently drawn is also acceptable.** INxM carries no signal (it's only the AC-ground reference for the internally-differential front end), so its value does not enter the signal transfer — the passband and the ~1.7 Hz corner are set entirely by the INxP cap. At **4.7 µF** it simply matches the signal cap and gives the best low-frequency common-mode reference (its own AC-ground corner also ~1.7 Hz). At **1 µF** that node's AC-ground corner rises to ~8 Hz (at 20 k `R_imp`), slightly reducing common-mode rejection below ~8 Hz — subsonic, negligible common-mode content from instrument pickups, so **inaudible** — in exchange for a smaller/cheaper part. X7R is fine either way (low swing). **The schematic currently uses 4.7 µF (the INxM matching caps on both ADCs);** pick one value and make doc + schematic agree.
 
 **Signal blocking-cap dielectric = 4.7 µF tantalum (decided).** Distortion is not a concern — the AC swing across the cap is tiny (< 0.1 Vpp), so tantalum's voltage-coefficient / dielectric-absorption artifacts are negligible (same reasoning as the X7R M-cap). **The one real caveat is polarity / reverse voltage** (⚠ §11): the tantalum sees the DC difference between the **buffer's output bias** (signal-line side) and INxP's internal common-mode, and a tantalum can fail *short* if reverse-biased even momentarily — e.g. at power-up or with MICBIAS off, one side can sit at 0 V while the other is positive. Confirm which side is higher and that it never reverses across all power states (power-up/down, MICBIAS gated off); orient the tantalum accordingly, or substitute a non-polar part if the sign can't be guaranteed.
 
@@ -54,8 +54,8 @@ With **C_in = 4.7 µF** fixed, the impedance setting directly picks the corner a
 
 | Net | Description |
 |---|---|
-| `IN1_SIG`…`IN8_SIG` | Per-channel buffer signal lines (from the `J1`/`J2` connectors): each JFET buffer's audio output → blocking cap → INxP. Buffers are powered separately from the MICBIAS rail |
-| `MICBIAS_A` / `MICBIAS_B` | Per-device buffer supply rail (3.014 V) — feeds that device's 4 buffers directly through connector `J1`/`J2`, no series resistor; **not** interconnected |
+| `IN1_SIG`…`IN8_SIG` | Per-channel buffer signal lines (from the pickup connectors): each JFET buffer's audio output → blocking cap → INxP. Buffers are powered separately from the MICBIAS rail |
+| `MICBIAS_A` / `MICBIAS_B` | Per-device buffer supply rail (3.014 V) — feeds that device's 4 buffers directly through its pickup connector, no series resistor; **not** interconnected |
 | `BCLK_ADC` | `SAI4_SCK_B` bit clock (PA2), MCU → both codecs (shared) |
 | `FSYNC_ADC` | `SAI4_FS_B` frame sync (PC0), MCU → both codecs (shared) |
 | `SDOUT_ADC` | Shared TDM data bus, both codecs → `SAI4_SD_B` (PA0) (per-device slot assignment + unused-slot tri-state) |
@@ -69,7 +69,7 @@ With **C_in = 4.7 µF** fixed, the impedance setting directly picks the corner a
 
 ## 4. Per-device connections (both codecs identical except ADDR strap + slot map)
 
-Refs: **U3 = ADC-A**, **U4 = ADC-B**. Pin numbers per the 24-WQFN pinout (SBAS892A pin table).
+The two devices are **ADC-A** and **ADC-B**. Pin numbers per the 24-WQFN pinout (SBAS892A pin table).
 
 | Pin | Name | Net / connection |
 |---|---|---|
@@ -77,16 +77,16 @@ Refs: **U3 = ADC-A**, **U4 = ADC-B**. Pin numbers per the 24-WQFN pinout (SBAS89
 | 2 | AREG | on-chip 1.8 V analog reg output (AVDD = 3.3 V mode) → **1 µF to AVSS at pin**, no external supply ⚠ |
 | 3 | VREF | **1 µF to AVSS at pin** (min per §8.3.4). Larger cap ⇒ raise `VREF_QCHG` |
 | 4 | AVSS | `GND` (direct to plane) |
-| 5 | MICBIAS | `MICBIAS_A`/`MICBIAS_B` — buffer supply rail. **1 µF to AVSS at pin** (sets the 1.6 µVRMS noise spec); routes to this device's 4 buffer rails via connector `J1`/`J2`, **no series resistor**. `MBIAS_VAL = 001` → 3.014 V, powered on via `MICBIAS_PDZ` |
-| 6 | IN1P_GPI1 | from buffer-1 signal line via **C_in 4.7 µF tantalum** blocking cap (GPI1 disabled — analog SE input) ⚠ polarity |
+| 5 | MICBIAS | `MICBIAS_A`/`MICBIAS_B` — buffer supply rail. **1 µF to AVSS at pin** (sets the 1.6 µVRMS noise spec); routes to this device's 4 buffer rails via its pickup connector, **no series resistor**. `MBIAS_VAL = 001` → 3.014 V, powered on via `MICBIAS_PDZ` |
+| 6 | IN1P_GPI1 | from buffer-1 signal line via a **4.7 µF tantalum** blocking cap (GPI1 disabled — analog SE input) ⚠ polarity |
 | 7 | IN1M_GPO1 | **1 µF X7R to GND** (matching cap; single-ended AC-coupled per Fig. 37; 4.7 µF as drawn) |
 | 8 | IN2P_GPI2 | from buffer-2 signal line via 4.7 µF tantalum |
 | 9 | IN2M_GPO2 | 1 µF X7R to GND (4.7 µF as drawn) |
 | 10 | IN3P_GPI3 | from buffer-3 signal line via 4.7 µF tantalum |
 | 11 | IN3M_GPO3 | 1 µF X7R to GND (4.7 µF as drawn) |
 | 12 | IN4P_GPI4 | from buffer-4 signal line via 4.7 µF tantalum |
-| 13 | IN4M_GPO4 | 1 µF X7R to GND (4.7 µF as drawn) — ⚠ **U4 (ADC-B) IN4M cap missing in schematic** |
-| 14 | SHDNZ | `CODEC_SHDNZ` (MCU PC6, shared); 10 kΩ pull-down to GND (R18, on the MCU sheet) holds the part in reset until the MCU drives it |
+| 13 | IN4M_GPO4 | 1 µF X7R to GND (4.7 µF as drawn) — ⚠ **ADC-B IN4M cap missing in schematic** |
+| 14 | SHDNZ | `CODEC_SHDNZ` (MCU PC6, shared); 10 kΩ pull-down to GND (on the MCU sheet) holds the part in reset until the MCU drives it |
 | 15 | ADDR1_MISO | I²C address strap A1 — **device-distinct** (see §6) |
 | 16 | ADDR0_SCLK | I²C address strap A0 — **device-distinct** (see §6) |
 | 17 | SCL_MOSI | `I2C_SCL` (PB8); 2.2–4.7 kΩ pull-up to IOVDD (one pair for the bus) |
@@ -118,7 +118,7 @@ Control bus = **I2C1** (PB8 SCL / PB9 SDA), the two codecs only (the PCM5102A DA
 
 The 7-bit address is set by the **ADDR0 (pin 16)** and **ADDR1 (pin 15)** strap pins. The two devices must strap to **distinct addresses** — e.g. ADC-A and ADC-B differ in the ADDR0/ADDR1 tie (GND vs. IOVDD, and the further SDA/SCL-referenced options the part allows).
 
-⚠ **Take the exact strap→address table from SBAS892A at entry** and confirm U3/U4's straps (U3: ADDR0+ADDR1→GND; U4: ADDR0→IOVDD, ADDR1→GND) land on two non-conflicting addresses; verify no clash with any other I²C device. (Not transcribing specific hex here — memory is not trustworthy for the address map; this is a review-gate item.)
+⚠ **Take the exact strap→address table from SBAS892A at entry** and confirm the two devices' straps (ADC-A: ADDR0+ADDR1→GND; ADC-B: ADDR0→IOVDD, ADDR1→GND) land on two non-conflicting addresses; verify no clash with any other I²C device. (Not transcribing specific hex here — memory is not trustworthy for the address map; this is a review-gate item.)
 
 ---
 
@@ -131,7 +131,7 @@ The 7-bit address is set by the **ADDR0 (pin 16)** and **ADDR1 (pin 15)** strap 
 | VREF (3) | internal reference | ≥ 1 µF to AVSS at pin |
 | DREG (24) | internal 1.5 V core reg | 1 µF to GND at pin (no external feed) |
 | IOVDD (19) | **`3V45_D`** (recommended ⚠) | 0.1 µF at pin |
-| MICBIAS (5) | internal reg (VREF×1.096 = 3.014 V) | 1 µF to AVSS at pin; feeds 4 buffer rails via `J1`/`J2`, no series resistor. **Budget: 4 buffers < 20 mA total/device** (30 mA OCP) ⚠ |
+| MICBIAS (5) | internal reg (VREF×1.096 = 3.014 V) | 1 µF to AVSS at pin; feeds 4 buffer rails via the pickup connector, no series resistor. **Budget: 4 buffers < 20 mA total/device** (30 mA OCP) ⚠ |
 
 **IOVDD source — OPEN (§11).** IOVDD only powers the digital I/O (BCLK/FSYNC/SDOUT/I²C). Recommendation: feed it from **`3V45_D`** (the digital rail), not `3V3_A`, to keep SDOUT/BCLK switching current *out of* the low-noise analog LDO — the same reasoning that put the DAC's DVDD on the digital rail (`dac-selection.md` §6). 3.45 V is within IOVDD's 3.0–3.6 V window, and it matches the MCU's I/O rail exactly, so logic levels are clean in both directions. AVDD stays on `3V3_A`. ⚠ confirm at the gate. (Alternative: IOVDD on `3V3_A` — one rail into the island, simpler routing, at the cost of digital current on the analog LDO.)
 
@@ -162,25 +162,25 @@ See `test-points.md` (single source of truth; categorized by access type). Codec
 
 ## 10. BOM (codec section)
 
-| Ref | Value / Part | Package | LCSC | Notes |
+| Item | Value / Part | Package | LCSC | Notes |
 |---|---|---|---|---|
-| U3, U4 | TLV320ADC5140 | 24-WQFN 4×4 (RTW) | pick | ⚠ confirm LCSC stock at order (board plan risk register) |
-| C_in ×8 | 4.7 µF **tantalum**, blocking (INxP) | pick | pick | ⚠ **polarity/reverse-voltage** (§2/§11); low-swing → distortion non-issue; 4.7 µF sets ~1.7 Hz corner for near-DC finger-pressure sensing |
-| C_inm ×8 | 1 µF **X7R** preferred (4.7 µF as drawn OK), matching (INxM→GND) | 0402/0603 | basic | not signal-carrying; reconcile value doc↔schematic |
-| C_avdd ×2 | 0.1 µF X7R | 0402 | basic | AVDD at pin |
-| C_iovdd ×2 | 0.1 µF X7R | 0402 | basic | IOVDD at pin |
-| C_areg ×2 | 1 µF X7R | 0402/0603 | basic | AREG to AVSS |
-| C_vref ×2 | 1 µF X7R | 0402/0603 | basic | VREF to AVSS |
-| C_dreg ×2 | 1 µF X7R | 0402/0603 | basic | DREG to GND |
-| C_bulk ×1–2 | 10 µF X7R ≥10 V | 0805 | basic | shared AVDD/3V3_A bulk near the pair |
-| C_micbias ×2 | 1 µF X7R | 0402/0603 | basic | MICBIAS decoupling to AVSS (preamp supply — **populated**) |
-| R_scl, R_sda | 2.2–4.7 kΩ | 0402 | basic | I²C pull-ups to IOVDD (one pair for the bus) |
-| R_shdnz | 10 kΩ | 0402 | basic | SHDNZ pull-down R18 (entered, shared, on MCU sheet) |
-| R_addr ×? | per address strap | 0402 | basic | ADDR0/ADDR1 straps — value/tie per §6 table ⚠ |
-| C_emi ×8 | 100–330 pF | 0402 | — | **DNP** optional RF shunt at each buffer signal line (external cable entry) |
-| R_sdout | 100 kΩ | 0402 | — | **DNP** optional SDOUT bus pull-down |
+| ADC codecs (×2) | TLV320ADC5140 | 24-WQFN 4×4 (RTW) | pick | ⚠ confirm LCSC stock at order (board plan risk register) |
+| INxP blocking caps (×8) | 4.7 µF **tantalum**, blocking (INxP) | pick | pick | ⚠ **polarity/reverse-voltage** (§2/§11); low-swing → distortion non-issue; 4.7 µF sets ~1.7 Hz corner for near-DC finger-pressure sensing |
+| INxM matching caps (×8) | 1 µF **X7R** preferred (4.7 µF as drawn OK), matching (INxM→GND) | 0402/0603 | basic | not signal-carrying; reconcile value doc↔schematic |
+| AVDD decouplers (×2) | 0.1 µF X7R | 0402 | basic | AVDD at pin |
+| IOVDD decouplers (×2) | 0.1 µF X7R | 0402 | basic | IOVDD at pin |
+| AREG caps (×2) | 1 µF X7R | 0402/0603 | basic | AREG to AVSS |
+| VREF caps (×2) | 1 µF X7R | 0402/0603 | basic | VREF to AVSS |
+| DREG caps (×2) | 1 µF X7R | 0402/0603 | basic | DREG to GND |
+| AVDD/3V3_A bulk (×1–2) | 10 µF X7R ≥10 V | 0805 | basic | shared AVDD/3V3_A bulk near the pair |
+| MICBIAS caps (×2) | 1 µF X7R | 0402/0603 | basic | MICBIAS decoupling to AVSS (preamp supply — **populated**) |
+| I²C pull-ups (SCL/SDA) | 2.2–4.7 kΩ | 0402 | basic | I²C pull-ups to IOVDD (one pair for the bus) |
+| SHDNZ pull-down | 10 kΩ | 0402 | basic | SHDNZ pull-down (entered, shared, on MCU sheet) |
+| ADDR straps (×?) | per address strap | 0402 | basic | ADDR0/ADDR1 straps — value/tie per §6 table ⚠ |
+| RF shunt caps (×8) | 100–330 pF | 0402 | — | **DNP** optional RF shunt at each buffer signal line (external cable entry) |
+| SDOUT bus pull-down | 100 kΩ | 0402 | — | **DNP** optional SDOUT bus pull-down |
 
-Passives JLCPCB basic-class; C-numbers at order time.
+Passives JLCPCB basic-class; LCSC codes at order time.
 
 ---
 
@@ -189,7 +189,7 @@ Passives JLCPCB basic-class; C-numbers at order time.
 1. **Input impedance `CHx_IMP`** — **20 kΩ (≈1.7 Hz corner) recommended** to meet the near-DC finger-pressure goal; 10 kΩ (≈3.4 Hz) only if more dynamic range is wanted. ⚠ user-confirm; must match the register setting.
 2. **Signal-cap tantalum polarity** (dielectric decided: 4.7 µF tantalum on INxP, 1 µF/4.7 µF X7R on INxM) — confirm the DC across each INxP tantalum (**buffer output bias** vs. internal common-mode) and that it **never reverses** across power-up/down and MICBIAS-off; orient `+` to the higher side, or use a non-polar part if the sign can't be guaranteed. Needs the ADC5140 input common-mode voltage (datasheet/EVM) + the buffer output bias. ⚠
 3. **IOVDD source** — `3V45_D` (recommended, keeps digital current off analog LDO) vs. `3V3_A`. ⚠ confirm at gate.
-4. **I²C addresses** — take the ADDR0/ADDR1 strap→address table from SBAS892A; confirm the drawn straps (U3: GND/GND, U4: IOVDD/GND) give distinct, non-conflicting addresses; check no bus clash. ⚠
+4. **I²C addresses** — take the ADDR0/ADDR1 strap→address table from SBAS892A; confirm the drawn straps (ADC-A: GND/GND, ADC-B: IOVDD/GND) give distinct, non-conflicting addresses; check no bus clash. ⚠
 5. **SDOUT bus discipline** — confirm both devices' unused-slot tri-state is enabled; decide whether to populate the optional 100 kΩ SDOUT pull-down. ⚠
 6. **AREG treatment** — confirm AREG decoupling / that it is *not* externally supplied in 3.3 V AVDD mode (AREG abs-max 2.0 V — never tie to 3V3_A). ⚠
 7. **SHDNZ strap** — shared pull-down value and whether a per-codec reset split is wanted for bring-up (`pin-allocation.md` §4 PC7 spare). ⚠
@@ -200,4 +200,4 @@ Passives JLCPCB basic-class; C-numbers at order time.
 
 ---
 
-*Schematic-entry status.* Entered and verified: all 8 input channels (4.7 µF polarized blocking caps → INxP, incl. U4 IN4M matching cap), AREG/VREF/DREG/MICBIAS 1 µF caps, distinct ADDR straps (U3: ADDR0+ADDR1→GND; U4: ADDR0→IOVDD, ADDR1→GND — resistor values unset), IOVDD on `3V45_D`, shared TDM bus, SHDNZ to PC6 with R18 10 k pull-down. MICBIAS rails are the auto-named connector nets `Net-(J1-Pin_1)`/`Net-(J2-Pin_1)` feeding the buffers directly through J1/J2 (no series RL — the JFET buffers are designed to run off a rail; confirmed U3 pin 5 → C35 1 µF + J1, U4 pin 5 → C36 1 µF + J2). Each INxP blocking cap now carries a **BAS316 clamp diode in parallel (D2–D9, added at entry)** — addresses §11 item 2's tantalum reverse-bias concern by limiting the reverse excursion to a diode drop; ⚠ verify orientation (cathode toward the normally-higher-DC side) and confirm a single-polarity clamp is the intent. **Not yet entered:** per-pin 0.1 µF AVDD/IOVDD decoupling + 10 µF bulk, I2C pull-up values (R1/R2 present, values unset), ADDR strap resistor values. **To reconcile:** INxM matching caps drawn at 4.7 µF vs. 1 µF preferred in §2 (either fine — make doc and schematic agree); **part value entered as "XLV320ADC5140IRTWR" (both U3/U4) — typo for TLV, will corrupt BOM lookup.**
+*Schematic-entry status.* Entered and verified: all 8 input channels (4.7 µF polarized blocking caps → INxP, incl. the ADC-B IN4M matching cap), AREG/VREF/DREG/MICBIAS 1 µF caps, distinct ADDR straps (ADC-A: ADDR0+ADDR1→GND; ADC-B: ADDR0→IOVDD, ADDR1→GND — resistor values unset), IOVDD on `3V45_D`, shared TDM bus, SHDNZ to PC6 with a 10 k pull-down. MICBIAS rails are the auto-named connector nets feeding the buffers directly through the pickup connectors (no series load resistor — the JFET buffers are designed to run off a rail; confirmed each ADC's pin 5 → 1 µF + its pickup connector). Each INxP blocking cap now carries a **BAS316 clamp diode in parallel (added at entry)** — addresses §11 item 2's tantalum reverse-bias concern by limiting the reverse excursion to a diode drop; ⚠ verify orientation (cathode toward the normally-higher-DC side) and confirm a single-polarity clamp is the intent. **Not yet entered:** per-pin 0.1 µF AVDD/IOVDD decoupling + 10 µF bulk, I2C pull-up values (pull-ups present, values unset), ADDR strap resistor values. **To reconcile:** INxM matching caps drawn at 4.7 µF vs. 1 µF preferred in §2 (either fine — make doc and schematic agree); **part value entered as "XLV320ADC5140IRTWR" (both ADCs) — typo for TLV, will corrupt BOM lookup.**

@@ -16,6 +16,8 @@ All three are single-row/peripheral parts — no BGA-style escape — which is a
 
 ## 1. Floor plan — long, thin board
 
+> **Actual placements live in [`placement-register.md`](placement-register.md)** — generated from the KiCad PCB by `tools/placement_register.py`, keyed by part value rather than reference designator. Consult it before reasoning about distances or adjacency; this section carries the *intent*, the register carries the *fact*. Re-run the script after any placement change.
+
 End-to-end placement along the long axis:
 
 ```
@@ -26,8 +28,8 @@ End-to-end placement along the long axis:
 
 - **Analog front end at one end, switcher/charger at the other.** The whole point is distance between the TPS63020's (and charger's) high-di/dt loops and the instrument-level front end.
 - **MCU in the middle.** Minimizes the runs to both the SAI4 codec bus (to the analog end) and the I2S1 DAC bus. At 12.288 MHz (SAI) / 3.072 MHz (I2S) these lengths are electrically short — placement is about noise, not signal integrity.
-- **\*`3V3_A` LDO placed mid-board (near its load), not at the power end.** Put the LDO close to the analog load so its PSRR isn't undone by a long *post*-LDO trace re-acquiring noise; let the noisier pre-LDO `3V45_D` do the long haul (the LDO rejects it). Local analog bulk stays at the ADC pair (`C_bulk` + `FB1` for `MCU_VDDA`).
-- **MICBIAS never goes toward the power end.** It's generated *inside* each ADC and only leaves the board via `J1`/`J2` to the offboard pickup preamps.
+- **\*`3V3_A` LDO placed mid-board (near its load), not at the power end.** Put the LDO close to the analog load so its PSRR isn't undone by a long *post*-LDO trace re-acquiring noise; let the noisier pre-LDO `3V45_D` do the long haul (the LDO rejects it). Local analog bulk stays at the ADC pair (the analog bulk cap + the VDDA ferrite for `MCU_VDDA`).
+- **MICBIAS never goes toward the power end.** It's generated *inside* each ADC and only leaves the board via the pickup connectors to the offboard pickup preamps.
 
 ### 1.1 Fits on one side (validated against the KiCad layout, 2026-07)
 
@@ -122,7 +124,7 @@ Per the TLV320ADC5140 datasheet (SBAS892): **MICBIAS current drive = 20 mA** for
 
 - **STM32H725** (VDD = `3V45_D`): op 1.62–3.6 V, abs-max ~4.0 V → fine.
 - **ADC5140** (IOVDD = `3V45_D`): IOVDD abs-max **3.9 V** (0.45 V headroom); inputs referenced to its own IOVDD → no mismatch. ⚠ 3.45 is ~4.5 % over the 3.3 V nominal — glance at recommended-operating IOVDD max (likely 3.6) at the datasheet gate.
-- **PCM5102A** (runs off `3V3_A`, **not** 3.45): only its digital inputs are *driven* at 3.45 V. Input abs-max ≈ DVDD + 0.5 = **3.8 V** → 3.45 within it (~0.35 V margin), well above VIH. **Watch power-up:** don't let the MCU drive I2S into the DAC before `3V3_A` is up. Safe in practice — STM32 GPIOs are Hi-Z at reset, `3V3_A` trails `3V45_D` only by the LDO turn-on delay, and XSMT is held low.
+- **PCM5102A** (DVDD = `3V45_D`; CPVDD/AVDD = `3V3_A`): its digital-core supply DVDD sits on the 3.45 V rail (per `dac-selection.md` — keeps DAC digital current off the analog LDO), so its digital inputs are driven at a matching 3.45 V. Input abs-max ≈ DVDD + 0.5 = **3.95 V** → the 3.45 V inputs sit ~0.5 V inside it, well above VIH. ⚠ confirm 3.45 V (+ rail tolerance) is inside the PCM5102A DVDD recommended-operating max; if not, DVDD moves to `3V3_A` (`dac-selection.md` §8). **Watch power-up:** don't let the MCU drive I2S into the DAC before `3V3_A` (CPVDD/AVDD) is up — STM32 GPIOs are Hi-Z at reset, `3V3_A` trails `3V45_D` by the LDO turn-on delay, and XSMT is held low.
 
 ### 6.3 Pickup ribbons — 6-conductor is fine
 
@@ -132,7 +134,7 @@ No fundamental issue — the buffering (low-Z source) is what makes single-ended
 
 - **Crosstalk** ~ –65 dB at 20 kHz (few-pF coupling into a ~950 Ω node), better toward DC. Negligible.
 - **Shared single ground** carries µA-level signal returns + near-constant buffer supply current → sub-µV signal-dependent drop. Negligible.
-- **EMI ingress** is the only real risk (unshielded near magnetic pickups); low source-Z mitigates, and the DNP `C_emi` (100–330 pF) RF shunt at each channel's board entry is available (pole ~500 kHz at 1 K drive → safe to populate, well above audio band).
+- **EMI ingress** is the only real risk (unshielded near magnetic pickups); low source-Z mitigates, and a DNP RF shunt cap (100–330 pF) at each channel's board entry is available (pole ~500 kHz at 1 K drive → safe to populate, well above audio band).
 - Insertion loss of the 1 K/20 K divider ≈ –0.4 dB — already in `adc-netlist.md`, not new.
 
 **Recommendations:** order conductors so the quiet lines separate signals (`GND · S1 · S2 · PWR · S3 · S4` — MICBIAS is a low-Z AC ground); keep the ribbon away from the SMPS/charger end. Optional margin: widen to a ground-interleaved ribbon (`G S G S …`) to kill shared-return coupling — not needed here.

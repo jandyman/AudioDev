@@ -37,7 +37,7 @@ Consequence: an MCU-only net with no series/pull passive is unreachable and need
 
 ## Category 2 — probe pad / via (otherwise unreachable)
 
-The ADC TDM bus runs from the leadless MCU to the leadless ADC pair — **no probeable endpoint anywhere on the net.** These need pads. ⚠ **Not yet in the schematic** (netlist check 2026-07-24): entered so far are TP1 (MCO1), TP11 (MICBIAS_A), TP12–14 (GND) — add TP symbols for the three bus nets below before layout completion.
+The ADC TDM bus runs from the leadless MCU to the leadless ADC pair — **no probeable endpoint anywhere on the net.** These need pads. ⚠ **Not yet in the schematic** (netlist check 2026-07-24): entered so far are the MCO1 loop, the MICBIAS_A pad, and the GND loops — add test-point symbols for the three bus nets below before layout completion.
 
 | # | Signal / net | Pin · Pad | Runs | Also called |
 |---|---|---|---|---|
@@ -64,19 +64,19 @@ Reachable without dedicated board area. Recorded here so nothing is lost from th
 
 | Signal / net | Where to touch it |
 |---|---|
-| `3V45_D` (digital rail) | C101 / C104 4.7 µF output caps (⚠ 2×22 µF per power doc still pending) |
-| `3V3_A` (analog rail) | LDO **U1** output side — C12/C13 as-built (1 µF output cap still to add) |
-| `MCU_VDDA` | C37 / C38 / FB1 |
-| VCORE | VCAP caps C90–C92 (near MCU) |
-| `bat+` / `VBAT` | bulk cap C23 / connector J3; post-switch `VBAT` at U2 VIN (⚠ VIN caps still to add) |
-| `CHG_IN` | charger input cap C30 / jack ring J4.2 (no TVS as-built; D1 is the *status* LED, not a TVS) |
-| `BATT_SENSE` | R12/R13 divider midpoint |
-| `I2C1_SCL` | R2 pull-up (to 3V45_D) |
-| `I2C1_SDA` | R1 pull-up |
-| `CODEC_SHDNZ` | R18 10 kΩ pull-down (MCU sheet) |
-| `MICBIAS_A` / `MICBIAS_B` | C_micbias 1 µF caps (to AVSS); also on J1/J2 buffer headers |
-| ADC input line (one per device) | INxP blocking cap (4.7 µF tantalum) / DNP C_emi shunt pad |
-| DAC OUTL (post-pad) | L-pad resistors / volume pot RV3 / output jack |
+| `3V45_D` (digital rail) | the 4.7 µF output caps (⚠ 2×22 µF per power doc still pending) |
+| `3V3_A` (analog rail) | LDO output side — output caps as-built (1 µF output cap still to add) |
+| `MCU_VDDA` | the VDDA caps / VDDA ferrite |
+| VCORE | VCAP caps (near MCU) |
+| `bat+` / `VBAT` | bulk cap / battery connector; post-switch `VBAT` at the buck-boost VIN (⚠ VIN caps still to add) |
+| `CHG_IN` | charger input cap / jack-ring pin (no TVS as-built; the status LED is the only diode, not a TVS) |
+| `BATT_SENSE` | sense-divider midpoint |
+| `I2C1_SCL` | SCL pull-up (to 3V45_D) |
+| `I2C1_SDA` | SDA pull-up |
+| `CODEC_SHDNZ` | 10 kΩ pull-down (MCU sheet) |
+| `MICBIAS_A` / `MICBIAS_B` | MICBIAS 1 µF caps (to AVSS); also on the pickup connectors |
+| ADC input line (one per device) | INxP blocking cap (4.7 µF tantalum) / DNP RF shunt pad |
+| DAC OUTL (post-pad) | L-pad resistors / volume pot / output jack |
 | `SAI4_MCLK_B` reserve | PA1 · 18 — DNP; already a reserve pad, populate only if MCLK ever needed |
 
 ---

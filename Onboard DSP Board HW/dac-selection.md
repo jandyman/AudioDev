@@ -39,7 +39,7 @@ So the target category is: **strap-configured stereo DAC with integrated charge 
 | **PCM5102A** (TI) | 2.1 Vrms ground-centered, charge pump, **1 kΩ min load**, XSMT soft-mute | **No MCLK** (internal PLL off BCK, SCK tied low) | single 3.3 V | TSSOP-20 | ~$0.9–1.1 (C107671) | Good | **Leaning choice** |
 | **PCM5100A** (TI) | Same family, pin-identical, 100 dB SNR (vs 112) | No MCLK | single 3.3 V | TSSOP-20 | ~$0.86 (C131154) | Good | Cost-down drop-in on same footprint |
 | **WM8524** (Cirrus) | 2.1 Vrms ground-referenced, DC servo, **1 kΩ min load**, ≤1 mV DC offset, 800-sample soft-mute, pop-suppressed up/down sequencer | **Needs MCLK** (128–1152·fs, auto-detected, synchronous) | single 3.3 V | TSSOP-16 (5.0×4.4) | ~$0.98 (C146242) | **Thin (~80 pcs)** | Alternate — technically excellent, stock too thin for turnkey |
-| **ES9023P** (ESS) | 2 Vrms ground-referenced, charge pump, but **5 kΩ min load** → pad output Z floor ~250–330 Ω | **Needs MCLK** (>192·fs async; power-up counter runs on MCLK) | single 3.3 V | SOP-16 | ~$1.2 (C2760388) | Good | Rejected: loses on both min load and clocking; R8 level-set can't reach 0.1 V (collapses below ~1.3 Vrms, bench-verified on diyAudio) |
+| **ES9023P** (ESS) | 2 Vrms ground-referenced, charge pump, but **5 kΩ min load** → pad output Z floor ~250–330 Ω | **Needs MCLK** (>192·fs async; power-up counter runs on MCLK) | single 3.3 V | SOP-16 | ~$1.2 (C2760388) | Good | Rejected: loses on both min load and clocking; its level-set resistor can't reach 0.1 V (collapses below ~1.3 Vrms, bench-verified on diyAudio) |
 | **CS4344** (Cirrus) | VDD/2-biased → coupling caps, weak drive, thump-prone | Needs MCLK | 3.3–5 V | TSSOP-10 | ~$0.4 | Good | Rejected: fails §2 on drive and DC coupling |
 | **PT8211/TM8211** | ~0.5 Vrms, high-Z output, 16-bit, LSB-justified (not I2S) | No MCLK | 3.3–5 V | SOP-8 | ~$0.1 | Good | Rejected: needs a buffer — package savings lost immediately |
 | I2C codecs w/ analog volume (ES8156, TLV320DAC3100, …) | Settable analog level, HP drivers | varies | varies | larger | $1–3 | varies | Rejected: I2C init is cheap (bus + driver already exist for the ADC5140s) but the analog-volume register would only replace four 0402 resistors while adding caps, pins, and config code. The pot is still required regardless (user volume + power switch). |
@@ -110,7 +110,7 @@ No new MCU pins beyond what `pin-allocation.md` already allocates.
 | 17 | XSMT | MCU PC9, net `DAC_XSMT` (low = soft-mute; would tie to AVDD if unused) |
 | 18 | LDOO | 0.1 µF to GND — internal 1.8 V LDO output, **no supply connection** (external 1.8 V only if bypassing the LDO; not done here) |
 | 19 | DGND | GND |
-| 20 | DVDD | 3.3 V **digital** rail — 0.1 µF to GND at pin; bulk folds into the digital rail's existing 10 µF nearby (internal LDO derives the 1.8 V core from DVDD; keeps digital current off the analog LDO) |
+| 20 | DVDD | `3V45_D` digital rail (**3.45 V**) — 0.1 µF to GND at pin; bulk folds into the digital rail's existing 10 µF nearby (internal LDO derives the 1.8 V core from DVDD; keeps digital current off the analog LDO). ⚠ confirm 3.45 V (+ rail tolerance) is inside the PCM5102A DVDD recommended-operating max; if not, move DVDD to `3V3_A` (accepts a few mA of DAC digital current on the analog LDO) |
 
 Notes: **single GND net board-wide** — no AGND/DGND nets in the schematic (TI: one common ground plane, no split; same for the ADC5140s, whose AVSS and thermal pad both go "directly to the board ground plane"). Zoning is by placement and the 3V3A net, not by ground nets. Assumes the 6-layer stackup (solid GND on L2): every cap and ground pin takes its own via(s) tight to its pads; the plane closes all loops underneath. Decoupling-cap ordering on CPVDD/AVDD: pin → cap tap → via to 3V3A, so the cap junctions the trace and the rail via hangs beyond it (trace inductance to the rail is free filtering). Cap set: 4× 0.1 µF at pins (CPVDD, AVDD, DVDD, LDOO), 2× 2.2 µF charge pump (flying + VNEG) on L1 at the chip, 1× shared 10 µF on the 3V3A pour near the DAC (CPVDD side); DVDD bulk shared with the digital rail. Charge-pump caps (2, 4, 5) closest to the device. Free bonus from the auto power modes: BCK+LRCK held low >1 s → full power-down (~0.2 mA), and restart is automatic when the I2S clocks resume — firmware gets DAC power management just by stopping/starting I2S1.
 
@@ -120,7 +120,7 @@ Notes: **single GND net board-wide** — no AGND/DGND nets in the schematic (TI:
 
 1. ES9023 **requires MCLK** (>192·fs async mode; the pop-suppression power-up counter runs on MCLK cycles). "No MCLK to route" was never true — it's true of the PCM510xA.
 2. ES9023 **min load is 5 kΩ**; every pad row in the rev-1 table (500 Ω–2 kΩ loads) violated it.
-3. ES9023's R8 output-level resistor cannot reach 0.1 V — output collapses below ~1.15–1.35 Vrms (diyAudio bench measurement). No pad-free path existed.
+3. ES9023's output-level resistor cannot reach 0.1 V — output collapses below ~1.15–1.35 Vrms (diyAudio bench measurement). No pad-free path existed.
 
 ---
 
@@ -130,6 +130,7 @@ Notes: **single GND net board-wide** — no AGND/DGND nets in the schematic (TI:
 2. **Final pad values & pot taper** — confirm Rs=1.2k/Rsh=62 against the real full-scale (2.1 Vrms typ, ±10 % over supply) and pick audio-taper pot part.
 3. **JLCPCB assembly check** — confirm C107671 (PCM5102APWR) loadable as Extended part at order time; note C131154 (PCM5100APWR) as BOM alternate.
 4. **Optional RC across Rsh** — decide if the 2.2–3.3 nF ultrasonic filter cap is wanted.
+5. **DVDD rail/voltage** — DVDD is on `3V45_D` (3.45 V) to keep DAC digital current off the analog LDO; confirm 3.45 V + rail tolerance is inside the PCM5102A DVDD recommended-operating window (SLAS859C). If it exceeds it, fall back to DVDD on `3V3_A`. (Reconciles a prior conflict with `layout-notes.md` §6.2, which had wrongly assumed the DAC ran entirely off `3V3_A`.)
 
 ---
 

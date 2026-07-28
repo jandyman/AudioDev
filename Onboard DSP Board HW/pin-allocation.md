@@ -16,7 +16,7 @@
 
 ## 1. Audio topology (clocking scheme — resolved)
 
-Capture and playback are **frequency-locked by construction**: both peripherals' kernel-clock muxes select **PLL3_P** (RCC `D3CCIPR.SAI4BSEL`, `D2CCIP1R.SPI123SEL` — both offer pll3_p). HSE = **24.576 MHz** (Y1) → PLL3 integer-N (e.g. VCO 393.216 MHz, PLL3_P = 49.152 MHz).
+Capture and playback are **frequency-locked by construction**: both peripherals' kernel-clock muxes select **PLL3_P** (RCC `D3CCIPR.SAI4BSEL`, `D2CCIP1R.SPI123SEL` — both offer pll3_p). HSE = **24.576 MHz** (the HSE crystal) → PLL3 integer-N (e.g. VCO 393.216 MHz, PLL3_P = 49.152 MHz).
 
 | Bus | Peripheral | Role | Bit clock | Notes |
 |---|---|---|---|---|
@@ -41,8 +41,8 @@ Capture and playback are **frequency-locked by construction**: both peripherals'
 | | `I2S1_WS` | **PA4** | 23 | AF5 | out | PCM5102A — LRCK |
 | | `I2S1_SDO` | **PA7** | 26 | AF5 | out | PCM5102A — DIN |
 | | *(no MCLK reserve)* | — | — | — | — | I2S1_MCK = PC4 collides with `BATT_SENSE`; DAC needs none |
-| **I2C1 (control)** | `I2C1_SCL` | **PB8** | 64 | AF4 | OD | ADC5140 ×2 — R2 pull-up to `3V45_D` ⚠ value unset (2.2–4.7 kΩ). DAC not on I2C (strap-configured, `dac-selection.md`) |
-| | `I2C1_SDA` | **PB9** | 65 | AF4 | OD | " (R1 pull-up) |
+| **I2C1 (control)** | `I2C1_SCL` | **PB8** | 64 | AF4 | OD | ADC5140 ×2 — pull-up to `3V45_D` ⚠ value unset (2.2–4.7 kΩ). DAC not on I2C (strap-configured, `dac-selection.md`) |
+| | `I2C1_SDA` | **PB9** | 65 | AF4 | OD | " (pull-up) |
 | **USART3 (BT — reserved)** | `USART3_TX` | **PC10** | 54 | AF7 | out | BT module RX |
 | | `USART3_RX` | **PC11** | 55 | AF7 | in | BT module TX |
 | | `USART3_RTS` | **PB14** | 38 | AF7 | out | BT module CTS (HW flow control) |
@@ -50,11 +50,11 @@ Capture and playback are **frequency-locked by construction**: both peripherals'
 | **USB (reserve)** | `OTG_FS_DM` | **PA11** | 46 | — | bidir | USB data reserved; charge is via jack ring, no USB connector on spin 1 (this part's OTG_HS in FS-PHY mode) |
 | | `OTG_FS_DP` | **PA12** | 47 | — | bidir | " |
 | **Battery sense** | `BATT_SENSE` = ADC1_INP4 | **PC4** | 27 | analog | in | battery voltage divider |
-| **Control pot 1** | `Pot2` = ADC1_INP11 | **PC1** | 14 | analog | in | RV1 wiper (pot: `3V3_A` ↔ GND, ratiometric vs VDDA) |
-| **Control pot 2** | `Pot3` = ADC1_INP8 | **PC5** | 28 | analog | in | RV2 wiper |
+| **Control pot 1** | `Pot2` = ADC1_INP11 | **PC1** | 14 | analog | in | wiper (pot: `3V3_A` ↔ GND, ratiometric vs VDDA) |
+| **Control pot 2** | `Pot3` = ADC1_INP8 | **PC5** | 28 | analog | in | wiper |
 | **Clock verify** | MCO1 | **PA8** | 43 | AF0 | out | test point (HSE/PLL health) |
 
-Pots are **PCB-mounted** (they mechanically support the board; knobs go right-angle through the panel), so wiper runs are short traces. Wiper RC filters judged unnecessary — firmware uses a long ADC sampling time (10 k pot ≈ 2.5 kΩ worst-case source) plus normal control-value smoothing; an optional 100 nF at each wiper is the only candidate if bench noise ever suggests it. The third panel pot is **RV3, the volume pot** (chassis-style but PCB-mounted, integrated switch = hard battery-line switch `bat+`→`VBAT`) — not an MCU input.
+Pots are **PCB-mounted** (they mechanically support the board; knobs go right-angle through the panel), so wiper runs are short traces. Wiper RC filters judged unnecessary — firmware uses a long ADC sampling time (10 k pot ≈ 2.5 kΩ worst-case source) plus normal control-value smoothing; an optional 100 nF at each wiper is the only candidate if bench noise ever suggests it. The third panel pot is **the volume pot** (chassis-style but PCB-mounted, integrated switch = hard battery-line switch `bat+`→`VBAT`) — not an MCU input.
 
 ---
 
@@ -62,12 +62,12 @@ Pots are **PCB-mounted** (they mechanically support the board; knobs go right-an
 
 | Function | Pin(s) | Pad | As-built |
 |---|---|---|---|
-| SWD debug | **PA13** (`SWDIO`), **PA14** (`SWCLK`) | 48, 52 | **J5**: 2×5 1.27 mm ARM Cortex Debug header — 1 VTref=`3V45_D`, 2 SWDIO, 4 SWCLK, 6 SWO, 10 NRST, 3/5/9 GND, 7 KEY, 8 NC |
-| SWO | **PB3** (`SWO`) | 58 | wired to J5 pin 6; RTT is the logging baseline, SWO a bonus |
-| HSE crystal | **PH0/PH1** | 10, 11 | **Y1 = 24.576 MHz** + C93/C94 load caps (15 pF placeholder — ⚠ set to 2×(CL−C_stray) for the chosen part; if a 3225 4-pad crystal, pads 2/4 = GND in the footprint) |
-| Boot | **BOOT0** | 63 | R14 10 kΩ pull-down; SWD-only programming |
-| Reset | **NRST** | 12 | C2 100 nF to GND + J5 pin 10 (⚠ MCU-sheet net needs its global `NRST` label restored to reach J5) |
-| Analog ref | VDDA | 16 | `MCU_VDDA` = `3V3_A` via FB1; **VREF+ is internal to VDDA on this package** — no pin, no strap |
+| SWD debug | **PA13** (`SWDIO`), **PA14** (`SWCLK`) | 48, 52 | debug header: 2×5 1.27 mm ARM Cortex Debug — 1 VTref=`3V45_D`, 2 SWDIO, 4 SWCLK, 6 SWO, 10 NRST, 3/5/9 GND, 7 KEY, 8 NC |
+| SWO | **PB3** (`SWO`) | 58 | wired to the debug header SWO pin; RTT is the logging baseline, SWO a bonus |
+| HSE crystal | **PH0/PH1** | 10, 11 | **24.576 MHz crystal** + load caps (15 pF placeholder — ⚠ set to 2×(CL−C_stray) for the chosen part; if a 3225 4-pad crystal, pads 2/4 = GND in the footprint) |
+| Boot | **BOOT0** | 63 | 10 kΩ pull-down; SWD-only programming |
+| Reset | **NRST** | 12 | 100 nF to GND + the debug header NRST pin (⚠ MCU-sheet net needs its global `NRST` label restored to reach the header) |
+| Analog ref | VDDA | 16 | `MCU_VDDA` = `3V3_A` via the VDDA ferrite; **VREF+ is internal to VDDA on this package** — no pin, no strap |
 | Power | see §7 | | |
 
 ---
@@ -76,14 +76,14 @@ Pots are **PCB-mounted** (they mechanically support the board; knobs go right-an
 
 | Function | Pin | Pad | As-built |
 |---|---|---|---|
-| Codec SHDNZ (shared) — `CODEC_SHDNZ` | **PC6** | 40 | drives both ADC5140 SHDNZ; R18 10 kΩ pull-down holds reset until MCU drives |
+| Codec SHDNZ (shared) — `CODEC_SHDNZ` | **PC6** | 40 | drives both ADC5140 SHDNZ; 10 kΩ pull-down holds reset until MCU drives |
 | Codec spare reset / 2nd line | **PC7** | 41 | reserved (unwired) — split only if bring-up needs it |
 | DAC soft-mute — `DAC_XSMT` | **PC9** | 42 | PCM5102A XSMT: hold **low** through power-up until rails + BCK stable (`dac-selection.md` §6) |
 | BT module reset/enable — `BT1` | **PB12** | 36 | reserved (label only, spin 2) |
 | BT status/wake — `BT2` | **PB15** | 39 | reserved (label only, spin 2) |
-| Status LED — `LED` | **PD2** | 57 | PD2 → D1 anode, cathode → R15 → GND (active-high, off during reset by Hi-Z default) ⚠ R15 value unset — 1 kΩ ≈ 1.5 mA |
+| Status LED — `LED` | **PD2** | 57 | PD2 → status-LED anode, cathode → series resistor → GND (active-high, off during reset by Hi-Z default) ⚠ series-resistor value unset — 1 kΩ ≈ 1.5 mA |
 
-ADC5140 I2C addresses are set by hardware ADDR straps: U3 = GND/GND, U4 = IOVDD/GND. ⚠ confirm against the SBAS892A strap→address table at the gate (`adc-netlist.md` §6).
+ADC5140 I2C addresses are set by hardware ADDR straps: ADC-A = GND/GND, ADC-B = IOVDD/GND. ⚠ confirm against the SBAS892A strap→address table at the gate (`adc-netlist.md` §6).
 
 ---
 
@@ -95,11 +95,11 @@ ADC5140 I2C addresses are set by hardware ADDR straps: U3 = GND/GND, U4 = IOVDD/
 
 ## 6. Open items (netlist-gate checklist)
 
-1. ⚠ **Crystal load caps** — C93/C94 = 15 pF placeholder; finalize against the chosen 24.576 MHz part's CL (2×(CL−C_stray)); footprint choice for 2-pad vs 4-pad crystal.
+1. ⚠ **Crystal load caps** — 15 pF placeholder; finalize against the chosen 24.576 MHz part's CL (2×(CL−C_stray)); footprint choice for 2-pad vs 4-pad crystal.
 2. ⚠ **DS13311 AF spot-check** for the six audio pins (machine-derived AFs above; two sources agree).
-3. ⚠ **I2C pull-up values** (R1/R2) and **ADDR strap values** — parts placed, values unset.
-4. ⚠ **R15 (LED) value** — suggest 1 kΩ.
-5. ~~**NRST label**~~ **Resolved** — verified from the netlist 2026-07-24: `NRST` = U7 pin 12 + C2 + J5 pin 10, one net.
+3. ⚠ **I2C pull-up values** and **ADDR strap values** — parts placed, values unset.
+4. ⚠ **LED series-resistor value** — suggest 1 kΩ.
+5. ~~**NRST label**~~ **Resolved** — verified from the netlist 2026-07-24: `NRST` = MCU pin 12 + the 100 nF cap + the debug header NRST pin, one net.
 6. **USB routing** — PA11/PA12 reserved; decide whether to route to any pads on spin 1 (near-zero cost; no connector planned). If USB data is ever activated, ⚠ verify how the transceiver is supplied on VFQFPN68 (no VDD33USB/VDD50USB pins — DS13311).
 7. **BT module** — confirm the chosen module uses HW flow control and matches the PB12/PB15 control lines (Phase 0 item 5).
 8. **SDOUT bus pull-down** — 100 kΩ DNP on `SAI4_SD_B` (populate only if bench shows float; `adc-netlist.md` §5).
@@ -111,14 +111,14 @@ ADC5140 I2C addresses are set by hardware ADDR straps: U3 = GND/GND, U4 = IOVDD/
 
 | Net | Pads | Count | As-built |
 |---|---|---|---|
-| `3V45_D` (VDD digital) | 9, 22, 35, 51, 68 | 5 | decoupling section: C96–C99 100 nF (one per pin at layout) + C101 4.7 µF bulk |
+| `3V45_D` (VDD digital) | 9, 22, 35, 51, 68 | 5 | decoupling section: 100 nF one per pin (at layout) + 4.7 µF bulk |
 | VBAT (backup domain) | 1 | 1 | tied to `3V45_D` (no coin cell) — **not** the battery `VBAT` net; shares name only |
 | VDDSMPS | 6 | 1 | `3V45_D` — **coverage rule, not per-pin caps** (2026-07-24, see `layout-notes.md` §5.1): pin vias into the island; ≥1 100 nF island↔GND cap within ~2 mm of the pin-6 via (on the near side of the VDD cluster — this is the noisy consumer), 4.7 µF within ~5 mm |
-| VLXSMPS → VFBSMPS | 5 → 7 | | **L2 2.2 µH** between them; **C95 4.7 µF** at VFBSMPS (AN5419 direct-SMPS) — keep this hot loop tight; VSSSMPS (pad 4) is two pads away |
-| VCAP | 33, 49, 66 | 3 | **100 nF each** (C90/C91/C92) — LDO permanently disabled on this package (ST-confirmed) |
-| VDDA / VSSA | 16 / 15 | 1/1 | `MCU_VDDA` (FB1 from `3V3_A`) + C38 100 nF / C37 1 µF *(schematic refs)* |
+| VLXSMPS → VFBSMPS | 5 → 7 | | **2.2 µH inductor** between them; **4.7 µF** at VFBSMPS (AN5419 direct-SMPS) — keep this hot loop tight; VSSSMPS (pad 4) is two pads away |
+| VCAP | 33, 49, 66 | 3 | **100 nF each** — LDO permanently disabled on this package (ST-confirmed) |
+| VDDA / VSSA | 16 / 15 | 1/1 | `MCU_VDDA` (VDDA ferrite from `3V3_A`) + 100 nF / 1 µF |
 | VSS | 8, 21, 34, 50, 67 + **exposed pad (69)** | 6 | single ground plane; pad soldered, thermal-via stitch at layout |
-| NRST / BOOT0 | 12 / 63 | | C2 100 nF / R14 10 kΩ pull-down |
+| NRST / BOOT0 | 12 / 63 | | 100 nF / 10 kΩ pull-down |
 
 Pins that exist on other H725 packages but **not here** (nothing to wire): VDDLDO ×3 (internal — SMPS-only supply mode), VREF+ (internal to VDDA), PDR_ON (internal), VDD33USB/VDD50USB.
 
