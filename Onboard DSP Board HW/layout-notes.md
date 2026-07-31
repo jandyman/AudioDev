@@ -1,6 +1,6 @@
 # Layout Notes — Multichannel ADC/DAC Board
 
-**Status:** Pre-layout decisions and rationale, captured from the placement/stackup discussion. Feeds the Phase 2 board layout. ⚠ items still need a bench/datasheet/layout call. Companion to `pin-allocation.md`, `adc-netlist.md`, `power-supply.md`/`-netlist.md`, `dac-selection.md`, and `test-points.md`. This is the **canonical layout doc**; part-level footprint/BOM choices (packages, dielectrics, JLC part numbers) live in the separate **assignments doc** — cross-referenced here, not duplicated.
+**Status:** Layout decisions and rationale. Feeds the Phase 2 board layout. ⚠ items still need a bench/datasheet/layout call. Companion to `pin-allocation.md`, `adc-netlist.md`, `power-supply.md`/`-netlist.md`, `dac-selection.md`, `bluetooth-constraints.md`, and `test-points.md`. This is the **canonical layout doc**; part-level footprint/BOM choices (packages, dielectrics, JLC part numbers) live in the separate **assignments doc** — cross-referenced here, not duplicated.
 
 **Read first for a fresh session:** this file assumes the schematic is entered (netlist-gate items tracked in the per-section docs) and captures how the board should be *placed and stacked up*, plus the analog-interface decisions that drive it.
 
@@ -21,15 +21,19 @@ All three are single-row/peripheral parts — no BGA-style escape — which is a
 End-to-end placement along the long axis:
 
 ```
-[ ANALOG FRONT END ]───[ MCU ]───[ POWER ]
-  ADC5140 ×2, DAC       H725       TPS63020 buck-boost,
-  MICBIAS, input caps   (middle)   TP4054 charger, LDO*
+[ ANALOG FRONT END ]───[ MCU ]───[ POWER ]───[ RADIO / CONTROLS ]
+  ADC5140 ×2, DAC       H725       TPS63020    BLE module (corner,
+  MICBIAS, input caps   (middle)   buck-boost, antenna on the edge),
+                                   TP4054      volume pot
+                                   charger,
+                                   LDO*
 ```
 
 - **Analog front end at one end, switcher/charger at the other.** The whole point is distance between the TPS63020's (and charger's) high-di/dt loops and the instrument-level front end.
 - **MCU in the middle.** Minimizes the runs to both the SAI4 codec bus (to the analog end) and the I2S1 DAC bus. At 8.192 MHz (SAI) / 2.048 MHz (I2S) these lengths are electrically short — placement is about noise, not signal integrity.
 - **\*`3V3_A` LDO placed mid-board (near its load), not at the power end.** Put the LDO close to the analog load so its PSRR isn't undone by a long *post*-LDO trace re-acquiring noise; let the noisier pre-LDO `3V45_D` do the long haul (the LDO rejects it). Local analog bulk stays at the ADC pair (the analog bulk cap + the VDDA ferrite for `MCU_VDDA`).
 - **MICBIAS never goes toward the power end.** It's generated *inside* each ADC and only leaves the board via the pickup connectors to the offboard pickup preamps.
+- **The radio and the user controls share the far corner, past the power end.** The BLE module wants an extreme corner with its antenna on a board edge, and the analog end is spoken for — so it goes at the opposite extreme, which puts it next to the switcher. That adjacency is managed rather than avoided; see §1.2.
 
 ### 1.1 Fits on one side (validated against the KiCad layout, 2026-07)
 
@@ -38,11 +42,39 @@ With the ADC section placed for real, the whole board is tracking to a **single-
 - **Output jack off-board.** The ¼″ TRS lives off the PCB (charge-ring wiring runs out to it), freeing the edge it would otherwise own.
 - **Tag-Connect debug, not a header** (§4) — reclaims the 2×5 header footprint and its probe keep-out.
 
+### 1.2 Radio corner — a packed corner, deliberately
+
+`bluetooth-constraints.md` is the canonical doc for the BLE module; this section
+carries only what the *layout* has to know. `placement-register.md` carries the
+measured clearances — read it rather than trusting any number written by hand.
+
+The corner holds the module, the volume pot, the battery connector, and the
+buck-boost inductor within a few millimetres of each other. There is no arrangement
+that separates them, so the design picks what to protect:
+
+- **The antenna end is protected absolutely.** It faces the board edge, copper is
+  cleared beneath it on every layer out to both edges it faces, and nothing is placed
+  off the end of it. Everything else in the corner is beside the module *body*, which
+  wants solid ground under it anyway.
+- **Orientation does the work that spacing can't.** The module's supply and UART pads
+  face the board edge, away from the converter; the column facing the inductor carries
+  only ground and unused pins. A re-lay must preserve this.
+- **The switcher adjacency is not a 2.4 GHz problem.** At ~2.4 MHz switching there is
+  no in-band mechanism; the exposure is near-field coupling into module pins, which
+  the pad ordering above already answers. Keep the switch node's copper short.
+- **The pots have plastic cases** — a dielectric load, not a conductive one — and sit
+  at the far end of the module from the antenna.
+- **Clearances are tight enough to be an assembly constraint, not just an RF one.**
+  Sub-millimetre courtyard gaps in this corner want a DRC pass with the real
+  clearance rules before fabrication, and the through-hole pot placed with care.
+
 ## 2. Grounding — one unified plane
 
 **Single ground plane for analog + digital (TI-recommended, and current mixed-signal best practice).** Do **not** split analog/digital grounds — the old split-plane guidance has been walked back for ~15 years because a return current forced to detour around a gap radiates/couples worse than the split ever prevented. Partition by **placement** (§1), not by cutting copper.
 
 This board is the poster child for it: the audio buses run from the mid-board MCU out to the analog/DAC end, so they *need* a continuous return the whole way, and analog living off at one end means the digital return currents (concentrated at the MCU) never have a reason to flow under the analog corner.
+
+**The one sanctioned void: the BLE antenna keep-out.** Copper is cleared on every layer across the module's antenna end (§1.2). This is not an exception to the rule above so much as a case where the rule's *reason* doesn't apply: the void sits at an extreme corner, past the last routing on the board, with the module's own body between it and everything else. No signal crosses it and no return current has any reason to reach it, so nothing is forced to detour. The test for whether a plane cut is acceptable was never "is the plane whole" but "does any return current have to go around it" — and here nothing does. Carry the void out to the board edges rather than leaving an isolated copper island in the middle of it, and keep it out of the module *body's* footprint, which needs solid ground.
 
 ## 3. Stackup — 4 layers, Sig / GND / GND\* / Sig
 
@@ -51,7 +83,7 @@ This board is the poster child for it: the audio buses run from the mid-board MC
 | Layer | Role |
 |---|---|
 | **L1 (top)** | Components + primary/critical signal routing (audio analog + both clock buses live here, over solid L2) |
-| **L2** | **Solid, unbroken GND plane** — the unified ground of §2. Never gapped. MCU exposed-pad thermal vias land here. |
+| **L2** | **Solid, unbroken GND plane** — the unified ground of §2. Never gapped, with one sanctioned exception: the BLE antenna keep-out at the far corner (§2). MCU exposed-pad thermal vias land here. |
 | **L3** | **GND-dominant plane** — ground pour stitched hard to L2, *with a `3V45_D` island under the MCU* (§5) for power routing (+ fat feeds for the other low-current rails). Effectively a second ground plane. |
 | **L4 (bottom)** | Tolerant routing (control, LED, spare GPIO) over L3 ground fill, plus stitching |
 
@@ -165,8 +197,10 @@ Not open decisions — confirmations, placements, and cost calls to settle while
 5. **DAC power-up ordering** — verify firmware keeps I2S Hi-Z until `3V3_A` is up (XSMT-low reinforces).
 6. **Pickup ribbon width** — stay at 6-conductor vs widen to ground-interleaved (cost call).
 7. **MICBIAS star-route** to the 4 buffer feeds (no common impedance).
-8. Existing netlist-gate ⚠ items in the per-section docs still stand (crystal load caps, I2C pull-up/ADDR values, VCAP/AN5419 SMPS-direct wiring, tantalum polarity, etc.).
-9. ~~Layer-count reconciliation~~ **Resolved 2026-07-28: 4 layers**, per §3. `multichannel-audio-board-plan.md` has been updated to match — its decision log no longer says 6.
+8. ⚠ **BLE antenna keep-out extent** — check the as-drawn void against the module manual's PCB-design drawing, particularly how far past the first pad row copper must be cleared (`bluetooth-constraints.md` §8).
+9. **Radio-corner DRC** — the corner has sub-millimetre courtyard gaps and a through-hole part beside an SMT module; run the clearance rules that will actually be fabricated before committing.
+10. **UART flow control** — confirm the module supports RTS/CTS before leaving two MCU pins committed to it (`bluetooth-constraints.md` §8).
+11. Existing netlist-gate ⚠ items in the per-section docs still stand (crystal load caps, I2C pull-up/ADDR values, VCAP/AN5419 SMPS-direct wiring, tantalum polarity, etc.).
 
 ## 8. Contingency architectures (held in reserve)
 

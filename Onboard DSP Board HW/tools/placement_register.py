@@ -27,7 +27,10 @@ def read_footprints(pcb_path):
     """Parse footprints out of a .kicad_pcb.
 
     Returns a list of dicts with value, footprint library id, board position,
-    rotation, layer, and global pad positions keyed by pad number.
+    rotation, layer, global pad positions keyed by pad number, and the
+    courtyard bounding box (the part's reserved area, which is what edge-to-edge
+    clearance has to be measured against -- centre-to-centre says nothing useful
+    about a 16 mm module sitting next to a 4 mm inductor).
     """
     text = Path(pcb_path).read_text()
     footprints = []
@@ -50,8 +53,33 @@ def read_footprints(pcb_path):
             "rotation": rotation,
             "layer": layer.group(1) if layer else "?",
             "pads": _pad_positions(block, origin_x, origin_y, rotation),
+            "courtyard": _courtyard_box(block, origin_x, origin_y, rotation),
         })
     return footprints
+
+
+def read_board_outline(pcb_path):
+    """Bounding box of the Edge.Cuts outline as (x_min, x_max, y_min, y_max).
+
+    The footprint spans below are origin-to-origin and so understate the board:
+    a 16 mm module's origin sits 8 mm inside its own outline. The outline is
+    what the <= 30 x 90 mm envelope is actually checked against.
+    """
+    text = Path(pcb_path).read_text()
+    corners = []
+    for graphic in re.finditer(r"\(gr_(?:line|rect|arc|circle|poly)"
+                               r"[\s\S]{0,800}?\n\t\)", text):
+        shape = graphic.group(0)
+        if '"Edge.Cuts"' not in shape:
+            continue
+        for point in re.finditer(
+                r"\((?:xy|start|end|center|mid) ([-\d.]+) ([-\d.]+)\)", shape):
+            corners.append((float(point.group(1)), float(point.group(2))))
+    if not corners:
+        return None
+    xs = [corner[0] for corner in corners]
+    ys = [corner[1] for corner in corners]
+    return (min(xs), max(xs), min(ys), max(ys))
 
 
 def _balanced_block(text, start):
@@ -87,6 +115,43 @@ def _pad_positions(block, origin_x, origin_y, rotation):
             origin_y - local_x * math.sin(angle) + local_y * math.cos(angle),
         )
     return pads
+
+
+def _courtyard_box(block, origin_x, origin_y, rotation):
+    """Global (x_min, x_max, y_min, y_max) of the F.CrtYd outline, or None.
+
+    KiCad stores the courtyard in footprint-local coordinates, so it has to be
+    rotated into board space before a bounding box means anything.
+    """
+    angle = math.radians(-rotation)
+    corners = []
+    for graphic in re.finditer(r"\(fp_(?:line|rect|poly)[\s\S]{0,600}?\n\t\t\)",
+                               block):
+        shape = graphic.group(0)
+        if '"F.CrtYd"' not in shape:
+            continue
+        for point in re.finditer(r"\((?:xy|start|end) ([-\d.]+) ([-\d.]+)\)",
+                                 shape):
+            local_x = float(point.group(1))
+            local_y = float(point.group(2))
+            corners.append((
+                origin_x + local_x * math.cos(angle) - local_y * math.sin(angle),
+                origin_y + local_x * math.sin(angle) + local_y * math.cos(angle),
+            ))
+    if not corners:
+        return None
+    xs = [corner[0] for corner in corners]
+    ys = [corner[1] for corner in corners]
+    return (min(xs), max(xs), min(ys), max(ys))
+
+
+def box_gap(box_a, box_b):
+    """Edge-to-edge gap between two bounding boxes; 0.0 when they overlap."""
+    ax_min, ax_max, ay_min, ay_max = box_a
+    bx_min, bx_max, by_min, by_max = box_b
+    dx = max(0.0, bx_min - ax_max, ax_min - bx_max)
+    dy = max(0.0, by_min - ay_max, ay_min - by_max)
+    return math.hypot(dx, dy)
 
 
 def assign_zones(footprints, zone_bounds):
@@ -142,8 +207,8 @@ def distance(a, b):
     return math.hypot(a[0] - b[0], a[1] - b[1])
 
 
-def format_register(footprints, zone_bounds, distance_pairs, pin_groups,
-                    pcb_name):
+def format_register(footprints, outline, zone_bounds, distance_pairs,
+                    clearance_pairs, keepout_regions, pin_groups, pcb_name):
     """Build the whole markdown document as a single string."""
     lines = []
     xs = [f["x"] for f in footprints]
@@ -166,9 +231,14 @@ def format_register(footprints, zone_bounds, distance_pairs, pin_groups,
     lines.append("| Metric | Value |")
     lines.append("|---|---|")
     lines.append("| Placed footprints | %d |" % len(footprints))
-    lines.append("| Long axis (x) span | %.1f mm (%.1f … %.1f) |"
+    if outline:
+        lines.append("| Board outline | %.1f × %.1f mm (x %.1f … %.1f, "
+                     "y %.1f … %.1f) |"
+                     % (outline[1] - outline[0], outline[3] - outline[2],
+                        outline[0], outline[1], outline[2], outline[3]))
+    lines.append("| Long axis (x) span, origins | %.1f mm (%.1f … %.1f) |"
                  % (max(xs) - min(xs), min(xs), max(xs)))
-    lines.append("| Short axis (y) span | %.1f mm (%.1f … %.1f) |"
+    lines.append("| Short axis (y) span, origins | %.1f mm (%.1f … %.1f) |"
                  % (max(ys) - min(ys), min(ys), max(ys)))
     lines.append("| Back-side parts | %s |"
                  % ("none — single-sided" if not back_side
@@ -215,6 +285,51 @@ def format_register(footprints, zone_bounds, distance_pairs, pin_groups,
         lines.append("| %s | %s | %.2f mm |" % (label_a, label_b, span))
     lines.append("")
 
+    if clearance_pairs:
+        lines.append("## Clearances — courtyard edge to courtyard edge")
+        lines.append("")
+        lines.append("Centre-to-centre is meaningless for the large parts. "
+                     "These are the gaps that decide whether the corner "
+                     "assembles and whether metal sits in a radiating "
+                     "near field.")
+        lines.append("")
+        lines.append("| From | To | Gap |")
+        lines.append("|---|---|---|")
+        for label_a, label_b, key_a, key_b in clearance_pairs:
+            boxes_a = [f["courtyard"] for f in match_parts(footprints, key_a)
+                       if f["courtyard"]]
+            boxes_b = [f["courtyard"] for f in match_parts(footprints, key_b)
+                       if f["courtyard"]]
+            if not boxes_a or not boxes_b:
+                lines.append("| %s | %s | *not placed* |" % (label_a, label_b))
+                continue
+            gap = min(box_gap(a, b) for a in boxes_a for b in boxes_b)
+            lines.append("| %s | %s | %.2f mm |" % (label_a, label_b, gap))
+        lines.append("")
+
+    for region in keepout_regions:
+        lines.append("## Keep-out region — %s" % region["title"])
+        lines.append("")
+        lines.append(region["note"])
+        lines.append("")
+        x_min, x_max, y_min, y_max = region["rect"]
+        lines.append("Extent: x = %.2f … %.2f mm, y = %.2f … %.2f mm "
+                     "(%.2f × %.2f mm)."
+                     % (x_min, x_max, y_min, y_max, x_max - x_min,
+                        y_max - y_min))
+        lines.append("")
+        lines.append("| Part | Gap to region |")
+        lines.append("|---|---|")
+        for label, key in region["parts"]:
+            boxes = [f["courtyard"] for f in match_parts(footprints, key)
+                     if f["courtyard"]]
+            if not boxes:
+                lines.append("| %s | *not placed* |" % label)
+                continue
+            gap = min(box_gap(box, region["rect"]) for box in boxes)
+            lines.append("| %s | %.2f mm |" % (label, gap))
+        lines.append("")
+
     for group in pin_groups:
         host = find_part(footprints, group["part_value"])
         if host is None:
@@ -259,10 +374,13 @@ def _aggregate_passives(members):
     return aggregated
 
 
-def generate(pcb_path, output_path, zone_bounds, distance_pairs, pin_groups):
+def generate(pcb_path, output_path, zone_bounds, distance_pairs,
+             clearance_pairs, keepout_regions, pin_groups):
     footprints = read_footprints(pcb_path)
-    document = format_register(footprints, zone_bounds, distance_pairs,
-                               pin_groups, Path(pcb_path).name)
+    document = format_register(footprints, read_board_outline(pcb_path),
+                               zone_bounds, distance_pairs, clearance_pairs,
+                               keepout_regions, pin_groups,
+                               Path(pcb_path).name)
     Path(output_path).write_text(document)
     print("wrote %s (%d footprints)" % (output_path, len(footprints)))
 
@@ -279,7 +397,8 @@ output_path = ("/Users/andy/Dropbox/Developer/AudioDev/Onboard DSP Board HW/"
 zone_bounds = [
     ("Analog front end", 137.0),
     ("MCU", 158.0),
-    ("Power / charger", 1e9),
+    ("Power / charger", 170.0),
+    ("Radio / controls", 1e9),
 ]
 
 distance_pairs = [
@@ -297,6 +416,45 @@ distance_pairs = [
     ("HSE crystal", "core SMPS inductor", "Crystal_SMD", "2.2uH"),
     ("HSE crystal", "its load caps", "Crystal_SMD", "15pF"),
     ("HSE crystal", "NRST cap", "Crystal_SMD", "100nF"),
+    ("BLE module", "MCU", "E104", "STM32H725RGVx"),
+    ("BLE module", "buck-boost inductor", "E104", "1.5uH"),
+]
+
+# The radio corner is packed tight enough that centre-to-centre distances
+# mislead: the module is 11.5 x 16 mm, so its centre is 8 mm from its own
+# antenna. Everything that matters there is an edge-to-edge gap.
+
+clearance_pairs = [
+    ("BLE module", "buck-boost inductor", "E104", "1.5uH"),
+    ("BLE module", "volume pot", "E104", "Potentiometer_Chinese"),
+    ("BLE module", "battery connector", "E104", "JST_PH"),
+    ("Buck-boost inductor", "volume pot", "1.5uH", "Potentiometer_Chinese"),
+]
+
+# The antenna end of the module -- the pad-free 4.14 mm of its 16 mm length.
+# Copper is cleared under it on every layer; this table is what keeps the
+# surrounding metal honest, since the graceful-degradation numbers in
+# bluetooth-constraints.md are stated against these gaps.
+
+antenna_zone = (170.35, 181.85, 72.93, 77.07)
+
+keepout_regions = [
+    {
+        "title": "BLE antenna end",
+        "note": ("The pad-free end of the module carries the ceramic chip "
+                 "antenna. Copper is cleared beneath it on all layers and the "
+                 "end faces the board edge, so no return path detours around "
+                 "the gap. Gaps below are to the nearest metal; vendor "
+                 "external-metal guidance is 10-30 mm for best range and "
+                 "degrades gracefully rather than cliff-edge."),
+        "rect": antenna_zone,
+        "parts": [
+            ("Buck-boost inductor", "1.5uH"),
+            ("Volume pot", "Potentiometer_Chinese"),
+            ("Battery connector", "JST_PH"),
+            ("Buck-boost converter", "TPS63020DSJR"),
+        ],
+    },
 ]
 
 # The HSE pair and the core-SMPS hot loop share one package edge; this table
@@ -327,4 +485,5 @@ pin_groups = [
     },
 ]
 
-generate(pcb_path, output_path, zone_bounds, distance_pairs, pin_groups)
+generate(pcb_path, output_path, zone_bounds, distance_pairs, clearance_pairs,
+         keepout_regions, pin_groups)
