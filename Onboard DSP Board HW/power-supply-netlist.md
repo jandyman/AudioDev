@@ -55,14 +55,16 @@ No power path, no TS input, no safety timer — that's the simplification being 
 | VIN (both) | `BATT` + 10 µF to GND (at pin) |
 | VINA | `BATT` + 0.1 µF to GND |
 | EN | `VBAT` (tied to VIN — regulator runs whenever the power switch closes; as-built 2026-07-15) |
-| PS/SYNC | `GND` ⚠ (power-save/PFM enabled — verify polarity: GND = PFM on this part) |
+| PS/SYNC | `GND` — power-save/PFM enabled. **Polarity confirmed** against SLVS916I (pin table: "1 disabled, 0 enabled"; §8: power save is entered with PS/SYNC low) |
 | L1 | `SW_L1` → 1.5 µH inductor → `SW_L2` |
 | L2 | `SW_L2` |
 | VOUT (all) | `3V45_D` + 2× 22 µF to GND |
 | FB | `FB_3V45` |
 | GND / PGND / PAD | `GND` |
 
-FB divider: `3V45_D` → 590 kΩ → `FB_3V45` → 100 kΩ → GND. Vout = 0.5 V × (1 + 590/100) = **3.45 V**. Both 1 %. ⚠ Confirm 0.5 V FB reference and max-R guidance in the datasheet.
+FB divider: `3V45_D` → **1.18 MΩ** → `FB_3V45` → **200 kΩ** → GND. Vout = 0.5 V × (1 + 1180/200) = **3.450 V**. Both 1 %, both standard E96 values.
+
+**Revised 2026-07-28 from 590 kΩ / 100 kΩ.** The 500 mV feedback reference is confirmed (SLVS916I §8.2.3), so the old pair had the correct *ratio* — but the datasheet specifies the low-side resistor *"must be kept in the range of 200 kΩ"* and its own selection table uses 180 kΩ throughout. The old pair sat at half that impedance level. The new pair also halves the divider's standing drain (~5.0 µA → ~2.5 µA), which matters on a node that is live whenever the unit is switched on. ⚠ Update the entered values.
 
 Power switch **(superseded as-built 2026-07-15)**: the switch is the integrated switch on the **volume pot** (the earlier volume-pot candidate won after all; the MCU control pots dropped from three to two — `pin-allocation.md` §6 item 6), and it is a **hard switch in the battery line**: `bat+` → pot switch → `VBAT`. The buck-boost EN ties to `VBAT`, and a 1 MΩ `VBAT` → GND bleed gives a defined off state. The switch now carries the full regulator input current (hundreds of mA peaks at low battery), not µA — **⚠ check the pot-switch current rating**, which the old EN-only scheme made irrelevant.
 
@@ -120,18 +122,21 @@ See `test-points.md` (single source of truth; categorized by access type). Power
 | charger IN/BAT caps | 1 µF X7R 25 V | 0603 | basic | charger VCC + BAT |
 | cell bulk / buck-boost VIN | 10 µF X7R ≥10 V | 0805 | basic | BATT bulk / buck-boost VIN |
 | misc 0.1 µF | 0.1 µF X7R | 0402 | basic | VINA, battery-sense filter, spare |
-| 3V45_D output bulk | 22 µF X5R/X7R ≥10 V (2×) | 0805 | basic | 3V45_D output |
+| 3V45_D output bulk | 22 µF X5R/X7R ≥10 V (2×) | 0805 | basic | 3V45_D output — entered as 2× 4.7 µF, ⚠ raise to 2× 22 µF (TI's reference circuit for this converter uses 3× 22 µF) |
 | LDO in/out + VDDA caps | 1 µF X7R ≥10 V | 0402/0603 | basic | LDO in/out, VDDA |
 | MCU SMPS VFB cap | 4.7 µF X7R | 0603 | basic | SMPS VFB ⚠ verify value |
 | charger PROG | 2.0 kΩ 1 % | 0402 | basic | PROG (≈500 mA) ⚠ recompute w/ cell |
-| LED series | 1 kΩ | 0402 | basic | charge-LED series |
-| FB divider top | 590 kΩ 1 % | 0402 | basic | buck-boost FB top |
-| FB divider bottom | 100 kΩ 1 % | 0402 | basic | buck-boost FB bottom |
+| status / charge LED | red, KT-0603R | 0603 | [C2286](https://jlcpcb.com/partdetail/C2286) | Vf 1.8–2.4 V, 300 mcd @ 20 mA, basic-class, 7.6 M stock, $0.007 |
+| LED series | 1 kΩ | 0402 | basic | charge-LED series — ≈1.5 mA (≈22 mcd, plainly visible); 2.2 kΩ ≈ 0.7 mA if battery life is preferred |
+| FB divider top | 1.18 MΩ 1 % | 0402 | basic | buck-boost FB top (revised 2026-07-28 from 590 kΩ) |
+| FB divider bottom | 200 kΩ 1 % | 0402 | basic | buck-boost FB bottom (revised 2026-07-28 from 100 kΩ — datasheet specifies ~200 kΩ low-side) |
 | EN/VBAT bleed | 1 MΩ | 0402 | basic | VBAT → GND bleed / off state |
 | battery-sense divider | 1 MΩ 1 % (2×) | 0402 | basic | battery sense |
 | GND test loops | test point | — | — | Cat 1 only; see `test-points.md` |
 
 Passives are JLCPCB basic-class; exact LCSC codes at order time. The three ICs were stock-checked 2026-07-13 (`power-supply.md` §6).
+
+**Red, not green, and the reason is the rail voltage.** A green LED's ~3.0 V Vf against the 3.45 V rail leaves only ~0.35 V across the series resistor, so the part-to-part Vf spread swings the current several-fold and the brightness with it. Red's ~1.9 V leaves ~1.45 V and a well-defined current. Any future indicator on this rail should follow the same reasoning rather than the colour preference.
 
 ## 3a. Charger section as built (2026-07-15)
 
@@ -142,13 +147,17 @@ Entered in the schematic with these deltas from §2 above (validated topology �
 - **No TVS on the ring** (dropped — field-proven without it) and **no charge LED** (CHRḠ left open).
 - **Caps:** 4.7 µF on `CHG_IN`, 4.7 µF on `bat+` (doc had 1 µF + 10 µF bulk; revisit at layout if desired).
 
-## 4. Netlist-gate checklist additions (the ⚠ items)
+## 4. Netlist-gate verification checklist (the ⚠ items)
+
+These are facts to confirm and values to correct before fab — not open decisions. Topology and parts are settled (`power-supply.md`).
 
 1. TP4054 RPROG once the cell is chosen (ICHG ≈ 1000 V / RPROG, keep ≤1C); confirm the constant on the exact vendor's datasheet — the part is multi-sourced. **As built: 30 kΩ ≈ 33 mA — confirm.**
 2. ~~TP4054 abs-max input vs. TVS clamp voltage~~ **Resolved 2026-07-15: no TVS — circuit field-proven on prior board.**
 3. Charger thermal: worst-case ~1 W in SOT-23-5 at 500 mA into a flat cell; confirm foldback behavior is acceptable or reduce ICHG.
 4. No TS/thermistor and no safety timer on TP4054 — confirm the chosen cell is acceptable without pack-level protection assumptions (most protected cells are).
-5. TPS63020 PS/SYNC polarity for power-save mode; FB reference voltage (0.5 V assumed) and divider max-R guidance.
+5. ~~TPS63020 PS/SYNC polarity; FB reference voltage and divider guidance~~ **Resolved 2026-07-28 against SLVS916I:** PS/SYNC low = power-save enabled (as drawn, correct); FB reference = 500 mV (as assumed, correct); low-side divider resistor specified at ~200 kΩ → **divider revised to 1.18 MΩ / 200 kΩ, update the entered values.**
+5a. **Buck-boost input capacitance is missing** — fit 10 µF + 0.1 µF at the VIN/VINA pins. `VBAT` has no local capacitance and sits after the mechanical power switch, so the switcher's input loop currently closes through switch contacts and wiring. TI's reference circuit uses 2× 10 µF input.
+5b. **3V45_D output capacitance** — entered 2× 4.7 µF vs. 2× 22 µF specified (TI reference: 3× 22 µF). Raise, or justify against the measured MCU load step.
 6. **H725 SMPS block wired verbatim from AN5419/Nucleo-H725** — mode strap, VCAP treatment, L/C values.
 7. PCM5102A VIH / input abs-max vs 3.45 V logic; ADC5140 sequencing (carried over from `power-supply.md` open items).
 8. **Pot-switch current rating** — the volume pot's integrated switch now hard-switches the battery line (§2 as-built note), carrying full regulator input current.

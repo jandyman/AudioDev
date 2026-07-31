@@ -108,15 +108,30 @@ def find_part(footprints, value):
     return None
 
 
-def nearest_distance(footprints, value_a, value_b):
-    """Smallest centre-to-centre distance between any part of each value.
+def match_parts(footprints, key):
+    """Find footprints by exact value, falling back to a footprint-name match.
 
-    Values often appear more than once (two ADC codecs, many identical
+    Values get retyped -- "24.576" became "24Mhz" when the crystal frequency
+    changed -- which would silently drop a row from the distance table. Falling
+    back to the footprint library name keeps the register keyed to the physical
+    part rather than to whatever someone typed in the value field.
+    """
+    exact = [f for f in footprints if f["value"] == key]
+    if exact:
+        return exact
+    lowered = key.lower()
+    return [f for f in footprints if lowered in f["library"].lower()]
+
+
+def nearest_distance(footprints, key_a, key_b):
+    """Smallest centre-to-centre distance between any part matching each key.
+
+    Parts often appear more than once (two ADC codecs, many identical
     passives). Reporting the first match found would silently describe the
     wrong part, so every pairing is measured and the closest returned.
     """
-    group_a = [f for f in footprints if f["value"] == value_a]
-    group_b = [f for f in footprints if f["value"] == value_b]
+    group_a = match_parts(footprints, key_a)
+    group_b = match_parts(footprints, key_b)
     if not group_a or not group_b:
         return None
     return min(distance((a["x"], a["y"]), (b["x"], b["y"]))
@@ -276,9 +291,12 @@ distance_pairs = [
     ("Buck-boost inductor", "nearer ADC codec", "1.5uH", "XLV320ADC5140IRTWR"),
     ("Analog LDO", "nearer ADC codec", "TPS7A2033PDBVR", "XLV320ADC5140IRTWR"),
     ("Analog LDO", "DAC", "TPS7A2033PDBVR", "PCM5102"),
-    ("HSE crystal", "MCU", "24.576", "STM32H725RGVx"),
-    ("HSE crystal", "core SMPS inductor", "24.576", "2.2uH"),
-    ("HSE crystal", "its load caps", "24.576", "15pF"),
+    # Keyed on the crystal footprint, not its value -- the value field gets
+    # retyped whenever the frequency changes.
+    ("HSE crystal", "MCU", "Crystal_SMD", "STM32H725RGVx"),
+    ("HSE crystal", "core SMPS inductor", "Crystal_SMD", "2.2uH"),
+    ("HSE crystal", "its load caps", "Crystal_SMD", "15pF"),
+    ("HSE crystal", "NRST cap", "Crystal_SMD", "100nF"),
 ]
 
 # The HSE pair and the core-SMPS hot loop share one package edge; this table

@@ -3031,16 +3031,6 @@
 			(embedded_fonts no)
 		)
 	)
-	(text "HSE 24.576 MHz - integer-N \nPLL3 for 48k family"
-		(exclude_from_sim no)
-		(at 93.98 122.682 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-		)
-		(uuid "45a7c07c-f8cb-4310-8b2b-706ccd186255")
-	)
 	(text "SMPS direct (AN5419): \n2.2uH VLX->VFB, 4.7uF at VFB"
 		(exclude_from_sim no)
 		(at 117.094 93.98 0)
@@ -4660,7 +4650,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "24.576"
+		(property "Value" "24Mhz"
 			(at 119.38 116.8399 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4671,7 +4661,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm"
+		(property "Footprint" "Crystal:Crystal_SMD_WE_IQXC-26-4Pin_1.6x1.2mm"
 			(at 114.3 115.57 0)
 			(hide yes)
 			(show_name no)

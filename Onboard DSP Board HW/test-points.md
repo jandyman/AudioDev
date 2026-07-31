@@ -89,7 +89,7 @@ Reachable without dedicated board area. Recorded here so nothing is lost from th
 
 Worst case ~11 pads; best case ~6 if the DAC lines are probed at the TSSOP leads.
 
-## Open items
+## Verification items (settle at layout)
 
 1. ⚠ **DAC-bus probeability** — confirm whether probing PCM5102A TSSOP leads is acceptable; decides Cat 2 vs Cat 3 for `I2S1_CK/WS/SDO` and `DAC_XSMT` (4 potential pads).
 2. GND loop placement — one per region (MCU / analog / DAC output).

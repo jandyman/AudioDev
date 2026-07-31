@@ -16,14 +16,26 @@
 
 ## 1. Audio topology (clocking scheme — resolved)
 
-Capture and playback are **frequency-locked by construction**: both peripherals' kernel-clock muxes select **PLL3_P** (RCC `D3CCIPR.SAI4BSEL`, `D2CCIP1R.SPI123SEL` — both offer pll3_p). HSE = **24.576 MHz** (the HSE crystal) → PLL3 integer-N (e.g. VCO 393.216 MHz, PLL3_P = 49.152 MHz).
+Capture and playback are **frequency-locked by construction**: both peripherals' kernel-clock muxes select **PLL3_P** (RCC `D3CCIPR.SAI4BSEL`, `D2CCIP1R.SPI123SEL` — both offer pll3_p).
+
+**System sample rate is 32 kHz.** Bass content is negligible above ~10 kHz, so a 15 kHz Nyquist leaves real margin; the reduction cuts YIN's cost by ~56 % (its difference function scales as fs², since both window length and lag range track fs), which is a larger saving than the 27 % clock cut the 400 MHz ceiling imposes. 32 kHz is a standard rate — the PCM5102A groups it with 44.1 and 48 kHz as "single rate", and the ADC5140's programmable range is 7.35–768 kHz — so no codec runs off-book. The board's output is analog, so nothing external constrains the choice.
+
+**HSE = 24.000 MHz**, a stock frequency, chosen for sourcing rather than for arithmetic. It regenerates the audio family exactly:
+
+```
+HSE 24.000  /M=5   → 4.800 MHz PLL3 reference
+            ×N=128 → 614.4 MHz VCO      (wide range 192–836 MHz)
+            /P=25  → PLL3_P = 24.576 MHz
+```
+
+The same VCO is reachable from 8, 12 or 16 MHz with M = 5 and N = 384/256/192, so the crystal frequency stays a free sourcing variable. 48 kHz remains available on the same tree (SAI ÷2, I2S ÷8) if it is ever wanted back.
 
 | Bus | Peripheral | Role | Bit clock | Notes |
 |---|---|---|---|---|
-| Codec capture | **SAI4_B** | Master, TDM **receiver** | 12.288 MHz (8 slots × 32 bit × 48 kHz) | Generates BCLK + FSYNC to both ADC5140s; single shared serial-data input (both codecs on one bus, per-device slot assignment). No MCLK distributed — codecs derive internal clocks from BCLK via their on-chip PLL. |
-| DAC playback | **I2S1** (SPI1, I2S master TX) | Master, I2S **transmitter** | 3.072 MHz (2 ch × 32 bit × 48 kHz; I2SDIV = 16 from 49.152 MHz) | Generates BCK + LRCK to the PCM5102A. **No MCLK** — DAC's internal PLL runs from BCK (SCK pin strapped low). |
+| Codec capture | **SAI4_B** | Master, TDM **receiver** | 8.192 MHz (8 slots × 32 bit × 32 kHz; PLL3_P ÷ 3) | Generates BCLK + FSYNC to both ADC5140s; single shared serial-data input (both codecs on one bus, per-device slot assignment). No MCLK distributed — codecs derive internal clocks from BCLK via their on-chip PLL. BCLK = 256 × fs, TI's own characterisation ratio. |
+| DAC playback | **I2S1** (SPI1, I2S master TX) | Master, I2S **transmitter** | 2.048 MHz (2 ch × 32 bit × 32 kHz; PLL3_P ÷ 12) | Generates BCK + LRCK to the PCM5102A. **No MCLK** — DAC's internal PLL runs from BCK (SCK pin strapped low). Rate detection carries ±4 % tolerance, so the exact chain above spends none of that margin. |
 
-**Why two different peripherals:** SAI4_B is the only sub-block with clock pins on this package, and one sub-block provides one master bit clock — the two streams need different rates (12.288 vs 3.072 MHz), so the DAC uses I2S1. SAI4 block A (SD_A on **PB2**, AF8) remains available as an internal-synchronous slave sharing block B's 12.288 MHz TDM clock — a future TDM-playback option, no clock pins needed.
+**Why two different peripherals:** SAI4_B is the only sub-block with clock pins on this package, and one sub-block provides one master bit clock — the two streams need different rates (8.192 vs 2.048 MHz), so the DAC uses I2S1. SAI4 block A (SD_A on **PB2**, AF8) remains available as an internal-synchronous slave sharing block B's 8.192 MHz TDM clock — a future TDM-playback option, no clock pins needed.
 
 **Firmware note — SAI4 is D3-domain:** capture DMA via **BDMA**, buffers in **SRAM4** (16 KB; 8 ch × 48 samples × 4 B double-buffered ≈ 3 KB/ms-block — comfortable). D-cache coherency for that region handled in the platform layer. The DAC side (I2S1, D2 domain) uses regular DMA. ⚠ verify SAI4_B master-receiver TDM config + BDMA request routing against RM0468 at firmware bring-up.
 
@@ -43,10 +55,6 @@ Capture and playback are **frequency-locked by construction**: both peripherals'
 | | *(no MCLK reserve)* | — | — | — | — | I2S1_MCK = PC4 collides with `BATT_SENSE`; DAC needs none |
 | **I2C1 (control)** | `I2C1_SCL` | **PB8** | 64 | AF4 | OD | ADC5140 ×2 — pull-up to `3V45_D` ⚠ value unset (2.2–4.7 kΩ). DAC not on I2C (strap-configured, `dac-selection.md`) |
 | | `I2C1_SDA` | **PB9** | 65 | AF4 | OD | " (pull-up) |
-| **USART3 (BT — reserved)** | `USART3_TX` | **PC10** | 54 | AF7 | out | BT module RX |
-| | `USART3_RX` | **PC11** | 55 | AF7 | in | BT module TX |
-| | `USART3_RTS` | **PB14** | 38 | AF7 | out | BT module CTS (HW flow control) |
-| | `USART3_CTS` | **PB13** | 37 | AF7 | in | BT module RTS |
 | **USB (reserve)** | `OTG_FS_DM` | **PA11** | 46 | — | bidir | USB data reserved; charge is via jack ring, no USB connector on spin 1 (this part's OTG_HS in FS-PHY mode) |
 | | `OTG_FS_DP` | **PA12** | 47 | — | bidir | " |
 | **Battery sense** | `BATT_SENSE` = ADC1_INP4 | **PC4** | 27 | analog | in | battery voltage divider |
@@ -64,7 +72,7 @@ Pots are **PCB-mounted** (they mechanically support the board; knobs go right-an
 |---|---|---|---|
 | SWD debug | **PA13** (`SWDIO`), **PA14** (`SWCLK`) | 48, 52 | debug header: 2×5 1.27 mm ARM Cortex Debug — 1 VTref=`3V45_D`, 2 SWDIO, 4 SWCLK, 6 SWO, 10 NRST, 3/5/9 GND, 7 KEY, 8 NC |
 | SWO | **PB3** (`SWO`) | 58 | wired to the debug header SWO pin; RTT is the logging baseline, SWO a bonus |
-| HSE crystal | **PH0/PH1** | 10, 11 | **24.576 MHz crystal** + load caps (15 pF placeholder — ⚠ set to 2×(CL−C_stray) for the chosen part; if a 3225 4-pad crystal, pads 2/4 = GND in the footprint) |
+| HSE crystal | **PH0/PH1** | 10, 11 | **24.000 MHz crystal, CL 8 pF, SMD1612-4P** — NDK NX1612SA family (4-pad; pads 2/4 = GND, tied to the can). Load caps ≈ **6.8 pF** (2×(CL−C_stray) = 7.0 pF at 4.5 pF stray; 6–10 pF covers 3–5 pF stray — ⚠ at CL 8 pF the answer is far more sensitive to C_stray than it was at CL 12 pF, so settle C_stray against the final routing before committing). The 1612 body is 1.92 mm² against the 2016's 3.2 mm² and the 3225's 8.0 mm², which is what makes the corner tractable — see `layout-notes.md` §5.1.1. |
 | Boot | **BOOT0** | 63 | 10 kΩ pull-down; SWD-only programming |
 | Reset | **NRST** | 12 | 100 nF to GND + the debug header NRST pin (⚠ MCU-sheet net needs its global `NRST` label restored to reach the header) |
 | Analog ref | VDDA | 16 | `MCU_VDDA` = `3V3_A` via the VDDA ferrite; **VREF+ is internal to VDDA on this package** — no pin, no strap |
@@ -79,9 +87,7 @@ Pots are **PCB-mounted** (they mechanically support the board; knobs go right-an
 | Codec SHDNZ (shared) — `CODEC_SHDNZ` | **PC6** | 40 | drives both ADC5140 SHDNZ; 10 kΩ pull-down holds reset until MCU drives |
 | Codec spare reset / 2nd line | **PC7** | 41 | reserved (unwired) — split only if bring-up needs it |
 | DAC soft-mute — `DAC_XSMT` | **PC9** | 42 | PCM5102A XSMT: hold **low** through power-up until rails + BCK stable (`dac-selection.md` §6) |
-| BT module reset/enable — `BT1` | **PB12** | 36 | reserved (label only, spin 2) |
-| BT status/wake — `BT2` | **PB15** | 39 | reserved (label only, spin 2) |
-| Status LED — `LED` | **PD2** | 57 | PD2 → status-LED anode, cathode → series resistor → GND (active-high, off during reset by Hi-Z default) ⚠ series-resistor value unset — 1 kΩ ≈ 1.5 mA |
+| Status LED — `LED` | **PD2** | 57 | PD2 → status-LED anode, cathode → series resistor → GND (active-high, off during reset by Hi-Z default). **Red 0603**, Vf 1.8–2.4 V, 300 mcd at 20 mA. Series resistor **1 kΩ ≈ 1.5 mA** (≈22 mcd, plainly visible); 2.2 kΩ ≈ 0.7 mA if battery life is favoured over brightness. **Red, not green** — a green Vf of ~3.0 V would leave only ~0.35 V across the resistor on this rail, so part-to-part Vf spread would swing the current several-fold; red's ~1.9 V leaves ~1.45 V and a well-defined current. |
 
 ADC5140 I2C addresses are set by hardware ADDR straps: ADC-A = GND/GND, ADC-B = IOVDD/GND. ⚠ confirm against the SBAS892A strap→address table at the gate (`adc-netlist.md` §6).
 
@@ -89,21 +95,27 @@ ADC5140 I2C addresses are set by hardware ADDR straps: ADC-A = GND/GND, ADC-B = 
 
 ## 5. Utilization
 
-**29 of 46 GPIO used.** Free: PA1 (MCLK reserve/TP), PA3, PA6, PA9, PA10, PA15, PB0, PB1, PB2 (SAI4_SD_A option), PB4, PB5, PB6, PB7, PB10, PC12, PC14/PC15 (LSE pair — usable as GPIO, no 32 kHz crystal planned). Headroom is real but thin vs the LQFP — check any spin-2 pin pick against this list and the package pinout (ports D/E/F/G largely don't exist).
+**23 of 46 GPIO used.** Free: PA1 (MCLK reserve/TP), PA3, PA6, PA9, PA10, PA15, PB0, PB1, PB2 (SAI4_SD_A option), PB4, PB5, PB6, PB7, PB10, PB12, PB13, PB14, PB15, PC10, PC11, PC12, PC14/PC15 (LSE pair — usable as GPIO, no 32 kHz crystal planned). PC10/PC11 plus PB13/PB14 remain a complete USART3 set (AF7, with hardware flow control) if a serial link is ever wanted. Headroom is real but thin vs the LQFP — check any spin-2 pin pick against this list and the package pinout (ports D/E/F/G largely don't exist).
 
 ---
 
-## 6. Open items (netlist-gate checklist)
+## 6. Verification items (netlist-gate checklist)
 
-1. ⚠ **Crystal load caps** — 15 pF placeholder; finalize against the chosen 24.576 MHz part's CL (2×(CL−C_stray)); footprint choice for 2-pad vs 4-pad crystal.
-2. ⚠ **DS13311 AF spot-check** for the six audio pins (machine-derived AFs above; two sources agree).
-3. ⚠ **I2C pull-up values** and **ADDR strap values** — parts placed, values unset.
-4. ⚠ **LED series-resistor value** — suggest 1 kΩ.
-5. ~~**NRST label**~~ **Resolved** — verified from the netlist 2026-07-24: `NRST` = MCU pin 12 + the 100 nF cap + the debug header NRST pin, one net.
-6. **USB routing** — PA11/PA12 reserved; decide whether to route to any pads on spin 1 (near-zero cost; no connector planned). If USB data is ever activated, ⚠ verify how the transceiver is supplied on VFQFPN68 (no VDD33USB/VDD50USB pins — DS13311).
-7. **BT module** — confirm the chosen module uses HW flow control and matches the PB12/PB15 control lines (Phase 0 item 5).
-8. **SDOUT bus pull-down** — 100 kΩ DNP on `SAI4_SD_B` (populate only if bench shows float; `adc-netlist.md` §5).
-9. **Test points** — see `test-points.md` (single source of truth; categorized by access type). Reserve pad on PA1 (`SAI4_MCLK_B`) noted there as Cat 3 / DNP.
+Pin assignment is settled; these are confirmations and value picks to close at the gate.
+
+1. ⚠ **Crystal load caps** — 6.8 pF suits the chosen 24 MHz / CL 8 pF part at ~4.5 pF stray; confirm C_stray against the final routing (6–10 pF covers 3–5 pF). At CL 8 pF, C_stray is a first-order term rather than a correction, so settle it against the routed layout, not before.
+2. ⚠ **Crystal drive level** — the 1612's max drive is 100 µW, well under a 3225's. Check it against the H725 HSE drive setting, and leave a series damping-resistor position (0 Ω default) at the oscillator.
+3. ⚠ **Load the 1612 footprint into the project** — `Main Board/AudioDev.pretty` holds `Crystal_SMD_NDK_NX1612SA-4Pin_1.6x1.2mm` (drawn to NDK's recommended land: pads 0.75 × 0.65 mm on 1.05 × 0.75 mm centres) but is **not yet in `fp-lib-table`**. Add it from Preferences → Manage Footprint Libraries (project tab), or with the project closed append to `Main Board/fp-lib-table`:
+   `(lib (name "AudioDev")(type "KiCad")(uri "${KIPRJMOD}/AudioDev.pretty")(options "")(descr "Project-local footprints"))`
+   Then swap the HSE crystal from `Crystal:Crystal_SMD_2016-4Pin_2.0x1.6mm` and re-run `tools/placement_register.py`. Note the inner gap between the two pad rows is 0.10 mm — right at JLC's minimum solder-mask dam, so expect a hairline dam or none; worth an eye on the fab drawing. KiCad's stock `Crystal:Crystal_SMD_WE_IQXC-26-4Pin_1.6x1.2mm` is a drop-in alternative if the local library is ever unavailable.
+4. ⚠ **`DIVP3` odd value 25** — PLL1's DIVP is restricted to even values; PLL2/PLL3 are documented 1–128. The 24 MHz → 24.576 MHz chain in §1 depends on 25 being accepted. Verify in RM0468.
+5. ⚠ **DS13311 AF spot-check** for the six audio pins (machine-derived AFs above; two sources agree).
+6. ⚠ **I2C pull-up values** and **ADDR strap values** — parts placed, values unset.
+7. ~~**LED series-resistor value**~~ **Resolved** — 1 kΩ; see `power-supply-netlist.md` for the LED part and the current-setting rationale.
+8. ~~**NRST label**~~ **Resolved** — verified from the netlist 2026-07-24: `NRST` = MCU pin 12 + the 100 nF cap + the debug header NRST pin, one net.
+9. **USB routing** — PA11/PA12 reserved; decide whether to route to any pads on spin 1 (near-zero cost; no connector planned). If USB data is ever activated, ⚠ verify how the transceiver is supplied on VFQFPN68 (no VDD33USB/VDD50USB pins — DS13311).
+10. **SDOUT bus pull-down** — 100 kΩ DNP on `SAI4_SD_B` (populate only if bench shows float; `adc-netlist.md` §5).
+11. **Test points** — see `test-points.md` (single source of truth; categorized by access type). Reserve pad on PA1 (`SAI4_MCLK_B`) noted there as Cat 3 / DNP.
 
 ---
 

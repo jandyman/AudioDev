@@ -4,12 +4,14 @@
 
 **Scope:** two TLV320ADC5140 codecs, each configured as **4× single-ended, AC-coupled** analog inputs → 8 channels on one shared TDM bus into `SAI4_B` (RX). Analog input conditioning, coupling/blocking caps, shared clock/data bus, distinct I²C addresses, per-device power + decoupling. The stereo DAC (`I2S1` TX) is a separate section — see `dac-selection.md`.
 
+**Why this part** — requirements, rationale, and all device documentation links (datasheet, the shared-TDM application note SBAA383, EVM, tooling, sourcing) live in **`adc-selection.md`**. This file assumes the choice and implements it.
+
 ---
 
 ## 1. Design inputs (confirmed with user 2026-07-14)
 
 - **Source per channel:** low-impedance magnetic pickups, each **buffered at the pickup by a JFET source-follower**. Buffer output impedance is known and low, **~1 kΩ**. Signal level is **< 0.1 V peak-to-peak** (≈ 35 mVpp ≈ 12 mVrms) — roughly **30–40 dB below** the ADC's single-ended full scale.
-- **Gain:** the required gain is not yet known and is deliberately handled **inside the ADC5140** (analog channel PGA + digital channel volume, optionally DRE up to 24 dB). Flexible in-device gain was a **primary reason for choosing this part**. The analog board path stays **unity** — no external gain stage; all level-setting is a register choice, characterized once the buffer output level is measured.
+- **Gain:** the required gain is not yet known and is deliberately handled **inside the ADC5140** (analog channel PGA + digital channel volume, optionally DRE up to 24 dB). The analog board path stays **unity** — no external gain stage; all level-setting is a register choice, characterized once the buffer output level is measured. (Rationale: `adc-selection.md` §2–§3.)
 - **Preamp powering:** each pickup preamp is powered from the codec's **MICBIAS** output used as a **supply rail**. The four JFET source-follower buffers are designed to run directly off a rail, so MICBIAS feeds their Vdd **directly — no series load resistor**. Wiring is **multi-conductor** (one MICBIAS power line + one signal line per channel + ground) through a per-device pickup connector (one for ADC-A, one for ADC-B): MICBIAS on one conductor powers all four buffers, and each buffer's audio returns on its own signal conductor, AC-coupled into `INxP`. **MICBIAS = 3.014 V** (VREF×1.096, `MBIAS_VAL = 001`), regulated, 1.6 µVRMS noise, up to **20 mA per device** (30 mA over-current trip) — the four buffers' combined supply current must stay inside that budget (§11). Each device's MICBIAS powers **its own 4 buffers only** — the two MICBIAS outputs are **never tied together** (separate regulators).
 - **Coupling:** **AC-coupled** to reject each buffer's DC output bias while passing near-DC audio. **Signal blocking cap (INxP) = 4.7 µF tantalum** — sized to push the high-pass corner as low as practical (~1.7 Hz at 20 kΩ input impedance) so the **onset transient of finger pressure** on the string is captured; see §2. It taps the buffer's signal line into INxP. **Matching cap (INxM) = 1 µF X7R preferred** (the 4.7 µF currently drawn is also fine — it carries no signal; see §2).
 - **Channels:** all 8 identical single-ended AC-coupled, MICBIAS-powered, unless a per-channel exception is called out later.
@@ -105,9 +107,10 @@ The two devices are **ADC-A** and **ADC-B**. Pin numbers per the 24-WQFN pinout 
 
 Both codecs are ASI **slaves**: `BCLK`/`FSYNC` are inputs driven by the MCU SAI4_B master (`pin-allocation.md` §1). Both `SDOUT` pins tie to the single shared net `SAI4_SD_B` → PA0.
 
-- **Slot map:** ADC-A drives slots **0–3**, ADC-B drives slots **4–7** (`CHx_SLOT`, P0_R11–R18). 8 slots × 32-bit × 48 kHz → ~12.288 MHz BCLK.
-- **Bus contention:** each device **tri-states the slots it does not own** (SBAS892A: "tri-state feature for the unused audio data slots"). Enable tri-state on both so only the owning device drives each slot; the rest of the frame is high-Z. No hard external bus keeper is required.
-- **Optional:** a single **weak pull-down (~100 kΩ, DNP)** on `SDOUT_ADC` to define the bus during the brief windows both devices are high-Z (power-up / between slots). Populate only if a logic-analyzer capture shows bus float. ⚠
+- **Slot map:** ADC-A drives slots **0–3**, ADC-B drives slots **4–7** (`CHx_SLOT`, P0_R11–R18). 8 slots × 32-bit × 32 kHz → **8.192 MHz BCLK** (= 256 × fs, TI's characterisation ratio).
+- **Bus contention:** each device **tri-states the slots it does not own** — `ASI_OUT_CH_EN` per channel, plus `TX_FILL` (`ASI_CFG0` bit 0) = 1 for Hi-Z on unused cycles. Enable both on both devices so only the owning device drives each slot; the rest of the frame is high-Z.
+- **Bus keeper is internal.** `TX_KEEPER` (`ASI_CFG1` bits 6:5) enables an on-chip keeper on SDOUT that holds the last driven value — settings 2/3 restrict it to the LSB window so the host latches the final bit cleanly without two devices contending at a slot boundary. `TX_LSB` and `TX_OFFSET` in the same register fine-tune the handoff. **No external bus-hold part is needed** (SBAA383C §3.1).
+- **Optional:** a single **weak pull-down (~100 kΩ, DNP)** footprint on `SDOUT_ADC` as insurance for the power-up window before either device is configured. Given the internal keeper this is belt-and-suspenders — populate only if a logic-analyzer capture shows bus float. ⚠
 - Keep `BCLK_ADC` / `FSYNC_ADC` short and away from the analog inputs (board plan Phase 3).
 
 ---
@@ -184,19 +187,22 @@ Passives JLCPCB basic-class; LCSC codes at order time.
 
 ---
 
-## 11. Open items / netlist-gate checklist additions
+## 11. Netlist-gate verification checklist
 
-1. **Input impedance `CHx_IMP`** — **20 kΩ (≈1.7 Hz corner) recommended** to meet the near-DC finger-pressure goal; 10 kΩ (≈3.4 Hz) only if more dynamic range is wanted. ⚠ user-confirm; must match the register setting.
+Part and topology are settled (`adc-selection.md`); these are datasheet confirmations, value picks, and bench characterizations.
+
+1. **Input impedance `CHx_IMP` — decided: 20 kΩ** (≈1.7 Hz corner at 4.7 µF), the nearest-DC option and the lightest load on the JFET buffer, which is what the finger-pressure onset goal calls for. 10 kΩ (≈3.4 Hz) is the documented fallback if bench work ever shows the extra dynamic range is worth the higher corner. Firmware register setting must match (§8).
 2. **Signal-cap tantalum polarity** (dielectric decided: 4.7 µF tantalum on INxP, 1 µF/4.7 µF X7R on INxM) — confirm the DC across each INxP tantalum (**buffer output bias** vs. internal common-mode) and that it **never reverses** across power-up/down and MICBIAS-off; orient `+` to the higher side, or use a non-polar part if the sign can't be guaranteed. Needs the ADC5140 input common-mode voltage (datasheet/EVM) + the buffer output bias. ⚠
-3. **IOVDD source** — `3V45_D` (recommended, keeps digital current off analog LDO) vs. `3V3_A`. ⚠ confirm at gate.
+3. **IOVDD source — decided: `3V45_D`** (keeps codec digital switching current off the analog LDO, and matches the MCU I/O rail so logic levels are clean both directions). Entered as such. ⚠ Remaining check is a datasheet one: confirm 3.45 V + rail tolerance sits inside IOVDD's recommended-operating window (3.0–3.6 V nominal) — see `layout-notes.md` §7 item 3.
 4. **I²C addresses** — take the ADDR0/ADDR1 strap→address table from SBAS892A; confirm the drawn straps (ADC-A: GND/GND, ADC-B: IOVDD/GND) give distinct, non-conflicting addresses; check no bus clash. ⚠
-5. **SDOUT bus discipline** — confirm both devices' unused-slot tri-state is enabled; decide whether to populate the optional 100 kΩ SDOUT pull-down. ⚠
+5. **SDOUT bus discipline** — confirm both devices' unused-slot tri-state (`ASI_OUT_CH_EN`) and `TX_FILL` = Hi-Z are set, and pick a `TX_KEEPER` setting (2 or 3 = keeper during the LSB window only, per SBAA383C). The internal keeper covers steady-state contention, so the optional 100 kΩ SDOUT pull-down is a DNP footprint for the pre-configuration window only — decide whether to populate.
 6. **AREG treatment** — confirm AREG decoupling / that it is *not* externally supplied in 3.3 V AVDD mode (AREG abs-max 2.0 V — never tie to 3V3_A). ⚠
 7. **SHDNZ strap** — shared pull-down value and whether a per-codec reset split is wanted for bring-up (`pin-allocation.md` §4 PC7 spare). ⚠
 8. **Coupling-cap charge (`INCAP_QCHG`)** — firmware must set it for 4.7 µF; note in the driver bring-up.
 9. **Gain characterization** — measure JFET-buffer output level, then set PGA/digital/DRE gain; verify no clip at 1 Vrms FS.
 10. **MICBIAS supply-current budget** — the JFET buffers now run directly off the MICBIAS rail (no `RL`, they are designed to run off a rail); confirm the 4 buffers' combined supply current stays **< 20 mA/device** (30 mA OCP). ⚠
 11. **Cable protection** — the MICBIAS rail and the per-channel signal lines are external-cable entries; decide whether they need series ferrite / ESD clamp / the optional RF shunt cap. ⚠
+12. **Auto-clock derivation at 32 kHz — RESOLVED (2026-07-28).** The scheme *is* table-based (SBAS892A §8.3.2, Table 6: supported FSYNC frequencies × BCLK-to-FSYNC ratios) and **32 kHz FSYNC at ratio 256 → 8.192 MHz BCLK is an explicitly listed, supported combination**. The auto-configuration block detects FSYNC frequency and BCLK ratio and sets every internal divider plus the PLL with no host programming; an unsupported combination raises an ASI clock-error interrupt and mutes the record channels (status in `ASI_STS`, P0_R21 — worth reading during bring-up as a clock-health check).
 
 ---
 

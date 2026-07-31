@@ -49,7 +49,7 @@ Spans x = 98.2 … 133.1 mm, 60 parts.
 
 ## Zone — MCU
 
-Spans x = 139.5 … 156.8 mm, 31 parts.
+Spans x = 139.5 … 155.7 mm, 31 parts.
 
 | Part | x (mm) | y (mm) | Package |
 |---|---|---|---|
@@ -58,14 +58,14 @@ Spans x = 139.5 … 156.8 mm, 31 parts.
 | R | 145.95 | 94.14 | R_0402_1005Metric |
 | R | 147.95 | 94.14 | R_0402_1005Metric |
 | Debug Connector | 151.56 | 98.36 | PinHeader_2x05_P1.27mm_Vertical |
+| 24Mhz | 153.25 | 83.85 | Crystal_SMD_2016-4Pin_2.0x1.6mm |
 | .1uF (×1) | 144.4 | — | passive |
 | 100nF (×12) | 139.6 … 153.4 | — | passive |
 | 10K (×3) | 139.5 … 145.2 | — | passive |
-| 15pF (×2) | 154.1 … 156.8 | — | passive |
+| 15pF (×2) | 153.3 … 155.2 | — | passive |
 | 1M (×2) | 144.4 … 145.9 | — | passive |
 | 1uF (×1) | 150.0 | — | passive |
 | 2.2uH (×1) | 152.7 | — | passive |
-| 24.576 (×1) | 154.3 | — | passive |
 | 4.7uF (×2) | 154.7 … 155.7 | — | passive |
 | 600 (×1) | 149.5 | — | passive |
 
@@ -104,9 +104,10 @@ Centre-to-centre unless a pin is named. These are the separations the layout rat
 | Buck-boost inductor | nearer ADC codec | 43.92 mm |
 | Analog LDO | nearer ADC codec | 9.76 mm |
 | Analog LDO | DAC | 11.77 mm |
-| HSE crystal | MCU | 9.14 mm |
-| HSE crystal | core SMPS inductor | 5.03 mm |
-| HSE crystal | its load caps | 2.76 mm |
+| HSE crystal | MCU | 8.04 mm |
+| HSE crystal | core SMPS inductor | 4.58 mm |
+| HSE crystal | its load caps | 2.10 mm |
+| HSE crystal | NRST cap | 2.61 mm |
 
 ## Pin geometry — MCU east face — core SMPS and HSE share an edge
 

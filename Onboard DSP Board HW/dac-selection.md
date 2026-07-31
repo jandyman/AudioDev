@@ -1,6 +1,6 @@
 # DAC Selection & Output Stage — Multichannel Audio Board
 
-**Status:** In discussion (rev 2, clean-slate survey) — **leaning PCM5102A**, with PCM5100A as the cost-down and WM8524 as the alternate. Supersedes the rev-1 discussion that leaned ES9023P; that lean rested on two datasheet errors (see §7). Resolves Phase 0 item 3 of `multichannel-audio-board-plan.md` once open items close.
+**Status:** **Decided — PCM5102A** (rev 2, clean-slate survey), with PCM5100A as the pin-identical cost-down on the same footprint and WM8524 as the documented alternate. Supersedes the rev-1 discussion that leaned ES9023P; that lean rested on two datasheet errors (see §7). Resolves Phase 0 item 3 of `multichannel-audio-board-plan.md`. §8 holds datasheet verifications and build-time part picks — not open choices.
 **Scope:** the stereo playback DAC on **I2S1** (SPI1 in I2S master-TX mode) and its analog output stage down to the offboard jack.
 
 ---
@@ -36,7 +36,7 @@ So the target category is: **strap-configured stereo DAC with integrated charge 
 
 | Part | Output / drive | Clock | Supply | Pkg | ~LCSC | Stock | Verdict |
 |---|---|---|---|---|---|---|---|
-| **PCM5102A** (TI) | 2.1 Vrms ground-centered, charge pump, **1 kΩ min load**, XSMT soft-mute | **No MCLK** (internal PLL off BCK, SCK tied low) | single 3.3 V | TSSOP-20 | ~$0.9–1.1 (C107671) | Good | **Leaning choice** |
+| **PCM5102A** (TI) | 2.1 Vrms ground-centered, charge pump, **1 kΩ min load**, XSMT soft-mute | **No MCLK** (internal PLL off BCK, SCK tied low) | single 3.3 V | TSSOP-20 | ~$0.9–1.1 (C107671) | Good | **Chosen** |
 | **PCM5100A** (TI) | Same family, pin-identical, 100 dB SNR (vs 112) | No MCLK | single 3.3 V | TSSOP-20 | ~$0.86 (C131154) | Good | Cost-down drop-in on same footprint |
 | **WM8524** (Cirrus) | 2.1 Vrms ground-referenced, DC servo, **1 kΩ min load**, ≤1 mV DC offset, 800-sample soft-mute, pop-suppressed up/down sequencer | **Needs MCLK** (128–1152·fs, auto-detected, synchronous) | single 3.3 V | TSSOP-16 (5.0×4.4) | ~$0.98 (C146242) | **Thin (~80 pcs)** | Alternate — technically excellent, stock too thin for turnkey |
 | **ES9023P** (ESS) | 2 Vrms ground-referenced, charge pump, but **5 kΩ min load** → pad output Z floor ~250–330 Ω | **Needs MCLK** (>192·fs async; power-up counter runs on MCLK) | single 3.3 V | SOP-16 | ~$1.2 (C2760388) | Good | Rejected: loses on both min load and clocking; its level-set resistor can't reach 0.1 V (collapses below ~1.3 Vrms, bench-verified on diyAudio) |
@@ -112,7 +112,7 @@ No new MCU pins beyond what `pin-allocation.md` already allocates.
 | 19 | DGND | GND |
 | 20 | DVDD | `3V45_D` digital rail (**3.45 V**) — 0.1 µF to GND at pin; bulk folds into the digital rail's existing 10 µF nearby (internal LDO derives the 1.8 V core from DVDD; keeps digital current off the analog LDO). ⚠ confirm 3.45 V (+ rail tolerance) is inside the PCM5102A DVDD recommended-operating max; if not, move DVDD to `3V3_A` (accepts a few mA of DAC digital current on the analog LDO) |
 
-Notes: **single GND net board-wide** — no AGND/DGND nets in the schematic (TI: one common ground plane, no split; same for the ADC5140s, whose AVSS and thermal pad both go "directly to the board ground plane"). Zoning is by placement and the 3V3A net, not by ground nets. Assumes the 6-layer stackup (solid GND on L2): every cap and ground pin takes its own via(s) tight to its pads; the plane closes all loops underneath. Decoupling-cap ordering on CPVDD/AVDD: pin → cap tap → via to 3V3A, so the cap junctions the trace and the rail via hangs beyond it (trace inductance to the rail is free filtering). Cap set: 4× 0.1 µF at pins (CPVDD, AVDD, DVDD, LDOO), 2× 2.2 µF charge pump (flying + VNEG) on L1 at the chip, 1× shared 10 µF on the 3V3A pour near the DAC (CPVDD side); DVDD bulk shared with the digital rail. Charge-pump caps (2, 4, 5) closest to the device. Free bonus from the auto power modes: BCK+LRCK held low >1 s → full power-down (~0.2 mA), and restart is automatic when the I2S clocks resume — firmware gets DAC power management just by stopping/starting I2S1.
+Notes: **single GND net board-wide** — no AGND/DGND nets in the schematic (TI: one common ground plane, no split; same for the ADC5140s, whose AVSS and thermal pad both go "directly to the board ground plane"). Zoning is by placement and the 3V3A net, not by ground nets. Assumes the 4-layer stackup (solid GND on L2 — `layout-notes.md` §3): every cap and ground pin takes its own via(s) tight to its pads; the plane closes all loops underneath. Decoupling-cap ordering on CPVDD/AVDD: pin → cap tap → via to 3V3A, so the cap junctions the trace and the rail via hangs beyond it (trace inductance to the rail is free filtering). Cap set: 4× 0.1 µF at pins (CPVDD, AVDD, DVDD, LDOO), 2× 2.2 µF charge pump (flying + VNEG) on L1 at the chip, 1× shared 10 µF on the 3V3A pour near the DAC (CPVDD side); DVDD bulk shared with the digital rail. Charge-pump caps (2, 4, 5) closest to the device. Free bonus from the auto power modes: BCK+LRCK held low >1 s → full power-down (~0.2 mA), and restart is automatic when the I2S clocks resume — firmware gets DAC power management just by stopping/starting I2S1.
 
 ---
 
@@ -124,7 +124,9 @@ Notes: **single GND net board-wide** — no AGND/DGND nets in the schematic (TI:
 
 ---
 
-## 8. Open items before finalizing
+## 8. Verification and build-time picks
+
+The part is chosen; these are datasheet confirmations and part-selection details to close before fab.
 
 1. **PCM5102A power-down behavior** — confirm no transient when 3.3 V collapses with XSMT high (mitigated by pot-at-min, but check the TI app notes / bench).
 2. **Final pad values & pot taper** — confirm Rs=1.2k/Rsh=62 against the real full-scale (2.1 Vrms typ, ±10 % over supply) and pick audio-taper pot part.
@@ -144,4 +146,4 @@ Notes: **single GND net board-wide** — no AGND/DGND nets in the schematic (TI:
 - ES9023 datasheet v0.72 (ESS) — https://www.esstech.com/wp-content/uploads/2022/09/ES9023-Datasheet-v0.72.pdf — MCLK modes p.4, RL min 5 kΩ p.10
 - diyAudio: "ES9023: Lowest possible output using R8?" — https://www.diyaudio.com/community/threads/es9023-lowest-possible-output-using-r8.389217/ — bench-measured collapse below ~1.15–1.35 Vrms
 
-*Decision not yet locked — see §8.*
+*Part decision locked. §8 tracks the remaining datasheet checks.*

@@ -27,29 +27,16 @@ End-to-end placement along the long axis:
 ```
 
 - **Analog front end at one end, switcher/charger at the other.** The whole point is distance between the TPS63020's (and charger's) high-di/dt loops and the instrument-level front end.
-- **MCU in the middle.** Minimizes the runs to both the SAI4 codec bus (to the analog end) and the I2S1 DAC bus. At 12.288 MHz (SAI) / 3.072 MHz (I2S) these lengths are electrically short — placement is about noise, not signal integrity.
+- **MCU in the middle.** Minimizes the runs to both the SAI4 codec bus (to the analog end) and the I2S1 DAC bus. At 8.192 MHz (SAI) / 2.048 MHz (I2S) these lengths are electrically short — placement is about noise, not signal integrity.
 - **\*`3V3_A` LDO placed mid-board (near its load), not at the power end.** Put the LDO close to the analog load so its PSRR isn't undone by a long *post*-LDO trace re-acquiring noise; let the noisier pre-LDO `3V45_D` do the long haul (the LDO rejects it). Local analog bulk stays at the ADC pair (the analog bulk cap + the VDDA ferrite for `MCU_VDDA`).
 - **MICBIAS never goes toward the power end.** It's generated *inside* each ADC and only leaves the board via the pickup connectors to the offboard pickup preamps.
 
 ### 1.1 Fits on one side (validated against the KiCad layout, 2026-07)
 
-With the ADC section placed for real, the whole board is tracking to a **single-sided, single-board** layout on the ~90×30 mm target — no back-side components required. Three moves make it fit; back-side placement and board-splitting are held in reserve only (§8):
+With the ADC section placed for real, the whole board is tracking to a **single-sided, single-board** layout on the ~90×30 mm target — no back-side components required. Two moves make it fit; back-side placement and board-splitting are held in reserve only (§8):
 
 - **Output jack off-board.** The ¼″ TRS lives off the PCB (charge-ring wiring runs out to it), freeing the edge it would otherwise own.
 - **Tag-Connect debug, not a header** (§4) — reclaims the 2×5 header footprint and its probe keep-out.
-- **Bluetooth on the main board, corner-tucked** — the u-blox ANNA-B112 is small enough (6.5×6.5 mm) to sit in a board corner without breaking single-sided fit (§1.2). It's a *consumer* of corner space, not a fit-enabler; its antenna keep-out (corner ground cutout) is reserved at minimum so the rest of the layout is compatible. (The other two moves below are what buy the area back.)
-
-### 1.2 Bluetooth — u-blox ANNA-B112, corner-mounted on the main board
-
-**Decision of record (2026-07-24):** BT is a **u-blox ANNA-B112 (nRF52832) reflowed onto the main board, in a corner** — superseding both the original "on-board generic DNP module + antenna keep-out" and the interim mezzanine-daughterboard plan. The 6.5×6.5 mm SiP is small enough to tuck into a corner; the daughterboard is retained only as a documented fallback (§8). Full rationale and reference links: `bluetooth-anna-b112.md`.
-
-**Corner choice.** Put the ANNA in a corner at the **power/MCU (noisy) end** — the corner *farthest from the analog inputs*, and steered away from the TPS63020 switcher/inductor so the RX front end isn't in its near field. Fitting it costs ~8 mm of MCU travel toward the analog end (MCU ≈ 27 mm on-center from the nearer ADC, vs ≈ 35 mm without it); that's acceptable because the unified ground plane and analog-trace discipline — not raw MCU distance — govern ADC noise here, and the sensitive analog nets face the *other* end.
-
-**Antenna keep-out (the load-bearing constraint).** The internal antenna requires a **corner ground-plane cutout on all layers + an external antenna tuning strip**, reproduced **copy-exact** from the u-blox internal-antenna reference design — modular certification is tied to it (SIM UBX-18009821, Fig. 30; Gerbers available from u-blox). This is a deliberate, sanctioned hole in the otherwise-unified L2/L3 ground (§2), placed at the extreme corner so no mid-board→analog return current ever needs to detour around it. Flag it in the layout so a later ground-fill pass doesn't flood the keep-out.
-
-**Interaction with the audio-output corridor.** The volume-pot/jack path runs at this same noisy end. Keep the audio-output corridor and its stitched ground guard **out of the antenna keep-out** (no ground there = the shielding assumption fails) and clear of the radiator — ~20 mm+ from the ANNA is fine, and a small RF shunt cap at the high-Z node covers rectification. See §6/output-path notes.
-
-**Plan of record:** at **minimum carve the corner keep-out** (cutout + tuning-strip area) so the rest of the board is laid out compatibly; **full footprint prep is optional** depending on how much effort the copy-exact reference layout turns out to be. Sourcing: not in the JLC assembly library and intermittently OOS at LCSC → **consign reels or hand-reflow** (hot air + preheater, leaded-paste rework, ~200 °C peak to keep JLC's lead-free neighbor joints solid).
 
 ## 2. Grounding — one unified plane
 
@@ -102,6 +89,34 @@ No ST reference design exists for the QFN68 package; this section stands in for 
 
 **Plane-fed decoupling model (settled 2026-07-24, supersedes "cap at pin X" phrasing everywhere).** At 0.4 mm pitch over a ~0.1 mm-distant plane pair, caps don't belong to pins: supply pins via directly into the island (no top-side cap hop required), and every island↔GND cap serves every pin through the planes, weighted by lateral distance (~50–100 pH/mm spreading at this spacing — "local" ≈ within a few mm). Requirements become **coverage**, not assignment: a 100 nF-class cap within ~2 mm of every supply via, bulk (4.7 µF) within ~5 mm, and one 100 nF sited between the VDDSMPS via and the quiet VDD taps (the SMPS is the noisy consumer that bounces the island). Non-negotiable discipline: **vias immediately at every cap pad** and at pads 4/6 themselves — a trace-then-distant-via reinserts the inductance this scheme exists to remove. The island's plane capacitance (tens of pF) does not replace the caps; it only replaces the wiring. Freeing quiet VDD pins of dedicated caps is encouraged where it buys space near pin 6 / the VLX corridor.
 
+## 5.1.1 HSE and the core SMPS share one package edge — an over-constrained corner
+
+**The single most useful fact about this corner, and it is a pinout constraint, not a layout choice.** ST placed the core-SMPS hot loop and the HSE crystal pair on the *same* package edge, 0.4 mm pitch, separated only by a VSS/VDD pair:
+
+```
+pin 4  VSSSMPS
+pin 5  VLXSMPS   ← switch node
+pin 6  VDDSMPS
+pin 7  VFBSMPS
+pin 8  VSS       ← ST's interposed
+pin 9  VDD       ←   ground/supply buffer
+pin 10 PH0 / HSE_IN
+pin 11 PH1 / HSE_OUT
+pin 12 NRST
+```
+
+Whatever drives HSE therefore sits ~2–4 mm from the buck switch node however it is placed. Three consequences:
+
+- **Proximity is not the hazard — loop area is, on both sides.** ST's "inductor as close as possible" and the conventional "crystal as close as possible" are the same rule applied to two adjacent loops: shorten VLX because it is the aggressor's antenna, shorten the crystal loop because it is the victim's. Mutual inductance between two small coplanar loops falls as ~1/d³ *and* scales with the product of the two areas, so shrinking both beats separating them by a wide margin. Two tight loops 2 mm apart couple weakly.
+- **ST interposed VSS/VDD deliberately** — a grounded pin and a supply pin between the switcher's return and the oscillator input. Combined with the converter being core-supply-only (sub-watt) and the switching FETs being on-die (the only exposed dV/dt copper is the short VLX run), the adjacency is routinely managed rather than marginal. The crystal's high-Q tank is its own defence: disturbance at the switching fundamental sits far outside the tank's passband, and any resulting spur is further attenuated by PLL3's loop filter before reaching SAI4. **The one thing worth actually checking** is where the internal SMPS switching frequency and its low harmonics fall relative to the crystal frequency — a harmonic landing near it is the only mechanism that turns proximity into injection pulling (AN5419).
+- **But the corner is genuinely over-constrained.** The inductor must be tight to pads 5/7. The crystal wants to be both tight to pads 10/11 *and* far from that inductor, and on the only axis available those pull in opposite directions — moving the crystal toward its pins moves it toward the switcher. There is no placement that satisfies everything; the design picks which constraint to relax.
+
+**Plan of record:** keep the crystal on the far side of the HSE pins from the SMPS group, favouring switcher separation over absolute run length, with both load caps flanking the crystal terminals and vias immediately at their ground ends (the resonant loop is crystal ↔ caps ↔ ground, and that triangle is what must stay small). The **SMD1612 package (1.92 mm², against 3.2 mm² for a 2016 and 8.0 mm² for a 3225)** is what makes this tractable at all, and is the reason the crystal frequency was moved to a stock 24 MHz — see `pin-allocation.md` §1.
+
+Package size is the single most effective lever in this corner, and it has paid off at every step down. Each reduction relaxes the over-constraint directly: a smaller can shortens the crystal↔cap↔ground triangle *and* buys separation from the inductor on the same axis, so the two opposing pulls of the previous paragraph both ease at once. 3225 → 2016 closed the HSE-pin distance from 5.33 mm to 4.28 mm; 2016 → 1612 should close it further. The 1612's own load caps are smaller in value too (6.8 pF against 15 pF), which keeps the flanking passives from becoming the new area floor. **If this corner is ever re-opened, look at package size before looking at placement.**
+
+**Related decision — the pin-6 decoupler is deliberately omitted** so the inductor can sit close, with the nearest `3V45_D` cap covering it through the plane per §5.1's coverage model. Note this is the weakest case for the distributed argument: the SMPS input current is chopped with fast edges, which is exactly what wants a local low-inductance cap, and ~3 mm of plane at 50–100 pH/mm is 150–300 pH in the path. Acceptable given the corridor conflict, but **put the island on the spin-1 bring-up list with a scope** rather than assuming it.
+
 ## 5.2 `3V3_A` LDO — fed directly from `3V45_D`, no boundary filter (settled 2026-07-25)
 
 `3V45_D` is already routed into the analog zone: the mixed-signal codecs put their **digital** supplies there — both ADCs' IOVDD and the DAC's DVDD sit on `3V45_D` (deliberately, to keep codec digital current off the analog LDO). So there is no "keep `3V45_D` out of analog" to win — the rail is in the zone regardless.
@@ -139,7 +154,9 @@ No fundamental issue — the buffering (low-Z source) is what makes single-ended
 
 **Recommendations:** order conductors so the quiet lines separate signals (`GND · S1 · S2 · PWR · S3 · S4` — MICBIAS is a low-Z AC ground); keep the ribbon away from the SMPS/charger end. Optional margin: widen to a ground-interleaved ribbon (`G S G S …`) to kill shared-return coupling — not needed here.
 
-## 7. Open items carried into layout
+## 7. Verification items carried into layout
+
+Not open decisions — confirmations, placements, and cost calls to settle while laying the board out.
 
 1. ⚠ **DAC-bus probeability** — probing PCM5102A TSSOP leads acceptable? Decides Cat 2 vs Cat 3 (4 pads) in `test-points.md`.
 2. ⚠ **L3 plane discipline** — confirm `3V45_D` island extent under the MCU + ground-flood/stitch elsewhere (esp. analog end) so no L4 crossover references chopped power.
@@ -149,12 +166,11 @@ No fundamental issue — the buffering (low-Z source) is what makes single-ended
 6. **Pickup ribbon width** — stay at 6-conductor vs widen to ground-interleaved (cost call).
 7. **MICBIAS star-route** to the 4 buffer feeds (no common impedance).
 8. Existing netlist-gate ⚠ items in the per-section docs still stand (crystal load caps, I2C pull-up/ADDR values, VCAP/AN5419 SMPS-direct wiring, tantalum polarity, etc.).
-9. ⚠ **Layer-count reconciliation** — `multichannel-audio-board-plan.md` says 6-layer; this doc (§3) argues 4. The single-sided, routing-light result strengthens the 4-layer case. Resolve between the two docs — a separate call from the fit/sidedness decision.
-10. ⚠ **ANNA-B112 corner keep-out** (§1.2) — reserve the u-blox internal-antenna reference cutout + tuning strip in the chosen corner (copy-exact for cert); keep the audio-output corridor/ground-guard and any analog nets out of the no-ground keep-out.
+9. ~~Layer-count reconciliation~~ **Resolved 2026-07-28: 4 layers**, per §3. `multichannel-audio-board-plan.md` has been updated to match — its decision log no longer says 6.
 
 ## 8. Contingency architectures (held in reserve)
 
-The plan of record is **single-board, single-sided** (§1.1). These are documented fallbacks only — to reach for if the layout stops fitting (scope growth, a bigger connector set, or if the ANNA corner can't be made to work and BT moves to a mezzanine daughterboard after all):
+The plan of record is **single-board, single-sided** (§1.1). These are documented fallbacks only — to reach for if the layout stops fitting (scope growth, a bigger connector set):
 
 - **Components on both sides.** Push the decoupling sea, the input clamp diodes, and small passives to the back, directly under the pins they serve (where decoupling wants to be anyway); keep the ICs, inductors, crystal, and connectors on top. Roughly doubles usable area at the cost of double-sided assembly.
 - **Split / mezzanine board along the SI partition.** The analog/digital/power zoning of §1 is already a physical partition — promote it to separate boards on a board-to-board stack (power at the bottom, MCU/DAC main, analog capture as its own board/wing). Improves analog/digital isolation as a side effect. The one constraint: the 12.288 MHz TDM bus (BCLK/FSYNC/SDOUT) crossing the connector must be short and flanked by ground pins. A rigid-flex version folds flat for bring-up (all components probeable) and folds into the stack for install.

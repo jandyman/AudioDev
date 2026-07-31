@@ -1,3 +1,5 @@
 (fp_lib_table
-  (lib (name "Device_Audio_Electrosmith_Daisy_Seed")(type "KiCad")(uri "/Users/andy/Documents/KiCad/6.0/footprints/Device_Audio_Electrosmith_Daisy_Seed.pretty")(options "")(descr ""))
+	(version 7)
+	(lib (name "Device_Audio_Electrosmith_Daisy_Seed") (type "KiCad") (uri "/Users/andy/Documents/KiCad/6.0/footprints/Device_Audio_Electrosmith_Daisy_Seed.pretty") (options "") (descr ""))
+	(lib (name "E104_BT5032A") (type "KiCad") (uri "/Users/andy/Documents/KiCad/Libraries/E104_BT5032A.pretty") (options "") (descr ""))
 )
