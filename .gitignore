@@ -13,6 +13,9 @@ test_audio_out/
 
 # KiCad local-history snapshots (auto-generated backup dir with its own git repo)
 .history/
+*-backups/
+*.kicad_prl
+fp-info-cache
 
 # KiCad lock files
 *.lck
