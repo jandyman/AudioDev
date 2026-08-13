@@ -3,7 +3,7 @@
 **Status:** Decided — **TLV320ADC5140**, two devices, 4 single-ended analog channels each, on one shared TDM bus into `SAI4_B`. The part was chosen during the planning thread and is assumed by every downstream document; this file consolidates the rationale that was previously scattered across `adc-netlist.md` §1 and the `multichannel-audio-board-plan.md` decision log, and is the home for the device documentation links (§7).
 **Scope:** the capture side — why this converter, what the design requires of it, and where its documentation lives. Netlist, pin-by-pin connections, cap values and BOM are **not** here — see `adc-netlist.md`. The playback DAC is `dac-selection.md`.
 
-> **Note on method.** Unlike `dac-selection.md`, this is **not** a clean-slate survey. No priced/stock-checked candidate table was built, and no alternative converter was formally evaluated. What follows is the reasoning *as decided*, written down so the requirements are auditable and so a future respin can re-open the choice against a stated spec rather than against memory. §6 lists what that leaves open.
+> **Note on method.** Unlike `dac-selection.md`, this is **not** a clean-slate survey — no priced, stock-checked candidate table was built. Alternatives *were* considered informally, and that comparison is recorded in §5.5; what it lacks is pricing, stock verification, and a common scoring basis. What follows is the reasoning *as decided*, written down so the requirements are auditable and so a future respin can re-open the choice against a stated spec rather than against memory. §6 lists what that leaves open.
 
 ---
 
@@ -75,11 +75,52 @@ The cost is one extra device's worth of board area, decoupling and unit price, a
 
 ---
 
+## 5.5 Alternatives considered
+
+Recorded from the preamp thread (consolidated 2026-08-11). Not a priced survey —
+no stock check or common scoring basis — but it establishes that the category in
+§2 was arrived at by elimination rather than assumed.
+
+The framing that produced this list is worth keeping: **whatever drives the ADC
+turned out to need far more board area than the ADC itself.** The cavity is a
+fixed size and already laid out. So the search was for a converter with a
+buffered, high-impedance front end and analog gain — one that would absorb the
+entire cavity-side analog section rather than requiring drivers in front of it.
+
+| Candidate | Outcome |
+|---|---|
+| **AK5578** | **Rejected.** Needs 4.75–5.25 V, which puts a boost converter next to a high-resolution ADC on a battery instrument. Its 5.28 Vrms full scale also wastes ~30 dB of range against this source. |
+| **CS5308P** | **Viable but rejected.** 3.3 V, 8 channels, built-in gain — but its switched-capacitor front end wants < 100 Ω source impedance, so it still needs external drivers. That is the board-area problem the search existed to solve. |
+| **PCM1865** | **Chosen, then superseded.** 3.3 V, integrated PGA, high-impedance buffered front end. Collapsed the cavity analog section to two chips and some caps — the architecture that is still in use. |
+| **TLV320ADC5140** | **Selected.** |
+
+**Why the ADC5140 over the PCM1865** — same system architecture, 2019-era
+silicon instead of 2014:
+
+- **4×4 mm WQFN-24 against TSSOP-30** — roughly a quarter of the board area, on
+  a board where area was the deciding constraint.
+- **~9 mW per channel**, which matters on a battery instrument.
+- **0–42 dB gain in 1 dB steps plus 0.1 dB calibration trim** — the trim is what
+  makes per-channel matching a register operation (§3).
+- **SBAA383 covers the exact two-device shared-TDM/I²C topology** this design
+  needs, rather than leaving it to be inferred.
+- **Register headers and a mainline Linux driver available** as reference
+  implementations (§7).
+
+**Process note.** The ADC5140 was found by looking at the vendor's product page,
+not by re-examining the settled choice — a review of "the two-PCM1865 plan"
+verified the plumbing around the decision without asking whether the part was
+still right, despite the part's age having been noted. Worth carrying forward as
+a review instruction: **ask for premises to be challenged, not only for
+connectivity to be checked.**
+
+---
+
 ## 6. Context for a future re-open
 
 The part is decided. This section exists so that if cost, supply, or a later spin ever re-opens the question, the argument can be re-run against a written spec rather than memory.
 
-1. **No candidate comparison was made.** §1–§2 are the spec to shop against if one is ever needed. The obvious first stop is the pin-compatible siblings in the same family — same 24-pin WQFN, same register model, lower converter performance, likely lower price — a drop-in on the same footprint the way the playback DAC's cost-down sibling is. **Not evaluated; noted as an option, not a recommendation.**
+1. **No *priced* candidate comparison was made.** §5.5 records what was considered and why each was eliminated, but without pricing, stock verification, or a common scoring basis; §1–§2 are the spec to shop against if a real survey is ever needed. The obvious first stop is the pin-compatible siblings in the same family — same 24-pin WQFN, same register model, lower converter performance, likely lower price — a drop-in on the same footprint the way the playback DAC's cost-down sibling is. **Not evaluated; noted as an option, not a recommendation.**
 2. **LCSC stock at order time** is the live supply risk (plan risk register). Checked 2026-07-28: in stock, 24-WQFN 4×4, ~$1.93 (see §7) — recheck at order.
 3. **Gain is uncharacterized.** The choice is validated only once the JFET buffer output level is measured and PGA/digital/DRE values are set without clipping at full scale (`adc-netlist.md` §11 item 9).
 4. **Mic-bias current budget is unverified.** The four buffers per device must draw less than the device's 20 mA limit (`adc-netlist.md` §11 item 10). If they do not, the "converter supplies the preamps" premise in §2 fails and a separate rail comes back.
@@ -136,7 +177,8 @@ This is the authority for the two-device bus: shared-TDM vs. daisy-chain topolog
 | Topic | Document |
 |---|---|
 | Input stage, coupling caps, corner frequency, nets, per-pin connections, decoupling, BOM, open netlist items | `adc-netlist.md` |
-| Register-configuration intent (kept in sync with the netlist) | `adc-netlist.md` §8 |
+| Register map, SAI driver, bring-up order, calibration | `adc-firmware-init.md` |
+| The JFET buffer boards feeding the inputs | `preamp-board.md` |
 | SAI/I²C/GPIO assignment and the PLL3 clock tree | `pin-allocation.md` |
 | Analog and digital rails feeding the converters | `power-supply.md`, `power-supply-netlist.md` |
 | Decoupling rules per device | `decoupling-checklist.md` |

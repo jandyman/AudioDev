@@ -169,6 +169,35 @@ notice — but there is no reason to spend it.
 - **Test points on the UART lines** so the serial link can be debugged independently
   of the BLE link (see `test-points.md`).
 
+## 6.5 Radiated coupling into the analog front end
+
+The requirements above treat the radio as something to be *placed* well. There
+is a second, independent concern: what the radio does to the instrument signal
+path. It is recorded here because the cavity cannot be shielded (§1.2), which
+is what makes it a system-level constraint rather than a layout detail.
+
+**The mechanism that matters is rectification, not pickup of the carrier.**
+2.4 GHz energy reaching a JFET gate junction is rectified there and appears as
+**baseband** artifacts. Once that has happened, no downstream filtering can
+remove it — it is indistinguishable from signal. This is the same mechanism as
+a phone buzzing through a guitar amp, and it is why filtering at the ADC input
+is not a defence.
+
+**Consequences already designed in:**
+
+- **An RC filter at every JFET gate**, on the preamp boards, corner far above
+  audio and far below 2.4 GHz. This is the primary defence and it is what makes
+  cable shielding unnecessary (`preamp-board.md` §4).
+- **Buffer supply taken from MICBIAS rather than the shared rail**, because the
+  BT *packet envelope* rides on the supply at audio-rate frequencies — a
+  separate mechanism from RF at the gate, and one that a low-frequency-blind
+  RF filter does nothing about (`preamp-board.md` §5).
+- **Per-channel supply RC on the preamp boards** (`preamp-board.md` §7).
+
+**Bench check that closes this out:** noise floor per channel with the radio
+transmitting versus idle. Until that measurement exists, the RF treatment is
+reasoned, not verified (`preamp-board.md` §11 item 6).
+
 ## 7. Alternatives — recorded, open
 
 **The candidate list is not exhaustive; nothing outside it is ruled out.** Other

@@ -879,7 +879,7 @@
 			(uuid "98b0969f-e3d0-472d-afc1-886362c30b48")
 		)
 		(instances
-			(project "JFET String Preamp Bridge"
+			(project "JFET String Preamp Neck"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(reference "#PWR03")
 					(unit 1)
@@ -975,7 +975,7 @@
 			(uuid "48943a1f-af49-48ea-9a1c-5de31f7035d2")
 		)
 		(instances
-			(project "JFET String Preamp Bridge"
+			(project "JFET String Preamp Neck"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(reference "J9")
 					(unit 1)
@@ -1042,7 +1042,7 @@
 			)
 		)
 		(instances
-			(project "JFET String Preamp Bridge"
+			(project "JFET String Preamp Neck"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(page "4")
 				)
@@ -1108,7 +1108,7 @@
 			)
 		)
 		(instances
-			(project "JFET String Preamp Bridge"
+			(project "JFET String Preamp Neck"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(page "3")
 				)
@@ -1174,7 +1174,7 @@
 			)
 		)
 		(instances
-			(project "JFET String Preamp Bridge"
+			(project "JFET String Preamp Neck"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(page "5")
 				)
@@ -1240,7 +1240,7 @@
 			)
 		)
 		(instances
-			(project "JFET String Preamp Bridge"
+			(project "JFET String Preamp Neck"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(page "2")
 				)
