@@ -4,7 +4,7 @@
 
 **Read first for a fresh session:** this file assumes the schematic is entered (netlist-gate items tracked in the per-section docs) and captures how the board should be *placed and stacked up*, plus the analog-interface decisions that drive it.
 
-**Scope note:** "the board" here means the **main control-cavity board only**. The two offboard pickup preamp PCBs have their own layout rules — gate-node copper discipline, Repeat Layout from a hierarchical sheet, custom magnet-wire footprints, bottom-side connector placement — and those live in **`preamp-board.md`** §10, not here.
+**Scope note:** "the board" here means the **main control-cavity board only**. The two offboard pickup preamp PCBs have their own layout rules — input-node copper discipline, Repeat Layout from a hierarchical sheet, custom magnet-wire footprints, bottom-side connector placement — and those live in **`preamp-board.md`** §11, not here.
 
 ## 0. Package reality (drives everything)
 
@@ -165,11 +165,13 @@ Given that, the `3V3_A` LDO is fed **directly from `3V45_D`**, tapping the same 
 
 ### 6.1 MICBIAS drive — OK for 4 buffers/device
 
-Per the TLV320ADC5140 datasheet (SBAS892): **MICBIAS current drive = 20 mA** for bias ≥ 2.5 V (your VREF×1.096 = 3.014 V setting qualifies); **over-current trip = 30 mA**; load regulation 0.6 % typ. Each ADC has its *own* MICBIAS feeding *its* 4 buffers → **5 mA/buffer budget**. The J201-type followers as designed draw well under 1 mA each across the Idss spread (`preamp-board.md` §2), so under 4 mA per device — comfortable, nowhere near OCP. Two devices, two independent 20 mA supplies, 8 buffers total.
+⚠ **MICBIAS is no longer used as the preamp supply.** The preamp boards take the **3.3 V analog rail** — the amplifier's own supply rejection (>80 dB across the audio band) makes MICBIAS's noise isolation unnecessary (`analog-front-end.md` §4). This section is retained because the numbers matter if it is ever brought back.
 
-The 20 mA ceiling is not a live constraint for this circuit, but it **does** foreclose a later move to lower-noise, higher-current JFETs (BF862-class, 2–5 mA/channel) or any added gain stage on the preamp boards. That trade is recorded in `preamp-board.md` §2 and §5.
+Per the TLV320ADC5140 datasheet (SBAS892): **MICBIAS current drive = 20 mA** for bias ≥ 2.5 V; **over-current trip = 30 mA**; load regulation 0.6 % typ. Against that ceiling the present front end would draw ~3.1 mA per board — comfortable, but a very different figure from the sub-milliamp follower loads this section was written for.
 
-**Layout:** datasheet says avoid common trace impedance to multiple loads — **star-route MICBIAS from the pin**, don't daisy-chain the 4 buffer feeds.
+The 20 mA ceiling was previously recorded as foreclosing higher-current devices or any gain stage on the preamp boards. **That constraint no longer applies** — moving the preamps to the analog rail removes the ceiling entirely, and a gain stage is exactly what the boards now carry (`analog-front-end.md`).
+
+**Layout:** if MICBIAS is ever used to feed multiple loads, the datasheet calls for avoiding common trace impedance — star-route from the pin rather than daisy-chaining. **Not applicable as drawn.** The equivalent live concern is the preamp boards' own shared bias node, handled on those boards (`preamp-board.md` §8).
 
 ### 6.2 `3V45_D` as digital supply — all three chips OK
 
@@ -179,13 +181,13 @@ The 20 mA ceiling is not a live constraint for this circuit, but it **does** for
 
 ### 6.3 Pickup cabling — 6-conductor, unshielded
 
-Two pickups, 4 channels each. Per pickup: 6 conductors = GND, PWR (MICBIAS), 4 buffered signals. Short runs; ~1 K source into 20 K ADC input.
+Two pickups, 4 channels each. Per pickup: 6 conductors = GND, PWR (3.3 V analog), 4 amplified signals. Short runs; ohms-level source into 20 K ADC input, ~320 mVpp per channel.
 
 No fundamental issue — the buffering (low-Z source) is what makes single-ended unshielded cable viable:
 
 - **Crosstalk** ~ –65 dB at 20 kHz (few-pF coupling into a ~950 Ω node), better toward DC. Negligible.
 - **Shared single ground** carries µA-level signal returns + near-constant buffer supply current → sub-µV signal-dependent drop. Negligible.
-- **EMI ingress** is the only real risk (unshielded near magnetic pickups); low source-Z mitigates, and a DNP RF shunt cap (100–330 pF) at each channel's board entry is available (pole ~500 kHz at 1 K drive → safe to populate, well above audio band). Note the *primary* RF defence is not here — it is the RC at each JFET gate on the preamp boards, because 2.4 GHz rectifying at the gate junction produces baseband artifacts that nothing downstream can remove (`bluetooth-constraints.md` §6.5, `preamp-board.md` §4).
+- **EMI ingress** is the only real risk (unshielded near magnetic pickups); low source-Z mitigates, and a DNP RF shunt cap (100–330 pF) at each channel's board entry is available (pole ~500 kHz at 1 K drive → safe to populate, well above audio band). Note the *primary* RF defence is not here — it is the RC at each amplifier input on the preamp boards, because 2.4 GHz rectifying at the input produces baseband artifacts that nothing downstream can remove (`bluetooth-constraints.md` §6.5, `preamp-board.md` §7). ⚠ That treatment was reasoned around a JFET gate junction and is **unvalidated against a CMOS input** — it is the identified risk in `analog-front-end.md` §8.
 - Insertion loss of the 1 K/20 K divider ≈ –0.4 dB — already in `adc-netlist.md`, not new.
 
 **Cable construction is 28 AWG loose round wire, not flat ribbon** (`preamp-board.md` §9 — driven by the 1 mm-pitch connector and the routing path through the pickup hole). An earlier revision of this section recommended a conductor ordering (`GND · S1 · S2 · PWR · S3 · S4`) and offered ground-interleaving as optional margin. **Both are withdrawn:** with loose round wires you do not control conductor adjacency, so ordering buys nothing. That reasoning only applies to ribbon or flat cable, where positions are fixed. If the cable ever changes to ribbon, reinstate it.
@@ -202,7 +204,7 @@ Not open decisions — confirmations, placements, and cost calls to settle while
 4. **GND wire-loop placement** — one per region (MCU / analog / DAC output).
 5. **DAC power-up ordering** — verify firmware keeps I2S Hi-Z until `3V3_A` is up (XSMT-low reinforces).
 6. **Pickup cable** — 6 conductors of loose 28 AWG (§6.3, `preamp-board.md` §9). The ground-interleaving option is withdrawn as inapplicable to round wire.
-7. **MICBIAS star-route** to the 4 buffer feeds (no common impedance).
+7. ~~**MICBIAS star-route** to the 4 buffer feeds.~~ **Withdrawn** — the preamp boards take the 3.3 V analog rail (§6.1). Route that rail to the pickup connectors as a normal analog supply.
    - ⚠ **Main-board pickup connector is unresolved.** The preamp end is a 1.0 mm-pitch right-angle SMT header chosen partly because "there is very little space at the main board edge" (`preamp-board.md` §9), but the main board is currently placed with 2.54 mm vertical headers. Reconcile — either the edge-space constraint is not real on this board, or the main-board connector needs to change.
 8. ⚠ **BLE antenna keep-out extent** — check the as-drawn void against the module manual's PCB-design drawing, particularly how far past the first pad row copper must be cleared (`bluetooth-constraints.md` §8).
 9. **Radio-corner DRC** — the corner has sub-millimetre courtyard gaps and a through-hole part beside an SMT module; run the clearance rules that will actually be fabricated before committing.

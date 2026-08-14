@@ -78,8 +78,8 @@ Both devices unless noted.
 2. **Coupling: AC-coupled** (default). `CHx_DC = 0` → same registers, D4.
 3. **Input impedance: 20 kΩ — not the 2.5 kΩ default.** `CHx_IMP = 10` →
    same registers, D[3:2]. **This setting is load-bearing for the entire analog
-   plan.** The default would move the corner to roughly 13.5 Hz and load the
-   JFET buffer measurably harder (`adc-netlist.md` §2).
+   plan.** The default would move the corner to roughly 13.5 Hz
+   (`adc-netlist.md` §2). Source loading is no longer a factor.
 4. **Input-cap quick charge** sized for the 4.7 µF blocking caps — the default
    assumes ≤ 1 µF. `INCAP_QCHG` → P0_R5 D[5:4]. Undersized, the baseline drifts
    for hundreds of milliseconds after channel power-up.
@@ -110,17 +110,19 @@ default to a state that is wrong here.**
 
 9. **Channel PGA:** 0–42 dB range in 1 dB steps, plus digital channel volume
    (−100 to +27 dB in 0.5 dB steps) if more is needed.
-   ⚠ **Starting value is not yet determined.** The source level is disputed in
-   the project record — the capture-side documents size it at roughly 12 mVrms
-   against a 1 Vrms full scale (30–40 dB of deficit), while the preamp thread
-   assumed a much hotter source needing only 15–18 dB. That is a ~23 dB
-   discrepancy and it is a **bench measurement, not a paper question**
-   (`preamp-board.md` §11 item 5). Set gain after measuring, and verify no
-   clipping at full scale.
+   **Starting value: roughly 17 dB of deficit, not the 30–40 dB this document
+   originally assumed.** The coil measures 40 mVpp and the front end amplifies
+   it to ≈320 mVpp (`analog-front-end.md` §1). The earlier ~23 dB dispute in the
+   project record is closed — both figures were estimates against a unity front
+   end that no longer exists. Set gain against the measured level at the
+   converter input and verify no clipping at full scale. **Reconsider whether
+   DRE has a role at all** at this input level.
 10. **Gain calibration:** 0.1 dB per-channel trim, to match channels after
-    measurement. Expect to need it — JFET Idss spread plus coil variation makes
-    per-channel level differences certain, not hypothetical
-    (`preamp-board.md` §2).
+    measurement. **The requirement is much smaller than previously stated.**
+    Front-end gain is a resistor ratio matched to component tolerance, so what
+    remains is coil-to-coil variation — real, but a trim rather than the
+    semiconductor-spread correction this step was written for
+    (`preamp-board.md` §1).
 11. **Phase calibration:** available at 163 ns resolution per channel. File
     under later — this is for aligning neck against bridge channels for
     cross-pickup feature extraction (pluck position, string velocity). Apply
@@ -130,26 +132,28 @@ Neck and bridge levels will differ, and may differ per string.
 
 ### 3.4 MICBIAS
 
-12. **Both devices' MICBIAS are used**, each supplying its own pickup's four
-    buffers; the two outputs are never tied together (`adc-netlist.md` §1,
-    `preamp-board.md` §5). `MBIAS_VAL = 001` → P0_R59 D[6:4] → 3.014 V
-    (VREF × 1.096, which requires `ADC_FSCALE = 00`). Power on via
-    `MICBIAS_PDZ` → P0_R117 D7.
-13. ⚠ **Power the input channels BEFORE enabling MICBIAS — this ordering is
-    load-bearing on hardware, not a preference.** The blocking caps at the
+12. **MICBIAS is not used.** The preamp boards take the 3.3 V analog rail
+    (`adc-netlist.md` §1, `analog-front-end.md` §4). Leave `MICBIAS_PDZ`
+    de-asserted. The settings are recorded in case it is ever brought back:
+    `MBIAS_VAL = 001` → P0_R59 D[6:4] → 3.014 V (VREF × 1.096, which requires
+    `ADC_FSCALE = 00`), enabled via `MICBIAS_PDZ` → P0_R117 D7.
+13. ⚠ **The firmware sequencing protection that used to exist here is gone, and
+    the hardware clamp is now the only cover.** The blocking caps at the
     converter inputs are polarised tantalums, oriented positive toward the
-    converter because the converter's internal input common-mode (~1.375 V)
-    always sits above the buffer's DC output (0.13–0.67 V). That relationship
-    holds in every steady state, but it inverts in one transient: MICBIAS live,
-    so the buffers are driving a positive DC out, while the converter's input
-    common-mode has not yet been established and its pins are still near ground.
-    Enabling the channels first means the common-mode is up before the buffers
-    have a rail, and the sign can never invert. A parallel clamp diode covers
-    the window as insurance, but do not rely on it — get the order right.
-    Full argument: `adc-netlist.md` §2, `preamp-board.md` §6.
+    converter because the converter's input common-mode (~1.375 V) sits above
+    the preamp's 1.0 V bias point in every steady state.
 
-    Concretely: leave `MICBIAS_PDZ` **de-asserted** in the bulk configuration
-    write, and set it as a separate step after the channels are powered.
+    Previously the preamps drew their supply from MICBIAS, so firmware could
+    guarantee the converter's common-mode was established first simply by
+    enabling the channels before MICBIAS. **The preamps now take the 3.3 V
+    analog rail, so they may be live before the converter is configured at all**
+    — a wider transient window than the one this ordering closed, and one
+    firmware cannot close. The parallel clamp diode across each blocking cap is
+    what covers it, and it is therefore required rather than insurance
+    (`adc-netlist.md` §2, §11 item 2).
+
+    **Power the input channels early in the bring-up sequence regardless.** It
+    shortens the window even though it no longer eliminates it.
     Everything else about MICBIAS is configured in the bulk write as normal.
     `INCAP_QCHG` is already set by then, so the caps charge to the common-mode
     on channel power-up as intended.
@@ -254,7 +258,8 @@ against RM0468 at bring-up (`pin-allocation.md` §1).
 - **Confirm quick-charge settings** by watching the baseline settle after
   channel enable with the 4.7 µF blocking caps fitted.
 - **Noise floor per channel at operating gain, radio on versus off.** This is
-  what validates the preamp boards' gate RC filters (`preamp-board.md` §4).
+  what validates the preamp boards' input RC filters (`preamp-board.md` §7),
+  and it is the identified risk to the front-end design.
 - **Check inter-device sample alignment** using the same physical event on the
   neck and bridge coils of one string. Apply phase calibration only if a
   measurable offset exists.
@@ -271,9 +276,11 @@ the low-frequency decision:
   open means the feature extractor can see the raw signal if it wants it, and
   the final trim happens where it can be changed without touching hardware
   configuration.
-- **Per-channel DC offsets will differ** because of JFET Idss spread
-  (`preamp-board.md` §2). Treat them as per-channel calibration constants,
-  estimable at idle.
+- **Per-channel DC offsets are now small.** The front end's offset is tens of
+  microvolts rather than a five-to-one semiconductor spread, and the coupling
+  caps block it regardless. Any residual offset is the converter's own. Treat as
+  per-channel calibration constants, estimable at idle, but do not expect the
+  magnitudes this step was originally sized for.
 
 ---
 
@@ -283,7 +290,8 @@ the low-frequency decision:
 |---|---|
 | Why this converter, and its documentation links | `adc-selection.md` |
 | Input stage, coupling caps, corner, per-pin connections, BOM | `adc-netlist.md` |
-| The JFET buffer boards feeding it | `preamp-board.md` |
+| The per-string preamp boards feeding it | `preamp-board.md` |
+| Why that front end amplifies rather than buffers | `analog-front-end.md` |
 | SAI/I²C/GPIO assignment and the PLL3 clock tree | `pin-allocation.md` |
 | Firmware effort estimate and risk register | `multichannel-audio-board-plan.md` |
 | Probe points on the capture bus | `test-points.md` |

@@ -12,10 +12,36 @@
 - No external SDRAM — internal SRAM only (564 KB; worst-case audio buffering is ~77 KB, see decision log)
 - JLCPCB turnkey assembly
 - Capture converters: **two TLV320ADC5140**, 4 single-ended AC-coupled channels each. Chosen for in-device gain (channel PGA + digital volume + DRE) so the analog board path stays unity with no external preamp, a mic-bias rail that powers the pickup buffers, and designed-in shared-TDM multi-device operation. Rationale, requirements, and all device documentation links in `adc-selection.md`; register configuration and bring-up in `adc-firmware-init.md`
-- Signal source: **two offboard 4-channel JFET preamp boards**, one per pickup, mounted under the bobbins — impedance conversion only, no gain, powered from their own device's MICBIAS. See `preamp-board.md`
+- Signal source: **two offboard 4-channel preamp boards**, one per pickup, mounted under the bobbins — one low-noise operational amplifier per string coil, gain of approximately eight, powered from the 3.3 V analog rail. See `preamp-board.md` for the circuit and `analog-front-end.md` for why it amplifies rather than buffers. The superseded source-follower design is preserved at `superseded/preamp-board-jfet.md`
 - Both ADC5140s share one TDM bus on **SAI4_B** (master RX — the only TDM-capable SAI on the VFQFPN68); DAC on **I2S1** (master TX), both kernel-clocked from PLL3 so capture and playback are frequency-locked by construction
 - Stereo DAC for audio output (one channel required; stereo is the natural granularity)
 - Lithium battery power, onboard cell. **No USB connector.** Charging via the **ring of the 1/4″ TRS output jack**: normal audio cable → audio sink; special charge cable → 5 V on the ring into the charger IC. Proven on a prior active-electronics board. (Amended 2026-07-13 from "USB charging"; see `power-supply.md`)
+
+
+**Analog front end changed (2026-08-14).** The per-string front end was
+respecified from a JFET source follower to a low-noise operational amplifier with
+a gain of approximately eight. The driver was a bench measurement: the coils
+produce 40 mVpp, some 20 dB below a conventional pickup, and a unity buffer
+cannot deliver its own noise figure into a converter whose input-referred noise
+becomes the system limit at that level. The reasoning, the alternatives
+considered, and the open bench questions are in **`analog-front-end.md`**; the
+circuit is `preamp-board.md`; the superseded design is preserved complete at
+`superseded/preamp-board-jfet.md`.
+
+Consequences that propagate: the preamp boards move from MICBIAS to the 3.3 V
+analog rail (a one-net schematic change, plus the connector power pin); the
+converter's programmable gain requirement falls by roughly 22 dB; per-channel
+gain and offset calibration shrink to small trims; the MICBIAS current budget
+closes as an open item; and the firmware sequencing that protected the input
+coupling capacitors no longer applies, leaving the clamp diodes as the sole cover
+(`adc-firmware-init.md` §3.4). **The identified risk is RF rectification at a
+CMOS input** — the RF treatment was reasoned around a JFET gate junction and is
+unvalidated against the new device. It is a bench measurement on the real board,
+and it is the one result that could send the design back.
+
+A control-cavity analog board is added so the pickups can be played and judged
+while the DSP hardware is in development: `cavity-preamp-board.md`. It is
+temporary and not on the critical path.
 
 ---
 
@@ -92,7 +118,7 @@ Log every anomaly for the spin-2 list even if worked around.
 
 **Clocking — superseded.** This entry once flagged the clocking scheme as an untranscribed placeholder. It is now fully specified and resolved in Phase 0 item 2 (HSE 24.000 MHz → PLL3_P 24.576 MHz exact; SAI4_B masters the TDM bus at 8.192 MHz; I2S1 masters the DAC at 2.048 MHz; codecs slave from BCLK via their internal PLL, no MCLK distribution), and the 32 kHz / 256× combination is confirmed against the ADC5140 datasheet's supported-clock table (`adc-selection.md` §3). No action.
 
-**Preamp-thread documentation merged (2026-08-11).** A separate thread covering the JFET pickup preamps and pickup design produced three documents — a design review, an ADC connection checklist, and a firmware-init note. They were folded into this doc set and deleted. **The host-side content in them was stale**: it assumed a Daisy Seed at 48 kHz on SAI2 Block B, an architecture this plan retired (see the Daisy entry above and Phase 0 item 2). It also assumed a single MICBIAS supplying all eight buffers at 2.75 V, and a signal coupling cap on the preamp board — both contradicted by the entered schematics, which use per-device MICBIAS at 3.014 V and put the blocking caps at the ADC inputs. The **analog** content was current and is now `preamp-board.md`; the register/driver content was rewritten for SAI4_B at 32 kHz as `adc-firmware-init.md`; the candidate comparison went to `adc-selection.md` §5.5, the RF-rectification mechanism to `bluetooth-constraints.md` §6.5, and the HPF/AGC/DRE-off requirement to `adc-netlist.md` §8. Two conflicts were **not** resolvable from documents and are carried as open items: the ~23 dB disagreement over source signal level (`adc-netlist.md` §11 item 9), and the main-board pickup connector (`layout-notes.md` §7 item 7b).
+**Preamp-thread documentation merged (2026-08-11).** A separate thread covering the JFET pickup preamps and pickup design produced three documents — a design review, an ADC connection checklist, and a firmware-init note. They were folded into this doc set and deleted. **The host-side content in them was stale**: it assumed a Daisy Seed at 48 kHz on SAI2 Block B, an architecture this plan retired (see the Daisy entry above and Phase 0 item 2). It also assumed a single MICBIAS supplying all eight buffers at 2.75 V, and a signal coupling cap on the preamp board — both contradicted by the entered schematics, which use per-device MICBIAS at 3.014 V and put the blocking caps at the ADC inputs. The **analog** content was current and is now `preamp-board.md`; the register/driver content was rewritten for SAI4_B at 32 kHz as `adc-firmware-init.md`; the candidate comparison went to `adc-selection.md` §5.5, the RF-rectification mechanism to `bluetooth-constraints.md` §6.5, and the HPF/AGC/DRE-off requirement to `adc-netlist.md` §8. Two conflicts were **not** resolvable from documents and were carried as open items. The ~23 dB disagreement over source signal level is now **closed by measurement** — the coil measures 40 mVpp and the front end amplifies it (`analog-front-end.md` §1); both earlier figures were estimates against a unity front end that has since been replaced. The main-board pickup connector remains open (`layout-notes.md` §7 item 7b).
 
 ## Risk register
 

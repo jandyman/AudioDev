@@ -10,13 +10,13 @@
 ## 1. Requirements
 
 - **8 simultaneous analog capture channels**, one per pickup, sample-aligned across all eight — the per-string / multi-pickup DSP depends on inter-channel phase, so channels must be simultaneously sampled, not muxed.
-- **Source:** low-impedance magnetic pickups, each buffered at the pickup by a JFET source-follower. Buffer output impedance ~1 kΩ; signal level **< 0.1 Vpp (≈ 12 mVrms)** — roughly **30–40 dB below** a 1 Vrms single-ended full scale.
-- **The buffers need a supply.** Multi-conductor cable from each pickup group carries one power line plus one signal line per channel. The board must originate a regulated, low-noise rail for them.
+- **Source:** low-impedance magnetic pickups, each amplified at the pickup by an operational amplifier with a gain of approximately eight (`preamp-board.md`). Source impedance presented to the converter is ohms; signal level **≈ 320 mVpp** — roughly **17 dB below** a 1 Vrms single-ended full scale. ⚠ *At selection this requirement read ~12 mVrms and 30–40 dB, against a unity source-follower front end. See §2.*
+- **The preamps need a supply.** Multi-conductor cable from each pickup group carries one power line plus one signal line per channel. The 3.3 V analog rail serves them; the converter is not required to originate it (`analog-front-end.md` §4).
 - **Near-DC low-frequency response** — the sensing target includes the **onset transient of finger pressure** on the string, so the input high-pass corner must sit as close to DC as the coupling scheme allows (single-digit Hz).
 - **Single 3.3 V-class supply**, battery-powered. No negative rail, no boost, no external analog reference.
 - **One MCU serial-audio peripheral for all eight channels.** The VFQFPN68 package has exactly one TDM-capable SAI (`SAI4_B`); eight channels must arrive on one bit-clock/frame-sync/data trio.
 - **No MCLK distribution.** The MCU is the audio-bus master and supplies BCLK/FSYNC only; the converters must derive their internal clocks from those. Board sample rate is **32 kHz**.
-- **Space-constrained, minimal external parts.** No external gain stage, no external anti-alias filter, no external voltage reference.
+- **Space-constrained, minimal external parts.** No gain stage, anti-alias filter or voltage reference **on the main board** — the front-end gain is offboard, at the pickup, where it has to be for noise and interference reasons (`analog-front-end.md` §2).
 - **JLCPCB (LCSC) stocked**, turnkey-assemblable package.
 
 ---
@@ -25,15 +25,17 @@
 
 These derived requirements do the actual selecting:
 
-**Gain must live inside the converter.** The source sits 30–40 dB below full scale and its exact level is not yet known — it depends on the JFET buffer, which is characterized on the bench, not on paper. Putting a discrete preamp on the board would commit to a gain before that measurement, add parts to a space-constrained layout, and add a noise contributor ahead of the converter. The converter must therefore provide **enough programmable analog gain (channel PGA) plus digital volume** to lift a ~12 mVrms source to full scale, so the analog board path stays **unity** and all level-setting is a register value that can change after bring-up. *This was the primary reason for the choice.*
+**Substantial programmable gain, with the exact requirement deferred.** At selection the source level was unmeasured and sized at ~12 mVrms, 30–40 dB below full scale, and the intent was for the converter to supply all of it while the analog board path stayed unity. **That requirement is now much weaker.** The front end amplifies at the pickup and delivers ≈320 mV peak-to-peak, roughly 17 dB below full scale (`analog-front-end.md`). The PGA's remaining job is trim, not lift.
 
-**The converter must supply the preamps.** A dedicated MICBIAS-class output — regulated, low-noise, with a documented current budget — lets the pickup buffers run off the converter itself. That removes an LDO, keeps the buffer supply referenced to the converter's own analog domain, and means the cable carries one power conductor instead of a separate rail. The output must be quiet enough to sit directly on a buffer's Vdd (µV-class noise) and carry the buffers' combined current.
+> This does not invalidate the choice — a part with 42 dB of programmable gain clears a 17 dB requirement comfortably — but it does mean **the deciding argument no longer discriminates**. If the converter is ever re-shopped, this requirement should not be the one carrying the decision; the multi-device bus sharing and clock-slave requirements below are the ones that genuinely narrow the field. See §6 item 3.
+
+**No supply requirement on the converter.** The preamp boards take the 3.3 V analog rail directly. MICBIAS was originally a selection requirement — a regulated, µV-class, current-budgeted output that could sit on a source follower's drain — because a follower rejects almost no supply noise. The specified front-end amplifier rejects more than 80 dB across the audio band, so this requirement is retired (`analog-front-end.md` §4). MICBIAS remains available and unused.
 
 **Multi-device bus sharing must be a designed-in feature, not a hack.** Eight channels on one SAI means several converters driving one data line. The part must support **per-channel programmable slot assignment** and must **tri-state the slots it does not own**, so devices coexist on a single data net without external bus arbitration. Equally, two identical parts must be addressable on one control bus — i.e. **strappable I²C addresses**.
 
 **Clock-slave with internal PLL, at 32 kHz.** With no MCLK routed, the part must generate its own internal clocks by observing BCLK and FSYNC. This is a hard gate: a part that needs MCLK costs a pin and a trace across the analog section.
 
-**Programmable input impedance.** With a fixed coupling cap, making the high-pass corner a *register* choice rather than a resistor choice is what lets the near-DC goal be tuned after the buffers are measured — and it sets how hard the 1 kΩ buffer is loaded. A part with a fixed, low input impedance would force a much larger coupling cap for the same corner.
+**Programmable input impedance.** With a fixed coupling cap, making the high-pass corner a *register* choice rather than a resistor choice is what lets the near-DC goal be tuned after the front end is measured. A part with a fixed, low input impedance would force a much larger coupling cap for the same corner. (Source loading was a second reason at selection; with an amplified, ohms-impedance source it no longer applies.)
 
 **Integrated anti-alias.** A sigma-delta front end with internal decimation filtering removes eight external filter networks from a board that does not have room for them.
 
@@ -43,11 +45,11 @@ So the target category is: **a multi-channel, simultaneously-sampling, single-3.
 
 ## 3. Why the TLV320ADC5140
 
-- **In-device gain covers the whole 30–40 dB deficit**, in three independent stages — **analog channel PGA, 0 to 42 dB in 1 dB steps**; **digital channel volume, −100 to +27 dB in 0.5 dB steps**; and optional DRE on top. The analog PGA alone covers the deficit, with the digital stage available for per-channel trim between pickups. Gain is deferred to bring-up as a register decision; the board carries no preamp. This is the deciding property.
-- **MICBIAS is a usable supply rail, not just a bias tap:** programmable output (VREF × 1.096 = 3.014 V at the default full-scale setting), **1.6 µVRMS** noise, **20 mA** per device with a 30 mA over-current trip. Each device powers only its own pickup group, so the two groups stay on separate regulators and never share a supply conductor.
+- **In-device gain covers the deficit several times over** — 17 dB is now required rather than the 30–40 dB assumed at selection (§2) — in three independent stages — **analog channel PGA, 0 to 42 dB in 1 dB steps**; **digital channel volume, −100 to +27 dB in 0.5 dB steps**; and optional DRE on top. The analog PGA alone covers the deficit, with the digital stage available for per-channel trim between pickups. Gain is deferred to bring-up as a register decision; the board carries no preamp. This is the deciding property.
+- **MICBIAS is a usable supply rail, not just a bias tap:** programmable output (VREF × 1.096 = 3.014 V), **1.6 µVRMS** noise, **20 mA** per device with a 30 mA over-current trip. ⚠ **Not used.** The preamp boards take the 3.3 V analog rail; the amplifier's own supply rejection makes the isolation unnecessary (`analog-front-end.md` §4). Retained here because it was a selection criterion and remains available.
 - **Shared-TDM operation is a documented, supported topology** with its own TI application note (SBAA383, §7) — per-channel slot mapping (`CHx_SLOT`, any channel to any of 64 slots), unused-slot tri-state (`ASI_OUT_CH_EN`), Hi-Z fill for unused cycles (`TX_FILL`), and an **internal bus keeper** (`TX_KEEPER`) that holds the data line between drivers. External bus discipline parts are therefore not required.
 - **32 kHz with a 256× bit clock is explicitly in the supported clock table** (datasheet Table 6: FSYNC 32 kHz, BCLK/FSYNC ratio 256 → **8.192 MHz**). The auto-configuration block detects the FSYNC frequency and BCLK ratio and sets every internal divider and the PLL with no host programming — and flags an ASI clock-error interrupt if the combination is unsupported. No MCLK needed.
-- **Programmable per-channel input impedance** (2.5 k / 10 k / 20 kΩ) makes the high-pass corner a register choice against a fixed coupling cap, reaching ~1.7 Hz at the 20 kΩ setting — the near-DC response the finger-pressure sensing needs — while loading the 1 kΩ buffer the lightest.
+- **Programmable per-channel input impedance** (2.5 k / 10 k / 20 kΩ) makes the high-pass corner a register choice against a fixed coupling cap, reaching ~1.7 Hz at the 20 kΩ setting — the near-DC response the finger-pressure sensing needs. Source loading no longer enters the choice.
 - **Everything analog is on-chip:** internal 1.8 V analog and 1.5 V core regulators (so the only external supplies are one analog and one I/O rail), internal voltage reference, sigma-delta anti-aliasing, integrated high-pass and biquad filters. External passive count per device is single-digit.
 - **Small, assemblable, and stocked:** 24-pin WQFN 4×4 mm, LCSC-stocked, low per-channel power (~9 mW/channel at 48 kHz) which matters for a battery instrument.
 - **Headroom that is not needed but is free:** 120 dB SNR and sample rates to 768 kHz. The application uses a small fraction of both; the part was not chosen for converter performance, and a lesser sibling would also clear the bar (§6).
@@ -122,8 +124,8 @@ The part is decided. This section exists so that if cost, supply, or a later spi
 
 1. **No *priced* candidate comparison was made.** §5.5 records what was considered and why each was eliminated, but without pricing, stock verification, or a common scoring basis; §1–§2 are the spec to shop against if a real survey is ever needed. The obvious first stop is the pin-compatible siblings in the same family — same 24-pin WQFN, same register model, lower converter performance, likely lower price — a drop-in on the same footprint the way the playback DAC's cost-down sibling is. **Not evaluated; noted as an option, not a recommendation.**
 2. **LCSC stock at order time** is the live supply risk (plan risk register). Checked 2026-07-28: in stock, 24-WQFN 4×4, ~$1.93 (see §7) — recheck at order.
-3. **Gain is uncharacterized.** The choice is validated only once the JFET buffer output level is measured and PGA/digital/DRE values are set without clipping at full scale (`adc-netlist.md` §11 item 9).
-4. **Mic-bias current budget is unverified.** The four buffers per device must draw less than the device's 20 mA limit (`adc-netlist.md` §11 item 10). If they do not, the "converter supplies the preamps" premise in §2 fails and a separate rail comes back.
+3. **Gain requirement has fallen by ~22 dB.** The source is measured and the front end amplifies it (§2). The part still clears the requirement easily, but the argument that selected it no longer discriminates between candidates — relevant only if the converter is ever re-shopped. Setting PGA and digital gain against the measured level remains an action (`adc-netlist.md` §11 item 9).
+4. **Mic-bias current budget — closed, not verified.** MICBIAS is no longer used as a preamp supply (§2), so there is nothing to budget. The premise it protected has been replaced rather than falsified.
 
 ---
 
@@ -178,7 +180,8 @@ This is the authority for the two-device bus: shared-TDM vs. daisy-chain topolog
 |---|---|
 | Input stage, coupling caps, corner frequency, nets, per-pin connections, decoupling, BOM, open netlist items | `adc-netlist.md` |
 | Register map, SAI driver, bring-up order, calibration | `adc-firmware-init.md` |
-| The JFET buffer boards feeding the inputs | `preamp-board.md` |
+| The per-string preamp boards feeding the inputs | `preamp-board.md` |
+| Why that front end amplifies rather than buffers | `analog-front-end.md` |
 | SAI/I²C/GPIO assignment and the PLL3 clock tree | `pin-allocation.md` |
 | Analog and digital rails feeding the converters | `power-supply.md`, `power-supply-netlist.md` |
 | Decoupling rules per device | `decoupling-checklist.md` |

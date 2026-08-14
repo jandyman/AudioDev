@@ -1,0 +1,2072 @@
+(kicad_sch
+	(version 20260306)
+	(generator "eeschema")
+	(generator_version "10.0")
+	(uuid "4e026c13-2084-4567-b603-ec1af2a03de2")
+	(paper "A4")
+	(lib_symbols
+		(symbol "Connector:Conn_01x01_Socket"
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "J"
+				(at 0 2.54 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Conn_01x01_Socket"
+				(at 0 -2.54 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Generic connector, single row, 01x01, script generated"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_locked" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "connector"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "Connector*:*_1x??_*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "Conn_01x01_Socket_1_1"
+				(polyline
+					(pts
+						(xy -1.27 0) (xy -0.508 0)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start 0 -0.508)
+					(mid -0.5058 0)
+					(end 0 0.508)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 3.81)
+					(name "Pin_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Device:C"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0.254)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "C"
+				(at 0.635 2.54 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "C"
+				(at 0.635 -2.54 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" ""
+				(at 0.9652 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Unpolarized capacitor"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "cap capacitor"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "C_*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "C_0_1"
+				(polyline
+					(pts
+						(xy -2.032 0.762) (xy 2.032 0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.032 -0.762) (xy 2.032 -0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "C_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 2.794)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 2.794)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Device:R"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R"
+				(at 0 0 90)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Resistor"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "R_0_1"
+				(rectangle
+					(start -1.016 -2.54)
+					(end 1.016 2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Transistor_FET:MMBFJ113"
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "Q"
+				(at 5.08 1.905 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "MMBFJ113"
+				(at 5.08 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
+				(at 5.08 -1.905 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(italic yes)
+					)
+					(justify left)
+				)
+			)
+			(property "Datasheet" "https://www.onsemi.com/pub/Collateral/MMBFJ113-D.PDF"
+				(at 5.08 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Description" "2mA min, 35V, 100mOhm max, 0.5-3V Vgs(off), N-Channel JFET, SOT-23"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "N-Channel FET Transistor"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "SOT?23*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "MMBFJ113_0_1"
+				(polyline
+					(pts
+						(xy 0 0) (xy -1.016 0.381) (xy -1.016 -0.381) (xy 0 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.254 1.905) (xy 0.254 -1.905)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.254 0) (xy -2.54 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 1.27 0)
+					(radius 2.8194)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 2.54) (xy 2.54 1.397) (xy 0.254 1.397)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 -2.54) (xy 2.54 -1.397) (xy 0.254 -1.397)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "MMBFJ113_1_1"
+				(pin passive line
+					(at 2.54 5.08 270)
+					(length 2.54)
+					(name "D"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 2.54 -5.08 90)
+					(length 2.54)
+					(name "S"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "G"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "power:GND"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#PWR"
+				(at 0 -6.35 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "GND"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "GND_0_1"
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 -1.27) (xy 1.27 -1.27) (xy 0 -2.54) (xy -1.27 -1.27) (xy 0 -1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "GND_1_1"
+				(pin power_in line
+					(at 0 0 270)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(junction
+		(at 96.52 64.77)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "1f599add-ff4a-439f-94df-d39ea2b9d185")
+	)
+	(junction
+		(at 87.63 76.2)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "8942a80a-b676-4d16-a71d-3f2ae766c6b9")
+	)
+	(junction
+		(at 96.52 76.2)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "9fbabc26-12f9-4221-b19f-3067e391fcf1")
+	)
+	(junction
+		(at 87.63 57.15)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "b77c8be3-4bcf-4cfd-8086-855c9a8fc7c5")
+	)
+	(junction
+		(at 96.52 46.99)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "d0aa9fdf-ea7d-4c15-8ab4-20d88e2b6357")
+	)
+	(wire
+		(pts
+			(xy 109.22 48.26) (xy 109.22 46.99)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0af4b4f5-bdec-4623-866f-5049ab8360e8")
+	)
+	(wire
+		(pts
+			(xy 96.52 46.99) (xy 109.22 46.99)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "156889a9-456f-4c3b-b66e-5091e01d609e")
+	)
+	(wire
+		(pts
+			(xy 77.47 63.5) (xy 77.47 68.58)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "24bae60c-08d7-41f7-820c-01f70d613a8c")
+	)
+	(wire
+		(pts
+			(xy 77.47 76.2) (xy 87.63 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2ea0e9b0-418c-48bb-ba53-abc03d1c60da")
+	)
+	(wire
+		(pts
+			(xy 96.52 62.23) (xy 96.52 64.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "333b435c-f3f4-48ab-af77-9df478575f97")
+	)
+	(wire
+		(pts
+			(xy 87.63 69.85) (xy 87.63 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "38a91fff-777d-4ee2-abcc-7df8f6abea75")
+	)
+	(wire
+		(pts
+			(xy 76.2 57.15) (xy 78.74 57.15)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "646c5dbb-3b0b-4983-8501-e2c4a47a7eac")
+	)
+	(wire
+		(pts
+			(xy 90.17 46.99) (xy 96.52 46.99)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "66b4cb5d-1132-4707-9869-0b8220ed0b10")
+	)
+	(wire
+		(pts
+			(xy 87.63 76.2) (xy 96.52 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "74b29cbe-c263-4ef6-a809-15be4cd49c56")
+	)
+	(wire
+		(pts
+			(xy 96.52 64.77) (xy 96.52 66.04)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "754388d5-7c87-4377-838e-4d7901577ab5")
+	)
+	(wire
+		(pts
+			(xy 96.52 64.77) (xy 114.3 64.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "78bb17c7-cfd3-4c42-b9bc-5528af2eed2a")
+	)
+	(wire
+		(pts
+			(xy 87.63 57.15) (xy 87.63 62.23)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "79544880-dd33-4117-891e-17b0451484a3")
+	)
+	(wire
+		(pts
+			(xy 96.52 76.2) (xy 109.22 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "79729809-27ba-4f1f-bc7b-c90dc46ede97")
+	)
+	(wire
+		(pts
+			(xy 87.63 57.15) (xy 88.9 57.15)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7b178d2a-278f-4463-862a-fb99f755181b")
+	)
+	(wire
+		(pts
+			(xy 86.36 57.15) (xy 87.63 57.15)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7ffb78f7-e288-4f44-9d6d-c609c81d65e2")
+	)
+	(wire
+		(pts
+			(xy 76.2 46.99) (xy 82.55 46.99)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9347b1dd-999f-48ee-bd44-04f9e9e35702")
+	)
+	(wire
+		(pts
+			(xy 109.22 55.88) (xy 109.22 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c56a0ca6-2ef2-4092-8e60-a09e9821841e")
+	)
+	(wire
+		(pts
+			(xy 76.2 63.5) (xy 77.47 63.5)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cf5317ab-8045-4122-941e-a15ea5a6235a")
+	)
+	(wire
+		(pts
+			(xy 96.52 73.66) (xy 96.52 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e32d3702-0725-481d-9469-2b50217d04d7")
+	)
+	(wire
+		(pts
+			(xy 96.52 78.74) (xy 96.52 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e34fdb37-45f3-4669-aa92-c51da3394143")
+	)
+	(wire
+		(pts
+			(xy 96.52 52.07) (xy 96.52 46.99)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ec5b2c11-7522-45cd-b7a9-229a1eef5261")
+	)
+	(wire
+		(pts
+			(xy 77.47 68.58) (xy 76.2 68.58)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f4a8f79f-1637-443f-8c6d-f28274ec6a9f")
+	)
+	(label ""
+		(at 80.01 45.72 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "4df36614-264c-41ae-8035-e39023bb85dc")
+	)
+	(hierarchical_label "3.7V"
+		(shape input)
+		(at 76.2 46.99 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "4f89cd1c-b9f3-4d37-9647-f59cb51b25b2")
+	)
+	(hierarchical_label "Output"
+		(shape output)
+		(at 114.3 64.77 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "94e019f9-d0d8-468e-9036-a0236fa75f8b")
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x01_Socket")
+		(at 71.12 68.58 0)
+		(mirror y)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "02054fee-f036-489e-9d8f-7e6a61e42ee9")
+		(property "Reference" "J4"
+			(at 71.374 66.548 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 66.802 66.548 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "JFET Preamp:Magnet Wire THT"
+			(at 71.12 68.58 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 71.12 68.58 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Generic connector, single row, 01x01, script generated"
+			(at 71.12 68.58 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "44ecc108-19ed-441f-a4e8-22bb22d9d07f")
+		)
+		(instances
+			(project "JFET String Preamp Bridge"
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
+					(reference "J12")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/40966223-d92b-4fe6-9f91-9c85192c0646"
+					(reference "J7")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/5aec4146-3bdc-41db-9ec2-8493546b66d5"
+					(reference "J16")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/96d96fc6-deb5-409d-b663-ae19210fcf32"
+					(reference "J4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 82.55 57.15 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "1f04f3c5-032e-4918-9b57-e359ccf94721")
+		(property "Reference" "R2"
+			(at 82.55 50.8 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "1K"
+			(at 82.55 53.34 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 82.55 58.928 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 82.55 57.15 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 82.55 57.15 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "137c56cb-e150-410f-aefe-141317a5a779")
+		)
+		(pin "1"
+			(uuid "ca8a53eb-1181-43fb-a619-5ed4e1d02f8b")
+		)
+		(instances
+			(project "JFET String Preamp Bridge"
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
+					(reference "R7")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/40966223-d92b-4fe6-9f91-9c85192c0646"
+					(reference "R3")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/5aec4146-3bdc-41db-9ec2-8493546b66d5"
+					(reference "R10")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/96d96fc6-deb5-409d-b663-ae19210fcf32"
+					(reference "R2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 96.52 78.74 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "33f402f7-d90c-4ef9-b7e1-d517614f6a23")
+		(property "Reference" "#PWR01"
+			(at 96.52 85.09 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 96.52 83.82 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 96.52 78.74 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 96.52 78.74 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 96.52 78.74 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "63a998f9-ffcb-4544-9cfa-4e02b5345da0")
+		)
+		(instances
+			(project "JFET String Preamp Bridge"
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
+					(reference "#PWR04")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/40966223-d92b-4fe6-9f91-9c85192c0646"
+					(reference "#PWR02")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/5aec4146-3bdc-41db-9ec2-8493546b66d5"
+					(reference "#PWR05")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/96d96fc6-deb5-409d-b663-ae19210fcf32"
+					(reference "#PWR01")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 96.52 69.85 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "40ef6c52-6e5c-4b8c-83e9-0ec95cdbcf75")
+		(property "Reference" "R1"
+			(at 99.06 68.5799 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "2.2K"
+			(at 99.06 71.1199 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 94.742 69.85 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 96.52 69.85 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 96.52 69.85 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "38a0ea14-4007-4475-b30b-e600aa0c2e94")
+		)
+		(pin "1"
+			(uuid "8cd6a84f-d641-4e2c-8b13-364eb8e99de0")
+		)
+		(instances
+			(project "JFET String Preamp Bridge"
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
+					(reference "R9")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/40966223-d92b-4fe6-9f91-9c85192c0646"
+					(reference "R4")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/5aec4146-3bdc-41db-9ec2-8493546b66d5"
+					(reference "R12")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/96d96fc6-deb5-409d-b663-ae19210fcf32"
+					(reference "R1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x01_Socket")
+		(at 72.39 76.2 0)
+		(mirror y)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "49fad697-948b-4458-b78b-b9f4359077fd")
+		(property "Reference" "J2"
+			(at 72.644 74.168 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 68.072 74.168 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "JFET Preamp:Magnet Wire THT"
+			(at 72.39 76.2 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 72.39 76.2 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Generic connector, single row, 01x01, script generated"
+			(at 72.39 76.2 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "a5d21c11-04d9-401f-8702-3faf085a23b9")
+		)
+		(instances
+			(project "JFET String Preamp Bridge"
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
+					(reference "J13")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/40966223-d92b-4fe6-9f91-9c85192c0646"
+					(reference "J8")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/5aec4146-3bdc-41db-9ec2-8493546b66d5"
+					(reference "J17")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/96d96fc6-deb5-409d-b663-ae19210fcf32"
+					(reference "J2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x01_Socket")
+		(at 71.12 63.5 0)
+		(mirror y)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "4a958e1f-27b6-4dfb-9c7e-cfadcdaa3f44")
+		(property "Reference" "J3"
+			(at 71.374 61.468 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 66.802 61.468 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "JFET Preamp:Magnet Wire THT"
+			(at 71.12 63.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 71.12 63.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Generic connector, single row, 01x01, script generated"
+			(at 71.12 63.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "57765f63-3321-4918-b79b-68e432934e95")
+		)
+		(instances
+			(project "JFET String Preamp Bridge"
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
+					(reference "J11")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/40966223-d92b-4fe6-9f91-9c85192c0646"
+					(reference "J6")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/5aec4146-3bdc-41db-9ec2-8493546b66d5"
+					(reference "J15")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/96d96fc6-deb5-409d-b663-ae19210fcf32"
+					(reference "J3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 109.22 52.07 180)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "5ae250f4-bc76-412b-a696-dfe384d86f4d")
+		(property "Reference" "C2"
+			(at 113.03 50.7999 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "100nF"
+			(at 113.03 53.3399 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 108.2548 48.26 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 109.22 52.07 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 109.22 52.07 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "0b550a58-6793-4765-a2c2-65ff250880b0")
+		)
+		(pin "1"
+			(uuid "d8221358-b302-4557-a276-419e8af32981")
+		)
+		(instances
+			(project "JFET String Preamp Bridge"
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
+					(reference "C7")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/40966223-d92b-4fe6-9f91-9c85192c0646"
+					(reference "C5")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/5aec4146-3bdc-41db-9ec2-8493546b66d5"
+					(reference "C9")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/96d96fc6-deb5-409d-b663-ae19210fcf32"
+					(reference "C2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 86.36 46.99 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "5dcbb446-5071-4074-b74a-b5fe059f1e5f")
+		(property "Reference" "R5"
+			(at 86.36 40.64 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100"
+			(at 86.36 43.18 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 86.36 48.768 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 86.36 46.99 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 86.36 46.99 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "00a89e60-a4c0-48ab-9e4b-95d7e35474af")
+		)
+		(pin "1"
+			(uuid "3523fcef-0643-4e4e-ba20-399ebbc51e06")
+		)
+		(instances
+			(project "JFET String Preamp Bridge"
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
+					(reference "R8")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/40966223-d92b-4fe6-9f91-9c85192c0646"
+					(reference "R6")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/5aec4146-3bdc-41db-9ec2-8493546b66d5"
+					(reference "R11")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/96d96fc6-deb5-409d-b663-ae19210fcf32"
+					(reference "R5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 87.63 66.04 180)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "735993cc-676c-433d-ba59-d23cf8f388c3")
+		(property "Reference" "C3"
+			(at 81.026 66.04 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "100pF"
+			(at 80.518 68.834 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 86.6648 62.23 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 87.63 66.04 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 87.63 66.04 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "43b4bb1b-dcee-42c3-b27d-b9b7a1333f4a")
+		)
+		(pin "1"
+			(uuid "353c9ab9-cb6c-4536-9c46-236cdc3cc74d")
+		)
+		(instances
+			(project "JFET String Preamp Bridge"
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
+					(reference "C6")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/40966223-d92b-4fe6-9f91-9c85192c0646"
+					(reference "C4")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/5aec4146-3bdc-41db-9ec2-8493546b66d5"
+					(reference "C8")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/96d96fc6-deb5-409d-b663-ae19210fcf32"
+					(reference "C3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x01_Socket")
+		(at 71.12 57.15 0)
+		(mirror y)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "ba370c67-2ae3-43d1-8da7-473369b47e41")
+		(property "Reference" "J1"
+			(at 71.12 55.118 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Input"
+			(at 67.564 57.15 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "JFET Preamp:Magnet Wire THT"
+			(at 71.12 57.15 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 71.12 57.15 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Generic connector, single row, 01x01, script generated"
+			(at 71.12 57.15 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "932a04c9-545d-4b9c-a293-b0d4f5c52773")
+		)
+		(instances
+			(project "JFET String Preamp Bridge"
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
+					(reference "J10")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/40966223-d92b-4fe6-9f91-9c85192c0646"
+					(reference "J5")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/5aec4146-3bdc-41db-9ec2-8493546b66d5"
+					(reference "J14")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/96d96fc6-deb5-409d-b663-ae19210fcf32"
+					(reference "J1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Transistor_FET:MMBFJ113")
+		(at 93.98 57.15 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "bd37a39a-f8f2-4cbd-ae95-2f100b96ff03")
+		(property "Reference" "Q1"
+			(at 99.06 55.8799 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "MMBFJ201"
+			(at 98.298 58.928 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
+			(at 99.06 59.055 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(justify left)
+			)
+		)
+		(property "Datasheet" "https://www.onsemi.com/pub/Collateral/MMBFJ113-D.PDF"
+			(at 99.06 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Description" "2mA min, 35V, 100mOhm max, 0.5-3V Vgs(off), N-Channel JFET, SOT-23"
+			(at 93.98 57.15 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "00a33ad2-f511-4c8f-9d40-61305de7357b")
+		)
+		(pin "2"
+			(uuid "f98aae17-5994-412c-a434-589c02287728")
+		)
+		(pin "3"
+			(uuid "30f777c6-9aa1-4190-904e-6f577c73f67a")
+		)
+		(instances
+			(project "JFET String Preamp Bridge"
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
+					(reference "Q3")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/40966223-d92b-4fe6-9f91-9c85192c0646"
+					(reference "Q2")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/5aec4146-3bdc-41db-9ec2-8493546b66d5"
+					(reference "Q4")
+					(unit 1)
+				)
+				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/96d96fc6-deb5-409d-b663-ae19210fcf32"
+					(reference "Q1")
+					(unit 1)
+				)
+			)
+		)
+	)
+)
