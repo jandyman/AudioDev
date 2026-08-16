@@ -5,7 +5,7 @@
 	(uuid "02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b")
 	(paper "A4")
 	(lib_symbols
-		(symbol "Connector:Conn_01x07_Socket"
+		(symbol "Connector:Conn_01x06_Pin"
 			(pin_names
 				(offset 1.016)
 				(hide yes)
@@ -16,7 +16,7 @@
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
 			(property "Reference" "J"
-				(at 0 10.16 0)
+				(at 0 7.62 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -25,7 +25,7 @@
 					)
 				)
 			)
-			(property "Value" "Conn_01x07_Socket"
+			(property "Value" "Conn_01x06_Pin"
 				(at 0 -10.16 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -57,7 +57,7 @@
 					)
 				)
 			)
-			(property "Description" "Generic connector, single row, 01x07, script generated"
+			(property "Description" "Generic connector, single row, 01x06, script generated"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -100,22 +100,76 @@
 					)
 				)
 			)
-			(symbol "Conn_01x07_Socket_1_1"
-				(polyline
-					(pts
-						(xy -1.27 7.62) (xy -0.508 7.62)
-					)
+			(symbol "Conn_01x06_Pin_1_1"
+				(rectangle
+					(start 0.8636 5.207)
+					(end 0 4.953)
 					(stroke
 						(width 0.1524)
 						(type default)
 					)
 					(fill
-						(type none)
+						(type outline)
+					)
+				)
+				(rectangle
+					(start 0.8636 2.667)
+					(end 0 2.413)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start 0.8636 0.127)
+					(end 0 -0.127)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start 0.8636 -2.413)
+					(end 0 -2.667)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start 0.8636 -4.953)
+					(end 0 -5.207)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start 0.8636 -7.493)
+					(end 0 -7.747)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type outline)
 					)
 				)
 				(polyline
 					(pts
-						(xy -1.27 5.08) (xy -0.508 5.08)
+						(xy 1.27 5.08) (xy 0.8636 5.08)
 					)
 					(stroke
 						(width 0.1524)
@@ -127,7 +181,7 @@
 				)
 				(polyline
 					(pts
-						(xy -1.27 2.54) (xy -0.508 2.54)
+						(xy 1.27 2.54) (xy 0.8636 2.54)
 					)
 					(stroke
 						(width 0.1524)
@@ -139,7 +193,7 @@
 				)
 				(polyline
 					(pts
-						(xy -1.27 0) (xy -0.508 0)
+						(xy 1.27 0) (xy 0.8636 0)
 					)
 					(stroke
 						(width 0.1524)
@@ -151,7 +205,7 @@
 				)
 				(polyline
 					(pts
-						(xy -1.27 -2.54) (xy -0.508 -2.54)
+						(xy 1.27 -2.54) (xy 0.8636 -2.54)
 					)
 					(stroke
 						(width 0.1524)
@@ -163,7 +217,7 @@
 				)
 				(polyline
 					(pts
-						(xy -1.27 -5.08) (xy -0.508 -5.08)
+						(xy 1.27 -5.08) (xy 0.8636 -5.08)
 					)
 					(stroke
 						(width 0.1524)
@@ -175,92 +229,8 @@
 				)
 				(polyline
 					(pts
-						(xy -1.27 -7.62) (xy -0.508 -7.62)
+						(xy 1.27 -7.62) (xy 0.8636 -7.62)
 					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 7.112)
-					(mid -0.5058 7.62)
-					(end 0 8.128)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 4.572)
-					(mid -0.5058 5.08)
-					(end 0 5.588)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 2.032)
-					(mid -0.5058 2.54)
-					(end 0 3.048)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -0.508)
-					(mid -0.5058 0)
-					(end 0 0.508)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -3.048)
-					(mid -0.5058 -2.54)
-					(end 0 -2.032)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -5.588)
-					(mid -0.5058 -5.08)
-					(end 0 -4.572)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -8.128)
-					(mid -0.5058 -7.62)
-					(end 0 -7.112)
 					(stroke
 						(width 0.1524)
 						(type default)
@@ -270,7 +240,7 @@
 					)
 				)
 				(pin passive line
-					(at -5.08 7.62 0)
+					(at 5.08 5.08 180)
 					(length 3.81)
 					(name "Pin_1"
 						(effects
@@ -288,7 +258,7 @@
 					)
 				)
 				(pin passive line
-					(at -5.08 5.08 0)
+					(at 5.08 2.54 180)
 					(length 3.81)
 					(name "Pin_2"
 						(effects
@@ -306,7 +276,7 @@
 					)
 				)
 				(pin passive line
-					(at -5.08 2.54 0)
+					(at 5.08 0 180)
 					(length 3.81)
 					(name "Pin_3"
 						(effects
@@ -324,7 +294,7 @@
 					)
 				)
 				(pin passive line
-					(at -5.08 0 0)
+					(at 5.08 -2.54 180)
 					(length 3.81)
 					(name "Pin_4"
 						(effects
@@ -342,7 +312,7 @@
 					)
 				)
 				(pin passive line
-					(at -5.08 -2.54 0)
+					(at 5.08 -5.08 180)
 					(length 3.81)
 					(name "Pin_5"
 						(effects
@@ -360,7 +330,7 @@
 					)
 				)
 				(pin passive line
-					(at -5.08 -5.08 0)
+					(at 5.08 -7.62 180)
 					(length 3.81)
 					(name "Pin_6"
 						(effects
@@ -370,24 +340,6 @@
 						)
 					)
 					(number "6"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -7.62 0)
-					(length 3.81)
-					(name "Pin_7"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "7"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -822,12 +774,6 @@
 		(uuid "118a98bb-23fc-485c-81f0-956c7df66a40")
 	)
 	(junction
-		(at 189.23 93.98)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "165101d6-5123-435f-badb-3cc260be9000")
-	)
-	(junction
 		(at 104.14 53.34)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -987,26 +933,6 @@
 	)
 	(wire
 		(pts
-			(xy 194.31 91.44) (xy 189.23 91.44)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "440ed392-62fe-48b0-8eac-fb84dcbe4f6c")
-	)
-	(wire
-		(pts
-			(xy 194.31 93.98) (xy 189.23 93.98)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "45a7f02c-70c5-4d56-b187-36b64e59affa")
-	)
-	(wire
-		(pts
 			(xy 95.25 58.42) (xy 95.25 68.58)
 		)
 		(stroke
@@ -1084,6 +1010,16 @@
 			(type default)
 		)
 		(uuid "66585418-cb3e-49d3-9b5a-54b62848e756")
+	)
+	(wire
+		(pts
+			(xy 194.31 91.44) (xy 193.04 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6876c11a-8b2a-4bc8-a43d-e285e46c5284")
 	)
 	(wire
 		(pts
@@ -1184,16 +1120,6 @@
 			(type default)
 		)
 		(uuid "930d58a2-e2e5-4b73-92ce-96a63f7e2d61")
-	)
-	(wire
-		(pts
-			(xy 189.23 93.98) (xy 189.23 96.52)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "976426b7-e117-48b8-9aa0-162aebdae720")
 	)
 	(wire
 		(pts
@@ -1307,13 +1233,13 @@
 	)
 	(wire
 		(pts
-			(xy 189.23 91.44) (xy 189.23 93.98)
+			(xy 193.04 91.44) (xy 193.04 92.71)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "cb438724-78df-4250-866f-8358f20b3361")
+		(uuid "d1d45056-11aa-4937-8676-0d7d561ecc0d")
 	)
 	(wire
 		(pts
@@ -1429,8 +1355,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 189.23 96.52 0)
-		(mirror y)
+		(at 193.04 92.71 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -1439,9 +1364,9 @@
 		(in_pos_files yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "29e03ce7-fd10-4acc-9436-f5098513615c")
-		(property "Reference" "#PWR03"
-			(at 189.23 102.87 0)
+		(uuid "716db78d-1bfe-4d6d-8c63-f41c88c98695")
+		(property "Reference" "#PWR02"
+			(at 193.04 99.06 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1452,7 +1377,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 189.23 101.6 0)
+			(at 193.04 97.79 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1462,7 +1387,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 189.23 96.52 0)
+			(at 193.04 92.71 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1473,7 +1398,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 189.23 96.52 0)
+			(at 193.04 92.71 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1484,7 +1409,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 189.23 96.52 0)
+			(at 193.04 92.71 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1495,12 +1420,12 @@
 			)
 		)
 		(pin "1"
-			(uuid "98b0969f-e3d0-472d-afc1-886362c30b48")
+			(uuid "73d81ebc-aea1-4fed-a356-925382f5e5c5")
 		)
 		(instances
 			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
-					(reference "#PWR03")
+					(reference "#PWR02")
 					(unit 1)
 				)
 			)
@@ -1667,8 +1592,8 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector:Conn_01x07_Socket")
-		(at 199.39 86.36 0)
+		(lib_id "Connector:Conn_01x06_Pin")
+		(at 199.39 86.36 180)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -1676,30 +1601,30 @@
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
-		(uuid "c2909713-5364-4030-88f9-f8bf70c49d25")
+		(uuid "f909935d-7651-4dde-b43e-46ae2b702cd9")
 		(property "Reference" "J9"
-			(at 200.66 85.0899 0)
+			(at 200.66 85.0901 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
+				(justify right)
 			)
 		)
 		(property "Value" ""
-			(at 200.66 87.6299 0)
+			(at 200.66 83.8201 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
+				(justify right)
 			)
 		)
-		(property "Footprint" "Connector_JST:JST_SH_SM06B-SRSS-TB_1x06-1MP_P1.00mm_Horizontal"
+		(property "Footprint" "Connector_PinHeader_2.00mm:PinHeader_1x06_P2.00mm_Horizontal"
 			(at 199.39 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -1721,7 +1646,7 @@
 				)
 			)
 		)
-		(property "Description" "Generic connector, single row, 01x07, script generated"
+		(property "Description" "Generic connector, single row, 01x06, script generated"
 			(at 199.39 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -1732,26 +1657,23 @@
 				)
 			)
 		)
+		(pin "1"
+			(uuid "23c5ded4-4aed-4ded-b670-ec63c07bcc2a")
+		)
 		(pin "5"
-			(uuid "a7468593-c5bb-48c5-931c-273a7c790ad3")
+			(uuid "c0de0d88-ea72-4299-9acc-4b3ff30c4a83")
 		)
 		(pin "6"
-			(uuid "caa02cde-4bde-43ed-a75f-21dcc15feb77")
-		)
-		(pin "4"
-			(uuid "e9d30726-9e51-4bc4-ae27-0c28cc7a1a62")
-		)
-		(pin "7"
-			(uuid "ffa34f3b-821e-45f3-b0ae-a48d4744f336")
-		)
-		(pin "3"
-			(uuid "a7d84a75-e20b-47d2-bef9-89049d70db67")
-		)
-		(pin "1"
-			(uuid "3bed860c-289c-4545-82d1-9c05f19a395a")
+			(uuid "7ca3ca4f-b3ea-491c-9759-45864c054e35")
 		)
 		(pin "2"
-			(uuid "48943a1f-af49-48ea-9a1c-5de31f7035d2")
+			(uuid "5888374c-8e5c-4681-b3f3-b9c926b853e9")
+		)
+		(pin "3"
+			(uuid "67d7e50a-f3c5-471c-ad45-526ce66035d7")
+		)
+		(pin "4"
+			(uuid "2133e832-7739-4f22-81f4-68456fad4cbb")
 		)
 		(instances
 			(project "OPA376 String Preamp"
