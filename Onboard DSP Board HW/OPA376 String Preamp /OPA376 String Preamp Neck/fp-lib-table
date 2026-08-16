@@ -1,4 +1,0 @@
-(fp_lib_table
-	(version 7)
-	(lib (name "JFET Preamp") (type "KiCad") (uri "${KIPRJMOD}/../JFET Preamp.pretty") (options "") (descr ""))
-)

@@ -64,7 +64,7 @@
           "min_island_area": 10.0,
           "min_thickness": 0.25,
           "pad_connection": 1,
-          "remove_islands": 2,
+          "remove_islands": 0,
           "thermal_relief_gap": 0.5,
           "thermal_relief_spoke_width": 0.5
         }
@@ -504,7 +504,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "JFET String Preamp Neck.kicad_pro",
+    "filename": "OPA376 String Preamp.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -587,13 +587,13 @@
           "show": true
         },
         {
-          "group_by": false,
+          "group_by": true,
           "label": "DNP",
           "name": "${DNP}",
-          "show": false
+          "show": true
         },
         {
-          "group_by": false,
+          "group_by": true,
           "label": "Exclude from BOM",
           "name": "${EXCLUDE_FROM_BOM}",
           "show": true
@@ -634,7 +634,7 @@
       "include_excluded_from_bom": true,
       "name": "",
       "sort_asc": true,
-      "sort_field": "${DNP}"
+      "sort_field": "Reference"
     },
     "bus_aliases": {},
     "connection_grid_size": 50.0,
@@ -672,18 +672,18 @@
     "subpart_id_separator": 0,
     "top_level_sheets": [
       {
-        "filename": "JFET String Preamp Neck.kicad_sch",
-        "name": "JFET String Preamp Neck",
+        "filename": "OPA376 String Preamp.kicad_sch",
+        "name": "OPA376 String Preamp",
         "uuid": "02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
       }
     ],
-    "used_designators": "",
+    "used_designators": "U1-4,R1-3,R13-24,C1-2,C10-20,J1-8,J10-17,#PWR1-2,#PWR6-21",
     "variants": []
   },
   "sheets": [
     [
       "02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b",
-      "JFET String Preamp Neck"
+      "OPA376 String Preamp Bridge"
     ],
     [
       "96d96fc6-deb5-409d-b663-ae19210fcf32",

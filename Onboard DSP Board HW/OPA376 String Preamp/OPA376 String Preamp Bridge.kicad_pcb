@@ -579,7 +579,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/1e005728-3526-4c75-a0ac-6daba4c75423")
 		(sheetname "/")
-		(sheetfile "OPA376 String Preamp Bridge.kicad_sch")
+		(sheetfile "OPA376 String Preamp.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -3622,7 +3622,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/ff92e35b-10d3-4ec3-89c0-a4c9d3ba8699")
 		(sheetname "/")
-		(sheetfile "OPA376 String Preamp Bridge.kicad_sch")
+		(sheetfile "OPA376 String Preamp.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -5789,7 +5789,7 @@
 		(property ki_fp_filters "C_*")
 		(path "/77ba61bb-7e58-4dd0-9604-e0481779a412")
 		(sheetname "/")
-		(sheetfile "OPA376 String Preamp Bridge.kicad_sch")
+		(sheetfile "OPA376 String Preamp.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -7409,7 +7409,7 @@
 		(property ki_fp_filters "Connector*:*_1x??_*")
 		(path "/c2909713-5364-4030-88f9-f8bf70c49d25")
 		(sheetname "/")
-		(sheetfile "OPA376 String Preamp Bridge.kicad_sch")
+		(sheetfile "OPA376 String Preamp.kicad_sch")
 		(units
 			(unit
 				(name "A")

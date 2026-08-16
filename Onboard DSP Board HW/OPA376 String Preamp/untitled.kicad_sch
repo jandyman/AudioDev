@@ -1118,7 +1118,7 @@
 			(uuid "b9ed3321-6123-4518-b3ca-e19ec2271831")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
 					(reference "R19")
 					(unit 1)
@@ -1209,7 +1209,7 @@
 			(uuid "7b321540-2af3-42d5-9afb-2ed53c3e5a3c")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
 					(reference "#PWR013")
 					(unit 1)
@@ -1300,7 +1300,7 @@
 			(uuid "25763f7e-7d5d-45bd-afdd-65bd2e2abb50")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
 					(reference "C14")
 					(unit 1)
@@ -1391,7 +1391,7 @@
 			(uuid "5ca786ae-9391-4aa5-8eb9-f2d430a5704e")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
 					(reference "R20")
 					(unit 1)
@@ -1482,7 +1482,7 @@
 			(uuid "f369b5d7-0481-42a4-92c2-25e0a686374f")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
 					(reference "R21")
 					(unit 1)
@@ -1583,7 +1583,7 @@
 			(uuid "dfea9e71-8add-4da3-bc23-dc2268e9c05d")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
 					(reference "U3")
 					(unit 1)
@@ -1675,7 +1675,7 @@
 			(uuid "f6e9fa34-5b1f-4b6d-8a4e-a9d8183b8a66")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
 					(reference "#PWR012")
 					(unit 1)
@@ -1764,7 +1764,7 @@
 			(uuid "02a7c1d3-cc74-4dc2-89c1-ba13b8e08815")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
 					(reference "J11")
 					(unit 1)
@@ -1854,7 +1854,7 @@
 			(uuid "b5b3afe4-f5d4-4446-a182-4471bdc0e649")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
 					(reference "#PWR014")
 					(unit 1)
@@ -1943,7 +1943,7 @@
 			(uuid "ac3c09ce-aa37-480a-a6e4-a145383bf46f")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
 					(reference "J13")
 					(unit 1)
@@ -2032,7 +2032,7 @@
 			(uuid "f5c46e50-18b8-4405-a389-5e327b33e762")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
 					(reference "J10")
 					(unit 1)
@@ -2123,7 +2123,7 @@
 			(uuid "5b85179d-a267-4860-9bf7-af96b10d2581")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
 					(reference "C19")
 					(unit 1)
@@ -2213,7 +2213,7 @@
 			(uuid "903b1c2a-e135-4bba-bb92-287fcf18a6e4")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
 					(reference "#PWR020")
 					(unit 1)
@@ -2302,7 +2302,7 @@
 			(uuid "6dad02a0-3ac1-46c3-81fa-110997f872da")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
 					(reference "J12")
 					(unit 1)
@@ -2393,7 +2393,7 @@
 			(uuid "c89bf368-22ac-4d22-b64e-04ce9d724c30")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
 					(reference "C13")
 					(unit 1)

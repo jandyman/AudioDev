@@ -1419,7 +1419,7 @@
 			(uuid "807618c4-79c9-4b49-8da7-8ae7a634c414")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(reference "R2")
 					(unit 1)
@@ -1498,7 +1498,7 @@
 			(uuid "98b0969f-e3d0-472d-afc1-886362c30b48")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(reference "#PWR03")
 					(unit 1)
@@ -1580,7 +1580,7 @@
 			(uuid "dfa0f188-ac45-4f6f-9f8c-aba7af8b503a")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(reference "C2")
 					(unit 1)
@@ -1658,7 +1658,7 @@
 			(uuid "56364b69-7bc1-45ae-8ea5-23b1ee9e4455")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(reference "#PWR01")
 					(unit 1)
@@ -1754,7 +1754,7 @@
 			(uuid "48943a1f-af49-48ea-9a1c-5de31f7035d2")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(reference "J9")
 					(unit 1)
@@ -1836,7 +1836,7 @@
 			(uuid "1ffdfe12-03e4-4016-a4c9-befb428879b5")
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(reference "R1")
 					(unit 1)
@@ -1913,7 +1913,7 @@
 			)
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(page "4")
 				)
@@ -1989,7 +1989,7 @@
 			)
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(page "3")
 				)
@@ -2065,7 +2065,7 @@
 			)
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(page "5")
 				)
@@ -2141,7 +2141,7 @@
 			)
 		)
 		(instances
-			(project "OPA376 String Preamp Bridge"
+			(project "OPA376 String Preamp"
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
 					(page "2")
 				)
