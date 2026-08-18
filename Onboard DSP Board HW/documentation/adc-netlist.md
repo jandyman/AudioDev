@@ -42,7 +42,9 @@ With **C_in = 4.7 µF** fixed, the impedance setting directly picks the corner. 
 
 > **Note on what changed.** An earlier revision weighed a **−3.8 dB to −0.6 dB** insertion loss across these settings, because the source was a follower with ~1.4 kΩ of output impedance. With an amplified, low-impedance source that column is gone: every setting passes full level, and the choice is purely corner frequency against converter dynamic range. The recommendation below is unaffected, but the reason it is cheap has changed.
 
-**Recommendation: 20 kΩ.** The design goal is **near-DC response to capture the onset transient of finger pressure**, so the lowest available corner wins: 20 kΩ × 4.7 µF ≈ **1.7 Hz**, the nearest-DC option for the chosen cap, and source loading no longer enters the choice. The "slightly higher noise" of the 20 kΩ setting is immaterial against a source that is amplified at the pickup, and the ADC's own converter noise dominates. Note the front end is inherently AC-coupled, so a *sustained* (true-DC) press is blocked regardless — what passes is the pressure **transient/attack**, whose spectral content sits well above 1.7 Hz, so the low corner captures the onset, which is the sensing target. **10 kΩ** (~3.4 Hz) is only a fallback if a touch more dynamic range is ever wanted. ⚠ **user-confirm** — §11 item 1.
+**Recommendation: 20 kΩ.** The setting is free — source loading no longer enters the choice, and the "slightly higher noise" of the 20 kΩ setting is immaterial against a source amplified at the pickup, where converter noise dominates. Taking the lowest available corner costs nothing, so take it: 20 kΩ × 4.7 µF ≈ **1.7 Hz**. **10 kΩ** (~3.4 Hz) is a fallback if a touch more dynamic range is ever wanted. ⚠ **user-confirm** — §11 item 1.
+
+> **What this corner is and is not for.** Earlier revisions justified it as "near-DC response to capture the onset transient of finger pressure", implying that reaching lower recovers more of the pluck. It does not. A magnetic pickup is a velocity transducer with a first-order zero at DC of its own, so a statically displaced string produces no output at any frequency and there is no near-DC pedestal for this network to pass or block. What the release event presents is a velocity transient, and the useful question is whether its slow portion arrives with usable signal-to-noise, not how close to DC the network reaches. The full argument, and the consequence that the low-frequency shaping is recovered digitally rather than bought with analog parts, is `analog-front-end.md` §6. **Do not re-open the cap value or the input impedance on low-corner grounds.**
 
 **Blocking-cap charge time.** 4.7 µF exceeds the device's default coupling-cap quick-charge window (default sized for **≤ 1 µF**). No hardware cost — firmware raises `INCAP_QCHG` (P0_R5_D[5:4]) so the caps charge to the common-mode at power-up without a long settle (SBAS892A §8.3.3). Captured in §8.
 
@@ -194,12 +196,82 @@ default **on** and are wrong for this application — none of them announces
 itself, so a board that works will simply be missing the low-frequency content
 the design exists to capture:
 
-- **Digital HPF — default ENABLED, −3 dB at 12 Hz.** This sits *above* the
-  ~1.7 Hz corner §2 goes to some trouble to achieve, and would silently remove
-  the finger-pressure onset energy. Must be disabled or its coefficients
-  reprogrammed well below 1 Hz.
+- **Digital HPF — default ENABLED, −3 dB at 8 Hz at this design's sample rate.**
+  See below; this is the one setting that must be got right, because it is the
+  only low-frequency loss in the chain that no downstream correction can undo.
 - **AGC — must be off.** Deterministic gain is required for feature extraction.
 - **DRE — off initially.** Automatic gain shifting means level nondeterminism.
+
+### The digital high-pass filter ⚠
+
+**The corners scale with sample rate, and the datasheet tabulates them at 16 kHz
+and 48 kHz.** This design runs 32 kHz (§5), so neither published column applies
+directly. `HPF_SEL[1:0]` at `P0_R107` (SBAS892A §8.3.6.4, Table 16):
+
+| `HPF_SEL[1:0]` | Setting | −3 dB at 32 kHz |
+|---|---|---|
+| `00` | programmable 1st-order IIR | as programmed; **flat by default** |
+| `01` (default) | 0.00025 × fs | **8 Hz** |
+| `10` | 0.002 × fs | 64 Hz |
+| `11` | 0.008 × fs | 256 Hz |
+
+> An earlier revision of this section gave the default as 12 Hz. That is the
+> 48 kHz figure read from the datasheet's table without scaling. The conclusion
+> is unchanged — 8 Hz still sits far above the 1.7 Hz corner §2 goes to trouble
+> to achieve — but the number was wrong.
+
+**Setting `HPF_SEL = 00` is a true bypass, not an approximation.** It hands the
+filter to the programmable first-order IIR, whose *default* coefficients
+(`N0 = 0x7FFFFFFF`, `N1 = 0`, `D1 = 0`) the datasheet states are flat at 0 dB —
+all-pass. No coefficient arithmetic is required to defeat the filter.
+
+**Specify a programmed corner at 0.5 Hz rather than a bypass.** Flat leaves the
+converter's own residual DC offset in the stream, where the low-frequency
+correction of `analog-front-end.md` §6.2 would amplify it. A 0.5 Hz corner sits
+below the analysis band and below the processor's own DC removal, while still
+bounding the offset before anything applies gain to it. Coefficients follow from
+the transfer function `H(z) = (N0 + N1·z⁻¹) / (2³¹ − D1·z⁻¹)` with a pole at
+`a = exp(−2π·fc/fs)`, giving `N0 = D1 = a·2³¹` and `N1 = −N0`:
+
+| Corner at 32 kHz | `N0` = `D1` | `N1` |
+|---|---|---|
+| 0.2 Hz | `0x7FFEB696` | `0x8001496A` |
+| **0.5 Hz (specify)** | **`0x7FFCC87E`** | **`0x80033782`** |
+| 1.0 Hz | `0x7FF99110` | `0x80066EF0` |
+
+The 32-bit coefficients resolve the corner to a few microhertz, so quantisation
+is not a consideration at these frequencies. ⚠ Confirm the sign convention of
+the denominator term against SBAS892A Equation 1 and TI's biquad application
+report before writing — the coefficient registers are at `P4_R72–R83`.
+
+**Three properties of this filter constrain the driver, not the board:**
+
+- It is **global, not per-channel** — one setting covers all four channels of a
+  device, which suits eight identical string channels but means it cannot be
+  used to treat one differently.
+- It must be programmed **per device**. Both codecs need it.
+- With `HPF_SEL = 00` the coefficients must be written **before powering up any
+  ADC channel for recording** (SBAS892A §8.3.6.4). This is a bring-up ordering
+  constraint, not a runtime adjustment, and belongs in the driver's
+  initialisation sequence.
+
+### The programmable biquads are deliberately left flat
+
+The device offers twelve programmable biquads, defaulting to all-pass. They are
+**not** used for the low-frequency correction, because their output is the
+single stream from which both the audio path and the analysis path derive, and
+the correction belongs on the analysis branch alone (`analog-front-end.md`
+§6.2). No register change is required to leave them flat.
+
+**The allocation default needs no change either, but the reason is worth
+recording** so it is not re-derived wrongly. `BIQUAD_CFG[1:0]` at `P0_R108`
+defaults to `2'b10` — two biquads per channel, supporting up to six channels
+(SBAS892A Table 18). That six is a count of *one device's* output channels, and
+each device here drives four (§5). The eight channels of this design are four
+per device across two devices, so the default accommodates them with a biquad to
+spare. **The six-channel limit does not bite.** It would only apply if a single
+device were asked to produce more than six output channels through its internal
+mixer.
 
 Final DC removal happens in the DSP at ~0.2–0.5 Hz, not in the converter
 (`adc-firmware-init.md` §7).
@@ -241,7 +313,7 @@ Passives JLCPCB basic-class; LCSC codes at order time.
 
 Part and topology are settled (`adc-selection.md`); these are datasheet confirmations, value picks, and bench characterizations.
 
-1. **Input impedance `CHx_IMP` — decided: 20 kΩ** (≈1.7 Hz corner at 4.7 µF), the nearest-DC option, which is what the finger-pressure onset goal calls for. (Source loading no longer enters this choice — §2.) 10 kΩ (≈3.4 Hz) is the documented fallback if bench work ever shows the extra dynamic range is worth the higher corner. Firmware register setting must match (§8).
+1. **Input impedance `CHx_IMP` — decided: 20 kΩ** (≈1.7 Hz corner at 4.7 µF), taken because it is free rather than because the corner has to be that low — see the note in §2 on what the corner is and is not for. (Source loading no longer enters this choice.) 10 kΩ (≈3.4 Hz) is the documented fallback if bench work ever shows the extra dynamic range is worth the higher corner. Firmware register setting must match (§8).
 2. **Signal-cap tantalum polarity — RESOLVED, no open action.** The converter self-biases its AC-coupled inputs to VREF/2 ≈ 1.375 V; the preamp presents a divider-set 1.0 V. The converter side is higher by 375 mV on every channel, so **+ toward the converter** and the sign cannot invert. Full argument, including the bias-point selection rule, is in §2. ⚠ **The sequencing exposure is now wider, not narrower.** The preamp boards take the 3.3 V analog rail rather than MICBIAS, so they no longer come up strictly after the converter — the firmware ordering that previously closed this window does not apply. The parallel silicon clamp diode is what covers it and is required. **Bench items:** measure the DC on one input pin and confirm it sits near 1.375 V (the number comes from TI application material rather than the datasheet), and confirm the preamp side sits at 1.0 V on every channel (`preamp-board.md` §12 item 4).
 3. **IOVDD source — decided: `3V45_D`** (keeps codec digital switching current off the analog LDO, and matches the MCU I/O rail so logic levels are clean both directions). Entered as such. ⚠ Remaining check is a datasheet one: confirm 3.45 V + rail tolerance sits inside IOVDD's recommended-operating window (3.0–3.6 V nominal) — see `layout-notes.md` §7 item 3.
 4. **I²C addresses** — take the ADDR0/ADDR1 strap→address table from SBAS892A; confirm the drawn straps (ADC-A: GND/GND, ADC-B: IOVDD/GND) give distinct, non-conflicting addresses; check no bus clash. ⚠
@@ -252,7 +324,9 @@ Part and topology are settled (`adc-selection.md`); these are datasheet confirma
 9. **Gain characterization — the level dispute is settled by measurement, no longer open.** The coil measures 40 mV peak-to-peak, which the preamp's gain of ~8 delivers as ≈320 mV peak-to-peak, roughly 17 dB below full scale (`analog-front-end.md` §1). Both earlier figures in the project record — the ≈12 mVrms sizing here and the hotter assumption from the preamp thread — were estimates against a unity front end that no longer exists. ⚠ **Remaining action:** set PGA and digital gain against the measured level and verify no clip at full scale. The requirement is far smaller than originally specified, and whether the Dynamic Range Enhancer still has a role should be reconsidered at the same time (`adc-firmware-init.md`).
 10. **MICBIAS — no longer used, no budget to verify.** The preamp boards take the 3.3 V analog rail (§1, `analog-front-end.md` §4). MICBIAS may be left unconfigured. If it is ever brought back, note the load is now ~3.1 mA per board against the 20 mA per-device limit rather than the sub-milliamp figure that applied to followers.
 11. **Cable protection** — the supply rail and the per-channel signal lines are external-cable entries; decide whether they need series ferrite / ESD clamp / the optional RF shunt cap. ⚠ Note the signal lines now carry ~320 mV peak-to-peak from an ohms-level source rather than tens of millivolts from kilohms, which materially reduces the ingress exposure this item was written against.
-12. **Auto-clock derivation at 32 kHz — RESOLVED (2026-07-28).** The scheme *is* table-based (SBAS892A §8.3.2, Table 6: supported FSYNC frequencies × BCLK-to-FSYNC ratios) and **32 kHz FSYNC at ratio 256 → 8.192 MHz BCLK is an explicitly listed, supported combination**. The auto-configuration block detects FSYNC frequency and BCLK ratio and sets every internal divider plus the PLL with no host programming; an unsupported combination raises an ASI clock-error interrupt and mutes the record channels (status in `ASI_STS`, P0_R21 — worth reading during bring-up as a clock-health check).
+12. **Digital high-pass filter — decided: programmed corner at 0.5 Hz** via `HPF_SEL = 00` and the coefficients in §8. This is the only low-frequency loss in the chain that no downstream correction can undo, so it is the one firmware setting the analog low-frequency argument actually depends on. ⚠ **Remaining checks, all datasheet or bring-up rather than board:** confirm the denominator sign convention of SBAS892A Equation 1 before writing coefficients; confirm the driver writes them **before** powering up any record channel; confirm both devices are programmed. **Bench item:** verify the corner landed by sweeping a low-frequency tone into one channel and reading the captured level — a filter left at its 8 Hz default will pass a working board that is silently missing the content the design exists to capture.
+13. **Biquad allocation — no action, recorded to prevent a wrong correction.** `BIQUAD_CFG[1:0]`'s default allocation supports six output channels *per device*, and each device drives four. The default stands. The biquads are left flat by design (§8).
+14. **Auto-clock derivation at 32 kHz — RESOLVED (2026-07-28).** The scheme *is* table-based (SBAS892A §8.3.2, Table 6: supported FSYNC frequencies × BCLK-to-FSYNC ratios) and **32 kHz FSYNC at ratio 256 → 8.192 MHz BCLK is an explicitly listed, supported combination**. The auto-configuration block detects FSYNC frequency and BCLK ratio and sets every internal divider plus the PLL with no host programming; an unsupported combination raises an ASI clock-error interrupt and mutes the record channels (status in `ASI_STS`, P0_R21 — worth reading during bring-up as a clock-health check).
 
 ---
 

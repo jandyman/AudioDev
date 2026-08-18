@@ -792,12 +792,6 @@
 		(uuid "4dc7975b-8326-49ed-872c-fd39a228fa13")
 	)
 	(junction
-		(at 85.09 53.34)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "64b47e97-1963-4ac9-9c21-34e0bfc46cf8")
-	)
-	(junction
 		(at 104.14 87.63)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -903,6 +897,16 @@
 	)
 	(wire
 		(pts
+			(xy 78.74 68.58) (xy 85.09 68.58)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3a5bd144-01ac-47e4-8802-c26de1d28b50")
+	)
+	(wire
+		(pts
 			(xy 104.14 53.34) (xy 111.76 53.34)
 		)
 		(stroke
@@ -913,7 +917,7 @@
 	)
 	(wire
 		(pts
-			(xy 74.93 78.74) (xy 85.09 78.74)
+			(xy 78.74 78.74) (xy 85.09 78.74)
 		)
 		(stroke
 			(width 0)
@@ -993,16 +997,6 @@
 	)
 	(wire
 		(pts
-			(xy 74.93 53.34) (xy 74.93 62.23)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "64ea524f-b0ff-4d6a-ac18-93f454b7adc9")
-	)
-	(wire
-		(pts
 			(xy 107.95 163.83) (xy 111.76 163.83)
 		)
 		(stroke
@@ -1053,7 +1047,7 @@
 	)
 	(wire
 		(pts
-			(xy 74.93 69.85) (xy 74.93 78.74)
+			(xy 78.74 77.47) (xy 78.74 78.74)
 		)
 		(stroke
 			(width 0)
@@ -1163,6 +1157,16 @@
 	)
 	(wire
 		(pts
+			(xy 78.74 69.85) (xy 78.74 68.58)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ae827ac2-d1f9-4445-a928-3156f72b7bc7")
+	)
+	(wire
+		(pts
 			(xy 104.14 71.12) (xy 104.14 87.63)
 		)
 		(stroke
@@ -1253,16 +1257,6 @@
 	)
 	(wire
 		(pts
-			(xy 74.93 53.34) (xy 85.09 53.34)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d7ffe522-4b7d-465d-813f-6e6012c52c4b")
-	)
-	(wire
-		(pts
 			(xy 194.31 86.36) (xy 163.83 86.36)
 		)
 		(stroke
@@ -1294,7 +1288,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "R"
+		(property "Value" "43K"
 			(at 87.63 74.9299 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1433,7 +1427,7 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 74.93 66.04 0)
+		(at 78.74 73.66 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -1441,10 +1435,9 @@
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "77ba61bb-7e58-4dd0-9604-e0481779a412")
 		(property "Reference" "C2"
-			(at 78.74 64.7699 0)
+			(at 71.12 72.3901 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1454,8 +1447,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "C"
-			(at 78.74 67.3099 0)
+		(property "Value" "10uF"
+			(at 71.12 74.93 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1465,8 +1458,8 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
-			(at 75.8952 69.85 0)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 79.7052 77.47 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1477,7 +1470,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 74.93 66.04 0)
+			(at 78.74 73.66 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1488,7 +1481,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 74.93 66.04 0)
+			(at 78.74 73.66 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1707,7 +1700,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "R"
+		(property "Value" "100K"
 			(at 87.63 63.4999 0)
 			(show_name no)
 			(do_not_autoplace no)

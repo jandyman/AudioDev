@@ -1524,7 +1524,7 @@
 				)
 			)
 		)
-		(property "Value" "TLV9001IDCK"
+		(property "Value" "OPA376"
 			(at 183.134 72.136 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2353,7 +2353,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 149.86 52.07 0)
 			(hide yes)
 			(show_name no)
