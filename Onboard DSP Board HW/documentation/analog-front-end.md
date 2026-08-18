@@ -145,7 +145,7 @@ ohms. Offset is tens of microvolts rather than a five-to-one spread.
 | Parameter | Value | Why it matters |
 |---|---|---|
 | Voltage noise at 1 kHz | 7.5 nV/√Hz | sets the system noise floor (§2.1) |
-| Quiescent current | 760 µA | eight channels is 6.1 mA — see §6 |
+| Quiescent current | 760 µA | eight channels is 6.1 mA — see §7 |
 | Supply range | 2.2–5.5 V | operates on the 3.3 V analog rail |
 | Gain bandwidth | 5.5 MHz | 690 kHz at the gain used; ample |
 | Power supply rejection | 86 dB typ, >80 dB across the audio band | this is what frees the supply choice (§4) |
@@ -212,7 +212,91 @@ bias point must sit below the converter's input bias, with margin.**
 
 ---
 
-## 6. Power
+## 6. Consequence: the low-frequency corner is a digital problem
+
+The requirement that sets the front end's low-frequency behaviour is the capture
+of the pluck as the string is released — the finger drawing the string aside and
+the moment it lets go. That requirement has been carried through this project as
+a demand for near-DC analog response. **The framing is wrong, and it is worth
+writing down why, because acting on it buys expensive analog parts that fix
+nothing.**
+
+**A magnetic pickup is a velocity transducer.** Its output is
+−N·(dΦ/dx)·(dx/dt): flux linkage varies with string position, and a voltage
+appears only while that position is changing. A string held statically at any
+displacement, however far it has been pulled aside, produces exactly zero volts.
+The transducer therefore carries a first-order zero at DC of its own, ahead of
+every capacitor in the chain.
+
+**Nothing below the coupling corners is being lost, because the pickup never
+generates it.** What a release event presents is a velocity transient: a small,
+slow signal while the finger draws the string aside, and a large fast one at the
+moment of release. Both are alternating. The design question is therefore not
+how close to DC the chain reaches, but whether the slow portion arrives with
+usable signal-to-noise. That is a level question, settled in the noise budget —
+not a corner-frequency question to be settled with capacitance.
+
+### 6.1 What the specified chain does below 10 Hz
+
+Two shaping mechanisms sit between the coil and the converter's digital output,
+and they are different in kind.
+
+**The gain network is a shelf, not a high-pass.** With the specified 15 kΩ
+feedback resistor, 2.2 kΩ lower leg and 22 µF return capacitor, the stage has a
+zero at 0.42 Hz and a pole at 3.29 Hz. Gain falls from eight in the passband to
+**unity at DC** — it does not fall to zero. Relative to the passband the −3 dB
+point is **3.24 Hz** and the response flattens at **−17.9 dB** below it.
+
+**The converter's coupling network is a true high-pass.** 4.7 µF into the 20 kΩ
+programmable input impedance gives a genuine zero at DC with a corner at
+**1.69 Hz** (§2 of `adc-netlist.md`).
+
+Cascaded, the two corners sit close enough together to compound: the system
+reaches −3 dB at about **3.9 Hz** and −9.6 dB at 1.7 Hz. Two poles this close is
+the least efficient arrangement available — it doubles the phase contribution
+and reaches barely lower than one of them alone.
+
+### 6.2 The shaping is recoverable; the correction belongs in the processor
+
+Both mechanisms are fixed, minimum-phase and bounded. The shelf inverts exactly
+with one pole and one zero, and its 17.9 dB span is the whole of what the
+correction has to supply. **Recover the low-frequency shape digitally rather
+than in copper.**
+
+**Apply the correction on the analysis branch only, not in the signal path.**
+The low-frequency content exists to serve onset detection and pluck
+characterisation; nothing in the audio path needs it. Correcting before the
+branch would push 17.9 dB of subsonic boost, and the converter's own residual
+offset with it, into audio that has no use for either.
+
+**This forecloses the converter's biquads as the place to do it.** Their output
+is the single stream both paths derive from, so a correction there is
+necessarily in the signal path. It belongs in the processor, downstream of the
+branch, which is also where the existing signal-node probing convention puts it.
+
+**The noise arithmetic is favourable, and for a structural reason.** The
+analysis branch is band-limited to a few tens of hertz, so it integrates noise
+over roughly 20 Hz where the audio path integrates over 20 kHz — about 30 dB of
+margin before anything is spent. The 17.9 dB of correction sits comfortably
+inside it.
+
+### 6.3 Consequences for the hardware
+
+- **Do not buy the low-frequency corner with noise.** The gain network's
+  resistor values, the gain leg return capacitor and the converter blocking cap
+  all stay as specified. The alternatives, and what they cost, are in §8.
+- **The converter's digital high-pass filter must be placed below the analysis
+  band.** It is the one low-frequency loss in the chain that no downstream
+  correction can undo, because it discards the content before the processor sees
+  it. Requirements are in §8 of `adc-netlist.md`.
+- **The noise figure to budget against is not the 1 kHz one.** The analysis band
+  sits in the amplifier's 1/f region, where the 7.5 nV/√Hz midband specification
+  understates the floor. Budget against the 0.1–10 Hz peak-to-peak
+  specification — §9 item 5.
+
+---
+
+## 7. Power
 
 | Configuration | Eight channels | Context |
 |---|---|---|
@@ -232,7 +316,7 @@ plugged in, so battery life is plugged-in time rather than elapsed time.
 
 ---
 
-## 7. Evaluated and not adopted
+## 8. Evaluated and not adopted
 
 **JFET source follower, no gain.** Complete and preserved at
 `superseded/preamp-board-jfet.md`. The quietest front end available here and
@@ -244,28 +328,35 @@ The condition under which it returns is compound and narrow: RF rectification
 would have to rule out a CMOS input *and* the composite below would have to prove
 unstabilisable. Recorded so the option is retrievable, not held open.
 
-**JFET input stage inside an operational amplifier's feedback loop.** A
-genuinely better circuit on paper — roughly 8 nV/√Hz at about 220 µA per channel,
-so three decibels quieter than the specified part at a third the current, using a
-low-cost amplifier. The JFET becomes the input device; the amplifier supplies
-only open-loop gain, DC accuracy and output drive, and its noise is referred back
-divided by the JFET stage's gain. The JFET's operating point is set by the loop
-rather than by Idss, which is what makes a common-source stage viable on 3 V at
-all.
+**JFET input stage inside an operational amplifier's feedback loop.** Simulated
+in full and parked. The circuit, the numbers and the conditions for revisiting
+it are in `jfet-composite-front-end.md`; the LTspice model, netlist and
+loop-gain bench are in `../simulation/jfet-composite-ltspice.zip`.
 
-Not adopted, for three reasons. Its headline noise figure is conditional on the
-JFET stage reaching a gain of roughly six — below that the amplifier's noise
-dominates and the composite ends up *worse* than the single-amplifier design.
-Stabilising a gain stage inside a feedback loop requires a compensation network
-whose values depend on drain-node capacitance, hence on layout, so it cannot be
-finalised on paper. And it occupies roughly 50% more board area per channel.
+A matched dual N-JFET differential pair replaces the amplifier's own input
+stage. Both circuit objections previously recorded here fail. The loop forces
+the two drain currents equal and therefore the two gate voltages equal, so the
+output rests on the bias reference across the whole Idss spread — the property
+the follower could never have. And a lead-lag network across the drains gives
+66 degrees of phase margin, with a four-degree sensitivity to 20 pF of stray at
+each drain, so the compensation *can* be finalised on paper.
 
-The decisive argument is none of those: **the only benefit is power, and power
-is not what these boards are for.** Single-string coils exist to serve the DSP
-system, whose processor and radio dominate the supply budget by an order of
-magnitude. Optimising the analog fallback's current draw optimises the wrong
-thing. Revisit only if a future application makes the front end the dominant
-load.
+What survives is smaller than this entry previously claimed and differently
+shaped: **1.8 dB of noise rather than three, and half the supply current rather
+than a third.** In exchange there is a new obstacle, and it is about supply
+rather than circuits — the topology needs a matched dual N-JFET satisfying
+**|Vgs(off)| ≤ (rail) − (bias reference) − (drain drop)**, which is 1.46 V at
+the values simulated. That rules out the low-noise audio duals, whose pinch-off
+runs to −2 V and beyond, and it rules out the grade the fab stocks.
+
+The decisive argument is unchanged. **The benefits are power and a modest noise
+figure, and power is not what these boards are for.** Single-string coils exist
+to serve the DSP system, whose processor and radio dominate the supply budget by
+an order of magnitude. Revisit if RF rectification at the CMOS input proves to
+be a real problem (§9 item 2), if a low-pinch-off matched dual becomes a stocked
+low-cost part, or if a future application — most plausibly a multi-coil
+commercial pickup rather than one coil per string — makes the front end the
+dominant load.
 
 **A low-cost general-purpose amplifier in place of the OPA376.** At 30 nV/√Hz
 the front end reads 72 dB delivered — worse than the follower it would replace,
@@ -285,9 +376,46 @@ requires no change to the pickup boards.
 **Finer magnet wire.** §1. Four decibels against a twenty decibel deficit, and no
 improvement at all to the coil's own signal-to-noise ratio.
 
+**Scaling the gain network's resistors to lower the shelf pole.** Holding the
+gain leg return capacitor at 22 µF and raising both resistors in proportion
+preserves the gain of eight and moves the pole down. It is rejected because it
+spends noise in precisely the wrong place. The feedback network's thermal
+contribution referred to the input is √(4kT·(Rf‖Rg)), which at the specified
+1.92 kΩ is **5.6 nV/√Hz** — already the second-largest term in the 10.5 nV/√Hz
+budget of §2.1, behind only the amplifier itself. Scaling by k scales that term
+by √k:
+
+| Scale | Feedback / lower leg | Shelf pole | Feedback noise | Total input-referred | Penalty |
+|---|---|---|---|---|---|
+| 1× (specified) | 15 kΩ / 2.2 kΩ | 3.29 Hz | 5.6 nV/√Hz | 10.5 nV/√Hz | — |
+| 2× | 30 kΩ / 4.4 kΩ | 1.64 Hz | 8.0 nV/√Hz | 11.9 nV/√Hz | +1.1 dB |
+| 3× | 45 kΩ / 6.6 kΩ | 1.10 Hz | 9.8 nV/√Hz | 13.2 nV/√Hz | +2.0 dB |
+
+At 2× the feedback network has overtaken the amplifier as the dominant source.
+Note that the CMOS input does not object — 23 fA/√Hz through 4.4 kΩ is 0.1 nV,
+nothing — so this fails on thermal noise alone. It buys a corner that §6 shows
+is recoverable for free.
+
+**A larger low-voltage Class II capacitor in the gain leg.** Capacitance costs
+no noise, so 47 µF or 100 µF in the same 0805 footprint would move the pole to
+1.54 Hz or 0.72 Hz at no thermal penalty, and the part sees only about a volt so
+a 6.3 V rating is amply derated. It is rejected on **piezoelectricity**, the
+same mechanism that rules Class II out of the converter's coupling network. This
+part already stands as a deliberate exception to the Class I rule; a
+higher-capacitance dielectric in the same volume generates more charge under
+mechanical stress, and a voltage developed across it appears in series with the
+lower gain leg — referred to the input at Rf/(Rf+Rg) = 0.87, essentially one for
+one. On a board rigidly mounted to a struck instrument that is a microphonic
+path straight into the signal, and it is the one respect in which raising the
+value makes things worse: the voltage-coefficient argument in `preamp-board.md`
+§8 improves with capacitance, but piezoelectric generation does not, because it
+is a source rather than a nonlinearity. **Retain 22 µF.** If the value is ever
+revisited, tap-test the assembled board and observe the output before accepting
+it.
+
 ---
 
-## 8. Open questions
+## 9. Open questions
 
 These are bench measurements, not analysis. Each is recorded against the
 verification list of the document it affects.
@@ -317,9 +445,33 @@ verification list of the document it affects.
    setting, and possibly the case for the Dynamic Range Enhancer, should be
    reconsidered against the real level.
 
+5. **Low-frequency noise, from the right specification.** ✅ **Closed as a
+   datasheet reading; one bench number left.** The amplifier's 0.1–10 Hz
+   specification is **0.8 µV peak-to-peak**, input referred — the 7.5 nV/√Hz in
+   §1 is a 1 kHz figure and understates the floor in the 1/f region where the
+   analysis band sits. Against the 40 mV peak-to-peak nominal-playing level that
+   is 94 dB, so **the pull phase has roughly 54 dB of headroom below nominal
+   playing before the amplifier's own low-frequency noise reaches 40 dB of
+   signal-to-noise in the analysis band.**
+
+   The shelf does not enter the arithmetic: signal and input-referred noise pass
+   through identical shaping, so the ratio at the input is what governs, and the
+   17.9 dB correction of §6.2 moves both together. §6 therefore closes unless
+   item 6 finds the pull phase more than about 54 dB down. ⚠ A first-principles
+   estimate — finger draw at centimetres per second against string velocity at
+   tenths of a metre per second — puts it 20 to 40 dB down, comfortably inside
+   the budget, but that is an estimate and item 6 is the measurement. **No board
+   change is expected to follow.**
+
+6. **The pull-phase signal level itself.** The measured 40 mV peak-to-peak in §1
+   is a nominal-playing figure. The slow draw before release is a far smaller
+   velocity and no measurement of it exists. It is the numerator of item 5 and
+   is measurable on the existing test board with the current front end — the
+   coupling network's shaping is known and can be divided out.
+
 ---
 
-## 9. Where the rest lives
+## 10. Where the rest lives
 
 | Topic | Document |
 |---|---|
@@ -328,6 +480,8 @@ verification list of the document it affects.
 | Converter input stage, coupling network, main-board connections | `adc-netlist.md` |
 | Why the converter, and what the architecture demands of it | `adc-selection.md` |
 | Register configuration, gain calibration, bring-up | `adc-firmware-init.md` |
+| Digital high-pass placement and the low-frequency correction | `adc-netlist.md` §8, `adc-firmware-init.md` §7 |
 | Radio placement, cavity shielding constraints | `bluetooth-constraints.md` |
 | Phase gates, bring-up order, risk register | `multichannel-audio-board-plan.md` |
 | The superseded follower design, and its device characterisation | `superseded/preamp-board-jfet.md` |
+| The JFET/amplifier composite: circuit, simulation, and what would bring it back | `jfet-composite-front-end.md` |
