@@ -328,28 +328,35 @@ The condition under which it returns is compound and narrow: RF rectification
 would have to rule out a CMOS input *and* the composite below would have to prove
 unstabilisable. Recorded so the option is retrievable, not held open.
 
-**JFET input stage inside an operational amplifier's feedback loop.** A
-genuinely better circuit on paper — roughly 8 nV/√Hz at about 220 µA per channel,
-so three decibels quieter than the specified part at a third the current, using a
-low-cost amplifier. The JFET becomes the input device; the amplifier supplies
-only open-loop gain, DC accuracy and output drive, and its noise is referred back
-divided by the JFET stage's gain. The JFET's operating point is set by the loop
-rather than by Idss, which is what makes a common-source stage viable on 3 V at
-all.
+**JFET input stage inside an operational amplifier's feedback loop.** Simulated
+in full and parked. The circuit, the numbers and the conditions for revisiting
+it are in `jfet-composite-front-end.md`; the LTspice model, netlist and
+loop-gain bench are in `../simulation/jfet-composite-ltspice.zip`.
 
-Not adopted, for three reasons. Its headline noise figure is conditional on the
-JFET stage reaching a gain of roughly six — below that the amplifier's noise
-dominates and the composite ends up *worse* than the single-amplifier design.
-Stabilising a gain stage inside a feedback loop requires a compensation network
-whose values depend on drain-node capacitance, hence on layout, so it cannot be
-finalised on paper. And it occupies roughly 50% more board area per channel.
+A matched dual N-JFET differential pair replaces the amplifier's own input
+stage. Both circuit objections previously recorded here fail. The loop forces
+the two drain currents equal and therefore the two gate voltages equal, so the
+output rests on the bias reference across the whole Idss spread — the property
+the follower could never have. And a lead-lag network across the drains gives
+66 degrees of phase margin, with a four-degree sensitivity to 20 pF of stray at
+each drain, so the compensation *can* be finalised on paper.
 
-The decisive argument is none of those: **the only benefit is power, and power
-is not what these boards are for.** Single-string coils exist to serve the DSP
-system, whose processor and radio dominate the supply budget by an order of
-magnitude. Optimising the analog fallback's current draw optimises the wrong
-thing. Revisit only if a future application makes the front end the dominant
-load.
+What survives is smaller than this entry previously claimed and differently
+shaped: **1.8 dB of noise rather than three, and half the supply current rather
+than a third.** In exchange there is a new obstacle, and it is about supply
+rather than circuits — the topology needs a matched dual N-JFET satisfying
+**|Vgs(off)| ≤ (rail) − (bias reference) − (drain drop)**, which is 1.46 V at
+the values simulated. That rules out the low-noise audio duals, whose pinch-off
+runs to −2 V and beyond, and it rules out the grade the fab stocks.
+
+The decisive argument is unchanged. **The benefits are power and a modest noise
+figure, and power is not what these boards are for.** Single-string coils exist
+to serve the DSP system, whose processor and radio dominate the supply budget by
+an order of magnitude. Revisit if RF rectification at the CMOS input proves to
+be a real problem (§9 item 2), if a low-pinch-off matched dual becomes a stocked
+low-cost part, or if a future application — most plausibly a multi-coil
+commercial pickup rather than one coil per string — makes the front end the
+dominant load.
 
 **A low-cost general-purpose amplifier in place of the OPA376.** At 30 nV/√Hz
 the front end reads 72 dB delivered — worse than the follower it would replace,
@@ -438,15 +445,23 @@ verification list of the document it affects.
    setting, and possibly the case for the Dynamic Range Enhancer, should be
    reconsidered against the real level.
 
-5. **Low-frequency noise, from the right specification.** §6 argues that the
-   analysis branch has ample margin for 17.9 dB of digital correction, and that
-   argument rests on a noise figure this document does not yet carry. The
-   7.5 nV/√Hz in §1 is a 1 kHz number and understates the floor in the 1/f
-   region where the analysis band sits. Take the amplifier's **0.1–10 Hz
-   peak-to-peak** specification and refer it to the pull-phase signal level.
-   If it closes, §6 closes with it and no board change follows. This is a
-   datasheet reading, not a bench measurement, and should be done before the
-   next review gate rather than at bring-up.
+5. **Low-frequency noise, from the right specification.** ✅ **Closed as a
+   datasheet reading; one bench number left.** The amplifier's 0.1–10 Hz
+   specification is **0.8 µV peak-to-peak**, input referred — the 7.5 nV/√Hz in
+   §1 is a 1 kHz figure and understates the floor in the 1/f region where the
+   analysis band sits. Against the 40 mV peak-to-peak nominal-playing level that
+   is 94 dB, so **the pull phase has roughly 54 dB of headroom below nominal
+   playing before the amplifier's own low-frequency noise reaches 40 dB of
+   signal-to-noise in the analysis band.**
+
+   The shelf does not enter the arithmetic: signal and input-referred noise pass
+   through identical shaping, so the ratio at the input is what governs, and the
+   17.9 dB correction of §6.2 moves both together. §6 therefore closes unless
+   item 6 finds the pull phase more than about 54 dB down. ⚠ A first-principles
+   estimate — finger draw at centimetres per second against string velocity at
+   tenths of a metre per second — puts it 20 to 40 dB down, comfortably inside
+   the budget, but that is an estimate and item 6 is the measurement. **No board
+   change is expected to follow.**
 
 6. **The pull-phase signal level itself.** The measured 40 mV peak-to-peak in §1
    is a nominal-playing figure. The slow draw before release is a far smaller
@@ -469,3 +484,4 @@ verification list of the document it affects.
 | Radio placement, cavity shielding constraints | `bluetooth-constraints.md` |
 | Phase gates, bring-up order, risk register | `multichannel-audio-board-plan.md` |
 | The superseded follower design, and its device characterisation | `superseded/preamp-board-jfet.md` |
+| The JFET/amplifier composite: circuit, simulation, and what would bring it back | `jfet-composite-front-end.md` |
