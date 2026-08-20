@@ -665,6 +665,14 @@
     "meta": {
       "version": 1
     },
+    "ngspice": {
+      "fix_include_paths": true,
+      "meta": {
+        "version": 0
+      },
+      "model_mode": 4,
+      "workbook_filename": "OPA376 String Preamp.wbk"
+    },
     "page_layout_descr_file": "",
     "plot_directory": "",
     "reuse_designators": true,
@@ -677,7 +685,7 @@
         "uuid": "02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b"
       }
     ],
-    "used_designators": "U1-4,R1-3,R13-24,C1-2,C10-20,J1-17,#PWR1-2,#PWR6-21",
+    "used_designators": "V1-8,U1-8,R1-10,R13-24,C1-6,C10-20,#PWR1-30,J1-17",
     "variants": []
   },
   "sheets": [

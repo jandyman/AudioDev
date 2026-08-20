@@ -293,6 +293,12 @@ output impedance is low enough to drive the volume control directly.
 
 ## 7. What to check in simulation, before entry
 
+**Simulation files:** `../simulation/resonance-emulator-ltspice.zip` — the full
+stage in both schematic and netlist form, a separate port-impedance test for the
+gyrator on its own, and a self-contained model library. Run the port-impedance
+test first: if the port is not inductive, nothing downstream of it means
+anything.
+
 This is the one circuit in the project where LTspice earns its keep. The models
 are all ideal enough to be trusted — unlike the noise work, where the device
 models are the weak link (`analog-front-end.md` §8).

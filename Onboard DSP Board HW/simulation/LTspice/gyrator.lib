@@ -1,0 +1,98 @@
+* ===========================================================================
+*  gyrator.lib -- models for the cavity-board resonance emulator
+*
+*  Contains only the parametrised opamp macromodel and its two wrappers.
+*  The gyrator itself is built from ordinary R and C in the netlists, which
+*  is the whole point -- there is no inductor model anywhere in this package.
+*
+*  The macromodel is the same one used by the string front-end simulation;
+*  its noise shaping is irrelevant here (this stage sees ~400 mV of signal)
+*  but GBW, AOL, the second pole and the output clamp all matter.
+* ===========================================================================
+
+* ---------------------------------------------------------------------------
+*  Generic single-supply opamp macromodel, parametrised.
+*
+*    EN   white input voltage noise density, V/rtHz
+*    FC   1/f corner, Hz  (density follows EN*sqrt(1+FC/f))
+*    GBW  gain-bandwidth product, Hz
+*    AOL  DC open-loop gain, V/V
+*    IQ   quiescent current, A
+*    FP2  second pole, Hz
+*    RO   open-loop output resistance, ohm
+*
+*  NOISE IS MODELLED AND IS THE POINT OF THIS SUBCIRCUIT.  Two noiseless
+*  E sources in series with the + input inject:
+*    - white noise from a resistor of EN^2/4kT ohms,
+*    - a 1/f term shaped by a five-section pole/zero ladder (poles at
+*      0.03/0.3/3/30/300 Hz, zeros a half-decade up) which produces a clean
+*      -10 dB/decade slope.
+*  The combination tracks EN*sqrt(1+FC/f) to within +/-0.4 dB from 0.1 Hz to
+*  100 kHz.  Ladder node impedances are kept low so the ladder's own thermal
+*  noise stays 20 dB under the intended floor.  These nodes carry no signal.
+* ---------------------------------------------------------------------------
+.subckt OPAMP P N VCC VEE OUT
++ PARAMS: EN=27n FC=150 GBW=1meg AOL=707946 IQ=60u FP2=2.5meg RO=200 CIN=4p
+
+Rnw   nw   0    {EN*EN/1.6577e-20}
+Rnf   nf   0    {EN*EN/1.6577e-20}
+Ef0   l0   0    nf 0  {7.648*sqrt(FC)}
+R1a   l0   a1   215
+R2a   a1   a1c  100
+Ca    a1c  0    16.84m
+Ef1   b0   0    a1 0  1
+R1b   b0   b1   215
+R2b   b1   b1c  100
+Cb    b1c  0    1.684m
+Ef2   c0   0    b1 0  1
+R1c   c0   c1   215
+R2c   c1   c1c  100
+Cc    c1c  0    168.4u
+Ef3   d0   0    c1 0  1
+R1d   d0   d1   215
+R2d   d1   d1c  100
+Cd    d1c  0    16.84u
+Ef4   e0   0    d1 0  1
+R1e   e0   e1   215
+R2e   e1   e1c  100
+Ce    e1c  0    1.684u
+
+Enw   px   P    nw 0  1
+Enf   pp   px   e1 0  1
+
+Cinp  pp   0    {CIN}
+Cinn  N    0    {CIN}
+Cind  pp   N    {CIN/2}
+
+Gm    0    g1   pp N   100u
+Rg1   g1   0    {AOL/100u}
+Cg1   g1   0    {100u/(6.283185*GBW)}
+Eb2   g2a  0    g1 0   1
+Rp2   g2a  g2   1k
+Cp2   g2   0    {1/(6.283185*1k*FP2)}
+
+Bo    no   0    V = min( max( V(g2), V(VEE)+0.015 ), V(VCC)-0.015 )
+Rout  no   OUT  {RO}
+Iq    VCC  VEE  {IQ}
+.ends OPAMP
+
+* --- TLV9001: 30 nV/rtHz at 1 kHz, 4.7 uVpp 0.1-10 Hz, 1 MHz, 60 uA -------
+.subckt TLV9001 P N VCC VEE OUT
+X1 P N VCC VEE OUT OPAMP PARAMS: EN=27n FC=150 GBW=1meg AOL=707946 IQ=60u
++ FP2=2.5meg RO=200 CIN=4p
+.ends TLV9001
+
+* --- OPA376: 7.5 nV/rtHz at 1 kHz, 0.8 uVpp 0.1-10 Hz, 5.5 MHz, 760 uA ----
+.subckt OPA376 P N VCC VEE OUT
+X1 P N VCC VEE OUT OPAMP PARAMS: EN=7.5n FC=55 GBW=5.5meg AOL=5.01e6 IQ=760u
++ FP2=14meg RO=60 CIN=5p
+.ends OPA376
+
+* ---------------------------------------------------------------------------
+*  TLV9004 is the quad version of the TLV9001 die -- identical per-section
+*  behaviour, so the TLV9001 subcircuit above is the correct model for a
+*  section of the quad actually fitted on the cavity board.
+* ---------------------------------------------------------------------------
+.subckt TLV9004 P N VCC VEE OUT
+X1 P N VCC VEE OUT TLV9001
+.ends TLV9004

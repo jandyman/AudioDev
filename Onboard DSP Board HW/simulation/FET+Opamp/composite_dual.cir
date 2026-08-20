@@ -1,0 +1,66 @@
+* ===========================================================================
+*  Dual-JFET / opamp composite string front end -- one channel
+*  Single 3.3 V analog rail.  Drop-in for the OPA376 per-string stage:
+*  same gain network, same input filter, same 1.0 V bias reference.
+*
+*  Open this file directly in LTspice (File > Open) and run it, or use
+*  composite_dual.asc for the schematic version.  jfet_composite.lib must
+*  sit in the same folder.
+* ===========================================================================
+.inc jfet_composite.lib
+
+.param Vrail  = 3.3
+
+.param Rin    = 1k    Cin = 100p
+.param Rd     = 5.6k  Rt  = 4.75k
+.param Rcz    = 4.7k  Ccz = 390p
+.param Rf     = 15k   Rg  = 2.2k   Cg = 22u
+.param Lcoil  = 66m   Rcoil = 320  Ccoil = 1f
+
+* --- supply and bias reference (shared by four channels) -------------------
+Vsupply   3V3_A     0         {Vrail}
+Rbias_top 3V3_A     VBIAS     100k
+Rbias_bot VBIAS     0         43.2k
+Cbias     VBIAS     0         10u
+
+* --- pickup coil: cold end on the bias node, hot end is the signal ---------
+Vsig      VBIAS     coil_a    AC 1 SIN(0 20m 300)
+Rcoil     coil_a    coil_b    {Rcoil}
+Lcoil     coil_b    COIL_HOT  {Lcoil}
+Ccoil     COIL_HOT  VBIAS     {Ccoil}
+
+* --- RF input filter, at the gate pin --------------------------------------
+Rin       COIL_HOT  GATE_IN   {Rin}
+Cin       GATE_IN   0         {Cin}
+
+* --- matched dual N-JFET input pair ----------------------------------------
+Jin       D_IN      GATE_IN   SRC   K2145T
+Jfb       D_FB      FB        SRC   K2145T
+Rdrain_in 3V3_A     D_IN      {Rd}
+Rdrain_fb 3V3_A     D_FB      {Rd}
+Rtail     SRC       0         {Rt}
+
+* --- lead-lag compensation, differential across the drains -----------------
+Rcomp     D_IN      comp_mid  {Rcz}
+Ccomp     comp_mid  D_FB      {Ccz}
+
+* --- second stage: senses the drain difference, drives the output ----------
+Xamp      D_FB      D_IN      3V3_A  0   CH_OUT   TLV9001
+
+* --- gain network: 7.8 in band, unity at DC --------------------------------
+Rfb       CH_OUT    FB        {Rf}
+Rgain     FB        gleg      {Rg}
+Cgain     gleg      0         {Cg}
+
+* --- cable and converter input ---------------------------------------------
+Ccable    CH_OUT    0         150p
+Rconv     CH_OUT    0         20k
+
+* --- analyses: uncomment one ------------------------------------------------
+.op
+* .ac    dec 40 0.1 10meg
+* .noise V(CH_OUT) Vsig dec 20 10 20k
+* .tran  0 120m 60m
+* grade corners: change K2145T to K2145L or K2145H on both JFETs
+
+.end

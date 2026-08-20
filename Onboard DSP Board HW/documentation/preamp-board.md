@@ -291,61 +291,133 @@ Simulated noise floors for this board should be read as optimistic lower bounds.
 passes through a hole to the control cavity; very little space at the main board
 edge; crimping avoided where possible.
 
-**Selected: 1.0 mm pitch wire-to-board, right-angle SMT header**, roughly 2.9 mm
-tall (JST SH SM06B-SRSS-TB or equivalent).
+**Selected: 2.00 mm pitch single-row right-angle through-hole header, 6-way**,
+mounted on the bottom side. Body height is roughly 2 mm above the board surface —
+*lower* than the 1.0 mm surface-mount part it replaces, which is the opposite of
+what a coarser pitch suggests. ⚠ Confirm against the part actually fitted;
+right-angle bodies in this pitch vary more than the pitch does.
+
+⚠ **This supersedes the 1.0 mm pitch wire-to-board SMT selection** previously
+specified here, and with it the fine-pitch crimping advice, the
+brand-compatibility caution and the mounting-pad note that selection carried.
+
+**Why the pitch went up.** Not profile, and not anything electrical — **the 1 mm
+crimp contacts were the problem.** They are awkward to handle and to seat, and
+the finished termination is fragile enough to become the least reliable thing in
+the assembly. Everything else about that part was acceptable. Doubling the pitch
+is a bet that contacts twice the size are enough more workable to fix it, and it
+brings a fallback the smaller part never had — see *Termination* below.
 
 Evaluated and rejected:
 
-- **FFC/ZIF** — lowest profile at 1.0–1.2 mm and no crimping, but needs a ZIF
+- **FFC/ZIF** — the lowest profile available and no crimping, but it needs a ZIF
   socket at both ends and there is no room at the main board edge.
 - **0.1″ right-angle headers** — roughly 8 mm tall.
-- **1.5 mm pitch (JST ZH)** — easier to hand-solder but roughly 4.4 mm tall,
-  which works against the clearance constraint.
+- **1.0 mm pitch wire-to-board (JST SH class)** — the previous selection,
+  rejected on the fragility of its crimp terminations rather than on anything
+  electrical. It also put a surface-mount part on the side that is hand-soldered
+  anyway, offered no way to fall back to a soldered joint, and bought no profile
+  advantage over the part now specified.
 
-**Configuration: 6-way per board** = four signals plus supply and ground. A
-seventh *conductor* for a second ground was considered and rejected — with loose
-round wires you do not control conductor adjacency, so flanking grounds buy
+**What the coarser pitch buys.** A through-hole part on the hand-soldered side,
+mating hardware that is a de facto standard rather than a per-manufacturer
+compatibility claim, contacts large enough that crimping may become practical,
+and — the part that does not depend on that bet paying off — the option of
+soldering the cable to the same holes.
+
+**Configuration: 6-way** = four signals plus supply and ground. Six positions and
+no mounting pad — a plain 1×6 at 2.00 mm pitch, 0.8 mm drill, on the bottom side.
+A seventh *conductor* for a second ground was considered and rejected — with
+loose round wires you do not control conductor adjacency, so flanking grounds buy
 nothing. That idea only makes sense with ribbon or flat cable, where conductor
 positions are fixed.
-
-Note the schematic symbol carries seven positions against a `1x06-1MP` footprint:
-the seventh is the connector's **mounting pad**, not a signal. Tie it to the
-ground pour, and expect ERC to want it declared unconnected or power-flagged
-rather than left floating.
 
 ⚠ **This supersedes the ribbon-cable treatment** previously in `layout-notes.md`
 §6.3, including its recommended conductor ordering — that analysis assumed flat
 ribbon with controlled adjacency.
 
-**Housing without protrusions** is accepted because it is the stocked variant.
-This gives up mechanical keying, so **the silkscreen needs a pin-1 marker and an
-orientation outline, and the cable must be marked**. A reversed insertion puts
-the supply rail onto a signal line and into an amplifier input through the input
-series resistor.
+### Termination — deliberately still open
 
-**If the pseudo-differential option in §4 is ever taken**, the conductor count
-rises to nine — four hot, four cold, plus supply, with ground carried on the
-cold returns. That is a different connector. It is worth confirming that a 10-way
-part exists in the same family and profile before committing the 6-way footprint,
-so the change stays a board revision rather than a connector search.
+**The footprint does not care how the cable is attached, and that is the point.**
+The same 1×6 through-hole pattern carries three terminations, so the choice can
+be deferred until boards and samples are in hand:
+
+| Termination | Profile on the bottom | Detachable | Status |
+|---|---|---|---|
+| Header fitted, mating socket on 2 mm crimp contacts | roughly 2 mm | yes | **preferred — sockets and contacts on order to evaluate** |
+| Header fitted, wires soldered to its pins | roughly 2 mm | no | available |
+| No header, wires soldered straight into the holes | essentially none | no | **the backup, and the lowest profile of the three** |
+
+**What is being evaluated is whether 2 mm crimp contacts are workable enough to
+be worth having.** They are the only route to a detachable cable, and detachable
+is what buys assembly and service access under the bobbin. If they turn out to
+share the fragility of the 1 mm contacts, soldering wins and **nothing about the
+board changes** — that is the whole value of having landed on a through-hole
+footprint.
+
+**What soldering gives up** is separating the board from its cable without an
+iron. Weigh it against the main-board end, which is soldered already: a soldered
+pickup end makes the cable captive at both ends and the harness a single unit.
+
+⚠ **A soldered joint needs strain relief.** The fragility that drove the pitch
+change does not disappear, it relocates — 28 AWG soldered into a plated hole
+fatigues at the joint if the cable can move. Anchor the cable mechanically before
+it leaves the assembly, whichever termination is chosen.
+
+### Polarity
+
+**The connector is unkeyed and the board carries no reverse-polarity
+protection.** This is accepted for development. **The board is marked and the
+cable is coded**, and that is the whole of the protection.
+
+Record the failure mode plainly, because it is not a soft one — and because the
+pin order changes how bad it is. Reversing a 6-way connector maps position 1 to
+6, 2 to 5 and 3 to 4. Supply can never land back on supply, so a reversed
+insertion is always a fault; what the ordering decides is which fault.
+
+> **Do not place supply and ground at mirror positions** — 1 and 6, 2 and 5, or
+> 3 and 4. That is the one family of arrangements in which reversal exchanges
+> them outright, applies the analog rail backwards across every amplifier on the
+> board, and should be expected to destroy all four.
+
+With supply and ground anywhere else, reversal instead leaves the board
+unpowered and drives the rail into two amplifier *outputs* through the cable.
+Those outputs clamp to their own floating supply through the output protection,
+so the board part-powers itself into an undefined state. That is not a good
+outcome either, but it is the recoverable one, and it costs nothing to choose it
+at schematic entry.
+
+Two retrofits exist should reversal stop being theoretical, neither needing more
+than a footprint change:
+
+- **Keying by omission** — a 7-position header with one pin removed and the
+  matching housing cavity plugged. Costs one position and no parts.
+- **A reverse-polarity series element** on the board's supply input. A Schottky
+  is one part but drops roughly 0.2 V, which drags the bias divider's output down
+  with it; a P-channel MOSFET costs area and almost no voltage.
+
+Production hardware wants a keyed housing rather than either of those.
+
+**A soldered termination removes the hazard at this end entirely** — a captive
+cable cannot be inserted backwards. Apply the mirror-position rule anyway. It
+costs nothing at schematic entry and it keeps the socket option open.
+
+**The pseudo-differential fallback in §4 no longer constrains this choice.** It
+would raise the conductor count to nine, and a 1×10 in this pitch and profile is
+an ordinary stock item — so taking that option stays a board revision and never
+becomes a connector search. That open item is closed.
 
 **Cable:** 28 AWG stranded, six conductors, loose — not twisted or shielded. The
 low-impedance amplified outputs and the input RC filter are what make that
 viable. Runs under the preamp board to the control cavity. Buy long and cut
 rather than coiling excess near the Bluetooth module.
 
-**Brand mixing — cautionary.** There is no standard governing 1.0 mm
-wire-to-board connectors; "compatible" is a manufacturer claim, not a
-specification. **Do not mix brands at the housing/header mating interface.** If
-forced to, resolve it by physically mating sample parts, not by comparing
-drawings.
-
-**Sourcing and assembly.** Headers can ride the JLCPCB order; housings and
-contacts are better sourced domestically for bench work. Assembly sequence:
-solder the main-board end first, pull the wires through the hole, *then* insert
-contacts into the housing at the pickup — insertion-only, because 1 mm pitch
-contacts insert easily but extract fiddlily. Pre-crimped pigtails avoid the crimp
-tool entirely.
+**Sourcing and assembly.** The header is through-hole and does not ride the
+JLCPCB assembly order — omit it from the assembly BOM and hand-solder it, or omit
+it from the board entirely if the cable is soldered into the holes. Assembly
+sequence is unchanged: solder the main-board end of the cable first, pull the
+wires through the hole, then terminate at the pickup by whichever route
+*Termination* above settles on.
 
 ---
 
@@ -363,6 +435,11 @@ the bottom of the pickup assembly, and better cable-slack management. The cable
 runs under the board to the cavity; a continuous ground pour between those wires
 and the input nodes is sufficient, since the barrier is capacitive interception
 and the aggressors are low-impedance amplified outputs anyway.
+
+**The header is through-hole, so its solder joints land on the top side.** Keep
+its pad rings and clearances clear of the input areas at that end, and trim the
+leads — that protrusion sits under the bobbin. The height arithmetic below
+accounts for it.
 
 **The input node — the one place where less copper is better.** Keep the
 coil-to-resistor-to-input copper short and small, and do **not** pour ground
@@ -391,13 +468,18 @@ fields, then redraw silkscreen and courtyard. The hole is a *property of the
 pad*, not a separate selectable object.
 
 **Assembly.** Single-sided JLCPCB assembly for the top, hand-solder the
-bottom-side connectors — two-sided assembly incurs a second-pass setup charge not
-worth it for one part per board. Ask JLCPCB to leave the connector pads unpasted,
-or omit the connector from the assembly BOM.
+bottom-side header — two-sided assembly incurs a second-pass setup charge not
+worth it for one part per board, and a through-hole part would not ride it in any
+case. Omit the header from the assembly BOM.
 
 **Heights.** SC70-5 is roughly 1.1 mm and the 0805 capacitors roughly 0.9 mm on
-top; the connector is roughly 2.9 mm on the bottom. Total stack is roughly 5.6 mm
-on a 1.6 mm board, 4.8 mm on 0.8 mm.
+top. The header body is roughly 2 mm on the bottom, and its trimmed leads and
+fillets add roughly 0.8 mm on top — under the component stack rather than on top
+of it, so the top side is still set by the components. Total stack is therefore
+roughly 4.7 mm on a 1.6 mm board and 3.9 mm on 0.8 mm, **lower than the
+surface-mount arrangement this replaces** — and roughly 2 mm lower again if the
+cable is soldered straight into the holes with no header fitted (§10). ⚠ Confirm
+the body height against the part fitted.
 
 **Area.** Approximately 7 × 4.5 mm per channel at the routing density this
 project uses, so roughly 130 mm² of channel area per board before the connector
@@ -424,15 +506,23 @@ and bias network.
    schematic says it does.
 6. **Measure channel-to-channel crosstalk.** The bias node is the path to
    suspect if it is worse than expected (§8).
-7. **Connector mounting pad** — confirm it lands on the ground pour and is
-   handled cleanly by ERC (§10).
-8. **Physically mate connector samples** before committing to two boards,
-   especially if brands end up mixed. Confirm housing stock and pin count, and
-   confirm a higher-count part exists in the family against §4's fallback.
-9. **Verify the bottom ground pour is not fragmented into islands** under the
-   input areas after routing — the cable runs beneath the board and the pour is
-   the barrier.
-10. **Feed the measured output level back into the converter's gain plan**
+7. **Confirm the header's top-side lead protrusion clears the bobbin** after
+   trimming, and that its pad rings and clearances have not encroached on the
+   input areas at that end of the board (§10, §11).
+8. **Confirm supply and ground are not at mirror positions** on the connector
+   (§10). This is a schematic check, it takes one look, and it is the difference
+   between a recoverable mis-insertion and a destroyed board.
+9. **Evaluate the 2 mm crimp contacts before committing to a detachable cable**
+   (§10). Crimp and seat a full set, mate it, then flex and tug the finished
+   termination — fragility rather than fit is what ruled out the previous
+   connector, and it is what this pitch change is meant to fix. If it does not
+   convince, solder to the same holes and change nothing else. Either way,
+   confirm the strain relief and confirm that the pin-1 marking and the cable
+   coding are unambiguous read from either end.
+10. **Verify the bottom ground pour is not fragmented into islands** under the
+    input areas after routing — the cable runs beneath the board and the pour is
+    the barrier.
+11. **Feed the measured output level back into the converter's gain plan**
     (`adc-firmware-init.md`). At the level this design produces, the programmable
     gain requirement is much lower than originally assumed.
 

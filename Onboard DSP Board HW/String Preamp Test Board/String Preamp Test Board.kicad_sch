@@ -1266,6 +1266,162 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Device:C_Small"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0.254)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "C"
+				(at 0.254 1.778 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "C_Small"
+				(at 0.254 -2.032 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Unpolarized capacitor, small symbol"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "capacitor cap"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "C_*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "C_Small_0_1"
+				(polyline
+					(pts
+						(xy -1.524 0.508) (xy 1.524 0.508)
+					)
+					(stroke
+						(width 0.3048)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.524 -0.508) (xy 1.524 -0.508)
+					)
+					(stroke
+						(width 0.3302)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "C_Small_1_1"
+				(pin passive line
+					(at 0 2.54 270)
+					(length 2.032)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -2.54 90)
+					(length 2.032)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Device:R"
 			(pin_numbers
 				(hide yes)
@@ -1808,6 +1964,121 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "GND_1"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#PWR"
+				(at 0 -6.35 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "GND"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "GND_1_0_1"
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 -1.27) (xy 1.27 -1.27) (xy 0 -2.54) (xy -1.27 -1.27) (xy 0 -1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "GND_1_1_1"
+				(pin power_in line
+					(at 0 0 270)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "New_Library:Pot_Switch"
 			(pin_names
 				(hide yes)
@@ -2217,6 +2488,234 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Simulation_SPICE:OPAMP"
+			(pin_names
+				(offset 0.254)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "U"
+				(at 3.81 3.175 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "${SIM.PARAMS}"
+				(at 3.81 -3.175 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" "https://ngspice.sourceforge.io/docs/ngspice-html-manual/manual.xhtml#sec__SUBCKT_Subcircuits"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Operational amplifier, single"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Sim.Pins" "1=in+ 2=in- 3=vcc 4=vee 5=out"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Sim.Device" "SUBCKT"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Sim.Library" "${KICAD9_SYMBOL_DIR}/Simulation_SPICE.sp"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Sim.Name" "kicad_builtin_opamp"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "simulation"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "OPAMP_0_1"
+				(polyline
+					(pts
+						(xy 5.08 0) (xy -5.08 5.08) (xy -5.08 -5.08) (xy 5.08 0)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "OPAMP_1_1"
+				(pin input line
+					(at -7.62 2.54 0)
+					(length 2.54)
+					(name "+"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -7.62 -2.54 0)
+					(length 2.54)
+					(name "-"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -2.54 7.62 270)
+					(length 3.81)
+					(name "V+"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -2.54 -7.62 90)
+					(length 3.81)
+					(name "V-"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 7.62 0 180)
+					(length 2.54)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "power:GND"
 			(power global)
 			(pin_names
@@ -2341,10 +2840,22 @@
 		(uuid "8247e9d1-7505-4334-88ff-242d9cb4e6e8")
 	)
 	(junction
+		(at 232.41 78.74)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "00049b56-f36f-4b8b-8e50-9c07618f43c3")
+	)
+	(junction
 		(at 71.12 60.96)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "042b6eaa-b7f8-4576-9a13-2769fc2b2a02")
+	)
+	(junction
+		(at 204.47 81.28)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "0dc09cfa-fc55-42dd-8049-378dd453fcf9")
 	)
 	(junction
 		(at 91.44 73.66)
@@ -2363,6 +2874,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "4ae11a57-c9fd-4391-92c9-74ca5d288b73")
+	)
+	(junction
+		(at 190.5 81.28)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "56a1c01a-cf9c-4905-9d37-4bf6bc7155a5")
 	)
 	(junction
 		(at 124.46 25.4)
@@ -2387,6 +2904,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "7c7294d0-d35c-4553-bec4-48d1c3dd994b")
+	)
+	(junction
+		(at 209.55 64.77)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "7f4c51ee-b439-4b1c-a301-9938362be093")
 	)
 	(junction
 		(at 105.41 49.53)
@@ -2610,6 +3133,16 @@
 	)
 	(wire
 		(pts
+			(xy 205.74 64.77) (xy 209.55 64.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "308e52ab-ac6b-474b-8231-20a3a7dd6cb9")
+	)
+	(wire
+		(pts
 			(xy 81.28 69.85) (xy 81.28 73.66)
 		)
 		(stroke
@@ -2617,6 +3150,16 @@
 			(type default)
 		)
 		(uuid "30afcc2b-dacd-41c5-be30-4b1fd541324d")
+	)
+	(wire
+		(pts
+			(xy 200.66 81.28) (xy 204.47 81.28)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "31517177-f315-489d-a765-4f9d8dda0672")
 	)
 	(wire
 		(pts
@@ -2660,6 +3203,16 @@
 	)
 	(wire
 		(pts
+			(xy 224.79 64.77) (xy 232.41 64.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3a5d6493-fd33-41c5-a558-f354e665aad2")
+	)
+	(wire
+		(pts
 			(xy 195.58 114.3) (xy 195.58 123.19)
 		)
 		(stroke
@@ -2687,6 +3240,16 @@
 			(type default)
 		)
 		(uuid "445e590d-a697-4078-a346-58b1a4ee83cb")
+	)
+	(wire
+		(pts
+			(xy 187.96 81.28) (xy 190.5 81.28)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "449406bf-93fe-499c-9a65-32ab45745ec4")
 	)
 	(wire
 		(pts
@@ -2720,6 +3283,26 @@
 	)
 	(wire
 		(pts
+			(xy 190.5 90.17) (xy 190.5 96.52)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4f699169-4384-438c-ab61-7b404c473b20")
+	)
+	(wire
+		(pts
+			(xy 209.55 64.77) (xy 217.17 64.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "513658f0-bfaa-42ee-bf2b-0a452b4aecac")
+	)
+	(wire
+		(pts
 			(xy 214.63 130.81) (xy 224.79 130.81)
 		)
 		(stroke
@@ -2750,6 +3333,16 @@
 	)
 	(wire
 		(pts
+			(xy 184.15 64.77) (xy 187.96 64.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5a4ba03c-89ae-4ccc-bf0c-4f6be7835c42")
+	)
+	(wire
+		(pts
 			(xy 194.31 123.19) (xy 195.58 123.19)
 		)
 		(stroke
@@ -2757,6 +3350,26 @@
 			(type default)
 		)
 		(uuid "5ac2c519-870c-4c0d-b259-5a3648870f22")
+	)
+	(wire
+		(pts
+			(xy 190.5 81.28) (xy 190.5 85.09)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5bc15dac-ea45-4226-a35c-457e198d3b08")
+	)
+	(wire
+		(pts
+			(xy 193.04 64.77) (xy 198.12 64.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5c423ab5-a8e6-4d0d-a48b-b822e8a1db78")
 	)
 	(wire
 		(pts
@@ -2800,6 +3413,16 @@
 	)
 	(wire
 		(pts
+			(xy 209.55 76.2) (xy 209.55 64.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "636bcf5c-9d37-4610-8b97-ef892b8bae56")
+	)
+	(wire
+		(pts
 			(xy 81.28 73.66) (xy 91.44 73.66)
 		)
 		(stroke
@@ -2840,6 +3463,16 @@
 	)
 	(wire
 		(pts
+			(xy 204.47 81.28) (xy 210.82 81.28)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "74334aea-41e2-40a8-8d44-bd4e08bcbc11")
+	)
+	(wire
+		(pts
 			(xy 143.51 40.64) (xy 143.51 43.18)
 		)
 		(stroke
@@ -2847,6 +3480,16 @@
 			(type default)
 		)
 		(uuid "74775ebb-33ea-463e-b879-3adbc361ecd1")
+	)
+	(wire
+		(pts
+			(xy 232.41 96.52) (xy 232.41 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "748257dc-336f-4ae9-9765-bc693b751d6b")
 	)
 	(wire
 		(pts
@@ -2867,6 +3510,16 @@
 			(type default)
 		)
 		(uuid "767492c1-8865-45d0-962a-eae5e53cab8f")
+	)
+	(wire
+		(pts
+			(xy 215.9 69.85) (xy 219.71 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "77740df5-7554-46c1-903b-eda2d27808cb")
 	)
 	(wire
 		(pts
@@ -2980,6 +3633,16 @@
 	)
 	(wire
 		(pts
+			(xy 190.5 81.28) (xy 193.04 81.28)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8de8cb35-1edd-4c59-b607-9865aca6b99d")
+	)
+	(wire
+		(pts
 			(xy 81.28 73.66) (xy 81.28 76.2)
 		)
 		(stroke
@@ -2987,6 +3650,26 @@
 			(type default)
 		)
 		(uuid "910378b0-54c5-4cbc-9dec-99d06b4d477f")
+	)
+	(wire
+		(pts
+			(xy 215.9 71.12) (xy 215.9 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "91f47944-c467-49e9-b7d3-28743f5d40c0")
+	)
+	(wire
+		(pts
+			(xy 232.41 64.77) (xy 232.41 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9d68f426-6e19-4022-b93c-f55392b59faf")
 	)
 	(wire
 		(pts
@@ -3020,6 +3703,16 @@
 	)
 	(wire
 		(pts
+			(xy 204.47 81.28) (xy 204.47 85.09)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a666f738-b856-4acd-8f9d-4ec7ff807ab2")
+	)
+	(wire
+		(pts
 			(xy 149.86 123.19) (xy 149.86 132.08)
 		)
 		(stroke
@@ -3030,6 +3723,16 @@
 	)
 	(wire
 		(pts
+			(xy 210.82 76.2) (xy 209.55 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "aae17d04-fd25-4247-a24c-f48b9127da28")
+	)
+	(wire
+		(pts
 			(xy 91.44 83.82) (xy 91.44 86.36)
 		)
 		(stroke
@@ -3037,6 +3740,16 @@
 			(type default)
 		)
 		(uuid "aef6da04-9d2e-4705-8905-4378ef0bd5d3")
+	)
+	(wire
+		(pts
+			(xy 175.26 81.28) (xy 180.34 81.28)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b0dbb1fa-b658-4d19-97d9-cc209a972f4c")
 	)
 	(wire
 		(pts
@@ -3057,6 +3770,16 @@
 			(type default)
 		)
 		(uuid "b78ae4f9-9e26-435a-be6b-8a277304a40a")
+	)
+	(wire
+		(pts
+			(xy 190.5 96.52) (xy 232.41 96.52)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b8b62aac-7970-4895-a42f-7a7eaa9a4673")
 	)
 	(wire
 		(pts
@@ -3157,6 +3880,16 @@
 			(type default)
 		)
 		(uuid "d9954839-33bc-49bb-b90d-6b8bd7536e30")
+	)
+	(wire
+		(pts
+			(xy 232.41 78.74) (xy 226.06 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e1590f48-ae24-465b-b3e4-de4763e582fd")
 	)
 	(wire
 		(pts
@@ -3434,6 +4167,86 @@
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
 					(reference "R1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "GND_1")
+		(lib_id "power:GND")
+		(at 184.15 64.77 270)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "08f1bb39-e6f8-4eb9-a419-bcd05139abdb")
+		(property "Reference" "#PWR020"
+			(at 177.8 64.77 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 180.34 64.7699 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" ""
+			(at 184.15 64.77 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 184.15 64.77 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 184.15 64.77 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "4f4e47a3-07fa-4ff7-9666-dedc6b778911")
+		)
+		(instances
+			(project "String Preamp Test Board"
+				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
+					(reference "#PWR020")
 					(unit 1)
 				)
 			)
@@ -3782,6 +4595,86 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:C_Small")
+		(at 190.5 64.77 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "22d4061a-b4f3-459b-af6e-ae0b9e2d7a8d")
+		(property "Reference" "C15"
+			(at 190.5063 58.42 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "50uF"
+			(at 190.5063 60.96 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 190.5 64.77 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 190.5 64.77 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Unpolarized capacitor, small symbol"
+			(at 190.5 64.77 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "052ffd82-cb3c-4ad2-a745-d4bd2cc2372d")
+		)
+		(pin "1"
+			(uuid "278f4744-536f-4660-bba8-ae595dbdb3ae")
+		)
+		(instances
+			(project "String Preamp Test Board"
+				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
+					(reference "C15")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:R_US")
 		(at 119.38 40.64 270)
 		(unit 1)
@@ -3854,6 +4747,88 @@
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
 					(reference "R7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C_Small")
+		(at 190.5 87.63 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "4187062e-c2ec-4700-986d-0724f9641dd3")
+		(property "Reference" "C13"
+			(at 193.04 86.3662 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "8.2nF"
+			(at 193.04 88.9062 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 190.5 87.63 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 190.5 87.63 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Unpolarized capacitor, small symbol"
+			(at 190.5 87.63 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "30846727-ab23-4313-a3ca-934d3f27f2b1")
+		)
+		(pin "1"
+			(uuid "4050b00e-e30e-4138-9b6b-c2a48cd71af8")
+		)
+		(instances
+			(project "String Preamp Test Board"
+				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
+					(reference "C13")
 					(unit 1)
 				)
 			)
@@ -3951,6 +4926,84 @@
 		)
 	)
 	(symbol
+		(lib_name "GND_1")
+		(lib_id "power:GND")
+		(at 204.47 90.17 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "5785b0a9-34b0-453f-865e-975646074259")
+		(property "Reference" "#PWR021"
+			(at 204.47 96.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 204.47 94.234 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 204.47 90.17 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 204.47 90.17 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 204.47 90.17 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "c87a185f-4752-454f-b03e-8f364e6aab8a")
+		)
+		(instances
+			(project "String Preamp Test Board"
+				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
+					(reference "#PWR021")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:C")
 		(at 91.44 80.01 180)
 		(unit 1)
@@ -4037,6 +5090,84 @@
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
 					(reference "C6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 219.71 69.85 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "61df7ccd-bb6b-4a48-b6e3-00a8bbf03201")
+		(property "Reference" "#PWR022"
+			(at 226.06 69.85 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 223.52 69.8499 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" ""
+			(at 219.71 69.85 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 219.71 69.85 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 219.71 69.85 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "22d4155e-a40c-4429-9848-d776a9621d4f")
+		)
+		(instances
+			(project "String Preamp Test Board"
+				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
+					(reference "#PWR022")
 					(unit 1)
 				)
 			)
@@ -4192,28 +5323,28 @@
 			)
 		)
 		(pin "5"
-			(uuid "81bad30f-81c5-4f7a-a501-fe21317dac93")
+			(uuid "81bad30f-81c5-4f7a-a501-fe21317dac94")
 		)
 		(pin "6"
-			(uuid "459a215d-2180-4218-b0b0-0c65296ca9ee")
+			(uuid "459a215d-2180-4218-b0b0-0c65296ca9ef")
 		)
 		(pin "1"
-			(uuid "f2a4674b-775e-4b11-9f64-0a675bddc1e4")
+			(uuid "f2a4674b-775e-4b11-9f64-0a675bddc1e5")
 		)
 		(pin "3"
-			(uuid "58264ccc-d674-4232-aeaf-990f8ee3b8ea")
+			(uuid "58264ccc-d674-4232-aeaf-990f8ee3b8eb")
 		)
 		(pin "7"
-			(uuid "20cde804-9d76-4166-bd9e-8ec8eaca1784")
+			(uuid "20cde804-9d76-4166-bd9e-8ec8eaca1785")
 		)
 		(pin "4"
-			(uuid "9f85fb60-632d-454d-bc78-13b72a23c2c5")
+			(uuid "9f85fb60-632d-454d-bc78-13b72a23c2c6")
 		)
 		(pin "2"
-			(uuid "6613f0a0-1661-48f3-bd71-ea3074adafe6")
+			(uuid "6613f0a0-1661-48f3-bd71-ea3074adafe7")
 		)
 		(pin "8"
-			(uuid "4625cc8d-3567-40ef-967a-d2e6ca1f6550")
+			(uuid "4625cc8d-3567-40ef-967a-d2e6ca1f6551")
 		)
 		(instances
 			(project "String Preamp Test Board"
@@ -4404,6 +5535,88 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:C_Small")
+		(at 204.47 87.63 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "73b9944d-6c7f-46e3-a408-da62c49fc0a3")
+		(property "Reference" "C14"
+			(at 207.01 86.3662 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "8.2nF"
+			(at 207.01 88.9062 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 204.47 87.63 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 204.47 87.63 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Unpolarized capacitor, small symbol"
+			(at 204.47 87.63 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "69f6ee8b-bb43-4061-a66b-353f2b718415")
+		)
+		(pin "1"
+			(uuid "b208d81f-ea84-4ec0-8c43-af0b9c87a582")
+		)
+		(instances
+			(project "String Preamp Test Board"
+				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
+					(reference "C14")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:R_US")
 		(at 116.84 142.24 180)
 		(unit 1)
@@ -4556,6 +5769,140 @@
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
 					(reference "#PWR08")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Simulation_SPICE:OPAMP")
+		(at 218.44 78.74 0)
+		(mirror x)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "7be64000-4642-4d7b-a513-03e8dcd28e36")
+		(property "Reference" "U6"
+			(at 226.06 83.8902 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "${SIM.PARAMS}"
+			(at 226.06 81.9851 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 218.44 78.74 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" "https://ngspice.sourceforge.io/docs/ngspice-html-manual/manual.xhtml#sec__SUBCKT_Subcircuits"
+			(at 218.44 78.74 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Operational amplifier, single"
+			(at 218.44 78.74 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Pins" "1=in+ 2=in- 3=vcc 4=vee 5=out"
+			(at 218.44 78.74 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Device" "SUBCKT"
+			(at 218.44 78.74 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Sim.Library" "${KICAD9_SYMBOL_DIR}/Simulation_SPICE.sp"
+			(at 218.44 78.74 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Name" "kicad_builtin_opamp"
+			(at 218.44 78.74 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "f2db19fa-bb8f-4e9c-8ed5-2da25cb1622f")
+		)
+		(pin "1"
+			(uuid "ea0adc32-17cb-4f79-8a32-62a33cc9c01a")
+		)
+		(pin "5"
+			(uuid "5b403d10-8408-4deb-aa80-de0d43dee32d")
+		)
+		(pin "4"
+			(uuid "187a3a0e-1dca-4329-9634-2e51b5d3272b")
+		)
+		(pin "3"
+			(uuid "190a21fd-b7b1-4beb-9afb-91b37115cd30")
+		)
+		(instances
+			(project "String Preamp Test Board"
+				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
+					(reference "U6")
 					(unit 1)
 				)
 			)
@@ -4756,6 +6103,86 @@
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
 					(reference "RV1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 196.85 81.28 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "844b94d5-daa2-475e-aacd-91e65c4f0096")
+		(property "Reference" "R11"
+			(at 196.85 74.93 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "10K"
+			(at 196.85 77.47 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 196.85 83.058 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 196.85 81.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 196.85 81.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "8d62da14-4a64-4fc7-a9ff-07da0cd5729a")
+		)
+		(pin "2"
+			(uuid "00760920-6cde-421a-a06c-cf570473b268")
+		)
+		(instances
+			(project "String Preamp Test Board"
+				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
+					(reference "R11")
 					(unit 1)
 				)
 			)
@@ -5017,6 +6444,166 @@
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
 					(reference "U2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 184.15 81.28 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "8fa5fd83-814f-40d1-93ac-c62c08ba544f")
+		(property "Reference" "R10"
+			(at 184.15 74.93 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "10K"
+			(at 184.15 77.47 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 184.15 83.058 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 184.15 81.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 184.15 81.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "daaa0894-12bc-47f8-a715-014f072fbfa0")
+		)
+		(pin "2"
+			(uuid "3bac981a-0a7c-4187-884b-e1ab694a9404")
+		)
+		(instances
+			(project "String Preamp Test Board"
+				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
+					(reference "R10")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 220.98 64.77 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "98f2ceed-3876-4d40-81f7-24691d467042")
+		(property "Reference" "R24"
+			(at 220.98 58.42 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "15k"
+			(at 220.98 60.96 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 220.98 66.548 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 220.98 64.77 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 220.98 64.77 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "16c949d4-252f-435c-aa25-0db80eeec469")
+		)
+		(pin "2"
+			(uuid "8cd655f5-05c2-433d-b0c5-b1a202b67091")
+		)
+		(instances
+			(project "String Preamp Test Board"
+				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
+					(reference "R24")
 					(unit 1)
 				)
 			)
@@ -5288,28 +6875,28 @@
 			)
 		)
 		(pin "5"
-			(uuid "81bad30f-81c5-4f7a-a501-fe21317dac93")
+			(uuid "81bad30f-81c5-4f7a-a501-fe21317dac95")
 		)
 		(pin "6"
-			(uuid "459a215d-2180-4218-b0b0-0c65296ca9ee")
+			(uuid "459a215d-2180-4218-b0b0-0c65296ca9f0")
 		)
 		(pin "1"
-			(uuid "f2a4674b-775e-4b11-9f64-0a675bddc1e4")
+			(uuid "f2a4674b-775e-4b11-9f64-0a675bddc1e6")
 		)
 		(pin "3"
-			(uuid "58264ccc-d674-4232-aeaf-990f8ee3b8ea")
+			(uuid "58264ccc-d674-4232-aeaf-990f8ee3b8ec")
 		)
 		(pin "7"
-			(uuid "20cde804-9d76-4166-bd9e-8ec8eaca1784")
+			(uuid "20cde804-9d76-4166-bd9e-8ec8eaca1786")
 		)
 		(pin "4"
-			(uuid "9f85fb60-632d-454d-bc78-13b72a23c2c5")
+			(uuid "9f85fb60-632d-454d-bc78-13b72a23c2c7")
 		)
 		(pin "2"
-			(uuid "6613f0a0-1661-48f3-bd71-ea3074adafe6")
+			(uuid "6613f0a0-1661-48f3-bd71-ea3074adafe8")
 		)
 		(pin "8"
-			(uuid "4625cc8d-3567-40ef-967a-d2e6ca1f6550")
+			(uuid "4625cc8d-3567-40ef-967a-d2e6ca1f6552")
 		)
 		(instances
 			(project "String Preamp Test Board"
@@ -5469,6 +7056,86 @@
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
 					(reference "#PWR09")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 201.93 64.77 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "be2d42f0-5fd0-4eaf-9224-810e08db1c41")
+		(property "Reference" "R23"
+			(at 201.93 58.42 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "10K"
+			(at 201.93 60.96 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 201.93 66.548 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 201.93 64.77 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 201.93 64.77 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "0bdf12c2-2101-4d19-992b-162f4e31e509")
+		)
+		(pin "2"
+			(uuid "b897617a-8734-4473-9b38-4574f9bbeedb")
+		)
+		(instances
+			(project "String Preamp Test Board"
+				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
+					(reference "R23")
 					(unit 1)
 				)
 			)

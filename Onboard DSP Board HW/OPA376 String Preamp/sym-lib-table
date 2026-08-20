@@ -1,0 +1,4 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "OPA376") (type "KiCad") (uri "${KIPRJMOD}/OPA376.kicad_sym") (options "") (descr "OPA376 with TI SPICE model pre-wired"))
+)

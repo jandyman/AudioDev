@@ -1,0 +1,64 @@
+* ===========================================================================
+*  GYRATOR PORT IMPEDANCE -- run this FIRST.
+*
+*  Everything else in this package depends on the gyrator actually behaving
+*  as an inductor across the audio band.  This file measures that directly,
+*  with nothing else attached.
+*
+*  A 1 A AC current source drives the port, so V(PA) is numerically equal to
+*  the port impedance in ohms.  (1 A is absurd physically; .ac is a linear
+*  small-signal analysis, so the number is exact and the units are convenient.)
+*
+*  AFTER RUNNING, PLOT V(PA) AND CHECK THREE THINGS:
+*
+*   1. MAGNITUDE rises at +6 dB/octave through the audio band, then flattens
+*      to R1||R2 above.  The flat region is the loss resistance.
+*
+*   2. PHASE sits in the 70-80 degree region around 2 kHz.  It will NOT reach
+*      90 -- the shortfall IS the finite Q, and the relationship is exact:
+*
+*                          Q  =  tan( phase angle )
+*
+*      So 74 degrees means Q = 3.5.  This is the quickest read on the design.
+*      If the phase never gets above ~45 degrees, the loss resistance is
+*      swamping the inductance -- see resonance-emulator.md section 2.3.
+*
+*   3. EQUIVALENT INDUCTANCE, by adding a trace with the expression
+*
+*                      Im(V(PA)) / (2*pi*frequency)
+*
+*      It should sit flat at L = R1*R2*Cg over the region of interest and
+*      fall off where the amplifier runs out of loop gain.  Where it starts
+*      to droop is the real upper limit of this circuit.
+* ===========================================================================
+.inc gyrator.lib
+
+.param Vrail = 3.7
+.param R1    = 82k
+.param R2    = 147k      $ 47k = high end of the trimmer, 247k = low end
+.param Cg    = 100p
+
+* --- supplies.  Vref is a stiff source here, deliberately: this test wants a
+* --- perfect AC ground so the measurement is of the gyrator alone.
+Vcc   VCC   0   {Vrail}
+Vref  VREF  0   {Vrail/2}
+
+* --- the probe ---------------------------------------------------------------
+Itest 0     PA  AC 1
+
+* --- the gyrator: port PA looks like L = R1*R2*Cg, shunted by R1||R2 ---------
+Rgy1  PA    GN  {R1}
+Cgy   GN    GO  {Cg}
+Rgy2  GO    PA  {R2}
+Xgyr  VREF  GN  VCC  0  GO  TLV9004
+
+.ac dec 100 10 1meg
+
+* --- sweep the frequency trimmer across its travel --------------------------
+* .step param R2 list 47k 82k 147k 200k 247k
+
+* --- expected, at the values above:
+*       R2 = 47k   ->  L = 0.385 H
+*       R2 = 147k  ->  L = 1.205 H,  R1||R2 = 52.6k,  Q at 1.76 kHz = 3.9
+*       R2 = 247k  ->  L = 2.025 H
+.end

@@ -1,0 +1,107 @@
+* ===========================================================================
+*  RESONANCE EMULATOR -- cavity preamp board, post-pan stage.
+*
+*  A gyrator-based series-resonant branch shunts the gain-setting leg of an
+*  otherwise unity-gain stage, producing a pickup-like peak.  Two trimmers
+*  (frequency and boost) and one player control (tone, which loads the tank).
+*
+*  Run gyrator_z.cir FIRST -- if the port is not inductive, nothing here means
+*  anything.
+*
+*  AFTER RUNNING, PLOT:   V(OUT)/V(IN)      in dB
+*
+*  Full design and the theory:  resonance-emulator.md
+* ===========================================================================
+.inc gyrator.lib
+
+.param Vrail = 3.7
+
+* --- the stage --------------------------------------------------------------
+.param Rf  = 10k        $ feedback
+.param Rg  = 1meg       $ lower leg -- large, so the passband sits at unity
+
+* --- boost trimmer:  2.2k = maximum peak,  22.2k = minimum ------------------
+.param Rb  = 2.2k
+
+* --- resonant branch --------------------------------------------------------
+.param Cs  = 6.8n
+
+* --- gyrator.  R2 is the frequency trimmer: 47k = high, 247k = low ----------
+.param R1  = 82k
+.param R2  = 147k
+.param Cg  = 100p
+
+* --- tone control.  100k = fully up (out of circuit), 100 = fully down ------
+.param Ct  = 22n
+.param Rt  = 100k
+
+* ---------------------------------------------------------------------------
+*  supply and mid-rail reference -- the real divider, not an ideal source,
+*  so any consequence of its finite impedance is visible
+* ---------------------------------------------------------------------------
+Vcc    VCC   0     {Vrail}
+Rref1  VCC   VREF  100k
+Rref2  VREF  0     100k
+Cref   VREF  0     10u
+
+* ---------------------------------------------------------------------------
+*  input: from the pan control, riding on the reference
+* ---------------------------------------------------------------------------
+Vin    IN    VREF  AC 1 SIN(0 200m 300)
+
+* ---------------------------------------------------------------------------
+*  main stage
+* ---------------------------------------------------------------------------
+Xstage IN    NEG   VCC  0  OUT  TLV9004
+Rfb    OUT   NEG   {Rf}
+Rgleg  NEG   VREF  {Rg}
+
+* ---------------------------------------------------------------------------
+*  resonant branch, from the inverting node back to the reference.
+*  Away from resonance it is high impedance and the stage sits at unity.
+* ---------------------------------------------------------------------------
+Rboost NEG   BN    {Rb}
+Cser   BN    PA    {Cs}
+
+* --- tone network, in parallel with Cser: adding capacitance walks the
+* --- resonance down, and the pot's resistance damps it on the way
+Ctone  BN    TN    {Ct}
+Rtone  TN    PA    {Rt}
+
+* --- the gyrator: port PA is an inductance L = R1*R2*Cg, referred to VREF ---
+Rgy1   PA    GN    {R1}
+Cgy    GN    GO    {Cg}
+Rgy2   GO    PA    {R2}
+Xgyr   VREF  GN    VCC  0  GO  TLV9004
+
+* ===========================================================================
+*  ANALYSES -- uncomment ONE .step at a time, or LTspice runs the cross
+*  product and the plot becomes unreadable.
+* ===========================================================================
+.ac dec 200 20 40k
+
+* --- 1. frequency trimmer, boost at maximum ---------------------------------
+* .step param R2 list 47k 82k 147k 200k 247k
+
+* --- 2. boost trimmer, frequency at mid -------------------------------------
+* .step param Rb list 2.2k 5k 9k 14k 22.2k
+
+* --- 3. tone control, both trimmers at mid ----------------------------------
+* .step param Rt list 100 2k 6k 15k 40k 100k
+
+* --- 4. supply, to confirm nothing moves with charge state ------------------
+* .step param Vrail list 3.0 3.7 4.2
+
+* --- headroom: swap the .ac above for this and watch V(GO), which is the
+* --- node with the largest internal swing on the board
+* .tran 0 60m 30m
+* ===========================================================================
+*  EXPECTED, at the values above:
+*      R2 = 47k   ->  f0 = 3.11 kHz
+*      R2 = 147k  ->  f0 = 1.76 kHz,  peak +8.9 dB at Rb = 2.2k
+*      R2 = 247k  ->  f0 = 1.36 kHz
+*      Rb = 22.2k ->  peak +2.9 dB
+*      passband gain +0.09 dB, i.e. unity for practical purposes
+*      tone fully down -> f0 falls by sqrt(Cs/(Cs+Ct)) = 0.486, about an octave
+* ===========================================================================
+.end

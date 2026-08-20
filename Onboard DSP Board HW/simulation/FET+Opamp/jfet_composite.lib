@@ -1,0 +1,121 @@
+* ===========================================================================
+*  jfet_composite.lib -- models for the JFET/opamp composite string front end
+*  Single 3.3 V analog rail, per-string pickup coil front end.
+* ===========================================================================
+
+* ---------------------------------------------------------------------------
+*  2SK2145 dual N-JFET, Y grade (Idss 1.2-3.0 mA, Vgs(off) -0.2 .. -1.5 V)
+*  Square-law fit; Kf/Af set so the modelled noise reproduces the datasheet
+*  noise figure (1 dB at 1 kHz, 5 dB at 10 Hz, Rg = 1 k, Id = 0.5 mA),
+*  which corresponds to ~1.8 nV/rtHz white with a ~100 Hz 1/f corner.
+* ---------------------------------------------------------------------------
+* Y grade, three corners.  Swap the model name on both JFETs to walk them:
+*   K2145L  Idss 1.2 mA, Vto -0.4 V   (low)
+*   K2145T  Idss 2.0 mA, Vto -0.6 V   (typical)
+*   K2145H  Idss 3.0 mA, Vto -1.0 V   (high)
+.model K2145L NJF(Vto=-0.4 Beta=7.500m Lambda=0.01 Rd=10 Rs=10
++                 Cgd=3p Cgs=10p Pb=0.7 Is=1p Kf=7.22e-18 Af=1)
+.model K2145T NJF(Vto=-0.6 Beta=5.556m Lambda=0.01 Rd=10 Rs=10
++                 Cgd=3p Cgs=10p Pb=0.7 Is=1p Kf=7.22e-18 Af=1)
+.model K2145H NJF(Vto=-1.0 Beta=3.000m Lambda=0.01 Rd=10 Rs=10
++                 Cgd=3p Cgs=10p Pb=0.7 Is=1p Kf=7.22e-18 Af=1)
+
+
+* ---------------------------------------------------------------------------
+*  MMBFJ201 -- the single JFET characterised in the superseded follower design.
+*  Standard Fairchild/onsemi square-law model.
+* ---------------------------------------------------------------------------
+.model J201 NJF(Beta=1.304m Betatce=-.5 Rd=1 Rs=1 Lambda=2.2m Vto=-.65
++               Vtotc=-2.5m Is=33.57f Isr=322.4f N=1 Nr=2 Xti=3
++               Alpha=311.7u Vk=243.6 Cgd=4.627p M=.3672 Pb=.5 Fc=.5
++               Cgs=4.972p Kf=9.882E-18 Af=1)
+
+* ---------------------------------------------------------------------------
+*  Generic single-supply opamp macromodel, parametrised.
+*
+*    EN   white input voltage noise density, V/rtHz
+*    FC   1/f corner, Hz  (density follows EN*sqrt(1+FC/f))
+*    GBW  gain-bandwidth product, Hz
+*    AOL  DC open-loop gain, V/V
+*    IQ   quiescent current, A
+*    FP2  second pole, Hz
+*    RO   open-loop output resistance, ohm
+*
+*  NOISE IS MODELLED AND IS THE POINT OF THIS SUBCIRCUIT.  Two noiseless
+*  E sources in series with the + input inject:
+*    - white noise from a resistor of EN^2/4kT ohms,
+*    - a 1/f term shaped by a five-section pole/zero ladder (poles at
+*      0.03/0.3/3/30/300 Hz, zeros a half-decade up) which produces a clean
+*      -10 dB/decade slope.
+*  The combination tracks EN*sqrt(1+FC/f) to within +/-0.4 dB from 0.1 Hz to
+*  100 kHz.  Ladder node impedances are kept low so the ladder's own thermal
+*  noise stays 20 dB under the intended floor.  These nodes carry no signal.
+* ---------------------------------------------------------------------------
+.subckt OPAMP P N VCC VEE OUT
++ PARAMS: EN=27n FC=150 GBW=1meg AOL=707946 IQ=60u FP2=2.5meg RO=200 CIN=4p
+
+Rnw   nw   0    {EN*EN/1.6577e-20}
+Rnf   nf   0    {EN*EN/1.6577e-20}
+Ef0   l0   0    nf 0  {7.648*sqrt(FC)}
+R1a   l0   a1   215
+R2a   a1   a1c  100
+Ca    a1c  0    16.84m
+Ef1   b0   0    a1 0  1
+R1b   b0   b1   215
+R2b   b1   b1c  100
+Cb    b1c  0    1.684m
+Ef2   c0   0    b1 0  1
+R1c   c0   c1   215
+R2c   c1   c1c  100
+Cc    c1c  0    168.4u
+Ef3   d0   0    c1 0  1
+R1d   d0   d1   215
+R2d   d1   d1c  100
+Cd    d1c  0    16.84u
+Ef4   e0   0    d1 0  1
+R1e   e0   e1   215
+R2e   e1   e1c  100
+Ce    e1c  0    1.684u
+
+Enw   px   P    nw 0  1
+Enf   pp   px   e1 0  1
+
+Cinp  pp   0    {CIN}
+Cinn  N    0    {CIN}
+Cind  pp   N    {CIN/2}
+
+Gm    0    g1   pp N   100u
+Rg1   g1   0    {AOL/100u}
+Cg1   g1   0    {100u/(6.283185*GBW)}
+Eb2   g2a  0    g1 0   1
+Rp2   g2a  g2   1k
+Cp2   g2   0    {1/(6.283185*1k*FP2)}
+
+Bo    no   0    V = min( max( V(g2), V(VEE)+0.015 ), V(VCC)-0.015 )
+Rout  no   OUT  {RO}
+Iq    VCC  VEE  {IQ}
+.ends OPAMP
+
+* --- TLV9001: 30 nV/rtHz at 1 kHz, 4.7 uVpp 0.1-10 Hz, 1 MHz, 60 uA -------
+.subckt TLV9001 P N VCC VEE OUT
+X1 P N VCC VEE OUT OPAMP PARAMS: EN=27n FC=150 GBW=1meg AOL=707946 IQ=60u
++ FP2=2.5meg RO=200 CIN=4p
+.ends TLV9001
+
+* --- OPA376: 7.5 nV/rtHz at 1 kHz, 0.8 uVpp 0.1-10 Hz, 5.5 MHz, 760 uA ----
+.subckt OPA376 P N VCC VEE OUT
+X1 P N VCC VEE OUT OPAMP PARAMS: EN=7.5n FC=55 GBW=5.5meg AOL=5.01e6 IQ=760u
++ FP2=14meg RO=60 CIN=5p
+.ends OPA376
+
+
+* ---------------------------------------------------------------------------
+*  Pickup coil: two coils in series, measured 320 ohm / 66 mH.
+*  Cp is the winding self-capacitance -- not measured; 100 pF is a placeholder
+*  and is one of the things worth sweeping.
+* ---------------------------------------------------------------------------
+.subckt COIL HOT COLD
+Lc  HOT  n1  {Lcoil}
+Rc  n1   COLD {Rcoil}
+Cp  HOT  COLD {Ccoil}
+.ends COIL
