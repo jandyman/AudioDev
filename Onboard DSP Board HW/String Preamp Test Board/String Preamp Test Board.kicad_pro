@@ -739,7 +739,7 @@
         "uuid": "17071b06-4887-4c2e-9588-4148705cb0ef"
       }
     ],
-    "used_designators": "U1,U3-6,J2-3,C1-4,C7,C10-15,#PWR1-3,#PWR5-6,#PWR11-22,u4,RV4-12,R3-6,R10-25",
+    "used_designators": "V1-2,U1-6,J1-4,C1-18,#PWR1-8,#PWR11-26,u4,RV4-12,R1-7,R10-26",
     "variants": []
   },
   "sheets": [
@@ -754,6 +754,10 @@
     [
       "a06fcc1e-adfb-481a-8c57-b21e06d67d3a",
       "Summer1"
+    ],
+    [
+      "d43362dd-6fda-43c9-aeea-4941a9e2c436",
+      "Lion Charger"
     ]
   ],
   "text_variables": {},

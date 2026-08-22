@@ -29,3 +29,7 @@ fp-info-cache
 # Python bytecode
 __pycache__/
 *.pyc
+
+# JLCPCB fabrication output (regenerated from the board files)
+**/jlcpcb*/gerber/
+**/jlcpcb*/production_files/

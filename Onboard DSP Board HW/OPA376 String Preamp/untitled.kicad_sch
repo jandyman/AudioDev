@@ -2104,7 +2104,7 @@
 				)
 			)
 		)
-		(property "Value" "OPA376xxDCK"
+		(property "Value" "OPA376AIDCKT"
 			(at 185.674 70.104 0)
 			(show_name no)
 			(do_not_autoplace no)
