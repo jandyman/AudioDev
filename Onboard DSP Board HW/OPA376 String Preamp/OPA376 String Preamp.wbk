@@ -5,7 +5,7 @@
     {
       "analysis": "TRAN",
       "commands": [
-        ".tran 20u 100m",
+        ".tran 20u 50m",
         ".kicad adjustpaths",
         ".save all",
         ".probe alli",
@@ -22,8 +22,13 @@
       "showGrid": true,
       "traces": [
         {
-          "color": "rgb(55, 126, 184)",
-          "signal": "V(/Input)",
+          "color": "rgb(152, 78, 163)",
+          "signal": "V(/SIngle_FET_preamp/3.3V)",
+          "trace_type": 257
+        },
+        {
+          "color": "rgb(77, 175, 74)",
+          "signal": "V(/SIngle_FET_preamp/MidRail)",
           "trace_type": 257
         },
         {
@@ -53,9 +58,86 @@
       "showGrid": true,
       "traces": [
         {
+          "color": "rgb(55, 126, 184)",
+          "signal": "V(/SIngle_FET_preamp/MidRail) (gain)",
+          "trace_type": 521
+        },
+        {
+          "color": "rgb(228, 26, 28)",
+          "signal": "V(/SIngle_FET_preamp/Output) (phase)",
+          "trace_type": 517
+        },
+        {
           "color": "rgb(228, 26, 28)",
           "signal": "V(/SIngle_FET_preamp/Output) (gain)",
           "trace_type": 521
+        },
+        {
+          "color": "rgb(77, 175, 74)",
+          "signal": "V(Net-_U1-+_) (phase)",
+          "trace_type": 517
+        },
+        {
+          "color": "rgb(77, 175, 74)",
+          "signal": "V(Net-_U1-+_) (gain)",
+          "trace_type": 521
+        }
+      ]
+    },
+    {
+      "analysis": "AC",
+      "commands": [
+        ".ac dec 20 100k 10Meg",
+        ".kicad adjustpaths",
+        ".save all",
+        ".probe alli",
+        ".probe allp"
+      ],
+      "dottedSecondary": true,
+      "margins": {
+        "bottom": 45,
+        "left": 70,
+        "right": 70,
+        "top": 30
+      },
+      "measurements": [],
+      "showGrid": true,
+      "traces": [
+        {
+          "color": "rgb(228, 26, 28)",
+          "signal": "V(/SIngle_FET_preamp/Output) (gain)",
+          "trace_type": 521
+        }
+      ]
+    },
+    {
+      "analysis": "NOISE",
+      "commands": [
+        ".noise v(/SIngle_FET_preamp/Output) V5 dec 20 100m 100k 1",
+        ".kicad adjustpaths",
+        ".save all",
+        ".probe alli",
+        ".probe allp"
+      ],
+      "dottedSecondary": true,
+      "margins": {
+        "bottom": 45,
+        "left": 70,
+        "right": 70,
+        "top": 30
+      },
+      "measurements": [],
+      "showGrid": true,
+      "traces": [
+        {
+          "color": "rgb(55, 126, 184)",
+          "signal": "inoise_spectrum",
+          "trace_type": 513
+        },
+        {
+          "color": "rgb(77, 175, 74)",
+          "signal": "onoise_spectrum",
+          "trace_type": 513
         }
       ]
     }
