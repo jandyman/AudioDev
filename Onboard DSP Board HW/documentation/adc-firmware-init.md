@@ -73,6 +73,14 @@ Both devices unless noted.
 
 ### 3.1 Analog input — the settings the analog design depends on
 
+⚠ **Items 1–4 all invert under the open hardware proposal in `adc-netlist.md`
+§2.1** (DC-coupled differential input on one added cable conductor): source
+becomes `CHx_INSRC = 00`, coupling `CHx_DC = 1`, impedance `CHx_IMP = 01`
+(10 kΩ — 2.5 kΩ is not supported for DC-coupled inputs), and the quick-charge
+item disappears. Do not write the driver against the proposal until it is
+adopted, but do keep these four values together in one table in the source so
+that flipping them is one edit rather than four.
+
 1. **Input source: single-ended.** `CHx_INSRC = 01` → P0_R60/65/70/75 D[6:5],
    all four channels each device.
 2. **Coupling: AC-coupled** (default). `CHx_DC = 0` → same registers, D4.
@@ -280,7 +288,16 @@ the low-frequency decision:
   microvolts rather than a five-to-one semiconductor spread, and the coupling
   caps block it regardless. Any residual offset is the converter's own. Treat as
   per-channel calibration constants, estimable at idle, but do not expect the
-  magnitudes this step was originally sized for.
+  magnitudes this step was originally sized for. ⚠ Under `adc-netlist.md` §2.1
+  the coupling caps are gone and the front end's offset does reach the converter
+  — still tens of microvolts, so the conclusion is unchanged, but the DC removal
+  above stops being optional.
+- ⚠ **No low-frequency correction is required for the preamp, and none should be
+  written.** An earlier revision of `analog-front-end.md` specified a 17.9 dB
+  shelf inversion on the analysis branch to undo a gain-network shelf. **That
+  shelf no longer exists** — the front end is DC-coupled and flat to DC
+  (`analog-front-end.md` §6). Writing the correction anyway would boost 18 dB of
+  nothing, and the converter's residual offset with it.
 
 ---
 
@@ -290,6 +307,8 @@ the low-frequency decision:
 |---|---|
 | Why this converter, and its documentation links | `adc-selection.md` |
 | Input stage, coupling caps, corner, per-pin connections, BOM | `adc-netlist.md` |
+| ⚠ The open DC-coupled differential proposal and its register table | `adc-netlist.md` §2.1 |
+| Preamp reference architecture and distribution | `../OPA376 String Preamp/reference-architecture.md` |
 | The per-string preamp boards feeding it | `preamp-board.md` |
 | Why that front end amplifies rather than buffers | `analog-front-end.md` |
 | SAI/I²C/GPIO assignment and the PLL3 clock tree | `pin-allocation.md` |

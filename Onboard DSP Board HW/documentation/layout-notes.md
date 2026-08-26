@@ -167,7 +167,7 @@ Given that, the `3V3_A` LDO is fed **directly from `3V45_D`**, tapping the same 
 
 ⚠ **MICBIAS is no longer used as the preamp supply.** The preamp boards take the **3.3 V analog rail** — the amplifier's own supply rejection (>80 dB across the audio band) makes MICBIAS's noise isolation unnecessary (`analog-front-end.md` §4). This section is retained because the numbers matter if it is ever brought back.
 
-Per the TLV320ADC5140 datasheet (SBAS892): **MICBIAS current drive = 20 mA** for bias ≥ 2.5 V; **over-current trip = 30 mA**; load regulation 0.6 % typ. Against that ceiling the present front end would draw ~3.1 mA per board — comfortable, but a very different figure from the sub-milliamp follower loads this section was written for.
+Per the TLV320ADC5140 datasheet (SBAS892): **MICBIAS current drive = 20 mA** for bias ≥ 2.5 V; **over-current trip = 30 mA**; load regulation 0.6 % typ. Against that ceiling the present front end would draw ~3.8 mA per board — comfortable, but a very different figure from the sub-milliamp follower loads this section was written for.
 
 The 20 mA ceiling was previously recorded as foreclosing higher-current devices or any gain stage on the preamp boards. **That constraint no longer applies** — moving the preamps to the analog rail removes the ceiling entirely, and a gain stage is exactly what the boards now carry (`analog-front-end.md`).
 

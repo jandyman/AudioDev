@@ -1,0 +1,20 @@
+* TLV900x wrappers for KiCad simulation.
+* Built from the single-amplifier TLV9002 macromodel in tlv9002.lib.
+* Documentation lives in tlv900x-notes.md. Keep this file plain ASCII with
+* no apostrophes, quotes, braces, dollar signs, semicolons or hash marks,
+* even inside comments.
+
+.include tlv9002.lib
+
+* Single. Ports are the SC70-5 package pins in order.
+.SUBCKT TLV9001 IN+ IN- VCC VEE OUT
+XA  IN+  IN-  VCC  VEE  OUT  TLV9002
+.ENDS TLV9001
+
+* Quad. Ports are package pins 1 through 14 in order.
+.SUBCKT TLV9004 OUT1 IN1- IN1+ VCC IN2+ IN2- OUT2 OUT3 IN3- IN3+ VEE IN4+ IN4- OUT4
+XA  IN1+  IN1-  VCC  VEE  OUT1  TLV9002
+XB  IN2+  IN2-  VCC  VEE  OUT2  TLV9002
+XC  IN3+  IN3-  VCC  VEE  OUT3  TLV9002
+XD  IN4+  IN4-  VCC  VEE  OUT4  TLV9002
+.ENDS TLV9004

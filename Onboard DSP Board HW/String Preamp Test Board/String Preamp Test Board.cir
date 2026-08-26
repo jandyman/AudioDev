@@ -1,0 +1,45 @@
+.title KiCad schematic
+.include "/Users/andy/Documents/Developer/AudioDev/Onboard DSP Board HW/String Preamp Test Board/tlv9001.lib"
+.include "/Users/andy/Documents/Developer/AudioDev/Onboard DSP Board HW/String Preamp Test Board/tlv9004.lib"
+XU1 Net-_U1A--_ Net-_U1A--_ /sum_in /v+ /buf_in Net-_U1B--_ Net-_U1B--_ /filt_in Net-_U1C--_ Net-_U1C-+_ GND /vref VG VG TLV9004
+R9 Net-_U1B--_ Net-_C7-Pad1_ 100
+C7 Net-_C7-Pad1_ /RV3_in 4.7u
+C6 GND /buf_in 4.7n
+R30 /p2_out /sum_in 22k
+C2 Net-_C2-Pad1_ /filt_in 8.2n
+R28 /RV3_in GND 10k
+R27 /filt_in /buf_in 1
+R3 Net-_U1A--_ Net-_C2-Pad1_ 10k
+R29 /sum_in /p1_out 22k
+C5 GND /v+ 0.1u
+R7 /vref /v+ 10k
+R8 GND /vref 10k
+C4 GND /vref 0.1u
+V2 /v+ GND DC 3.7 
+R6 Net-_U1C--_ /filt_in 15k
+C3 Net-_U1C-+_ VG 8.2n
+R4 Net-_C2-Pad1_ Net-_U1C-+_ 10k
+R5 VG Net-_U1C--_ 10k
+R11 /Summer/sim_in Net-_C8-Pad1_ 100k
+R10 /Summer/sim_in Net-_C8-Pad1_ 100k
+V1 /Summer/sim_in GND DC 0 SIN( 0 1 1k 0 0 0 ) AC 1  
+R13 /Summer/sim_in Net-_C8-Pad1_ 100k
+R12 /Summer/sim_in Net-_C8-Pad1_ 100k
+R15 VG Net-_U2--_ 2.2k
+R16 Net-_U2--_ /p1_out 22k
+R14 Net-_U2-+_ VG 1Meg
+C9 GND /v+ 100n
+XU2 Net-_U2-+_ Net-_U2--_ /v+ GND /p1_out TLV9001
+C8 Net-_C8-Pad1_ Net-_U2-+_ 5.6n
+R18 /Summer1/sim_in Net-_C10-Pad1_ 100k
+R17 /Summer1/sim_in Net-_C10-Pad1_ 100k
+V3 /Summer1/sim_in GND DC 0 SIN( 0 1 1k 0 0 0 ) AC 1  
+R20 /Summer1/sim_in Net-_C10-Pad1_ 100k
+R19 /Summer1/sim_in Net-_C10-Pad1_ 100k
+R22 VG Net-_U3--_ 2.2k
+R23 Net-_U3--_ /p2_out 22k
+R21 Net-_U3-+_ VG 1Meg
+C11 GND /v+ 100n
+XU3 Net-_U3-+_ Net-_U3--_ /v+ GND /p2_out TLV9001
+C10 Net-_C10-Pad1_ Net-_U3-+_ 5.6n
+.end

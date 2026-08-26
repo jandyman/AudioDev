@@ -3147,7 +3147,7 @@
 				)
 			)
 		)
-		(property "Sim.Params" "dc=0 ampl=22e-3 f=1k ac=1"
+		(property "Sim.Params" "dc=0 ampl=1 f=1k ac=1"
 			(at 81.28 104.0101 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3525,7 +3525,7 @@
 				)
 			)
 		)
-		(property "Sim.Library" "tlv9001.lib"
+		(property "Sim.Library" "tlv9002.lib"
 			(at 196.85 120.65 0)
 			(hide yes)
 			(show_name no)
@@ -3536,7 +3536,7 @@
 				)
 			)
 		)
-		(property "Sim.Name" "TLV9001"
+		(property "Sim.Name" "TLV9002"
 			(at 196.85 120.65 0)
 			(hide yes)
 			(show_name no)

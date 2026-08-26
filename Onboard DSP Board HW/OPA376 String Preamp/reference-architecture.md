@@ -5,6 +5,23 @@ DC-coupled: there is no capacitor in the gain leg, and no high-pass anywhere in 
 preamp. Low-frequency limiting happens once, at the tantalum coupling capacitors on
 the DSP board.
 
+⚠ **That last sentence is now itself under review (2026-08-26).** A proposal
+carries this reference to the DSP board on one added cable conductor and takes the
+converter inputs DC-coupled differential, which deletes those coupling capacitors
+and makes the whole chain flat to DC. It also turns the reference from an
+unrejected common term into a common-mode one — see *Distribution* below.
+`../documentation/adc-netlist.md` §2.1 holds the argument and the open checks;
+`../documentation/preamp-board.md` §4 holds the board side.
+
+⚠ **Correction carried with it.** The claim that a differential connection at the
+converter would require twice the converter channels — stated in the companion
+project note and the reason this option went unconsidered — **is false.** Each
+converter has four INxP/INxM *pairs* and records four analog channels whether
+those pairs are configured differential or single-ended (SBAS892A §8.3.3). In
+single-ended mode the cold pin is not a second channel, it is an AC ground behind
+a matching capacitor; the eight-per-device figure applies only to digital
+microphone inputs. **A differential connection costs zero channels.**
+
 <svg viewBox="0 0 1120 510" style="width:100%;height:auto;max-width:1120px" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schematic of supply filtering and buffered mid-rail reference">
 <rect x="0" y="0" width="1120" height="510" fill="#fbfaf7"/>
 <g font-family="ui-sans-serif,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
@@ -166,3 +183,12 @@ is the knob, not a pre-filter RC.
 **Distribution.** VREF is a strip-wide net. Star it from the buffer output rather
 than daisy-chaining, and do not hang a large bypass on that output — it works against
 stability into the resistive load the four gain legs present.
+
+⚠ **If the proposal above is adopted, the cable conductor must be sensed at the
+star node itself**, Kelvin fashion. The perturbation the summed gain-leg current
+produces across the buffer's output impedance is common to every channel output,
+so a converter differencing against a conductor taken from the star point
+subtracts it — and the inter-string crosstalk with it. Sense it partway down the
+distribution instead and that cancellation is lost, which is the difference
+between the proposal fixing this term and merely relocating it. Raise the
+connector to seven positions at the same time.

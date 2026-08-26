@@ -2227,7 +2227,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0540bc55-662d-4a3c-957f-e1bd04eb64b3")
-		(property "Reference" "R1"
+		(property "Reference" "R24"
 			(at 118.11 92.7099 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2290,7 +2290,7 @@
 		(instances
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef/d43362dd-6fda-43c9-aeea-4941a9e2c436"
-					(reference "R1")
+					(reference "R24")
 					(unit 1)
 				)
 			)
@@ -2308,7 +2308,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "09373786-0192-4edd-b188-384b7e057e5b")
-		(property "Reference" "C6"
+		(property "Reference" "C13"
 			(at 129.54 106.6799 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2382,7 +2382,7 @@
 		(instances
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef/d43362dd-6fda-43c9-aeea-4941a9e2c436"
-					(reference "C6")
+					(reference "C13")
 					(unit 1)
 				)
 			)
@@ -2399,7 +2399,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "0d2af2cf-9ed2-4e8b-8c09-d0dee68b8404")
-		(property "Reference" "C5"
+		(property "Reference" "C12"
 			(at 119.38 67.31 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2462,7 +2462,7 @@
 		(instances
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef/d43362dd-6fda-43c9-aeea-4941a9e2c436"
-					(reference "C5")
+					(reference "C12")
 					(unit 1)
 				)
 			)
@@ -2479,7 +2479,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "1a94e24a-ec58-4101-83ed-965b8c2f78f0")
-		(property "Reference" "#PWR04"
+		(property "Reference" "#PWR019"
 			(at 105.41 123.19 0)
 			(hide yes)
 			(show_name no)
@@ -2538,7 +2538,7 @@
 		(instances
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef/d43362dd-6fda-43c9-aeea-4941a9e2c436"
-					(reference "#PWR04")
+					(reference "#PWR019")
 					(unit 1)
 				)
 			)
@@ -2556,7 +2556,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "21fb99dc-fd96-407d-8fce-5a63f50eea91")
-		(property "Reference" "U2"
+		(property "Reference" "U5"
 			(at 140.2206 57.2602 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2629,7 +2629,7 @@
 		(instances
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef/d43362dd-6fda-43c9-aeea-4941a9e2c436"
-					(reference "U2")
+					(reference "U5")
 					(unit 1)
 				)
 			)
@@ -2646,7 +2646,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "2db0e441-6140-4914-8820-d46a09d1b6fd")
-		(property "Reference" "R7"
+		(property "Reference" "R26"
 			(at 153.67 71.12 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2707,7 +2707,7 @@
 		(instances
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef/d43362dd-6fda-43c9-aeea-4941a9e2c436"
-					(reference "R7")
+					(reference "R26")
 					(unit 1)
 				)
 			)
@@ -2725,7 +2725,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2ddfbe67-c067-40b3-b2c6-df23d3ca482e")
-		(property "Reference" "C9"
+		(property "Reference" "C15"
 			(at 162.56 58.4199 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2788,7 +2788,7 @@
 		(instances
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef/d43362dd-6fda-43c9-aeea-4941a9e2c436"
-					(reference "C9")
+					(reference "C15")
 					(unit 1)
 				)
 			)
@@ -2805,7 +2805,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "3fd99b0c-fa05-475b-9f51-a4ad65d43100")
-		(property "Reference" "U1"
+		(property "Reference" "U4"
 			(at 104.14 101.6001 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2971,7 +2971,7 @@
 		(instances
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef/d43362dd-6fda-43c9-aeea-4941a9e2c436"
-					(reference "U1")
+					(reference "U4")
 					(unit 3)
 				)
 			)
@@ -2989,7 +2989,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "710564be-37ec-4daf-83ac-eeb9ad42936e")
-		(property "Reference" "#PWR08"
+		(property "Reference" "#PWR021"
 			(at 193.04 77.47 0)
 			(hide yes)
 			(show_name no)
@@ -3048,7 +3048,7 @@
 		(instances
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef/d43362dd-6fda-43c9-aeea-4941a9e2c436"
-					(reference "#PWR08")
+					(reference "#PWR021")
 					(unit 1)
 				)
 			)
@@ -3066,7 +3066,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "862e9fd1-61e9-47ea-8c81-8ecb08b9d998")
-		(property "Reference" "J1"
+		(property "Reference" "J3"
 			(at 84.455 87.596 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3138,7 +3138,7 @@
 		(instances
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef/d43362dd-6fda-43c9-aeea-4941a9e2c436"
-					(reference "J1")
+					(reference "J3")
 					(unit 1)
 				)
 			)
@@ -3245,7 +3245,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "bb6b2bed-8f9c-48fe-a0ed-a47e0efaf451")
-		(property "Reference" "#PWR07"
+		(property "Reference" "#PWR020"
 			(at 139.7 85.09 0)
 			(hide yes)
 			(show_name no)
@@ -3304,7 +3304,7 @@
 		(instances
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef/d43362dd-6fda-43c9-aeea-4941a9e2c436"
-					(reference "#PWR07")
+					(reference "#PWR020")
 					(unit 1)
 				)
 			)
@@ -3322,7 +3322,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d3a97559-4da8-4d68-9377-2f6f5c627b6d")
-		(property "Reference" "C8"
+		(property "Reference" "C14"
 			(at 142.621 98.2253 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3396,7 +3396,7 @@
 		(instances
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef/d43362dd-6fda-43c9-aeea-4941a9e2c436"
-					(reference "C8")
+					(reference "C14")
 					(unit 1)
 				)
 			)
@@ -3498,7 +3498,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e4df94da-574d-4b4b-aa0f-0c006741cb35")
-		(property "Reference" "R2"
+		(property "Reference" "R25"
 			(at 118.11 106.6799 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3561,7 +3561,7 @@
 		(instances
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef/d43362dd-6fda-43c9-aeea-4941a9e2c436"
-					(reference "R2")
+					(reference "R25")
 					(unit 1)
 				)
 			)

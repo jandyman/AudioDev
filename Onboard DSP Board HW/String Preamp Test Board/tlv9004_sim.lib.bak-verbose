@@ -1,0 +1,79 @@
+* ---------------------------------------------------------------------------
+* TLV900x family wrappers for KiCad simulation
+*
+* TI ships one macromodel per AMPLIFIER, not per package: tlv9002.lib defines
+* a single 5-port amplifier (.subckt TLV9002 IN+ IN- VCC VEE OUT) plus sixteen
+* internal helper subcircuits.  TLV9001 / TLV9002 / TLV9004 are that same
+* amplifier in 1-, 2- and 4-channel packages, so every variant below is built
+* from it rather than from a separate vendor file.
+*
+* Do NOT also add TI's own TLV9001 or TLV9004 library to this project.  Those
+* files redefine VOS_SRC_0, VCCS_LIM_ZO_0, VNSE_0, OL_SENSE_0 and the rest of
+* the helper subcircuits, and two copies in one netlist corrupts ngspice's
+* numparam tables ("Mismatch: N formal but 0 actual params").  One file per
+* vendor family, with a wrapper per package variant inside it.
+*
+* Likewise, point EVERY symbol that needs this amplifier at THIS file -- if one
+* symbol references tlv9002.lib directly while another reaches it through the
+* .include below, tlv9002.lib is read twice and you get the same collision.
+*
+* ---------------------------------------------------------------------------
+* TLV9001 -- single, e.g. Amplifier_Operational:TLV9001IDCK (SC70-5 / SOT-23-5)
+*
+*   Sim.Device  SUBCKT
+*   Sim.Library tlv9004_sim.lib
+*   Sim.Name    TLV9001
+*   Sim.Pins    1=IN+ 2=VEE 3=IN- 4=OUT 5=VCC
+*
+*   pin 1  IN+     pin 4  OUT
+*   pin 2  VEE     pin 5  VCC
+*   pin 3  IN-
+*
+* Purely cosmetic -- it makes the netlist read TLV9001 where the board has one.
+* Selecting TLV9002 for a TLV9001 symbol is electrically identical.
+*
+* ---------------------------------------------------------------------------
+* TLV9004 -- quad, Amplifier_Operational:Opamp_Quad (14 pins, units A-D)
+*
+*   Sim.Device  SUBCKT
+*   Sim.Library tlv9004_sim.lib
+*   Sim.Name    TLV9004
+*   Sim.Pins    1=OUT1 2=IN1- 3=IN1+ 4=VCC 5=IN2+ 6=IN2- 7=OUT2 8=OUT3
+*               9=IN3- 10=IN3+ 11=VEE 12=IN4+ 13=IN4- 14=OUT4
+*               (all on one line, single spaces)
+*
+*   pin  1  OUT1     pin  8  OUT3
+*   pin  2  IN1-     pin  9  IN3-
+*   pin  3  IN1+     pin 10  IN3+
+*   pin  4  VCC      pin 11  VEE
+*   pin  5  IN2+     pin 12  IN4+
+*   pin  6  IN2-     pin 13  IN4-
+*   pin  7  OUT2     pin 14  OUT4
+*
+* Symbol units A B C D correspond to channels 1 2 3 4.
+*
+* KiCad emits ONE SPICE element per symbol reference, not one per unit, so a
+* multi-unit symbol needs a model whose port list covers every package pin.
+* That is why the quad needs a wrapper and the single does not.
+*
+* SET Sim.Pins BY HAND, in Symbol Properties.  The Simulation Model Editor's
+* Pin Assignments tab only ever lists the pins of the unit you opened it from,
+* and pressing OK rewrites Sim.Pins with just those.  Cancel is safe; OK is
+* not.  See KiCad issue #12372.
+* ---------------------------------------------------------------------------
+
+.include tlv9002.lib
+
+* --- single ---------------------------------------------------------------
+.SUBCKT TLV9001 IN+ IN- VCC VEE OUT
+XA  IN+  IN-  VCC  VEE  OUT  TLV9002
+.ENDS TLV9001
+
+* --- quad -----------------------------------------------------------------
+.SUBCKT TLV9004 OUT1 IN1- IN1+ VCC IN2+ IN2- OUT2 OUT3 IN3- IN3+ VEE IN4+ IN4- OUT4
+* TLV9002 port order is: IN+ IN- VCC VEE OUT
+XA  IN1+  IN1-  VCC  VEE  OUT1  TLV9002
+XB  IN2+  IN2-  VCC  VEE  OUT2  TLV9002
+XC  IN3+  IN3-  VCC  VEE  OUT3  TLV9002
+XD  IN4+  IN4-  VCC  VEE  OUT4  TLV9002
+.ENDS TLV9004

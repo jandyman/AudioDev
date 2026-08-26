@@ -3,6 +3,11 @@
 **Status:** Committed. The per-string front end is a low-noise operational
 amplifier with gain, sited at the pickup. The circuit is `preamp-board.md`.
 
+⚠ **Revised 2026-08-26.** The stage is DC-coupled from a buffered reference; §6
+is rewritten around that and the low-frequency shelf argument it previously
+carried is withdrawn. §6.3 raises a proposal to carry the reference to the
+converter and delete the coupling network as well.
+
 **Scope:** the reasoning that spans the pickup boards, the converter and the
 control-cavity electronics — why the front end amplifies rather than buffers,
 what that decision requires of the supply and the coupling network, and what was
@@ -145,7 +150,7 @@ ohms. Offset is tens of microvolts rather than a five-to-one spread.
 | Parameter | Value | Why it matters |
 |---|---|---|
 | Voltage noise at 1 kHz | 7.5 nV/√Hz | sets the system noise floor (§2.1) |
-| Quiescent current | 760 µA | eight channels is 6.1 mA — see §7 |
+| Quiescent current | 760 µA | eight channels plus two reference buffers is 7.6 mA — see §7 |
 | Supply range | 2.2–5.5 V | operates on the 3.3 V analog rail |
 | Gain bandwidth | 5.5 MHz | 690 kHz at the gain used; ample |
 | Power supply rejection | 86 dB typ, >80 dB across the audio band | this is what frees the supply choice (§4) |
@@ -188,8 +193,9 @@ happens to be — 0.13 to 0.67 V across the part distribution, uncontrollable, a
 the origin of a selection rule, a clamp diode, a startup sequencing constraint
 and a downstream calibration step.
 
-With an operational amplifier the output rests at whatever the bias divider is
-set to. **Specify 1.0 V.**
+With an operational amplifier the output rests at whatever the reference is set
+to. **Specify 1.0 V**, from a divider on the analog rail, filtered at its tap and
+buffered (§6.1).
 
 That value is chosen, not inherited. It places the front-end output below the
 converter's self-bias of 1.375 V by 375 mV, which:
@@ -210,9 +216,18 @@ gate-source pinch-off voltage must sit below the converter's input bias — is
 replaced by something simpler and enforced by a resistor ratio: **the front-end
 bias point must sit below the converter's input bias, with margin.**
 
+⚠ **That rule exists only to protect a polarised coupling capacitor, and the
+proposal in §6.3 deletes the capacitor.** If it is adopted the rule goes with it
+and is replaced by a preference pointing the other way: the converter's optimum
+DC bias for a DC-coupled input is its own reference midpoint, 1.375 V at the
+specified full-scale setting, which is also several dB better on symmetric swing
+and still 625 mV clear of the amplifier's common-mode boundary. **Do not move the
+value while the coupling network stands**; move it as part of adopting the
+proposal. `preamp-board.md` §5.
+
 ---
 
-## 6. Consequence: the low-frequency corner is a digital problem
+## 6. Consequence: the front end is DC-coupled
 
 The requirement that sets the front end's low-frequency behaviour is the capture
 of the pluck as the string is released — the finger drawing the string aside and
@@ -236,77 +251,136 @@ how close to DC the chain reaches, but whether the slow portion arrives with
 usable signal-to-noise. That is a level question, settled in the noise budget —
 not a corner-frequency question to be settled with capacitance.
 
-### 6.1 What the specified chain does below 10 Hz
+**All of which remains true, and is no longer the reason the stage is
+DC-coupled.** The stage is DC-coupled because the capacitor that would have made
+it otherwise turned out to be indefensible on its own terms, and removing it cost
+nothing. §6.1 is that argument.
 
-Two shaping mechanisms sit between the coil and the converter's digital output,
-and they are different in kind.
+### 6.1 Why the gain-leg capacitor went, and what replaced it
 
-**The gain network is a shelf, not a high-pass.** With the specified 15 kΩ
-feedback resistor, 2.2 kΩ lower leg and 22 µF return capacitor, the stage has a
-zero at 0.42 Hz and a pole at 3.29 Hz. Gain falls from eight in the passband to
-**unity at DC** — it does not fall to zero. Relative to the passband the −3 dB
-point is **3.24 Hz** and the response flattens at **−17.9 dB** below it.
+The superseded stage returned its lower gain leg to ground through a 22 µF Class
+II part, and both this document and `preamp-board.md` waved that part through as
+a deliberate, called-out exception to an otherwise strict Class I rule. The
+justification given was that although it carries signal current, the voltage
+developed across it in band is a few millivolts — "effectively no voltage across
+it to be non-linear about".
 
-**The converter's coupling network is a true high-pass.** 4.7 µF into the 20 kΩ
-programmable input impedance gives a genuine zero at DC with a corner at
-**1.69 Hz** (§2 of `adc-netlist.md`).
+**That justification does not survive contact with the two mechanisms it was
+meant to answer, and it fails differently against each.**
 
-Cascaded, the two corners sit close enough together to compound: the system
-reaches −3 dB at about **3.9 Hz** and −9.6 dB at 1.7 Hz. Two poles this close is
-the least efficient arrangement available — it doubles the phase contribution
-and reaches barely lower than one of them alone.
+- **It is a signal-path part by the only definition that matters.** It carries the
+  whole gain-setting current, so its capacitance *is* the gain network's low
+  corner. A high-K dielectric in a small package loses the majority of its
+  nominal capacitance under bias, and this part sits with about a volt across it
+  — the inverting input rests at the bias point and the far end is at ground.
+  Losing capacitance moves the designed corner and steepens the local slope that
+  produces distortion. The "few millivolts of signal" argument bounds the
+  distortion; it says nothing about the corner.
+- **Piezoelectric generation is a source, not a non-linearity, so it does not
+  scale down with signal.** §8 of this document had already worked out that a
+  voltage developed across this part is referred to the input at
+  Rf/(Rf+Rg) = 0.87 — essentially one for one — and had used exactly that
+  arithmetic to reject a *larger* Class II part in the same position. The same
+  arithmetic condemns the part that was there. Holding both positions at once was
+  the error: the small-signal argument answers voltage coefficient and was
+  silently reused against microphonics, which it does not touch.
 
-### 6.2 The shaping is recoverable; the correction belongs in the processor
+**Provenance.** The inconsistency was raised externally — Gemini disputed the
+assertion that this part was essentially not a signal-path capacitor — and it
+held up. What followed is larger than the part: the natural repair is not a
+better dielectric but **no capacitor at all**, and once the leg has to return
+somewhere other than ground through a capacitor, returning it to a buffered
+reference is both the cheapest option and the one that makes the stage flat to
+DC. A defect in a justification therefore produced a topology improvement, and
+the same reasoning is now propagating to every other large capacitor in the
+system, the converter's coupling network included (§6.3).
 
-Both mechanisms are fixed, minimum-phase and bounded. The shelf inverts exactly
-with one pole and one zero, and its 17.9 dB span is the whole of what the
-correction has to supply. **Recover the low-frequency shape digitally rather
-than in copper.**
+**The replacement.** A divider on the analog rail, filtered at its tap and
+buffered, distributed as a strip-wide reference; the coil cold ends and the lower
+gain legs both return to it. Circuit and values are `preamp-board.md` §3 and §8;
+the distribution and supply filtering are in
+`../OPA376 String Preamp/reference-architecture.md`.
 
-**Apply the correction on the analysis branch only, not in the signal path.**
-The low-frequency content exists to serve onset detection and pluck
-characterisation; nothing in the audio path needs it. Correcting before the
-branch would push 17.9 dB of subsonic boost, and the converter's own residual
-offset with it, into audio that has no use for either.
+**What it costs and what it buys.** One amplifier and one capacitor per board,
+against four capacitors deleted. Reference-borne noise now reaches the output at
+a gain of exactly one while the signal sees the full stage gain — a 17.9 dB
+ratio, where biasing the non-inverting input from a bare divider would have put
+it at Rf/Rg ≈ 6.8. **That ratio is not a rejection**; nothing cancels, it is
+bounded by the stage gain, and it shrinks if the gain is lowered. Turning it into
+a real rejection is what the proposal in §6.3 is for.
 
-**This forecloses the converter's biquads as the place to do it.** Their output
-is the single stream both paths derive from, so a correction there is
-necessarily in the signal path. It belongs in the processor, downstream of the
-branch, which is also where the existing signal-node probing convention puts it.
+### 6.2 What is left below 10 Hz
 
-**The noise arithmetic is favourable, and for a structural reason.** The
-analysis branch is band-limited to a few tens of hertz, so it integrates noise
-over roughly 20 Hz where the audio path integrates over 20 kHz — about 30 dB of
-margin before anything is spent. The 17.9 dB of correction sits comfortably
-inside it.
+**The preamp contributes nothing.** No pole, no zero, no shelf; the stage is flat
+to DC and its DC gain to the reference is exactly one.
 
-### 6.3 Consequences for the hardware
+⚠ **This supersedes the shelf analysis previously in this section** — a zero at
+0.42 Hz, a pole at 3.29 Hz, unity gain at DC and −17.9 dB of relative loss below
+the corner — together with the 17.9 dB digital correction that was specified on
+the analysis branch to undo it, and the statement that the two low-frequency
+corners compound to −3 dB at about 3.9 Hz. **There is now only one analog
+corner.** No low-frequency correction is required in the processor for the
+preamp, and none should be written.
 
-- **Do not buy the low-frequency corner with noise.** The gain network's
-  resistor values, the gain leg return capacitor and the converter blocking cap
-  all stay as specified. The alternatives, and what they cost, are in §8.
+**The converter's coupling network is the whole of what remains**: 4.7 µF into
+the programmable 20 kΩ input impedance, a genuine zero at DC with a corner at
+**1.69 Hz** (`adc-netlist.md` §2). Below it the chain loses content that no
+downstream correction recovers exactly, because a true high-pass has no bounded
+inverse at DC — unlike the shelf it replaced, which did.
+
+**The digital high-pass in the converter is still the one loss that no correction
+can undo at all**, because it discards content before the processor sees it.
+Requirements are unchanged: `adc-netlist.md` §8.
+
+### 6.3 Consequence: the converter's coupling network is now the odd one out
+
+Everything the front end gains from DC coupling — no tolerance-mismatched phase
+shift at the low fundamentals, no time constant tilting the baseline under an
+attack transient in exactly the window an envelope or attack estimator reads — is
+given back at the converter, by eight polarised capacitors whose value tolerance
+is ±20% and whose corners therefore differ string to string.
+
+⚠ **PROPOSAL (2026-08-26): carry the buffered reference to the converter on one
+added conductor and take the converter's inputs DC-coupled differential.** The
+buffer exists already, so the board-side cost is one conductor and one connector
+position. It deletes the coupling capacitors, their clamp diodes and their
+matching capacitors — a material area saving on a control-cavity board where area
+is the binding constraint — removes the last analog high-pass in the chain, and
+converts the reference from an unrejected common term into a common-mode one that
+the converter's own rejection subtracts. The argument, the register settings, the
+open checks and the retrofit path are `adc-netlist.md` §2.1;
+`preamp-board.md` §4 covers the board side.
+
+**Status: proposal, pending simulation and confirmation of the converter's
+DC-coupled common-mode window.** Until it is adopted, the coupling network of
+`adc-netlist.md` §2 stands as specified, and so does the bias point of §5 above.
+
+### 6.4 Consequences for the hardware
+
+- **Do not buy a low-frequency corner with noise.** The gain network's resistor
+  values stay as specified. There is no longer a gain-leg capacitor to argue
+  about, and the alternatives that were argued against it are recorded in §8 as
+  history rather than as live options.
 - **The converter's digital high-pass filter must be placed below the analysis
-  band.** It is the one low-frequency loss in the chain that no downstream
-  correction can undo, because it discards the content before the processor sees
-  it. Requirements are in §8 of `adc-netlist.md`.
+  band**, unchanged. `adc-netlist.md` §8.
 - **The noise figure to budget against is not the 1 kHz one.** The analysis band
   sits in the amplifier's 1/f region, where the 7.5 nV/√Hz midband specification
-  understates the floor. Budget against the 0.1–10 Hz peak-to-peak
-  specification — §9 item 5.
-
----
+  understates the floor. Budget against the 0.1–10 Hz peak-to-peak specification
+  — §9 item 5. Note that the flicker corner extracted from the manufacturer's
+  simulation model sits near 55 Hz, squarely inside the bass fundamental range.
 
 ## 7. Power
 
 | Configuration | Eight channels | Context |
 |---|---|---|
-| Front end as specified | 6.1 mA | |
+| Front end as specified | 7.6 mA | four channel amplifiers and one reference buffer per board, two boards |
 | Superseded follower | 0.5–2.4 mA | |
 | Commercial active bass, measured | 11.2 mA | more than this design |
 | EMG active pickup pair | 0.16 mA | the exceptional low end of the field |
 
-Six milliamps is comfortably inside normal practice for an active instrument and
-below the measured draw of a mainstream commercial one. It also sits well under
+Under eight milliamps is comfortably inside normal practice for an active
+instrument and below the measured draw of a mainstream commercial one. ⚠ The
+6.1 mA previously stated here omitted the reference buffer. It also sits well under
 the threshold the superseded design used when it rejected a higher-current JFET
 class on battery grounds — that objection was framed at 16 to 40 mA and does not
 reach this.
@@ -363,55 +437,61 @@ the front end reads 72 dB delivered — worse than the follower it would replace
 and no amount of gain recovers it, because the amplifier's own floor scales with
 the signal. The part choice, not the topology, is what makes this design work.
 
-**Pseudo-differential transmission to the cavity.** The converter supports it,
-and it addresses §2.2 by rejection rather than by level: 60–80 dB of common-mode
-rejection for 6 dB of signal, against 42 dB of available programmable gain.
-Rejection is usually cheaper than level. It was not adopted because it needs a
-cold conductor per channel — nine conductors instead of six — so it is a
-connector and cable change rather than a board change, and the gain the front end
-now provides addresses the same exposure. **This remains the correct fallback if
-bench measurement finds cable interference to be a real problem**, and it
-requires no change to the pickup boards.
+**Pseudo-differential transmission to the cavity, a cold conductor per channel.**
+The converter supports it, and it addresses §2.2 by rejection rather than by
+level: 60 dB of common-mode rejection for 6 dB of full-scale utilisation, against
+42 dB of available programmable gain. Rejection is usually cheaper than level. It
+was not adopted because it needs a cold conductor per channel — nine conductors
+instead of six — so it is a connector and cable change rather than a board
+change, and the gain the front end now provides addresses the same exposure.
+**This remains the correct fallback if bench measurement finds cable interference
+to be a real problem**, and it requires no change to the pickup boards.
+
+⚠ **Do not confuse it with the single-reference-conductor proposal of §6.3**,
+which is a different mechanism aimed at a different term. That proposal rejects
+what is common to the reference and every output — rail ripple through the
+divider, buffer-impedance crosstalk, the inter-board ground offset — and deletes
+the coupling network. It does **not** reject near-field pickup that differs wire
+to wire in a loose bundle, and it introduces one exposure the present
+arrangement does not have: interference captured by the reference conductor alone
+arrives in all four channels at unity, where today the converter's cold pins sit
+on a stiff local AC ground and have no injection path at all. The two options are
+compatible and address different problems; adopting one does not settle the
+other.
+
+**The claim that a differential connection would cost converter channels is
+false, and was blocking both options.** The converter records four analog
+channels per device whether its four input pairs are configured differential or
+single-ended; in single-ended mode the cold pin is not a second channel, it is an
+AC ground behind a matching capacitor. The eight-per-device figure applies only
+to digital microphones. `adc-netlist.md` §2.1.
 
 **Finer magnet wire.** §1. Four decibels against a twenty decibel deficit, and no
 improvement at all to the coil's own signal-to-noise ratio.
 
-**Scaling the gain network's resistors to lower the shelf pole.** Holding the
-gain leg return capacitor at 22 µF and raising both resistors in proportion
-preserves the gain of eight and moves the pole down. It is rejected because it
-spends noise in precisely the wrong place. The feedback network's thermal
-contribution referred to the input is √(4kT·(Rf‖Rg)), which at the specified
-1.92 kΩ is **5.6 nV/√Hz** — already the second-largest term in the 10.5 nV/√Hz
-budget of §2.1, behind only the amplifier itself. Scaling by k scales that term
-by √k:
+**Scaling the gain network's resistors to lower the shelf pole.** ⚠ **Recorded as
+history — there is no shelf.** The stage is flat to DC (§6), so there is no pole
+to move and this option no longer exists. Its arithmetic is preserved because the
+conclusion it reached still governs the resistor values that remain: the feedback
+network's thermal contribution referred to the input is √(4kT·(Rf‖Rg)), which at
+the specified 1.92 kΩ is **5.6 nV/√Hz** — the second-largest term in the
+10.5 nV/√Hz budget of §2.1, behind only the amplifier itself. Scaling both
+resistors by k scales that term by √k: at 2× it reaches 8.0 nV/√Hz and has
+overtaken the amplifier as the dominant source; at 3×, 9.8 nV/√Hz. **Do not scale
+the gain network up.** The CMOS input does not object — 23 fA/√Hz through 4.4 kΩ
+is a tenth of a nanovolt — so the objection is thermal noise alone.
 
-| Scale | Feedback / lower leg | Shelf pole | Feedback noise | Total input-referred | Penalty |
-|---|---|---|---|---|---|
-| 1× (specified) | 15 kΩ / 2.2 kΩ | 3.29 Hz | 5.6 nV/√Hz | 10.5 nV/√Hz | — |
-| 2× | 30 kΩ / 4.4 kΩ | 1.64 Hz | 8.0 nV/√Hz | 11.9 nV/√Hz | +1.1 dB |
-| 3× | 45 kΩ / 6.6 kΩ | 1.10 Hz | 9.8 nV/√Hz | 13.2 nV/√Hz | +2.0 dB |
-
-At 2× the feedback network has overtaken the amplifier as the dominant source.
-Note that the CMOS input does not object — 23 fA/√Hz through 4.4 kΩ is 0.1 nV,
-nothing — so this fails on thermal noise alone. It buys a corner that §6 shows
-is recoverable for free.
-
-**A larger low-voltage Class II capacitor in the gain leg.** Capacitance costs
-no noise, so 47 µF or 100 µF in the same 0805 footprint would move the pole to
-1.54 Hz or 0.72 Hz at no thermal penalty, and the part sees only about a volt so
-a 6.3 V rating is amply derated. It is rejected on **piezoelectricity**, the
-same mechanism that rules Class II out of the converter's coupling network. This
-part already stands as a deliberate exception to the Class I rule; a
-higher-capacitance dielectric in the same volume generates more charge under
-mechanical stress, and a voltage developed across it appears in series with the
-lower gain leg — referred to the input at Rf/(Rf+Rg) = 0.87, essentially one for
-one. On a board rigidly mounted to a struck instrument that is a microphonic
-path straight into the signal, and it is the one respect in which raising the
-value makes things worse: the voltage-coefficient argument in `preamp-board.md`
-§8 improves with capacitance, but piezoelectric generation does not, because it
-is a source rather than a nonlinearity. **Retain 22 µF.** If the value is ever
-revisited, tap-test the assembled board and observe the output before accepting
-it.
+**A larger low-voltage Class II capacitor in the gain leg.** ⚠ **Recorded as
+history — there is no capacitor in the gain leg**, and the reasoning that would
+have rejected a larger one is what removed the original (§6.1). The mechanism is
+worth keeping in view because it now applies board-wide rather than to one part:
+capacitance costs no thermal noise, so a higher value in the same footprint looks
+free, and it is not. A Class II dielectric generates charge under mechanical
+stress, that voltage appears in series with whatever it sits under, and unlike a
+voltage coefficient the mechanism does not scale down with signal level. On a
+board rigidly mounted to a struck instrument it is a microphonic path straight
+into the signal, and it is the one respect in which raising the value makes
+things worse. The board-wide rule that follows is `preamp-board.md` §9.
 
 ---
 
@@ -454,10 +534,10 @@ verification list of the document it affects.
    playing before the amplifier's own low-frequency noise reaches 40 dB of
    signal-to-noise in the analysis band.**
 
-   The shelf does not enter the arithmetic: signal and input-referred noise pass
-   through identical shaping, so the ratio at the input is what governs, and the
-   17.9 dB correction of §6.2 moves both together. §6 therefore closes unless
-   item 6 finds the pull phase more than about 54 dB down. ⚠ A first-principles
+   ⚠ **The shelf that this item previously had to reason around is gone** — the
+   stage is flat to DC (§6), so the ratio at the input is simply the ratio at the
+   output and no correction moves either. §6 therefore closes unless item 6 finds
+   the pull phase more than about 54 dB down. ⚠ A first-principles
    estimate — finger draw at centimetres per second against string velocity at
    tenths of a metre per second — puts it 20 to 40 dB down, comfortably inside
    the budget, but that is an estimate and item 6 is the measurement. **No board
@@ -476,6 +556,9 @@ verification list of the document it affects.
 | Topic | Document |
 |---|---|
 | Per-string front-end circuit, values, connector, layout | `preamp-board.md` |
+| Reference architecture, distribution, supply filtering | `../OPA376 String Preamp/reference-architecture.md` |
+| Symbol/footprint/model traps, capacitor policy, the rail-spectrum gate | project note *OPA376 String Preamp — simulation and pre-fab notes* |
+| Noise budget worked by hand | `../OPA376 String Preamp/noise-by-hand.md` |
 | Control-cavity analog board for the fallback instrument | `cavity-preamp-board.md` |
 | Converter input stage, coupling network, main-board connections | `adc-netlist.md` |
 | Why the converter, and what the architecture demands of it | `adc-selection.md` |

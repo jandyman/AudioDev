@@ -1,7 +1,17 @@
 # Pickup Preamp Boards — Design
 
-**Status:** To be entered. Two identical 4-channel boards, one per pickup (neck,
+**Status:** Specified. Two identical 4-channel boards, one per pickup (neck,
 bridge), each mounted under its pickup bobbin.
+
+⚠ **Revised 2026-08-26 to the buffered-reference, DC-coupled stage.** The stage
+specified here has no capacitor in the gain leg and no high-pass anywhere in the
+preamp. That decision was taken in the simulation work and recorded next to the
+schematic — `../OPA376 String Preamp/reference-architecture.md` and the project
+note *OPA376 String Preamp — simulation and pre-fab notes* — and this document
+had not been reconciled to it. Sections 3, 8 and 9 previously specified a gain
+leg returning to ground through a capacitor and an unbuffered, bypassed divider;
+both are superseded. The reasoning that produced the change is in
+`analog-front-end.md` §6.
 
 **Scope:** the offboard per-string front-end boards — the circuit, the
 per-channel values, the connector and cable to the control cavity, and the
@@ -67,54 +77,128 @@ constraint.
 
 ---
 
-## 3. Input biasing — the coil is the bias path
+## 3. Input biasing — the reference is the bias path
 
-**Tie each coil's cold end to the board's bias reference, not to ground.** The
-coil then defines its amplifier's input potential directly, carrying only the
-input's picoamps of bias current, and the signal swings symmetrically about the
+**Tie each coil's cold end to the strip's reference, not to ground.** The coil
+then defines its amplifier's input potential directly, carrying only the input's
+picoamps of bias current, and the signal swings symmetrically about the
 reference.
 
-This is the property that makes the circuit small. Without it, a single-supply
-amplifier looking at a coil that swings below ground would need an input
-coupling capacitor and a bias network per channel. With it there is neither —
-five parts per channel, the same count as a source follower.
+**Return the lower gain leg to that same reference, not to ground.** This is the
+one arrangement detail that decides the character of the whole stage. With the
+reference at both nodes no DC flows in the gain leg, so none flows in the
+feedback resistor, and the output rests at the reference regardless of the AC
+gain. The stage is **DC-coupled and flat to DC**: no input coupling capacitor, no
+per-channel bias network, and no capacitor in the gain leg.
 
-Two consequences to hold during layout and bring-up:
+**The reference is a divider on the analog rail followed by a unity-gain
+buffer**, one per board, distributed as a strip-wide net (§8). The buffer is what
+makes the arrangement affordable — an unbuffered divider cannot hold a node that
+four gain legs draw signal current from.
 
-- **The cold ends are not grounds.** They connect to a bias node that is an AC
-  ground only by virtue of its bypass capacitor. Route them as signals.
-- **The coils inject nothing into that node**, because the input draws no
-  current. Channel-to-channel coupling through the shared reference comes from
-  the gain network, not from the coils, and is addressed in §8.
+### Why the leg returns to the reference and not to the non-inverting input alone
 
----
+Reference-borne noise and rail ripple reach the output at a gain of **exactly
+one** when both nodes sit on the reference, while the signal sees the full stage
+gain — a **17.9 dB ratio** at the design gain. Bias the non-inverting input from
+the divider and return the gain leg anywhere else, and reference noise arrives at
+the output at Rf/Rg ≈ 6.8 instead. Same part count, same schematic complexity,
+17 dB apart.
 
-## 4. Single-ended, not differential
+**The 17.9 dB is a gain ratio, not a rejection.** Nothing cancels. It is bounded
+by the stage gain and shrinks if the gain is ever lowered. Whether it can be
+turned into a real rejection is the subject of §4.
 
-The control cavity cannot be shielded, because the Bluetooth module's antenna is
-in it (`bluetooth-constraints.md`). That makes interference into the wire run the
-governing question.
+### Consequences to hold during layout and bring-up
 
-Single-ended is adopted because the front end's gain addresses that exposure
-directly: the cable carries 320 mV peak-to-peak from an output impedance of ohms,
-which is more signal and lower source impedance than a conventional instrument's
-wiring, which works. Twisted pairs into differential receivers would add 40–50 dB
-of rejection that the level and impedance already make unnecessary, at the cost
-of four twisted pairs and a larger connector.
+- **The cold ends are not grounds.** They connect to the reference, which is an
+  AC ground only by virtue of the filter capacitor ahead of its buffer. Route
+  them as signals.
+- **The coils inject nothing into the reference**, because the input draws no
+  current. What does flow into it is the summed gain-leg current of all four
+  channels, so **the buffer's output impedance sets inter-string isolation** —
+  budget it from peak leg current against full-scale input. The requirement is
+  loose at bass fundamentals and scales with frequency; about a megahertz of
+  gain-bandwidth is ample.
+- **Star the reference from the buffer output**, do not daisy-chain it.
+- **Do not hang a large bypass on the buffer output.** Its noise is already at
+  the output by then, the capacitor only forms a pole with milliohms of output
+  impedance up in the megahertz, and it works against stability into the
+  resistive load the four gain legs present. The filtering belongs on the divider
+  tap, ahead of the buffer.
+- **Every input DC error now sees the full stage gain**, which is what makes the
+  amplifier's offset specification load-bearing rather than incidental. At 25 µV
+  that is under 200 µV at the output against roughly a volt of headroom. The
+  buffer's own offset moves the reference and every output together, so it is
+  close to a don't-care.
+- **Fit a very high value bleeder from each non-inverting input to the
+  reference** so that an open pickup coil leaves the input defined rather than
+  floating, and does not slam the output to a rail.
 
-**Future-proofing: switching later requires no change to these boards.** The
-converter supports pseudo-differential input — run each channel's output as hot
-and a ground reference as cold, twisted. That costs 6 dB against 42 dB of
-available programmable gain. It does require a cold conductor per channel, so it
-is a connector and cable change (§10). **This is the documented fallback if bench
-measurement finds cable interference to be a real problem.**
+## 4. The connection to the converter
 
----
+**Specified: single-ended, one signal conductor per channel, AC-coupled at the
+converter.** The control cavity cannot be shielded, because the Bluetooth
+module's antenna is in it (`bluetooth-constraints.md`), which makes interference
+into the wire run the governing question. Single-ended answers it by level rather
+than by rejection: the cable carries 320 mV peak-to-peak from an output impedance
+of ohms, which is more signal and lower source impedance than a conventional
+instrument's wiring, which works. Twisted pairs into differential receivers would
+add 40–50 dB of rejection that the level and impedance already make unnecessary,
+at the cost of four twisted pairs and a larger connector.
+
+Two differential options exist against that baseline, and they are not the same
+option. Neither requires any change to the channel circuit of §8.
+
+**Pseudo-differential, a cold conductor per channel.** Run each channel's output
+as hot and a ground reference as cold, twisted. This addresses cable interference
+by rejection, and it is the response if bench measurement finds interference to be
+a real problem. It costs a cold conductor per channel — nine conductors instead
+of six — so it is a connector and cable change (§10).
+
+**⚠ PROPOSAL (2026-08-26): one reference conductor, DC-coupled differential.**
+Carry the buffered reference itself over a **single** added conductor, present it
+to the converter's cold input pins, and configure the converter for a DC-coupled
+differential input. This is a different mechanism from the option above and buys
+different things:
+
+- **It turns §3's 17.9 dB ratio into a rejection.** The reference appears at
+  every channel output at a gain of one and at the cold pin at a gain of one, so
+  the converter's common-mode rejection subtracts it. Rail ripple arriving
+  through the divider — the dominant reference-borne term, and coherent in every
+  channel because it is literally the same node — stops being a per-channel spur.
+- **It cancels inter-string crosstalk through the buffer**, because the
+  perturbation the summed gain-leg currents produce across the buffer's output
+  impedance is also common to every output and to the reference conductor. This
+  requires the conductor to be sensed **at the reference star node**, not
+  somewhere down the distribution.
+- **It rejects the ground-return offset between the two boards**, which a
+  reference reproduced locally at the converter could not do. That is the reason
+  the conductor has to come from this board rather than being generated at the
+  far end.
+- **It removes the last high-pass in the chain.** With the preamp flat to DC, the
+  converter's coupling capacitors are the only analog low-frequency limit left,
+  and they impose exactly the tolerance-mismatched phase shift at the low
+  fundamentals that DC-coupling this stage was meant to avoid.
+- **It costs no converter channels.** See `adc-netlist.md` §2.1 — the converter
+  records four analog channels per device whether its input pairs are configured
+  differential or single-ended.
+
+**Status: proposal, pending simulation and a datasheet confirmation** of the
+converter's DC-coupled common-mode window. The board-side cost is one conductor
+and one connector position (§10); there are no new parts, because the buffer this
+depends on is already required by §3. The full argument, the register settings
+and what it deletes from the main board are in `adc-netlist.md` §2.1.
+
+⚠ **This supersedes the statement, previously carried here and in the reference
+architecture note, that a differential connection would require twice the
+converter channels.** It would not.
 
 ## 5. Bias point and output level
 
-**Specify the bias reference at 1.0 V**, from a divider on the 3.3 V analog rail,
-shared by all four channels on a board and bypassed.
+**Specify the reference at 1.0 V**, from a divider on the 3.3 V analog rail,
+filtered at the divider tap and buffered, shared by all four channels on a board
+(§3, §8).
 
 Every channel's output therefore rests at 1.0 V, to the tolerance of two
 resistors. The value is chosen for what happens at the far end:
@@ -133,6 +217,20 @@ resistors. The value is chosen for what happens at the far end:
 > point must sit below the converter's input bias with margin. Unlike the rule it
 > replaces, this one is enforced by a resistor ratio rather than by a
 > distribution of semiconductor parameters.
+
+⚠ **The ratio is open, and the two reasons to change it point the same way.**
+1.0 V sits well below half the rail and costs several dB of symmetric headroom
+for no benefit that survives the move to a buffered reference — the value was
+chosen to protect a polarised coupling part, and nothing else here depends on it.
+Under the §4 proposal that constraint disappears entirely and is replaced by a
+preference in the opposite direction: the converter's own optimum DC bias for a
+DC-coupled input is its reference midpoint, **1.375 V** at the specified
+full-scale setting. That value is still comfortably inside the amplifier's
+common-mode region — 625 mV clear of the (V+) − 1.3 V boundary — and it gives
+1.375 V of downward swing against 1.9 V upward, materially more symmetric than
+the present 950 mV. **Do not move it while the AC-coupled arrangement stands**,
+because the selection rule above still governs there; move it as part of adopting
+§4, and re-derive the divider ratio at the same time.
 
 **Level.** 40 mV peak-to-peak at the coil becomes approximately 320 mV
 peak-to-peak on the cable, placing the source roughly 17 dB below the converter's
@@ -159,7 +257,9 @@ here — the amplifier's own rejection does the work that the resistor would hav
 done, and the residual case for it is RF isolation rather than crosstalk. Fit it
 if board area is not pressing.
 
-**Board current** is roughly 3.1 mA per board, four amplifiers plus the divider.
+**Board current** is roughly **3.8 mA per board** — four channel amplifiers, the
+reference buffer, and the divider. ⚠ This supersedes the 3.1 mA previously stated
+here, which counted four amplifiers and no buffer.
 
 ---
 
@@ -214,61 +314,97 @@ Values are given by function; take designators from the schematic at entry.
 | Amplifier | **OPA376** | SC70-5 or SOT-23-5 | §2 |
 | Input series resistor | 1 kΩ | 0402 | RF filter, coil hot terminal to amplifier input |
 | Input shunt capacitor | 100 pF C0G | 0402 | RF filter to ground, at the input pin |
+| Input bleeder | ≥ 10 MΩ | 0402 | non-inverting input to the reference, so an open coil leaves the input defined rather than floating (§3). In parallel with a 320 Ω coil it is electrically invisible |
 | Feedback resistor | 15 kΩ | 0402 | with the leg below, gain 7.8 |
-| Lower gain leg | 2.2 kΩ | 0402 | inverting input to the return capacitor |
-| Gain leg return capacitor | 22 µF X5R | 0805 | **to ground, not to the bias node** — see below |
+| Lower gain leg | 2.2 kΩ | 0402 | inverting input **to the reference**, not to ground, and with no capacitor in series — §3 |
+| Feedback damping network | ⚠ per the stability sweep | 0402 | a feedback capacitor and series resistor across the feedback resistor, added after this document's previous revision. **Take the values from the schematic and the simulation notes, not from this table** |
 | Local supply decoupling | 100 nF | 0402 | at the amplifier supply pin |
-| Coil landing pads | — | custom THT | magnet-wire pads; hot to the input resistor, cold to the bias node |
+| Coil landing pads | — | custom THT | magnet-wire pads; hot to the input resistor, cold to the reference |
 | RF damping network | 27 kΩ + 1 nF | 0402 ×2 | **footprints only, do not populate** (§7) |
 
 Shared per board:
 
 | Function | Value | Package | Notes |
 |---|---|---|---|
-| Bias divider | 100 kΩ / 43.2 kΩ | 0402 | 3.3 V analog rail to ground, producing 1.0 V |
-| Bias node bypass | 10 µF X5R | 0805 | shunts the divider's own noise across the audio band |
+| Supply entry resistor | 47 Ω | 0402 | analog rail into the strip supply bus, with the capacitor below |
+| Supply entry capacitor | 100 nF | 0402 | strip supply bus to ground |
+| Reference divider | 100 kΩ / 43 kΩ | 0402 | analog rail to ground, producing 1.0 V — ratio open, §5 |
+| Reference filter capacitor | 47 µF tantalum | — | **on the divider tap, ahead of the buffer.** Sets the reference pole; carries no signal current |
+| Reference buffer | **OPA376**, unity gain | SC70-5 or SOT-23-5 | divider tap to the strip-wide reference net (§3) |
 
-**The gain leg returns to ground through its capacitor, not to the bias node.**
-This is the one arrangement detail that is easy to get wrong and expensive to get
-wrong. Returning all four legs to the shared bias node would put each channel's
-signal-frequency feedback current into a node of finite impedance, coupling it
-into the other three at roughly −28 dB at 30 Hz — fatal for a design whose entire
-premise is per-string isolation. Returning to ground gives identical DC behaviour
-(no current flows through the leg at DC either way, so the output still rests at
-the bias voltage) while sending the signal current into the ground pour.
+**The gain leg returns to the reference, not to ground, and carries no
+capacitor.** This is the arrangement §3 argues for and it is the difference
+between a stage that is flat to DC and one that is not. It is also the one detail
+most likely to be "corrected" by someone reading an older revision of this
+document — mark it on the schematic as intentional.
 
-**No DC-blocking capacitor is required in the gain network.** Because the coil
-biases the non-inverting input to the reference directly, both ends of the gain
-network sit at the same potential and the DC gain is one by construction.
+**No DC-blocking capacitor is required anywhere in the channel.** Because the
+coil biases the non-inverting input to the reference directly and the gain leg
+returns to the same node, both ends of the gain network sit at the same potential
+and the DC gain to the reference is one by construction.
 
-**The gain leg return capacitor is a deliberate exception to §9's dielectric
-rule.** It carries signal current, but the voltage developed across it in band is
-a few millivolts — at 30 Hz its reactance is about a tenth of the resistor it
-sits under, and a twentieth of a decibel of gain error follows. A Class II part
-has effectively no voltage across it to be non-linear about. Mark it as
-intentional on the schematic so it does not read as an oversight.
+**The reference filter capacitor is not optional and not merely decoupling.** The
+divider's own thermal noise and the rail spectrum that reaches it appear at every
+channel's output identically — correlated across channels, so they do not average
+down through any downstream summing, and they land as a coherent spur rather than
+as noise. The capacitor value is the knob that sets how far down they arrive; a
+series resistor ahead of the divider is not, because the Thevenin impedance is
+dominated by the shunt leg and adding resistance in the top leg moves the pole
+almost not at all while shifting the reference by hundreds of millivolts.
 
-**The bias node bypass is not optional and not merely decoupling.** The divider's
-own thermal noise appears at every channel's input identically — correlated
-across channels, so it does not average down through any downstream summing. The
-bypass shunts it from a fraction of a hertz upward. **Do not substitute an active
-buffer for the bypassed divider**: an amplifier's noise there would be
-uncorrelated with nothing and would dominate.
+**Thermal noise from the reference is not worth engineering against** — it costs
+under a tenth of a decibel. The rail spectrum reaching it is a different matter
+and is the open gate in §12.
 
----
+**The buffer is an OPA376 because one is already on the board's bill of
+materials.** Its noise enters every channel at unity, against roughly
+84 nV/√Hz arriving from the channel amplifier at the design gain, so a 7.5 nV/√Hz
+part costs about 0.03 dB where a 30 nV/√Hz general-purpose part would cost half a
+decibel. Introducing a second amplifier type also means a new symbol, a new
+footprint assignment and a new simulation-model mapping, each of which is a fresh
+opportunity for the pin-mapping errors recorded in the simulation notes.
+
+**Do not make the reference a replica gain stage** in an attempt to match the
+noise path of a real channel. Matching would require the same gain of eight,
+which would inject 84 nV/√Hz of *uncorrelated* noise into all four channels at
+unity and cost roughly 3 dB. Unity buffer only.
 
 ## 9. Component type rules
 
 These apply board-wide and are stated here because they are easy to lose when
 values are picked from a stock list.
 
-**Class I (C0G/NP0) dielectric for every capacitor in the signal path.** Class II
-dielectrics (X7R, X5R) have a voltage coefficient that converts signal swing
-across the part into distortion, and they are piezoelectric — a real rather than
-theoretical concern for a part rigidly mounted to a vibrating instrument. Class
-II remains correct for supply decoupling and for bias-network bypassing, where
-the AC voltage across the part is negligible. The two Class II parts in §8 are
-both of that kind and are called out individually.
+**No Class II ceramic (X5R, X7R, Y5V) anywhere in a signal path or on the
+reference, board-wide.** Class I (C0G/NP0), tantalum or polymer only. Supply
+bypasses sitting behind the amplifier's supply rejection are the only exception,
+and §8 names them.
+
+⚠ **This is stricter than the rule previously stated here**, which permitted a
+Class II part in the gain leg and another on the bias node as called-out
+exceptions. Both parts are gone from §8, and the exception that licensed them
+does not survive review. Two independent mechanisms drove the change, and both
+get *worse* with DC bias, because bias poles the ferroelectric dielectric:
+
+- **Voltage coefficient.** A high capacitance value in a small package is
+  necessarily an extreme high-K dielectric, and at a bias of about a volt such a
+  part can lose the majority of its nominal capacitance. That both moves the
+  designed corner and steepens the local slope that produces the distortion.
+  Second harmonic reaching a tenth of a percent at full scale near the bottom of
+  the range is achievable with a poor choice, against a converter floor around
+  −95 dB.
+- **Piezoelectricity.** The strip mounts on the pickup bobbin with the coil wires
+  soldered directly to it — the most mechanically excited location in the
+  instrument — and a narrow strip is compliant in bending. Strain-induced charge
+  from a biased Class II part is injected into the signal at close to unity
+  referred to the input, in the same 30–200 Hz band as the signal, correlated
+  with body vibration and therefore not separable downstream. **A shared
+  reference capacitor is the worst case of all**, because it injects the same
+  body vibration into every channel in phase and defeats exactly the per-string
+  isolation the multichannel architecture exists to provide. This is why the
+  reference filter is specified as a tantalum on a low-impedance divider rather
+  than a Class I part on a high-impedance one: both remove the piezoelectric
+  path, and the low-impedance version is roughly 20 dB better on rail rejection,
+  which is the axis that actually matters.
 
 **Thin film wherever DC crosses a signal-path resistor.** Thick film's excess
 (current) noise is 1/f and scales with the DC voltage across the part, and thick
@@ -327,6 +463,10 @@ soldering the cable to the same holes.
 
 **Configuration: 6-way** = four signals plus supply and ground. Six positions and
 no mounting pad — a plain 1×6 at 2.00 mm pitch, 0.8 mm drill, on the bottom side.
+⚠ **Under the §4 proposal this becomes 7-way**, the added position carrying the
+reference. A 1×7 and a 1×8 in this pitch and profile are ordinary stock items, so
+the choice is a footprint change and never a connector search — but see
+*Polarity* below, where the extra position is not free.
 A seventh *conductor* for a second ground was considered and rejected — with
 loose round wires you do not control conductor adjacency, so flanking grounds buy
 nothing. That idea only makes sense with ribbon or flat cable, where conductor
@@ -390,8 +530,10 @@ at schematic entry.
 Two retrofits exist should reversal stop being theoretical, neither needing more
 than a footprint change:
 
-- **Keying by omission** — a 7-position header with one pin removed and the
-  matching housing cavity plugged. Costs one position and no parts.
+- **Keying by omission** — a header with one position more than the conductor
+  count, that pin removed and the matching housing cavity plugged. Costs one
+  position and no parts. ⚠ Under the §4 proposal this needs an 8-position part,
+  not the 7-position one that would otherwise have served.
 - **A reverse-polarity series element** on the board's supply input. A Schottky
   is one part but drops roughly 0.2 V, which drags the bias divider's output down
   with it; a P-channel MOSFET costs area and almost no voltage.
@@ -402,12 +544,25 @@ Production hardware wants a keyed housing rather than either of those.
 cable cannot be inserted backwards. Apply the mirror-position rule anyway. It
 costs nothing at schematic entry and it keeps the socket option open.
 
-**The pseudo-differential fallback in §4 no longer constrains this choice.** It
-would raise the conductor count to nine, and a 1×10 in this pitch and profile is
-an ordinary stock item — so taking that option stays a board revision and never
-becomes a connector search. That open item is closed.
+⚠ **The §4 proposal changes this analysis and makes it worse.** Seven positions
+reverse as 1↔7, 2↔6, 3↔5 with 4 fixed, so the mirror set to avoid changes.
+More importantly, with the converter's coupling capacitors deleted there is no
+longer a series capacitor between a signal conductor and a converter input pin,
+so a reversal that lands the supply conductor on a signal position applies the
+analog rail directly to that pin. Both boards sit on the same analog rail and the
+converter's analog pins are rated to its own supply plus 0.3 V, so it is
+survivable while powered and not while it is not. **Redo the position assignment
+when the proposal is adopted, and take keying from optional to specified at the
+same time.**
 
-**Cable:** 28 AWG stranded, six conductors, loose — not twisted or shielded. The
+**Neither differential option in §4 constrains this choice.** The
+pseudo-differential fallback would raise the conductor count to nine and the
+reference-conductor proposal raises it to seven; 1×7, 1×8 and 1×10 in this pitch
+and profile are all ordinary stock items, so either remains a board revision
+rather than a connector search. That open item is closed.
+
+**Cable:** 28 AWG stranded, six conductors — seven under the §4 proposal —
+loose, not twisted or shielded. The
 low-impedance amplified outputs and the input RC filter are what make that
 viable. Runs under the preamp board to the control cavity. Buy long and cut
 rather than coiling excess near the Bluetooth module.
@@ -450,14 +605,24 @@ near-zero inductance to ground, and at 2.4 GHz that inductance, not the
 capacitance, is what determines whether the filter works. Same for the local
 supply decoupling.
 
-**The bias node.** Route it as a signal, star from the bypass capacitor to the
-four coil cold-end pads. Site the bypass capacitor centrally rather than at the
-divider. The divider itself can sit anywhere convenient.
+**The reference net.** Route it as a signal, and **star it from the buffer
+output** to eight destinations — the four coil cold-end pads and the four gain
+legs. Do not daisy-chain it: the gain legs inject the signal-frequency feedback
+current of every channel into this node, and a shared segment of copper between
+two of them is an inter-string crosstalk path that no amount of buffer quality
+recovers. Site the buffer centrally to keep the star arms comparable. The divider
+and its filter capacitor sit ahead of the buffer and can go anywhere convenient.
 
-**Gain leg returns.** Each channel's gain leg return capacitor grounds into the
-pour with its own via at the pad. These carry the signal-frequency feedback
-currents that §8 keeps off the bias node; do not let them share a return path
-back to a single point.
+⚠ **This supersedes the previous instruction to star from a bypass capacitor and
+to ground each gain leg's return capacitor into the pour.** There is no bypass
+capacitor on the reference and no capacitor in the gain leg; both parts are gone
+(§3, §8), and the return current they used to send into the ground pour now goes
+back to the buffer instead. Plan the copper for that.
+
+**If the §4 proposal is adopted, bring the reference conductor's connector pin
+back to the star node itself**, not to the nearest convenient point on a star
+arm. The cancellation it buys is exactly the difference between those two
+choices.
 
 **Custom footprint for the magnet-wire landings.** Stock wire-connection
 footprints bottom out around 1.4 mm outer diameter, far too large. Use **0.4 mm
@@ -498,31 +663,57 @@ and bias network.
 3. **Characterise the 62 kHz resonance** on the real board and decide whether to
    populate the damping network (§7). Check with typical stage lighting nearby,
    not only on a clean bench.
-4. **Confirm the output bias point** lands at 1.0 V and that the delta to the
-   converter's input self-bias is as expected in the same direction on every
-   channel (§5). This is what protects the polarised coupling part.
+4. **Confirm the output bias point** lands at the reference on every channel, and
+   that the delta to the converter's input self-bias is as expected and in the
+   same direction (§5). This is what protects the polarised coupling part while
+   the AC-coupled arrangement stands. Measure the reference itself at the buffer
+   output and again at the far end of the distribution — a difference there is
+   the crosstalk path of item 6 showing up as a DC error.
 5. **Measure channel-to-channel gain spread**, which should be resistor
    tolerance. A larger spread means the gain network is not returning where the
    schematic says it does.
-6. **Measure channel-to-channel crosstalk.** The bias node is the path to
-   suspect if it is worse than expected (§8).
-7. **Confirm the header's top-side lead protrusion clears the bobbin** after
+6. **Measure channel-to-channel crosstalk.** The reference is the path to
+    suspect if it is worse than expected, and the mechanism is the buffer's
+    output impedance against the summed gain-leg current (§3). Check the
+    distribution is starred rather than daisy-chained before suspecting the part.
+7. **Measure the analog rail spectrum below 1 kHz** on assembled hardware with
+    the converters and the processor running. ⚠ **This is the open gate on the
+    reference network.** The rail reaches the output by two paths: directly
+    through the amplifier, where supply rejection handles it, and through the
+    reference divider, where it is not rejected at all — the amplifier sees it as
+    a legitimate input and amplifies it faithfully, and it dominates by roughly
+    24 dB at 100 Hz. It also appears identically in every channel, so it lands as
+    a coherent spur rather than as noise, which is exactly what pollutes a
+    per-string estimator. This measurement is the only thing that decides whether
+    the reference needs more than a filtered low-impedance divider. Escalation
+    order if the rail is dirty: raise the filter capacitor, then derive the
+    reference from a dedicated voltage reference rather than the rail. **The §4
+    proposal attacks this term directly** — it is common-mode by construction —
+    so take this measurement before spending parts on it.
+8. **Verify the three transfer functions by simulation before release**, because
+    they are near model-independent where a simulated noise figure is not:
+    reference to output should be exactly unity, signal to output should be flat
+    to DC at the design gain, and rail to output should show the divider path.
+    One operating point and one AC sweep cover all three, and the defects found
+    on this board so far surfaced from setting up the operating point rather than
+    from schematic review.
+9. **Confirm the header's top-side lead protrusion clears the bobbin** after
    trimming, and that its pad rings and clearances have not encroached on the
    input areas at that end of the board (§10, §11).
-8. **Confirm supply and ground are not at mirror positions** on the connector
+10. **Confirm supply and ground are not at mirror positions** on the connector
    (§10). This is a schematic check, it takes one look, and it is the difference
    between a recoverable mis-insertion and a destroyed board.
-9. **Evaluate the 2 mm crimp contacts before committing to a detachable cable**
+11. **Evaluate the 2 mm crimp contacts before committing to a detachable cable**
    (§10). Crimp and seat a full set, mate it, then flex and tug the finished
    termination — fragility rather than fit is what ruled out the previous
    connector, and it is what this pitch change is meant to fix. If it does not
    convince, solder to the same holes and change nothing else. Either way,
    confirm the strain relief and confirm that the pin-1 marking and the cable
    coding are unambiguous read from either end.
-10. **Verify the bottom ground pour is not fragmented into islands** under the
+12. **Verify the bottom ground pour is not fragmented into islands** under the
     input areas after routing — the cable runs beneath the board and the pour is
     the barrier.
-11. **Feed the measured output level back into the converter's gain plan**
+13. **Feed the measured output level back into the converter's gain plan**
     (`adc-firmware-init.md`). At the level this design produces, the programmable
     gain requirement is much lower than originally assumed.
 
@@ -533,6 +724,9 @@ and bias network.
 | Topic | Document |
 |---|---|
 | Why the front end amplifies, and what was rejected | `analog-front-end.md` |
+| The reference architecture, distribution and supply filtering | `../OPA376 String Preamp/reference-architecture.md` |
+| Symbol, footprint and simulation-model traps; capacitor policy; the rail-spectrum gate | project note *OPA376 String Preamp — simulation and pre-fab notes* |
+| Noise budget worked by hand | `../OPA376 String Preamp/noise-by-hand.md` |
 | Converter input stage, coupling network, main-board connections | `adc-netlist.md` |
 | Why the converter, and what the architecture demands of it | `adc-selection.md` |
 | Register configuration, gain calibration, bring-up | `adc-firmware-init.md` |

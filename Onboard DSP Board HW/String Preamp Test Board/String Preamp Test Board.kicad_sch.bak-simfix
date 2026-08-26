@@ -3410,16 +3410,6 @@
 		)
 		(uuid "be401d9a-1c14-47aa-bc21-bc5d8555742a")
 	)
-	(label "sum_out"
-		(at 118.11 116.84 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "c167de1c-a737-45bf-8c5a-b58fcb124949")
-	)
 	(label "p2_out"
 		(at 74.93 134.62 0)
 		(effects
@@ -3535,7 +3525,7 @@
 				)
 			)
 		)
-		(property "Sim.Library" "tlv9004.lib"
+		(property "Sim.Library" "tlv9004_sim.lib"
 			(at 213.36 39.37 0)
 			(hide yes)
 			(show_name yes)
@@ -3571,7 +3561,7 @@
 				(justify left)
 			)
 		)
-		(property "Sim.Pins" "1=OUT1 2=IN1- 3=IN1+ 4=VCC 5=IN2+ 6=IN2- 7=OUT2 8=OUT3 9=IN3- 10=IN3+ 11=VEE 12=IN4+ 13=IN4- 14=OUT4"
+		(property "Sim.Pins" "3=INAP 4=VCC 5=OUTA 6=INAM 6=INBM 7=INBP 7=OUTB 8=OUTC 9=INCM 10=INCP 11=VEE 12=INDP 13=INDM 14=OUTD"
 			(at 213.36 36.83 0)
 			(hide yes)
 			(show_name yes)
@@ -3813,7 +3803,7 @@
 				)
 			)
 		)
-		(property "Sim.Library" "tlv9004.lib"
+		(property "Sim.Library" "tlv9004_sim.lib"
 			(at 210.82 93.98 0)
 			(hide yes)
 			(show_name yes)
@@ -3849,7 +3839,7 @@
 				(justify left)
 			)
 		)
-		(property "Sim.Pins" "1=OUT1 2=IN1- 3=IN1+ 4=VCC 5=IN2+ 6=IN2- 7=OUT2 8=OUT3 9=IN3- 10=IN3+ 11=VEE 12=IN4+ 13=IN4- 14=OUT4"
+		(property "Sim.Pins" "3=INAP 4=VCC 5=OUTA 6=INAM 6=INBM 7=INBP 7=OUTB 8=OUTC 9=INCM 10=INCP 11=VEE 12=INDP 13=INDM 14=OUTD"
 			(at 210.82 91.44 0)
 			(hide yes)
 			(show_name yes)
@@ -3898,46 +3888,46 @@
 			)
 		)
 		(pin "6"
-			(uuid "c6504a48-1d28-41a4-bcc6-d39ffbb97a6b")
+			(uuid "c6504a48-1d28-41a4-bcc6-d39ffbb97a6a")
 		)
 		(pin "14"
-			(uuid "6c9b9254-7bec-4c31-81d1-c0f40768b532")
+			(uuid "6c9b9254-7bec-4c31-81d1-c0f40768b531")
 		)
 		(pin "8"
-			(uuid "ac98b8ac-7c89-416e-80a6-7f45b821e8b6")
+			(uuid "ac98b8ac-7c89-416e-80a6-7f45b821e8b5")
 		)
 		(pin "9"
-			(uuid "6e003e35-5f7b-464e-9485-5d4fc762c705")
+			(uuid "6e003e35-5f7b-464e-9485-5d4fc762c704")
 		)
 		(pin "5"
-			(uuid "c5448cee-f893-463d-9261-e3719303afd2")
+			(uuid "c5448cee-f893-463d-9261-e3719303afd1")
 		)
 		(pin "12"
-			(uuid "da58c05b-aeb5-4def-90fe-9e9d1817c490")
+			(uuid "da58c05b-aeb5-4def-90fe-9e9d1817c48f")
 		)
 		(pin "2"
-			(uuid "b0f14646-cef8-4541-9a66-38ba5953b6fa")
+			(uuid "b0f14646-cef8-4541-9a66-38ba5953b6f9")
 		)
 		(pin "1"
-			(uuid "ba90069d-b765-4629-ae83-1a7c1daf235e")
+			(uuid "ba90069d-b765-4629-ae83-1a7c1daf235d")
 		)
 		(pin "4"
-			(uuid "a1ea500b-c3c0-45d0-bfd1-280fde5e7ec9")
+			(uuid "a1ea500b-c3c0-45d0-bfd1-280fde5e7ec8")
 		)
 		(pin "11"
-			(uuid "56f03aa0-d39c-4632-83c9-2a7830ae1f37")
+			(uuid "56f03aa0-d39c-4632-83c9-2a7830ae1f36")
 		)
 		(pin "3"
-			(uuid "9db9efe4-2233-40f6-bcfd-8bc87b6946ae")
+			(uuid "9db9efe4-2233-40f6-bcfd-8bc87b6946ad")
 		)
 		(pin "7"
-			(uuid "490dd763-8625-459e-8be6-0cbe3a27dfdb")
+			(uuid "490dd763-8625-459e-8be6-0cbe3a27dfda")
 		)
 		(pin "10"
-			(uuid "f4e3073d-a820-490c-8a51-0f46ec8cb983")
+			(uuid "f4e3073d-a820-490c-8a51-0f46ec8cb982")
 		)
 		(pin "13"
-			(uuid "a5c5cf8e-cb85-4114-a8d8-0f381c83c477")
+			(uuid "a5c5cf8e-cb85-4114-a8d8-0f381c83c476")
 		)
 		(instances
 			(project "String Preamp Test Board"
@@ -4014,7 +4004,7 @@
 				)
 			)
 		)
-		(property "Sim.Library" "tlv9004.lib"
+		(property "Sim.Library" "tlv9004_sim.lib"
 			(at 153.67 66.04 0)
 			(hide yes)
 			(show_name yes)
@@ -4050,7 +4040,7 @@
 				(justify left)
 			)
 		)
-		(property "Sim.Pins" "1=OUT1 2=IN1- 3=IN1+ 4=VCC 5=IN2+ 6=IN2- 7=OUT2 8=OUT3 9=IN3- 10=IN3+ 11=VEE 12=IN4+ 13=IN4- 14=OUT4"
+		(property "Sim.Pins" "3=INAP 4=VCC 5=OUTA 6=INAM 6=INBM 7=INBP 7=OUTB 8=OUTC 9=INCM 10=INCP 11=VEE 12=INDP 13=INDM 14=OUTD"
 			(at 153.67 68.58 0)
 			(hide yes)
 			(show_name yes)
@@ -4752,7 +4742,7 @@
 				)
 			)
 		)
-		(property "Sim.Library" "tlv9004.lib"
+		(property "Sim.Library" "tlv9004_sim.lib"
 			(at 93.98 104.14 0)
 			(hide yes)
 			(show_name yes)
@@ -4788,7 +4778,7 @@
 				(justify left)
 			)
 		)
-		(property "Sim.Pins" "1=OUT1 2=IN1- 3=IN1+ 4=VCC 5=IN2+ 6=IN2- 7=OUT2 8=OUT3 9=IN3- 10=IN3+ 11=VEE 12=IN4+ 13=IN4- 14=OUT4"
+		(property "Sim.Pins" "3=INAP 4=VCC 5=OUTA 6=INAM 6=INBM 7=INBP 7=OUTB 8=OUTC 9=INCM 10=INCP 11=VEE 12=INDP 13=INDM 14=OUTD"
 			(at 93.98 101.6 0)
 			(hide yes)
 			(show_name yes)
@@ -4837,46 +4827,46 @@
 			)
 		)
 		(pin "6"
-			(uuid "c6504a48-1d28-41a4-bcc6-d39ffbb97a6c")
+			(uuid "c6504a48-1d28-41a4-bcc6-d39ffbb97a6a")
 		)
 		(pin "14"
-			(uuid "6c9b9254-7bec-4c31-81d1-c0f40768b533")
+			(uuid "6c9b9254-7bec-4c31-81d1-c0f40768b531")
 		)
 		(pin "8"
-			(uuid "ac98b8ac-7c89-416e-80a6-7f45b821e8b7")
+			(uuid "ac98b8ac-7c89-416e-80a6-7f45b821e8b5")
 		)
 		(pin "9"
-			(uuid "6e003e35-5f7b-464e-9485-5d4fc762c706")
+			(uuid "6e003e35-5f7b-464e-9485-5d4fc762c704")
 		)
 		(pin "5"
-			(uuid "c5448cee-f893-463d-9261-e3719303afd3")
+			(uuid "c5448cee-f893-463d-9261-e3719303afd1")
 		)
 		(pin "12"
-			(uuid "da58c05b-aeb5-4def-90fe-9e9d1817c491")
+			(uuid "da58c05b-aeb5-4def-90fe-9e9d1817c48f")
 		)
 		(pin "2"
-			(uuid "b0f14646-cef8-4541-9a66-38ba5953b6fb")
+			(uuid "b0f14646-cef8-4541-9a66-38ba5953b6f9")
 		)
 		(pin "1"
-			(uuid "ba90069d-b765-4629-ae83-1a7c1daf235f")
+			(uuid "ba90069d-b765-4629-ae83-1a7c1daf235d")
 		)
 		(pin "4"
-			(uuid "a1ea500b-c3c0-45d0-bfd1-280fde5e7eca")
+			(uuid "a1ea500b-c3c0-45d0-bfd1-280fde5e7ec8")
 		)
 		(pin "11"
-			(uuid "56f03aa0-d39c-4632-83c9-2a7830ae1f38")
+			(uuid "56f03aa0-d39c-4632-83c9-2a7830ae1f36")
 		)
 		(pin "3"
-			(uuid "9db9efe4-2233-40f6-bcfd-8bc87b6946af")
+			(uuid "9db9efe4-2233-40f6-bcfd-8bc87b6946ad")
 		)
 		(pin "7"
-			(uuid "490dd763-8625-459e-8be6-0cbe3a27dfdc")
+			(uuid "490dd763-8625-459e-8be6-0cbe3a27dfda")
 		)
 		(pin "10"
-			(uuid "f4e3073d-a820-490c-8a51-0f46ec8cb984")
+			(uuid "f4e3073d-a820-490c-8a51-0f46ec8cb982")
 		)
 		(pin "13"
-			(uuid "a5c5cf8e-cb85-4114-a8d8-0f381c83c478")
+			(uuid "a5c5cf8e-cb85-4114-a8d8-0f381c83c476")
 		)
 		(instances
 			(project "String Preamp Test Board"
@@ -6577,7 +6567,7 @@
 				)
 			)
 		)
-		(property "Sim.Library" "tlv9004.lib"
+		(property "Sim.Library" "tlv9004_sim.lib"
 			(at 153.67 101.6 0)
 			(hide yes)
 			(show_name yes)
@@ -6613,7 +6603,7 @@
 				(justify left)
 			)
 		)
-		(property "Sim.Pins" "1=OUT1 2=IN1- 3=IN1+ 4=VCC 5=IN2+ 6=IN2- 7=OUT2 8=OUT3 9=IN3- 10=IN3+ 11=VEE 12=IN4+ 13=IN4- 14=OUT4"
+		(property "Sim.Pins" "3=INAP 4=VCC 5=OUTA 6=INAM 6=INBM 7=INBP 7=OUTB 8=OUTC 9=INCM 10=INCP 11=VEE 12=INDP 13=INDM 14=OUTD"
 			(at 153.67 99.06 0)
 			(hide yes)
 			(show_name yes)
@@ -6662,46 +6652,46 @@
 			)
 		)
 		(pin "6"
-			(uuid "c6504a48-1d28-41a4-bcc6-d39ffbb97a6d")
+			(uuid "c6504a48-1d28-41a4-bcc6-d39ffbb97a6a")
 		)
 		(pin "14"
-			(uuid "6c9b9254-7bec-4c31-81d1-c0f40768b534")
+			(uuid "6c9b9254-7bec-4c31-81d1-c0f40768b531")
 		)
 		(pin "8"
-			(uuid "ac98b8ac-7c89-416e-80a6-7f45b821e8b8")
+			(uuid "ac98b8ac-7c89-416e-80a6-7f45b821e8b5")
 		)
 		(pin "9"
-			(uuid "6e003e35-5f7b-464e-9485-5d4fc762c707")
+			(uuid "6e003e35-5f7b-464e-9485-5d4fc762c704")
 		)
 		(pin "5"
-			(uuid "c5448cee-f893-463d-9261-e3719303afd4")
+			(uuid "c5448cee-f893-463d-9261-e3719303afd1")
 		)
 		(pin "12"
-			(uuid "da58c05b-aeb5-4def-90fe-9e9d1817c492")
+			(uuid "da58c05b-aeb5-4def-90fe-9e9d1817c48f")
 		)
 		(pin "2"
-			(uuid "b0f14646-cef8-4541-9a66-38ba5953b6fc")
+			(uuid "b0f14646-cef8-4541-9a66-38ba5953b6f9")
 		)
 		(pin "1"
-			(uuid "ba90069d-b765-4629-ae83-1a7c1daf2360")
+			(uuid "ba90069d-b765-4629-ae83-1a7c1daf235d")
 		)
 		(pin "4"
-			(uuid "a1ea500b-c3c0-45d0-bfd1-280fde5e7ecb")
+			(uuid "a1ea500b-c3c0-45d0-bfd1-280fde5e7ec8")
 		)
 		(pin "11"
-			(uuid "56f03aa0-d39c-4632-83c9-2a7830ae1f39")
+			(uuid "56f03aa0-d39c-4632-83c9-2a7830ae1f36")
 		)
 		(pin "3"
-			(uuid "9db9efe4-2233-40f6-bcfd-8bc87b6946b0")
+			(uuid "9db9efe4-2233-40f6-bcfd-8bc87b6946ad")
 		)
 		(pin "7"
-			(uuid "490dd763-8625-459e-8be6-0cbe3a27dfdd")
+			(uuid "490dd763-8625-459e-8be6-0cbe3a27dfda")
 		)
 		(pin "10"
-			(uuid "f4e3073d-a820-490c-8a51-0f46ec8cb985")
+			(uuid "f4e3073d-a820-490c-8a51-0f46ec8cb982")
 		)
 		(pin "13"
-			(uuid "a5c5cf8e-cb85-4114-a8d8-0f381c83c479")
+			(uuid "a5c5cf8e-cb85-4114-a8d8-0f381c83c476")
 		)
 		(instances
 			(project "String Preamp Test Board"
@@ -6978,7 +6968,7 @@
 	(sheet
 		(at 55.88 99.06)
 		(size 15.875 13.335)
-		(exclude_from_sim no)
+		(exclude_from_sim yes)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
@@ -7054,7 +7044,7 @@
 	(sheet
 		(at 55.88 128.27)
 		(size 16.51 13.335)
-		(exclude_from_sim no)
+		(exclude_from_sim yes)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)

@@ -722,8 +722,8 @@
       "meta": {
         "version": 0
       },
-      "model_mode": 0,
-      "workbook_filename": ""
+      "model_mode": 4,
+      "workbook_filename": "String Preamp Test Board.wbk"
     },
     "page_layout_descr_file": "",
     "plot_directory": "",
@@ -739,7 +739,7 @@
         "uuid": "17071b06-4887-4c2e-9588-4148705cb0ef"
       }
     ],
-    "used_designators": "V1-2,U1-6,J1-4,C1-18,#PWR1-8,#PWR11-26,u4,RV4-12,R1-7,R10-26",
+    "used_designators": "V1-3,U1-7,J1-4,C1-18,#PWR1-26,u4,RV1-12,R1-30",
     "variants": []
   },
   "sheets": [

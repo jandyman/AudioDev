@@ -93,7 +93,7 @@ coupling capacitors are needed — two suffice for the whole board.
 | Bias resistor | 1 MΩ | mid-rail node to the non-inverting input |
 | Feedback resistor | 22 kΩ | with the leg below, gain 11 |
 | Lower gain leg | 2.2 kΩ | to ground through the return capacitor |
-| Gain leg return capacitor | 22 µF X5R | to ground, not to the mid-rail node |
+| Gain leg return capacitor | 22 µF X5R | to ground, not to the mid-rail node — ⚠ **see the propagation note below** |
 | Local decoupling | 100 nF | at the amplifier |
 
 **Shared:**
@@ -109,6 +109,26 @@ coupling capacitors are needed — two suffice for the whole board.
 | Output coupling | 10–22 nF C0G | 7–16 Hz into a megohm load — **no polarised part is needed here** |
 | Charger | TP4054, 30 kΩ program resistor | ≈33 mA into a 100 mAh cell |
 | Output jack | 3-conductor, sleeve switching the supply | draw is plugged-in time only |
+
+⚠ **Propagation note (2026-08-26) — not yet worked through for this board.** The
+pickup boards no longer use a gain-leg return capacitor: their lower gain legs
+return to a buffered reference, which makes those stages DC-coupled and removed
+the Class II part that this table still carries in the same position
+(`preamp-board.md` §3, `analog-front-end.md` §6.1). The justification that
+licensed that part — that it carries signal current but develops only millivolts
+across it — did not survive review, and it was the same justification used here.
+Two things follow for this board and neither has been decided:
+
+- The gain-leg return capacitor sits with about a volt of DC across it and sets
+  the stage's low corner, so it is a signal-path part by the definition
+  `preamp-board.md` §9 now uses, and this board is mounted in the same struck
+  instrument.
+- The mid-rail divider here is unbuffered, so returning the legs to it is not
+  available as a drop-in; it would need the same buffer the pickup boards have.
+
+**This board is the fallback instrument and is not on the critical path**, so the
+change is recorded rather than made. Work it through before this board is
+entered, not after.
 
 **Amplifier: OPA2376**, one dual package. The alternative is a low-power
 general-purpose dual, which costs about 1.4 dB here and buys two and a half hours
@@ -215,13 +235,13 @@ the value is load-bearing.
 
 | Load | Current |
 |---|---|
-| Eight pickup channels | 6.08 mA |
+| Eight pickup channels plus two reference buffers | 7.6 mA |
 | Cavity amplifiers (quad, four sections) | 0.24 mA |
 | Trimmer dividers (20 kΩ) | 0.40 mA |
 | Bias divider | 0.02 mA |
-| **Total** | **≈ 6.7 mA** |
+| **Total** | **≈ 8.3 mA** |
 
-**About 15 hours on a 100 mAh cell**, and that is plugged-in time rather than
+**About 12 hours on a 100 mAh cell**, and that is plugged-in time rather than
 elapsed time because the output jack's sleeve switches the supply.
 
 The amplifier is a low-power quad, which costs roughly 1.4 dB against a
