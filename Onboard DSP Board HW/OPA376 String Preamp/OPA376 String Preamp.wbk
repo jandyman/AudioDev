@@ -23,6 +23,20 @@
       "traces": [
         {
           "color": "rgb(152, 78, 163)",
+          "cursor1": {
+            "position": 0.022271043484742913,
+            "x_format": "3~s",
+            "y_format": "3~V"
+          },
+          "cursor2": {
+            "position": 0.022521000865013675,
+            "x_format": "3~s",
+            "y_format": "3~V"
+          },
+          "cursorD": {
+            "x_format": "3~s",
+            "y_format": "3~V"
+          },
           "signal": "V(/SIngle_FET_preamp/3.3V)",
           "trace_type": 257
         },
@@ -35,13 +49,18 @@
           "color": "rgb(228, 26, 28)",
           "signal": "V(/SIngle_FET_preamp/Output)",
           "trace_type": 257
+        },
+        {
+          "color": "rgb(55, 126, 184)",
+          "signal": "V(/SIngle_FET_preamp/in)",
+          "trace_type": 257
         }
       ]
     },
     {
       "analysis": "AC",
       "commands": [
-        ".ac dec 20 1 10k",
+        ".ac dec 20 10 100k",
         ".kicad adjustpaths",
         ".save all",
         ".probe alli",
@@ -58,11 +77,6 @@
       "showGrid": true,
       "traces": [
         {
-          "color": "rgb(55, 126, 184)",
-          "signal": "V(/SIngle_FET_preamp/MidRail) (gain)",
-          "trace_type": 521
-        },
-        {
           "color": "rgb(228, 26, 28)",
           "signal": "V(/SIngle_FET_preamp/Output) (phase)",
           "trace_type": 517
@@ -70,16 +84,6 @@
         {
           "color": "rgb(228, 26, 28)",
           "signal": "V(/SIngle_FET_preamp/Output) (gain)",
-          "trace_type": 521
-        },
-        {
-          "color": "rgb(77, 175, 74)",
-          "signal": "V(Net-_U1-+_) (phase)",
-          "trace_type": 517
-        },
-        {
-          "color": "rgb(77, 175, 74)",
-          "signal": "V(Net-_U1-+_) (gain)",
           "trace_type": 521
         }
       ]

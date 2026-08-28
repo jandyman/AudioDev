@@ -970,16 +970,16 @@
 		(uuid "4a7b89d7-547e-419c-81d4-d3f2793b41da")
 	)
 	(junction
+		(at 165.1 87.63)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "5e4f60ba-5641-4dfd-aac4-4bbb8a46a3fc")
+	)
+	(junction
 		(at 187.96 66.04)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "895063c2-8863-4a83-ae08-02d596359fb6")
-	)
-	(junction
-		(at 140.97 87.63)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "97a0360b-e7a1-4167-a808-636627444a0e")
 	)
 	(junction
 		(at 167.64 52.07)
@@ -998,6 +998,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "cf6552fc-f466-4435-bdb7-2620235eec6c")
+	)
+	(junction
+		(at 140.97 87.63)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "d01bb498-23ac-4ca0-b85c-167e3e8835ef")
 	)
 	(junction
 		(at 187.96 52.07)
@@ -1137,7 +1143,7 @@
 	)
 	(wire
 		(pts
-			(xy 140.97 87.63) (xy 146.05 87.63)
+			(xy 140.97 87.63) (xy 165.1 87.63)
 		)
 		(stroke
 			(width 0)
@@ -1247,16 +1253,6 @@
 	)
 	(wire
 		(pts
-			(xy 165.1 78.74) (xy 165.1 80.01)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "8cecad45-1e0d-4eb9-9220-b725bb6049af")
-	)
-	(wire
-		(pts
 			(xy 167.64 52.07) (xy 172.72 52.07)
 		)
 		(stroke
@@ -1264,6 +1260,16 @@
 			(type default)
 		)
 		(uuid "a00c13e9-deab-4b79-9af9-562467e567d4")
+	)
+	(wire
+		(pts
+			(xy 165.1 78.74) (xy 165.1 87.63)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "aaa5fc05-71cb-4ac8-9225-4e22c616e66d")
 	)
 	(wire
 		(pts
@@ -1347,6 +1353,16 @@
 	)
 	(wire
 		(pts
+			(xy 165.1 87.63) (xy 171.45 87.63)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fd59fa81-46cc-4789-b7c1-afb6b7ddce0f")
+	)
+	(wire
+		(pts
 			(xy 113.03 50.8) (xy 121.92 50.8)
 		)
 		(stroke
@@ -1388,7 +1404,7 @@
 	)
 	(hierarchical_label "MidRail"
 		(shape input)
-		(at 146.05 87.63 0)
+		(at 171.45 87.63 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2033,7 +2049,7 @@
 				)
 			)
 		)
-		(property "Value" "15k"
+		(property "Value" "27K"
 			(at 168.656 76.454 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2962,96 +2978,6 @@
 				)
 				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/96d96fc6-deb5-409d-b663-ae19210fcf32"
 					(reference "J4")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 165.1 80.01 0)
-		(mirror y)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "e5ea9ea9-ead6-4ea1-9a12-47be858f2316")
-		(property "Reference" "#PWR09"
-			(at 165.1 86.36 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "GND"
-			(at 169.164 81.788 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 165.1 80.01 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 165.1 80.01 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 165.1 80.01 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "9bcef7b0-4a82-4b7a-9a36-0c3ac4fe3ddf")
-		)
-		(instances
-			(project "OPA376 String Preamp"
-				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/0e773300-e149-4e84-baf2-886502bbe02a"
-					(reference "#PWR015")
-					(unit 1)
-				)
-				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/40966223-d92b-4fe6-9f91-9c85192c0646"
-					(reference "#PWR012")
-					(unit 1)
-				)
-				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/5aec4146-3bdc-41db-9ec2-8493546b66d5"
-					(reference "#PWR023")
-					(unit 1)
-				)
-				(path "/02ac84b2-5c3b-408e-9eb0-8fb87f64ec2b/96d96fc6-deb5-409d-b663-ae19210fcf32"
-					(reference "#PWR09")
 					(unit 1)
 				)
 			)

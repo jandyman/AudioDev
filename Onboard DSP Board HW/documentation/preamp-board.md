@@ -442,11 +442,40 @@ significance is that it represents 26 dB of gain for any interference living nea
 it — switching supplies and lighting drivers are plausible neighbours — and the
 front end now amplifies that by eight rather than attenuating it.
 
-**Provision a damping network per channel and leave it unpopulated.** A series
-resistor and capacitor across the coil, around 27 kΩ with 1 nF, brings Q to
-approximately one. It is not fitted by default because a shunt of that value
-costs about a decibel at 10 kHz against the coil's rising impedance. Two 0402
-footprints per channel is cheap insurance against a respin.
+⚠ **The damping is fitted, not reserved, and this supersedes the unpopulated
+footprint previously specified here.** A **15 kΩ from the non-inverting input to
+the reference** sits in parallel with the input shunt capacitor. With
+√(L/C) = 25.7 kΩ and the series losses (320 Ω coil plus the 1 kΩ input resistor)
+giving Q ≈ 19.5 undamped, 15 kΩ brings the tank to **Q ≈ 0.57**. The 26 dB peak is
+gone.
+
+**It must return to the reference, not to ground.** Returned to ground it forms a
+DC divider with the coil and the input resistor, putting the non-inverting input
+at 0.919 of the reference — which the stage's gain of 7.82 turns into an output
+resting at **0.37 of the reference** instead of at it, and which breaks the
+reference cancellation in the same proportion. The damping is identical either
+way, because the reference is an AC ground at 62 kHz: the buffer presents about
+1 Ω there.
+
+**The value is 27 kΩ, giving Q ≈ 1.0.** With √(L/C) = 25.7 kΩ and the series
+losses (320 Ω coil plus the 1 kΩ input resistor) giving Q ≈ 19.5 undamped, 27 kΩ
+in parallel brings the tank to **Q ≈ 1.0** — critically damped rather than merely
+tamed, and the 26 dB peak is gone.
+
+**The damping loads the coil in band, and that is the price.** The loading rises
+with the coil's impedance, so it appears as a slight treble tilt rather than a
+flat loss: **−0.41 dB in the passband and −1.52 dB at 10 kHz**, a tilt of 1.1 dB.
+A 15 kΩ would have given Q ≈ 0.57 and 1.8 dB of tilt; the 27 kΩ **in series with
+1 nF** once specified here would have cut the in-band loading further, at the cost
+of a second part per channel. If the tilt proves unwanted on the instrument, that
+series capacitor is the retrofit, not a larger resistor.
+
+⚠ **The passband loss means the delivered gain is 7.45, not 7.82.** The amplifier's
+gain is unchanged; the damping resistor divides against the coil and the input
+resistor ahead of it. So each channel delivers about **300 mV peak-to-peak** from
+a 40 mV coil rather than the ≈320 mV quoted in the surrounding documents. The
+difference is 0.4 dB and does not move any argument that rests on those figures —
+it is recorded so the discrepancy is not rediscovered as an error.
 
 **Secondary path:** the Bluetooth packet envelope rides on the supply at
 audio-rate frequencies. This is a distinct mechanism from RF at the input, and it
@@ -463,13 +492,12 @@ Values are given by function; take designators from the schematic at entry.
 | Amplifier | **OPA376** | SC70-5 or SOT-23-5 | §2 |
 | Input series resistor | 1 kΩ | 0402 | RF filter, coil hot terminal to amplifier input |
 | Input shunt capacitor | 100 pF C0G | 0402 | RF filter to ground, at the input pin |
-| Input bleeder | ≥ 10 MΩ | 0402 | non-inverting input to the reference, so an open coil leaves the input defined rather than floating (§3). In parallel with a 320 Ω coil it is electrically invisible |
 | Feedback resistor | 15 kΩ | 0402 | with the leg below, gain 7.8 |
 | Lower gain leg | 2.2 kΩ | 0402 | inverting input **to the reference**, not to ground, and with no capacitor in series — §3 |
 | Feedback damping network | ⚠ per the stability sweep | 0402 | a feedback capacitor and series resistor across the feedback resistor, added after this document's previous revision. **Take the values from the schematic and the simulation notes, not from this table** |
 | Local supply decoupling | 100 nF | 0402 | at the amplifier supply pin |
 | Coil landing pads | — | custom THT | magnet-wire pads; hot to the input resistor, cold to the reference |
-| RF damping network | 27 kΩ + 1 nF | 0402 ×2 | **footprints only, do not populate** (§7) |
+| Resonance damping resistor | 27 kΩ | 0402 | non-inverting input **to the reference**, in parallel with the input shunt capacitor. Fitted, not a reserved footprint — §7. It also serves as the bleeder that keeps the input defined if a coil goes open |
 
 Shared per board:
 
@@ -478,9 +506,20 @@ Shared per board:
 | Supply entry resistor | 47 Ω | 0402 | analog rail into the strip supply bus, with the capacitor below |
 | Supply entry capacitor | 100 nF | 0402 | strip supply bus to ground |
 | Reference series resistor | 1 kΩ | 0402 | connector reference pin to the buffer input. Carries only a CMOS input current, so it introduces **no DC error at all**. Also limits current into the input clamps on hot-plug |
-| Reference RF shunt | 100 pF C0G | 0402 | **at the connector pin**, via straight down at the pad — same network, same values and the same reasoning as the coil inputs (§7). At 2.4 GHz the inductance to ground decides whether it works, not the capacitance |
-| Reference bulk capacitor | 4.7 µF tantalum | 0805 | **do not populate.** Footprint only — see the trade below |
-| Generating divider | 100 kΩ / 71.5 kΩ | 0402 ×2 | **do not populate.** Fit for standalone bench work, when nothing is driving the reference conductor; §3.1 |
+| Reference RF shunt | 100 pF C0G | 0402 | **at the buffer's input pin**, after the series resistor and with a via straight down at the pad — the same network, the same values and the same ordering as the coil inputs (§7). Resistor first, capacitor at the amplifier pin: that ordering is the low-pass. A capacitor at the connector pin instead would shunt only against the driving buffer's milliohms and leave the amplifier input unfiltered |
+
+⚠ **No divider, no filter capacitor on a divider tap, and no bulk capacitor at
+the buffer input.** The 47 µF that filtered the divider in the self-generating
+arrangement is deleted, not moved: there is no divider to filter, and a bulk
+capacitor at the buffer input is the audio-band pole ruled out below. **On a 0.75″
+strip that removes the largest passive on the board.**
+
+**The generating divider is omitted rather than reserved as a footprint.** The
+consequence is that the board cannot self-reference on the bench — standalone work
+needs a reference injected on the connector's reference pin, which is one clip
+lead from a bench supply and no worse than needing a supply rail anyway. Two 0402
+footprints would have bought the convenience; on this strip the area is better
+spent.
 
 ⚠ **An audio-band pole here is a trade, not an improvement — leave the bulk
 capacitor as a footprint and decide it on the bench.** An earlier revision
@@ -746,41 +785,35 @@ change does not disappear, it relocates — 28 AWG soldered into a plated hole
 fatigues at the joint if the cable can move. Anchor the cable mechanically before
 it leaves the assembly, whichever termination is chosen.
 
-### Polarity
+### Polarity — decided, do not re-raise
 
-**The connector is unkeyed and the board carries no reverse-polarity
-protection.** This is accepted for development. **The board is marked and the
-cable is coded**, and that is the whole of the protection.
+**The connector is unkeyed and the board carries no reverse-polarity protection.
+This is a recorded, accepted risk.** The mitigation is a colour-coded cable, a
+pin-1 indicator on the silkscreen, and the fact that one person builds and
+services these boards. The pinout has been reviewed repeatedly and the decision
+is not open.
 
-Record the failure mode plainly, because it is not a soft one — and because the
-pin order changes how bad it is. Reversing a 6-way connector maps position 1 to
-6, 2 to 5 and 3 to 4. Supply can never land back on supply, so a reversed
-insertion is always a fault; what the ordering decides is which fault.
+⚠ **This item is closed. Do not re-open it from the failure analysis below**,
+which is retained only so the consequence is on record, and so that a change of
+context — a second builder, a production run, a keyed housing — has the reasoning
+to hand rather than rediscovering it.
 
-> **Do not place supply and ground at mirror positions** — 1 and 6, 2 and 5, or
-> 3 and 4. That is the one family of arrangements in which reversal exchanges
-> them outright, applies the analog rail backwards across every amplifier on the
-> board, and should be expected to destroy all four.
+Reversal maps position 1 to the last, 2 to the second-last, and so on. Supply can
+never land back on supply, so a reversed insertion is always a fault; the ordering
+decides which fault. Where supply and ground sit at mirror positions, reversal
+exchanges them outright, applies the analog rail backwards across every amplifier
+on the board, and should be expected to destroy all four. With supply and ground
+anywhere else, reversal instead leaves the board unpowered and drives the rail
+into two amplifier *outputs* through the cable; those outputs clamp to their own
+floating supply through the output protection, so the board part-powers itself
+into an undefined state — not a good outcome either, but the recoverable one.
 
-With supply and ground anywhere else, reversal instead leaves the board
-unpowered and drives the rail into two amplifier *outputs* through the cable.
-Those outputs clamp to their own floating supply through the output protection,
-so the board part-powers itself into an undefined state. That is not a good
-outcome either, but it is the recoverable one, and it costs nothing to choose it
-at schematic entry.
-
-Two retrofits exist should reversal stop being theoretical, neither needing more
-than a footprint change:
-
-- **Keying by omission** — a header with one position more than the conductor
-  count, that pin removed and the matching housing cavity plugged. Costs one
-  position and no parts. ⚠ Under the §4 proposal this needs an 8-position part,
-  not the 7-position one that would otherwise have served.
-- **A reverse-polarity series element** on the board's supply input. A Schottky
-  is one part but drops roughly 0.2 V, which drags the bias divider's output down
-  with it; a P-channel MOSFET costs area and almost no voltage.
-
-Production hardware wants a keyed housing rather than either of those.
+Two retrofits exist should the context change, neither needing more than a
+footprint change: **keying by omission** — a header with one position more than
+the conductor count, that pin removed and the matching housing cavity plugged —
+or **a reverse-polarity series element** on the supply input, where a Schottky is
+one part but drops roughly 0.2 V and a P-channel MOSFET costs area and almost no
+voltage. Production hardware wants a keyed housing rather than either.
 
 **A soldered termination removes the hazard at this end entirely** — a captive
 cable cannot be inserted backwards. Apply the mirror-position rule anyway. It
@@ -952,30 +985,26 @@ and bias network.
     divider. Confirm buffer stability into the cable capacitance while you are
     there — 50 to 100 pF of loose conductor, and the "no large bypass on the
     buffer output" rule now extends across that cable.
-9. **Confirm the board self-references with the DNP divider fitted** and nothing
-    plugged into the reference pin, since that is the bench configuration and it
-    is easy to break without noticing once the connector path is the normal
-    one.
+9. **Confirm the board behaves with a bench reference injected on the connector's
+    reference pin**, since there is no on-board divider to fall back on (§8) and
+    that is now the only standalone configuration.
     One operating point and one AC sweep cover all three, and the defects found
     on this board so far surfaced from setting up the operating point rather than
     from schematic review.
 10. **Confirm the header's top-side lead protrusion clears the bobbin** after
    trimming, and that its pad rings and clearances have not encroached on the
    input areas at that end of the board (§10, §11).
-11. **Confirm supply and ground are not at mirror positions** on the connector
-   (§10). This is a schematic check, it takes one look, and it is the difference
-   between a recoverable mis-insertion and a destroyed board.
-12. **Evaluate the 2 mm crimp contacts before committing to a detachable cable**
+11. **Evaluate the 2 mm crimp contacts before committing to a detachable cable**
    (§10). Crimp and seat a full set, mate it, then flex and tug the finished
    termination — fragility rather than fit is what ruled out the previous
    connector, and it is what this pitch change is meant to fix. If it does not
    convince, solder to the same holes and change nothing else. Either way,
    confirm the strain relief and confirm that the pin-1 marking and the cable
    coding are unambiguous read from either end.
-13. **Verify the bottom ground pour is not fragmented into islands** under the
+12. **Verify the bottom ground pour is not fragmented into islands** under the
     input areas after routing — the cable runs beneath the board and the pour is
     the barrier.
-14. **Feed the measured output level back into the converter's gain plan**
+13. **Feed the measured output level back into the converter's gain plan**
     (`adc-firmware-init.md`). At the level this design produces, the programmable
     gain requirement is much lower than originally assumed.
 

@@ -539,12 +539,17 @@ verification list of the document it affects.
    real board in the real instrument — a breadboard would not reproduce the RF
    environment.
 
-3. **The coil's resonance with the input filter's shunt capacitor** — 62 kHz at a
-   Q of roughly 20, a consequence of the coil's very low DC resistance. Out of
-   band and removed by the converter's decimation filter, but it is 26 dB of gain
-   for anything living near it, and the front end now amplifies it by eight
-   rather than attenuating it. First place to look if an unexplained noise
-   appears.
+3. **The coil's resonance with the input filter's shunt capacitor.** ✅ **Closed
+   by a fitted part, not open.** Undamped it is 62 kHz at a Q of roughly 20 — a
+   consequence of the coil's very low DC resistance — and 26 dB of gain for
+   anything living near it. A **27 kΩ from the non-inverting input to the
+   reference** is fitted in parallel with the shunt capacitor and brings the tank
+   to **Q ≈ 1.0**; a 220 pF across the feedback resistor separately drops the
+   stage's gain there from 7.82 to about 5.2. The peak is gone, and the resonance
+   is no longer the first place to look if an unexplained noise appears. What it
+   costs is in-band loading — 0.41 dB in the passband and 1.52 dB at 10 kHz, a
+   tilt of 1.1 dB — and a delivered gain of 7.45 rather than 7.82
+   (`preamp-board.md` §7).
 
 4. **Converter operating point.** At 320 mV peak-to-peak the source sits roughly
    17 dB below full scale rather than the 30–40 dB assumed when the converter was
