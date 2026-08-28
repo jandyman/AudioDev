@@ -3,7 +3,13 @@
 **Status:** Specified. Two identical 4-channel boards, one per pickup (neck,
 bridge), each mounted under its pickup bobbin.
 
-⚠ **Revised 2026-08-26 to the buffered-reference, DC-coupled stage.** The stage
+⚠ **Revised twice on 2026-08-26.** The second revision moved the *origin* of the
+reference off this board: it is now generated on the board at the far end of the
+cable — the converter board or the control-cavity board — and this board filters
+and re-buffers it. §3 carries the argument, §4 the cable consequence. The divider
+that used to generate it remains as a **do-not-populate footprint for bench use**.
+
+⚠ **First revision, to the buffered-reference, DC-coupled stage.** The stage
 specified here has no capacitor in the gain leg and no high-pass anywhere in the
 preamp. That decision was taken in the simulation work and recorded next to the
 schematic — `../OPA376 String Preamp/reference-architecture.md` and the project
@@ -91,10 +97,42 @@ feedback resistor, and the output rests at the reference regardless of the AC
 gain. The stage is **DC-coupled and flat to DC**: no input coupling capacitor, no
 per-channel bias network, and no capacitor in the gain leg.
 
-**The reference is a divider on the analog rail followed by a unity-gain
-buffer**, one per board, distributed as a strip-wide net (§8). The buffer is what
-makes the arrangement affordable — an unbuffered divider cannot hold a node that
-four gain legs draw signal current from.
+**The reference arrives on a cable conductor, and this board filters it and
+re-buffers it** into a strip-wide net (§8). The local buffer is what makes the
+arrangement affordable — an unbuffered node cannot be held against four gain legs
+drawing signal current from it — and it is also what keeps that current off the
+cable, which is the subject of §3.1.
+
+### 3.1 Why the reference is generated at the far end and buffered here
+
+**The requirement comes from the analog instrument.** There are two pickup boards
+and the control-cavity board blends them into one output, so its whole signal
+chain has exactly one reference node. Two independently generated references
+cannot serve it: their difference is divider tolerance — ±38 mV with 1% parts,
+±4 mV with 0.1% — and a blend control puts that difference directly across a
+wiper as a DC step. No tolerance budget makes it zero. **One generator per
+instrument is a functional requirement, not a preference.**
+
+The converter instrument has no such requirement — the two references never meet
+there, each converter differences against its own, and the digital high-pass
+removes any DC difference. But the pickup boards must be identical in both
+instruments, so the instrument that has the requirement sets the architecture.
+
+**Generating remotely would normally cost the cancellation described in
+`adc-netlist.md` §2.1, and the local buffer is what prevents that.** The gain
+legs draw signal current from whatever node they return to. Returned to a raw
+incoming conductor, that current — up to 36 µA with four strings in phase —
+would develop about 3.6 µV across the cable's resistance, appearing as
+string-to-string crosstalk at roughly −93 dB. That is already some 4 dB below the
+front end's own noise floor, so it would be tolerable; with the legs returning to
+a **local** buffer output of a few tens of milliohms instead, the same current
+develops 0.65 µV, about **−108 dB**, and the conductor carries only the buffer's
+input current, which is femtoamps.
+
+**Keep the generating divider on this board as a DNP footprint.** Populated, the
+board self-references and works standalone on the bench with nothing plugged in;
+empty, the connector feeds the buffer. That recovers standalone operation as a
+footprint rather than as a build variant.
 
 ### Why the leg returns to the reference and not to the non-inverting input alone
 
@@ -157,9 +195,10 @@ a real problem. It costs a cold conductor per channel — nine conductors instea
 of six — so it is a connector and cable change (§10).
 
 **⚠ PROPOSAL (2026-08-26): one reference conductor, DC-coupled differential.**
-Carry the buffered reference itself over a **single** added conductor, present it
-to the converter's cold input pins, and configure the converter for a DC-coupled
-differential input. This is a different mechanism from the option above and buys
+Add a **single** conductor carrying the instrument's reference, generated on the
+converter board (§3.1), filtered and re-buffered here, and presented at the far
+end to the converter's cold input pins with the converter configured for a
+DC-coupled differential input. This is a different mechanism from the option above and buys
 different things:
 
 - **It turns §3's 17.9 dB ratio into a rejection.** The reference appears at
@@ -196,9 +235,12 @@ converter channels.** It would not.
 
 ## 5. Bias point and output level
 
-**Specify the reference at 1.0 V**, from a divider on the 3.3 V analog rail,
-filtered at the divider tap and buffered, shared by all four channels on a board
-(§3, §8).
+**The value is set by the generator at the far end** (§3.1), not on this board —
+this board reproduces whatever it is given, to within its buffer's offset. What
+this section fixes is the *window* the value has to fall in for these amplifiers
+to work, and that window is a property of this board.
+
+**While the AC-coupled arrangement of §4 stands: 1.0 V.**
 
 Every channel's output therefore rests at 1.0 V, to the tolerance of two
 resistors. The value is chosen for what happens at the far end:
@@ -218,19 +260,126 @@ resistors. The value is chosen for what happens at the far end:
 > replaces, this one is enforced by a resistor ratio rather than by a
 > distribution of semiconductor parameters.
 
-⚠ **The ratio is open, and the two reasons to change it point the same way.**
-1.0 V sits well below half the rail and costs several dB of symmetric headroom
-for no benefit that survives the move to a buffered reference — the value was
-chosen to protect a polarised coupling part, and nothing else here depends on it.
-Under the §4 proposal that constraint disappears entirely and is replaced by a
-preference in the opposite direction: the converter's own optimum DC bias for a
-DC-coupled input is its reference midpoint, **1.375 V** at the specified
-full-scale setting. That value is still comfortably inside the amplifier's
-common-mode region — 625 mV clear of the (V+) − 1.3 V boundary — and it gives
-1.375 V of downward swing against 1.9 V upward, materially more symmetric than
-the present 950 mV. **Do not move it while the AC-coupled arrangement stands**,
-because the selection rule above still governs there; move it as part of adopting
-§4, and re-derive the divider ratio at the same time.
+### The value under DC coupling — derivation
+
+⚠ **This applies only if the §4 proposal is adopted.** While the coupling
+capacitors stand, the selection rule above governs and the value stays at 1.0 V.
+Once they are gone there is no polarised part to protect, the reference becomes
+free, and the value follows from three constraints that can all be written down.
+
+**Constraint 1 — the amplifier's input common-mode ceiling.** The device's
+common-mode range runs from (V–) − 0.1 V to (V+) + 0.1 V, but **common-mode
+rejection is specified only from (V–) to (V+) − 1.3 V** — 2.0 V on this rail. The
+coil's hot end sits at the reference ±20 mV, because 40 mV peak-to-peak at the
+coil is the *input* level. So **B ≤ 1.98 V**. This is the constraint most likely
+to be missed, because the part is sold as rail-to-rail input and the limit is in
+the rejection specification rather than the range.
+
+**Constraint 2 — output swing.** Output saturation headroom is 40–50 mV maximum
+at 25 °C into 10 kΩ and 80 mV maximum over the full temperature range into 2 kΩ;
+the load here is the feedback network in parallel with the converter's input
+impedance, about 6 kΩ, so **budget 80 mV** at each rail. Signal peaks are
+±156 mV (40 mV peak-to-peak at the coil times the gain of 7.82), and the standing
+allowance is a transient at four times nominal, ±626 mV. So
+**0.71 V ≤ B ≤ 2.59 V**.
+
+**Constraint 3 — the far end.** On the converter instrument, recommended analog
+input range is 0 V to AVDD, which binds nothing; the *preference* is the
+converter's own reference midpoint, **VREF/2 = 1.375 V** at the specified
+full-scale setting. On the analog instrument there is no converter and the value
+is the control-cavity board's to choose (`cavity-preamp-board.md`).
+
+**The window is 0.71 V to 1.98 V and its midpoint is 1.345 V.** The converter's
+preferred value sits 30 mV off the centre of the amplifier's own allowed range,
+so there is no trade to make. **Specify 1.375 V.**
+
+**Why the converter prefers its own midpoint, in mechanism rather than by
+assertion.** At exactly VREF/2 the DC current in both input arms is zero. Nothing
+flows along the reference conductor, so its resistance cannot produce an offset;
+and the mismatch between the two input impedances has no common-mode voltage to
+act on, so it produces no differential error. Away from VREF/2 by ΔV, a mismatch
+of about 0.1% — which is what the converter's 60 dB common-mode rejection implies
+— turns ΔV into a differential DC offset that the programmable gain then
+multiplies. At mid-rail that is roughly 275 µV before gain: small, and removed by
+the digital high-pass, but free to avoid.
+
+**Why not mid-rail.** 1.65 V buys 1.7 dB of swing that constraint 2 shows is not
+needed, and spends input common-mode margin that constraint 1 shows is the
+binding one — clearance below the 2.0 V ceiling falls from 625 mV to 350 mV.
+
+### Divider values, and the one thing not to change
+
+⚠ **These values now live at the generator, not on this board** (§3.1). They are
+recorded here because the DNP divider footprint of §8 must be able to reproduce
+them for bench work, and because the invariance below is the thing most likely to
+be lost when the generator is laid out on another board.
+
+**Top leg 100 kΩ, bottom leg 71.5 kΩ**, giving 1.3757 V from a 3.3 V rail. E24
+will not reach it — 68 kΩ and 75 kΩ land 39 mV either side — so the bottom leg is
+an E96 1% value.
+
+**Change the bottom leg only, and leave the top leg and the filter capacitor
+alone.** Above the reference pole, rail-to-reference attenuation is
+1/(2π·f·C·R_top): it depends on the top leg and the capacitor and **not on the
+divider ratio at all**. At 100 Hz with 100 kΩ and 47 µF that is −69 dB, and
+moving the bottom leg from 43 kΩ to 71.5 kΩ changes it by nothing. Against the
+amplifier's 86 dB of supply rejection the divider path is still the dominant one
+by about 17 dB, which is the term §4's differential connection subtracts and §12
+item 7 measures.
+
+If more rail rejection is ever wanted, the levers are the capacitor and the top
+leg — raising the top leg requires raising the bottom leg in proportion to hold
+the ratio, and costs thermal noise that is not worth engineering against.
+
+### The analog instrument takes a different value, for the same reasons
+
+That instrument runs from a cell spanning 3.0 to 4.2 V, so its reference is a
+*ratio* of the battery rail rather than a fixed voltage, and headroom scales with
+the cell — which is what a battery-powered analog board wants. **Do not fix it at
+a voltage**: a hard 1.85 V would sit above the common-mode ceiling of constraint 1
+at end of discharge, and would leave barely a volt of upward swing there.
+
+The ceiling is what decides the ratio, and it binds on a stage this board does not
+have. Constraint 1 applies to any amplifier whose input common mode *moves*; an
+inverting stage's plus input never moves, so it is immune, while **a follower's
+input common mode swings with the full signal**. At mid-rail on a 3.0 V cell the
+reference is 1.50 V, the ceiling is 1.70 V, and a follower carrying ±200 mV
+reaches exactly the ceiling. The choice of ratio, and whether to make the exposed
+stages inverting instead, belongs to `cavity-preamp-board.md`.
+
+### Headroom, which is now independent of the bias decision
+
+**This is the property that makes the whole arrangement comfortable to work
+with.** The stage's DC gain to the reference is exactly one, so the operating
+point is the reference whatever the AC gain is; and the reference is now set by
+the converter rather than by a coupling network. **Gain and bias point are
+orthogonal.** Changing the gain changes how much swing is needed around the
+operating point, and moves the operating point not at all — so gain can be
+retuned after simulation or after bench measurement without reopening anything in
+this section.
+
+At 1.375 V the swing available is **1.295 V downward and 1.845 V upward**, so the
+downward side binds:
+
+| Quantity | Value |
+|---|---|
+| Peak swing available (downward, binding) | 1.295 V |
+| Nominal playing peak at the design gain | 0.156 V |
+| **Headroom above nominal playing** | **18.4 dB, or 8.3× in amplitude** |
+| Headroom above the standing 4× transient allowance | 6.3 dB |
+
+The 80 mV saturation allowance costs 0.5 dB of that and is not what sets it — the
+bias point is. For comparison, mid-rail would give 20.1 dB, so the whole of what
+constraint 1 gives up is **1.7 dB**.
+
+**If more headroom is wanted, lower the gain — do not move the bias.** Gain is
+the lever with real range: 7.82 → 6 buys 2.3 dB. It costs level on the cable, and
+therefore signal-to-interference (`analog-front-end.md` §2.2), and it narrows the
+reference-to-signal ratio of §3 — but under §4 that ratio becomes a rejection
+rather than a margin, so lowering the gain is materially cheaper under the
+proposal than it was before it. **Note also that the preamp clips about 6.8 dB
+below the converter's differential full scale**, so the analog chain sets the
+ceiling and the converter cannot be overdriven.
 
 **Level.** 40 mV peak-to-peak at the coil becomes approximately 320 mV
 peak-to-peak on the cable, placing the source roughly 17 dB below the converter's
@@ -328,9 +477,100 @@ Shared per board:
 |---|---|---|---|
 | Supply entry resistor | 47 Ω | 0402 | analog rail into the strip supply bus, with the capacitor below |
 | Supply entry capacitor | 100 nF | 0402 | strip supply bus to ground |
-| Reference divider | 100 kΩ / 43 kΩ | 0402 | analog rail to ground, producing 1.0 V — ratio open, §5 |
-| Reference filter capacitor | 47 µF tantalum | — | **on the divider tap, ahead of the buffer.** Sets the reference pole; carries no signal current |
-| Reference buffer | **OPA376**, unity gain | SC70-5 or SOT-23-5 | divider tap to the strip-wide reference net (§3) |
+| Reference series resistor | 1 kΩ | 0402 | connector reference pin to the buffer input. Carries only a CMOS input current, so it introduces **no DC error at all**. Also limits current into the input clamps on hot-plug |
+| Reference RF shunt | 100 pF C0G | 0402 | **at the connector pin**, via straight down at the pad — same network, same values and the same reasoning as the coil inputs (§7). At 2.4 GHz the inductance to ground decides whether it works, not the capacitance |
+| Reference bulk capacitor | 4.7 µF tantalum | 0805 | **do not populate.** Footprint only — see the trade below |
+| Generating divider | 100 kΩ / 71.5 kΩ | 0402 ×2 | **do not populate.** Fit for standalone bench work, when nothing is driving the reference conductor; §3.1 |
+
+⚠ **An audio-band pole here is a trade, not an improvement — leave the bulk
+capacitor as a footprint and decide it on the bench.** An earlier revision
+specified a series 10 kΩ with a 4.7 µF tantalum for a 3.4 Hz corner, on the
+reasoning that a buffer lets you filter an incoming reference for free; a later
+one forbade the capacitor outright. **Both were wrong, in opposite directions.**
+
+The mechanism is this. Under §4 the converter's cold pin taps the **generated**
+node at the far end of the cable, while every channel output on this board rides
+on the **local** copy that this network produces. Anything making those two differ
+appears differentially, at unity, in every channel. With `n` for whatever rides on
+the generated node, `p` for whatever the conductor picks up on the way over, and
+`H` for this network's transfer:
+
+```
+differential = n·(H − 1) + H·p + G·s
+```
+
+**Unfiltered (H = 1) the generated node's noise cancels exactly and conductor
+pickup appears in full. Filtered (H → 0 in band) conductor pickup is removed and
+the generated node's noise appears in full.** The filter does not add or remove
+error; it swaps which of the two terms survives.
+
+Neither term is large. On the converter instrument `n` is rail ripple already
+attenuated about 69 dB by the generator's own divider filter, plus that
+generator's buffer noise — of order −110 dB and +0.03 dB respectively, uncancelled.
+`p` is pickup on a conductor driven from a buffer's milliohms along its whole
+length, which suppresses capacitive coupling well; **magnetic coupling it does not
+suppress**, since an induced EMF is in series with the conductor and appears
+across the high-impedance end however stiff the driver is. Mains-frequency pickup
+in an unshielded cavity is therefore a real term and it is the reason to keep the
+option open.
+
+**On the analog instrument the sign flips.** There is no differential receiver
+there, so there is no cancellation to lose, and the generated reference sits on a
+battery rail carrying the charger — the term that board's own verification calls
+out as worth measuring. Filtering here is a straight win on that instrument.
+
+### What the conductor actually picks up
+
+The trade above is settled by estimating `p`, and the two coupling mechanisms
+behave oppositely under this board's impedance scheme.
+
+**Capacitive coupling is already defeated, structurally.** It injects a *current*,
+so the voltage it develops scales with the impedance of the node it lands on. An
+adjacent signal conductor at 156 mV and 1 kHz, with perhaps 3 pF of mutual
+capacitance over six inches, injects about 2.9 nA; that current returns to the
+generator's buffer through 0.032 Ω of 28 AWG and develops **0.09 picovolts**. The
+only node where electric-field coupling could matter is a high-impedance one,
+which is why the series resistor stays 1 kΩ and the run from the connector pin to
+the buffer input stays short — 0.1 pF onto that node is about 0.1 µV, still
+−120 dB.
+
+**Inductive coupling is not defeated by impedance at all**, because the EMF is in
+series with the loop. Loop area is the reference conductor against the ground
+conductor in the same bundle: at 3 mm separation over six inches, 4.6 × 10⁻⁴ m².
+
+| Ambient field at 60 Hz | EMF induced | Against 156 mV |
+|---|---|---|
+| 0.1 µT, quiet room | 0.02 µV | −138 dB |
+| 1 µT, near wiring | 0.17 µV | −119 dB |
+| 10 µT, close to a transformer or power amplifier | 1.7 µV | −99 dB |
+
+Loose bundling that lets the pair splay to 10 mm triples these, and the EMF scales
+with frequency so hum harmonics matter as much as the fundamental.
+
+**The comparison that settles it: the coil is a far better magnetic antenna than
+the cable.** Both see the same field, and sensitivity is turns × area — of order
+0.4 m² for the coil against 4.6 × 10⁻⁴ m² for the cable loop, a ratio near 900,
+after which the coil's output is multiplied by the stage gain while the
+conductor's arrives at unity. Even allowing 20–40 dB of humbucking rejection in
+the pickup, **any field strong enough to put measurable hum on the reference
+conductor is already producing more of it in the coils.** Filtering the conductor
+cannot reach the dominant term.
+
+**Specify: 1 kΩ and 100 pF fitted, and no bulk capacitor.** Leave the footprint if
+board area is free, but do not expect to populate it: it would attack a term some
+60 dB below what the coils deliver, at the cost of the exact cancellation §4 exists
+to buy — or, done properly at both ends, at the cost of sixteen matched parts at
+the converter (`adc-netlist.md` §2.1).
+
+**If hum ever does surface as a cable problem, the lever is loop area, not
+filtering.** See §10.
+
+**The series resistor's noise is the one cost, and 1 kΩ is why it is small.** It
+appears at the buffer input, so it reaches every channel output at unity and does
+*not* cancel differentially. At 1 kΩ that is 4.07 nV/√Hz against roughly
+84 nV/√Hz arriving from the channel amplifiers — about 0.01 dB. At the 10 kΩ
+previously specified it would have been 12.9 nV/√Hz, or 0.1 dB, which is still
+small but is ten times the price for no benefit.
 
 **The gain leg returns to the reference, not to ground, and carries no
 capacitor.** This is the arrangement §3 argues for and it is the difference
@@ -464,7 +704,9 @@ soldering the cable to the same holes.
 **Configuration: 6-way** = four signals plus supply and ground. Six positions and
 no mounting pad — a plain 1×6 at 2.00 mm pitch, 0.8 mm drill, on the bottom side.
 ⚠ **Under the §4 proposal this becomes 7-way**, the added position carrying the
-reference. A 1×7 and a 1×8 in this pitch and profile are ordinary stock items, so
+reference — as an **input** to this board, not an output (§3.1). It feeds the
+filter and buffer of §8 and nothing else, so it carries no signal current in
+either instrument. A 1×7 and a 1×8 in this pitch and profile are ordinary stock items, so
 the choice is a footprint change and never a connector search — but see
 *Polarity* below, where the extra position is not free.
 A seventh *conductor* for a second ground was considered and rejected — with
@@ -561,8 +803,19 @@ reference-conductor proposal raises it to seven; 1×7, 1×8 and 1×10 in this pi
 and profile are all ordinary stock items, so either remains a board revision
 rather than a connector search. That open item is closed.
 
+**Twist the reference conductor with the ground conductor** under the §4
+proposal. This is a harness instruction rather than a cable specification, it
+costs nothing, and it attacks the only cable-coupling mechanism the board's
+impedances do not already defeat (§8): cutting the loop area by ten to twenty
+times buys 20–26 dB, more than any practical filter would give at mains frequency
+and without giving up the reference cancellation. It is worth doing on this
+conductor specifically, and not on the signal conductors, because pickup on the
+reference appears in all four channels *correlated* where a signal conductor's
+does not.
+
 **Cable:** 28 AWG stranded, six conductors — seven under the §4 proposal —
-loose, not twisted or shielded. The
+loose, not twisted or shielded, **except the reference and ground pair above**.
+The
 low-impedance amplified outputs and the input RC filter are what make that
 viable. Runs under the preamp board to the control cavity. Buy long and cut
 rather than coiling excess near the Bluetooth module.
@@ -694,26 +947,35 @@ and bias network.
     they are near model-independent where a simulated noise figure is not:
     reference to output should be exactly unity, signal to output should be flat
     to DC at the design gain, and rail to output should show the divider path.
+    ⚠ Run the first of these with the reference driven from the connector through
+    the §8 filter, which is how it will actually be fed, rather than from the DNP
+    divider. Confirm buffer stability into the cable capacitance while you are
+    there — 50 to 100 pF of loose conductor, and the "no large bypass on the
+    buffer output" rule now extends across that cable.
+9. **Confirm the board self-references with the DNP divider fitted** and nothing
+    plugged into the reference pin, since that is the bench configuration and it
+    is easy to break without noticing once the connector path is the normal
+    one.
     One operating point and one AC sweep cover all three, and the defects found
     on this board so far surfaced from setting up the operating point rather than
     from schematic review.
-9. **Confirm the header's top-side lead protrusion clears the bobbin** after
+10. **Confirm the header's top-side lead protrusion clears the bobbin** after
    trimming, and that its pad rings and clearances have not encroached on the
    input areas at that end of the board (§10, §11).
-10. **Confirm supply and ground are not at mirror positions** on the connector
+11. **Confirm supply and ground are not at mirror positions** on the connector
    (§10). This is a schematic check, it takes one look, and it is the difference
    between a recoverable mis-insertion and a destroyed board.
-11. **Evaluate the 2 mm crimp contacts before committing to a detachable cable**
+12. **Evaluate the 2 mm crimp contacts before committing to a detachable cable**
    (§10). Crimp and seat a full set, mate it, then flex and tug the finished
    termination — fragility rather than fit is what ruled out the previous
    connector, and it is what this pitch change is meant to fix. If it does not
    convince, solder to the same holes and change nothing else. Either way,
    confirm the strain relief and confirm that the pin-1 marking and the cable
    coding are unambiguous read from either end.
-12. **Verify the bottom ground pour is not fragmented into islands** under the
+13. **Verify the bottom ground pour is not fragmented into islands** under the
     input areas after routing — the cable runs beneath the board and the pour is
     the barrier.
-13. **Feed the measured output level back into the converter's gain plan**
+14. **Feed the measured output level back into the converter's gain plan**
     (`adc-firmware-init.md`). At the level this design produces, the programmable
     gain requirement is much lower than originally assumed.
 

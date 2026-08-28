@@ -218,12 +218,25 @@ bias point must sit below the converter's input bias, with margin.**
 
 ⚠ **That rule exists only to protect a polarised coupling capacitor, and the
 proposal in §6.3 deletes the capacitor.** If it is adopted the rule goes with it
-and is replaced by a preference pointing the other way: the converter's optimum
-DC bias for a DC-coupled input is its own reference midpoint, 1.375 V at the
-specified full-scale setting, which is also several dB better on symmetric swing
-and still 625 mV clear of the amplifier's common-mode boundary. **Do not move the
-value while the coupling network stands**; move it as part of adopting the
-proposal. `preamp-board.md` §5.
+and the value stops being a downstream constraint at all. It is then set by three
+things that can be written down — the amplifier's input common-mode ceiling at
+(V+) − 1.3 V, its output swing requirement, and the converter's preference for
+its own reference midpoint — which between them give an allowed window of
+0.71 V to 1.98 V with a midpoint of 1.345 V, against a converter preference of
+**1.375 V**. The two agree to within 30 mV, so nothing is traded: 1.375 V is
+3 dB better than 1.0 V on the binding downward swing and still 625 mV clear of
+the common-mode boundary, and the change is the divider's bottom leg alone
+(100 kΩ / 71.5 kΩ). Derivation, headroom arithmetic and the rail-rejection
+invariance are `preamp-board.md` §5. **Do not move the value while the coupling
+network stands**; move it as part of adopting the proposal.
+
+**And once it moves, the bias point stops interacting with the gain.** The
+stage's DC gain to the reference is exactly one, so the operating point is the
+reference whatever the AC gain is, and the reference is set by the converter
+rather than by a coupling network. Gain can be retuned after simulation or bench
+measurement without reopening the bias question — which is not a small
+convenience, because gain is the one lever with real range if headroom turns out
+tight.
 
 ---
 
@@ -340,16 +353,30 @@ attack transient in exactly the window an envelope or attack estimator reads —
 given back at the converter, by eight polarised capacitors whose value tolerance
 is ±20% and whose corners therefore differ string to string.
 
-⚠ **PROPOSAL (2026-08-26): carry the buffered reference to the converter on one
-added conductor and take the converter's inputs DC-coupled differential.** The
-buffer exists already, so the board-side cost is one conductor and one connector
-position. It deletes the coupling capacitors, their clamp diodes and their
+⚠ **PROPOSAL (2026-08-26): carry the instrument's reference to the converter's
+cold input pins on one added conductor and take the converter's inputs DC-coupled
+differential.** The buffer on the pickup board exists already — it becomes a
+re-buffer of an incoming reference rather than the generator of a local one — so
+the board-side cost is one conductor and one connector position. It deletes the coupling capacitors, their clamp diodes and their
 matching capacitors — a material area saving on a control-cavity board where area
 is the binding constraint — removes the last analog high-pass in the chain, and
 converts the reference from an unrejected common term into a common-mode one that
 the converter's own rejection subtracts. The argument, the register settings, the
 open checks and the retrofit path are `adc-netlist.md` §2.1;
 `preamp-board.md` §4 covers the board side.
+
+**The reference is generated at the far end, not on the pickup board**, and the
+reason comes from the other instrument entirely. The control-cavity board blends
+two pickups into one output, so its signal chain has exactly one reference node;
+two independently generated references differ by divider tolerance and a blend
+control puts that difference across a wiper as a DC step, which no tolerance
+budget removes. The pickup boards are identical in both instruments, so the
+instrument that has the requirement sets the direction for both. The converter
+instrument has no such requirement of its own — its two references never meet,
+and the digital high-pass removes any DC difference — and the term it gives up by
+reversing is inter-string crosstalk at about −93 dB, which the pickup board's
+local re-buffer then reduces to −108 dB. Both sit below the front end's own noise
+floor. `preamp-board.md` §3.1.
 
 **Status: proposal, pending simulation and confirmation of the converter's
 DC-coupled common-mode window.** Until it is adopted, the coupling network of

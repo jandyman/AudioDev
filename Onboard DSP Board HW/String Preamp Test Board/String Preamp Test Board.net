@@ -2,7 +2,7 @@
 	(version "E")
 	(design
 		(source "/Users/andy/Documents/Developer/AudioDev/Onboard DSP Board HW/String Preamp Test Board/String Preamp Test Board.kicad_sch")
-		(date "2026-08-24T18:13:45")
+		(date "2026-08-26T19:41:26")
 		(tool "Eeschema 10.0.5")
 		(sheet
 			(number "1")
@@ -200,7 +200,7 @@
 	(components
 		(comp
 			(ref "C2")
-			(value "8.2nF")
+			(value "5.6nF")
 			(description "Unpolarized capacitor, small symbol")
 			(fields
 				(field
@@ -254,7 +254,7 @@
 		)
 		(comp
 			(ref "C3")
-			(value "8.2nF")
+			(value "5.6nF")
 			(description "Unpolarized capacitor, small symbol")
 			(fields
 				(field
@@ -670,7 +670,7 @@
 		)
 		(comp
 			(ref "R3")
-			(value "10K")
+			(value "14.7k")
 			(description "Resistor")
 			(fields
 				(field
@@ -724,7 +724,7 @@
 		)
 		(comp
 			(ref "R4")
-			(value "10K")
+			(value "5.9K")
 			(description "Resistor")
 			(fields
 				(field
@@ -1047,6 +1047,60 @@
 			)
 		)
 		(comp
+			(ref "R14")
+			(value "9.6k")
+			(description "Resistor")
+			(fields
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Resistor")
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "String Preamp Test Board")
+			)
+			(property
+				(name "Sheetfile")
+				(value "String Preamp Test Board.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "9a7e375d-0ab2-4b30-957c-6a08ee609e21")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
 			(ref "RV1")
 			(value "100k")
 			(footprint "Potentiometer_THT:Potentiometer_Alps_RK097_Single_Horizontal")
@@ -1280,7 +1334,7 @@
 			(description "Quad operational amplifier")
 			(fields
 				(field
-					(name "Sim.Library") "tlv9004_sim.lib")
+					(name "Sim.Library") "tlv9004.lib")
 				(field
 					(name "Sim.Name") "TLV9004")
 				(field
@@ -1303,7 +1357,7 @@
 			)
 			(property
 				(name "Sim.Library")
-				(value "tlv9004_sim.lib")
+				(value "tlv9004.lib")
 			)
 			(property
 				(name "Sim.Name")
@@ -1337,8 +1391,8 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "092d64d0-a045-441e-a52c-9e674d2d4943" "521aabfe-66a5-4960-b2f3-cdb75adcc62f"
-				"0b4e415d-7fc9-4be4-8883-c766b4950bdb" "ccc68501-385d-4218-9695-c892c473ff90"
+			(tstamps "092d64d0-a045-441e-a52c-9e674d2d4943" "0b4e415d-7fc9-4be4-8883-c766b4950bdb"
+				"521aabfe-66a5-4960-b2f3-cdb75adcc62f" "ccc68501-385d-4218-9695-c892c473ff90"
 				"00062b03-0676-44bc-959f-9dcdf50b04e8"
 			)
 			(units
@@ -1480,60 +1534,6 @@
 			)
 		)
 		(comp
-			(ref "C8")
-			(value "5.6nF")
-			(footprint "Capacitor_SMD:C_0402_1005Metric")
-			(description "Unpolarized capacitor, small symbol")
-			(fields
-				(field
-					(name "Footprint") "Capacitor_SMD:C_0402_1005Metric")
-				(field
-					(name "Datasheet")
-				)
-				(field
-					(name "Description") "Unpolarized capacitor, small symbol")
-			)
-			(libsource
-				(lib "Device")
-				(part "C_Small")
-				(description "Unpolarized capacitor, small symbol")
-			)
-			(property
-				(name "Sheetname")
-				(value "Summer")
-			)
-			(property
-				(name "Sheetfile")
-				(value "Summer.kicad_sch")
-			)
-			(property
-				(name "ki_keywords")
-				(value "capacitor cap")
-			)
-			(property
-				(name "ki_fp_filters")
-				(value "C_*")
-			)
-			(sheetpath
-				(names "/Summer/")
-				(tstamps "/03c40853-3202-4ac0-9ecc-52e0eb91cbde/")
-			)
-			(tstamps "0f076ee9-592e-47b9-8107-169f42128dc8")
-			(units
-				(unit
-					(name "A")
-					(pins
-						(pin
-							(num "1")
-						)
-						(pin
-							(num "2")
-						)
-					)
-				)
-			)
-		)
-		(comp
 			(ref "C9")
 			(value "100nF")
 			(footprint "Capacitor_SMD:C_0402_1005Metric")
@@ -1589,22 +1589,22 @@
 		)
 		(comp
 			(ref "J1")
-			(value "~")
-			(footprint "Connector_PinHeader_2.00mm:PinHeader_1x04_P2.00mm_Vertical")
-			(description "Generic connector, single row, 01x04, script generated")
+			(value "Conn_01x07_Socket")
+			(description "Generic connector, single row, 01x07, script generated")
 			(fields
 				(field
-					(name "Footprint") "Connector_PinHeader_2.00mm:PinHeader_1x04_P2.00mm_Vertical")
+					(name "Footprint")
+				)
 				(field
 					(name "Datasheet")
 				)
 				(field
-					(name "Description") "Generic connector, single row, 01x04, script generated")
+					(name "Description") "Generic connector, single row, 01x07, script generated")
 			)
 			(libsource
 				(lib "Connector")
-				(part "Conn_01x04_Socket")
-				(description "Generic connector, single row, 01x04, script generated")
+				(part "Conn_01x07_Socket")
+				(description "Generic connector, single row, 01x07, script generated")
 			)
 			(property
 				(name "Sheetname")
@@ -1626,7 +1626,7 @@
 				(names "/Summer/")
 				(tstamps "/03c40853-3202-4ac0-9ecc-52e0eb91cbde/")
 			)
-			(tstamps "aed4b189-aaa7-4a3c-9bb7-f23d99b1ccbd")
+			(tstamps "4d187078-c9fb-4af6-a6f8-60ffb84f32c7")
 			(units
 				(unit
 					(name "A")
@@ -1643,13 +1643,22 @@
 						(pin
 							(num "4")
 						)
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "6")
+						)
+						(pin
+							(num "7")
+						)
 					)
 				)
 			)
 		)
 		(comp
 			(ref "R10")
-			(value "100K")
+			(value "20k")
 			(footprint "Resistor_SMD:R_0402_1005Metric")
 			(description "Resistor")
 			(fields
@@ -1703,7 +1712,7 @@
 		)
 		(comp
 			(ref "R11")
-			(value "100K")
+			(value "20k")
 			(footprint "Resistor_SMD:R_0402_1005Metric")
 			(description "Resistor")
 			(fields
@@ -1757,7 +1766,7 @@
 		)
 		(comp
 			(ref "R12")
-			(value "100K")
+			(value "20k")
 			(footprint "Resistor_SMD:R_0402_1005Metric")
 			(description "Resistor")
 			(fields
@@ -1811,7 +1820,7 @@
 		)
 		(comp
 			(ref "R13")
-			(value "100K")
+			(value "20k")
 			(footprint "Resistor_SMD:R_0402_1005Metric")
 			(description "Resistor")
 			(fields
@@ -1864,116 +1873,8 @@
 			)
 		)
 		(comp
-			(ref "R14")
-			(value "1Meg")
-			(footprint "Resistor_SMD:R_0402_1005Metric")
-			(description "Resistor")
-			(fields
-				(field
-					(name "Footprint") "Resistor_SMD:R_0402_1005Metric")
-				(field
-					(name "Datasheet")
-				)
-				(field
-					(name "Description") "Resistor")
-			)
-			(libsource
-				(lib "Device")
-				(part "R")
-				(description "Resistor")
-			)
-			(property
-				(name "Sheetname")
-				(value "Summer")
-			)
-			(property
-				(name "Sheetfile")
-				(value "Summer.kicad_sch")
-			)
-			(property
-				(name "ki_keywords")
-				(value "R res resistor")
-			)
-			(property
-				(name "ki_fp_filters")
-				(value "R_*")
-			)
-			(sheetpath
-				(names "/Summer/")
-				(tstamps "/03c40853-3202-4ac0-9ecc-52e0eb91cbde/")
-			)
-			(tstamps "582abf6b-1aa1-42d7-b2d6-42c3a1616529")
-			(units
-				(unit
-					(name "A")
-					(pins
-						(pin
-							(num "1")
-						)
-						(pin
-							(num "2")
-						)
-					)
-				)
-			)
-		)
-		(comp
-			(ref "R15")
-			(value "2.2k")
-			(footprint "Resistor_SMD:R_0402_1005Metric")
-			(description "Resistor")
-			(fields
-				(field
-					(name "Footprint") "Resistor_SMD:R_0402_1005Metric")
-				(field
-					(name "Datasheet")
-				)
-				(field
-					(name "Description") "Resistor")
-			)
-			(libsource
-				(lib "Device")
-				(part "R")
-				(description "Resistor")
-			)
-			(property
-				(name "Sheetname")
-				(value "Summer")
-			)
-			(property
-				(name "Sheetfile")
-				(value "Summer.kicad_sch")
-			)
-			(property
-				(name "ki_keywords")
-				(value "R res resistor")
-			)
-			(property
-				(name "ki_fp_filters")
-				(value "R_*")
-			)
-			(sheetpath
-				(names "/Summer/")
-				(tstamps "/03c40853-3202-4ac0-9ecc-52e0eb91cbde/")
-			)
-			(tstamps "e680b44e-fc7d-4737-90dc-6987816755b3")
-			(units
-				(unit
-					(name "A")
-					(pins
-						(pin
-							(num "1")
-						)
-						(pin
-							(num "2")
-						)
-					)
-				)
-			)
-		)
-		(comp
 			(ref "R16")
-			(value "22k")
+			(value "20k")
 			(footprint "Resistor_SMD:R_0402_1005Metric")
 			(description "Resistor")
 			(fields
@@ -2357,7 +2258,7 @@
 			(description "Low-power, Rail-to-Rail, 1MHz Operational Amplifier, SOT-353")
 			(fields
 				(field
-					(name "Sim.Library") "tlv9004_sim.lib")
+					(name "Sim.Library") "tlv9001.lib")
 				(field
 					(name "Sim.Name") "TLV9001")
 				(field
@@ -2378,7 +2279,7 @@
 			)
 			(property
 				(name "Sim.Library")
-				(value "tlv9004_sim.lib")
+				(value "tlv9001.lib")
 			)
 			(property
 				(name "Sim.Name")
@@ -2445,7 +2346,7 @@
 				(field
 					(name "Sim.Pins") "1=+ 2=-")
 				(field
-					(name "Sim.Params") "dc=0 ampl=1 f=1k ac=1")
+					(name "Sim.Params") "dc=0 ampl=.34 f=1k ac=1")
 				(field
 					(name "Sim.Type") "SIN")
 				(field
@@ -2469,7 +2370,7 @@
 			)
 			(property
 				(name "Sim.Params")
-				(value "dc=0 ampl=1 f=1k ac=1")
+				(value "dc=0 ampl=.34 f=1k ac=1")
 			)
 			(property
 				(name "Sim.Type")
@@ -2496,60 +2397,6 @@
 				(tstamps "/03c40853-3202-4ac0-9ecc-52e0eb91cbde/")
 			)
 			(tstamps "67848362-14e3-4eeb-bb4f-4e0c8a6a9da2")
-			(units
-				(unit
-					(name "A")
-					(pins
-						(pin
-							(num "1")
-						)
-						(pin
-							(num "2")
-						)
-					)
-				)
-			)
-		)
-		(comp
-			(ref "C10")
-			(value "5.6nF")
-			(footprint "Capacitor_SMD:C_0402_1005Metric")
-			(description "Unpolarized capacitor, small symbol")
-			(fields
-				(field
-					(name "Footprint") "Capacitor_SMD:C_0402_1005Metric")
-				(field
-					(name "Datasheet")
-				)
-				(field
-					(name "Description") "Unpolarized capacitor, small symbol")
-			)
-			(libsource
-				(lib "Device")
-				(part "C_Small")
-				(description "Unpolarized capacitor, small symbol")
-			)
-			(property
-				(name "Sheetname")
-				(value "Summer1")
-			)
-			(property
-				(name "Sheetfile")
-				(value "Summer.kicad_sch")
-			)
-			(property
-				(name "ki_keywords")
-				(value "capacitor cap")
-			)
-			(property
-				(name "ki_fp_filters")
-				(value "C_*")
-			)
-			(sheetpath
-				(names "/Summer1/")
-				(tstamps "/a06fcc1e-adfb-481a-8c57-b21e06d67d3a/")
-			)
-			(tstamps "0f076ee9-592e-47b9-8107-169f42128dc8")
 			(units
 				(unit
 					(name "A")
@@ -2620,22 +2467,22 @@
 		)
 		(comp
 			(ref "J2")
-			(value "~")
-			(footprint "Connector_PinHeader_2.00mm:PinHeader_1x04_P2.00mm_Vertical")
-			(description "Generic connector, single row, 01x04, script generated")
+			(value "Conn_01x07_Socket")
+			(description "Generic connector, single row, 01x07, script generated")
 			(fields
 				(field
-					(name "Footprint") "Connector_PinHeader_2.00mm:PinHeader_1x04_P2.00mm_Vertical")
+					(name "Footprint")
+				)
 				(field
 					(name "Datasheet")
 				)
 				(field
-					(name "Description") "Generic connector, single row, 01x04, script generated")
+					(name "Description") "Generic connector, single row, 01x07, script generated")
 			)
 			(libsource
 				(lib "Connector")
-				(part "Conn_01x04_Socket")
-				(description "Generic connector, single row, 01x04, script generated")
+				(part "Conn_01x07_Socket")
+				(description "Generic connector, single row, 01x07, script generated")
 			)
 			(property
 				(name "Sheetname")
@@ -2657,7 +2504,7 @@
 				(names "/Summer1/")
 				(tstamps "/a06fcc1e-adfb-481a-8c57-b21e06d67d3a/")
 			)
-			(tstamps "aed4b189-aaa7-4a3c-9bb7-f23d99b1ccbd")
+			(tstamps "4d187078-c9fb-4af6-a6f8-60ffb84f32c7")
 			(units
 				(unit
 					(name "A")
@@ -2674,13 +2521,22 @@
 						(pin
 							(num "4")
 						)
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "6")
+						)
+						(pin
+							(num "7")
+						)
 					)
 				)
 			)
 		)
 		(comp
 			(ref "R17")
-			(value "100K")
+			(value "20k")
 			(footprint "Resistor_SMD:R_0402_1005Metric")
 			(description "Resistor")
 			(fields
@@ -2734,7 +2590,7 @@
 		)
 		(comp
 			(ref "R18")
-			(value "100K")
+			(value "20k")
 			(footprint "Resistor_SMD:R_0402_1005Metric")
 			(description "Resistor")
 			(fields
@@ -2788,7 +2644,7 @@
 		)
 		(comp
 			(ref "R19")
-			(value "100K")
+			(value "20k")
 			(footprint "Resistor_SMD:R_0402_1005Metric")
 			(description "Resistor")
 			(fields
@@ -2842,7 +2698,7 @@
 		)
 		(comp
 			(ref "R20")
-			(value "100K")
+			(value "20k")
 			(footprint "Resistor_SMD:R_0402_1005Metric")
 			(description "Resistor")
 			(fields
@@ -2895,116 +2751,8 @@
 			)
 		)
 		(comp
-			(ref "R21")
-			(value "1Meg")
-			(footprint "Resistor_SMD:R_0402_1005Metric")
-			(description "Resistor")
-			(fields
-				(field
-					(name "Footprint") "Resistor_SMD:R_0402_1005Metric")
-				(field
-					(name "Datasheet")
-				)
-				(field
-					(name "Description") "Resistor")
-			)
-			(libsource
-				(lib "Device")
-				(part "R")
-				(description "Resistor")
-			)
-			(property
-				(name "Sheetname")
-				(value "Summer1")
-			)
-			(property
-				(name "Sheetfile")
-				(value "Summer.kicad_sch")
-			)
-			(property
-				(name "ki_keywords")
-				(value "R res resistor")
-			)
-			(property
-				(name "ki_fp_filters")
-				(value "R_*")
-			)
-			(sheetpath
-				(names "/Summer1/")
-				(tstamps "/a06fcc1e-adfb-481a-8c57-b21e06d67d3a/")
-			)
-			(tstamps "582abf6b-1aa1-42d7-b2d6-42c3a1616529")
-			(units
-				(unit
-					(name "A")
-					(pins
-						(pin
-							(num "1")
-						)
-						(pin
-							(num "2")
-						)
-					)
-				)
-			)
-		)
-		(comp
-			(ref "R22")
-			(value "2.2k")
-			(footprint "Resistor_SMD:R_0402_1005Metric")
-			(description "Resistor")
-			(fields
-				(field
-					(name "Footprint") "Resistor_SMD:R_0402_1005Metric")
-				(field
-					(name "Datasheet")
-				)
-				(field
-					(name "Description") "Resistor")
-			)
-			(libsource
-				(lib "Device")
-				(part "R")
-				(description "Resistor")
-			)
-			(property
-				(name "Sheetname")
-				(value "Summer1")
-			)
-			(property
-				(name "Sheetfile")
-				(value "Summer.kicad_sch")
-			)
-			(property
-				(name "ki_keywords")
-				(value "R res resistor")
-			)
-			(property
-				(name "ki_fp_filters")
-				(value "R_*")
-			)
-			(sheetpath
-				(names "/Summer1/")
-				(tstamps "/a06fcc1e-adfb-481a-8c57-b21e06d67d3a/")
-			)
-			(tstamps "e680b44e-fc7d-4737-90dc-6987816755b3")
-			(units
-				(unit
-					(name "A")
-					(pins
-						(pin
-							(num "1")
-						)
-						(pin
-							(num "2")
-						)
-					)
-				)
-			)
-		)
-		(comp
 			(ref "R23")
-			(value "22k")
+			(value "20k")
 			(footprint "Resistor_SMD:R_0402_1005Metric")
 			(description "Resistor")
 			(fields
@@ -3388,7 +3136,7 @@
 			(description "Low-power, Rail-to-Rail, 1MHz Operational Amplifier, SOT-353")
 			(fields
 				(field
-					(name "Sim.Library") "tlv9004_sim.lib")
+					(name "Sim.Library") "tlv9001.lib")
 				(field
 					(name "Sim.Name") "TLV9001")
 				(field
@@ -3409,7 +3157,7 @@
 			)
 			(property
 				(name "Sim.Library")
-				(value "tlv9004_sim.lib")
+				(value "tlv9001.lib")
 			)
 			(property
 				(name "Sim.Name")
@@ -3476,7 +3224,7 @@
 				(field
 					(name "Sim.Pins") "1=+ 2=-")
 				(field
-					(name "Sim.Params") "dc=0 ampl=1 f=1k ac=1")
+					(name "Sim.Params") "dc=0 ampl=.34 f=1k ac=1")
 				(field
 					(name "Sim.Type") "SIN")
 				(field
@@ -3500,7 +3248,7 @@
 			)
 			(property
 				(name "Sim.Params")
-				(value "dc=0 ampl=1 f=1k ac=1")
+				(value "dc=0 ampl=.34 f=1k ac=1")
 			)
 			(property
 				(name "Sim.Type")
@@ -4642,8 +4390,8 @@
 		)
 		(libpart
 			(lib "Connector")
-			(part "Conn_01x04_Socket")
-			(description "Generic connector, single row, 01x04, script generated")
+			(part "Conn_01x07_Socket")
+			(description "Generic connector, single row, 01x07, script generated")
 			(footprints
 				(fp "Connector*:*_1x??_*")
 			)
@@ -4651,7 +4399,7 @@
 				(field
 					(name "Reference") "J")
 				(field
-					(name "Value") "Conn_01x04_Socket")
+					(name "Value") "Conn_01x07_Socket")
 				(field
 					(name "Footprint")
 				)
@@ -4659,7 +4407,7 @@
 					(name "Datasheet")
 				)
 				(field
-					(name "Description") "Generic connector, single row, 01x04, script generated")
+					(name "Description") "Generic connector, single row, 01x07, script generated")
 			)
 			(pins
 				(pin
@@ -4680,6 +4428,21 @@
 				(pin
 					(num "4")
 					(name "Pin_4")
+					(type "passive")
+				)
+				(pin
+					(num "5")
+					(name "Pin_5")
+					(type "passive")
+				)
+				(pin
+					(num "6")
+					(name "Pin_6")
+					(type "passive")
+				)
+				(pin
+					(num "7")
+					(name "Pin_7")
 					(type "passive")
 				)
 			)
@@ -5073,40 +4836,7 @@
 				(pintype "passive")
 			)
 			(node
-				(ref "R11")
-				(pin "1")
-				(pintype "passive")
-			)
-			(node
-				(ref "R12")
-				(pin "1")
-				(pintype "passive")
-			)
-			(node
-				(ref "R13")
-				(pin "1")
-				(pintype "passive")
-			)
-			(node
 				(ref "RV4")
-				(pin "2")
-				(pinfunction "2_2")
-				(pintype "passive")
-			)
-			(node
-				(ref "RV5")
-				(pin "2")
-				(pinfunction "2_2")
-				(pintype "passive")
-			)
-			(node
-				(ref "RV6")
-				(pin "2")
-				(pinfunction "2_2")
-				(pintype "passive")
-			)
-			(node
-				(ref "RV7")
 				(pin "2")
 				(pinfunction "2_2")
 				(pintype "passive")
@@ -5127,40 +4857,7 @@
 				(pintype "passive")
 			)
 			(node
-				(ref "R18")
-				(pin "1")
-				(pintype "passive")
-			)
-			(node
-				(ref "R19")
-				(pin "1")
-				(pintype "passive")
-			)
-			(node
-				(ref "R20")
-				(pin "1")
-				(pintype "passive")
-			)
-			(node
-				(ref "RV10")
-				(pin "2")
-				(pinfunction "2_2")
-				(pintype "passive")
-			)
-			(node
-				(ref "RV11")
-				(pin "2")
-				(pinfunction "2_2")
-				(pintype "passive")
-			)
-			(node
 				(ref "RV8")
-				(pin "2")
-				(pinfunction "2_2")
-				(pintype "passive")
-			)
-			(node
-				(ref "RV9")
 				(pin "2")
 				(pinfunction "2_2")
 				(pintype "passive")
@@ -5173,6 +4870,71 @@
 		)
 		(net
 			(code "6")
+			(name "/VG")
+			(class "Default")
+			(node
+				(ref "C3")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J1")
+				(pin "6")
+				(pinfunction "Pin_6_6")
+				(pintype "passive")
+			)
+			(node
+				(ref "J2")
+				(pin "6")
+				(pinfunction "Pin_6_6")
+				(pintype "passive")
+			)
+			(node
+				(ref "R14")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "R5")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U1")
+				(pin "13")
+				(pinfunction "-_13")
+				(pintype "input")
+			)
+			(node
+				(ref "U1")
+				(pin "14")
+				(pintype "output")
+			)
+			(node
+				(ref "U2")
+				(pin "1")
+				(pinfunction "+_1")
+				(pintype "input")
+			)
+			(node
+				(ref "U3")
+				(pin "1")
+				(pinfunction "+_1")
+				(pintype "input")
+			)
+			(node
+				(ref "V1")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "V3")
+				(pin "2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "7")
 			(name "/buf_in")
 			(class "Default")
 			(node
@@ -5194,8 +4956,8 @@
 			)
 		)
 		(net
-			(code "7")
-			(name "/filt_in")
+			(code "8")
+			(name "/filt_out")
 			(class "Default")
 			(node
 				(ref "C2")
@@ -5220,7 +4982,7 @@
 			)
 		)
 		(net
-			(code "8")
+			(code "9")
 			(name "/out")
 			(class "Default")
 			(node
@@ -5237,7 +4999,7 @@
 			)
 		)
 		(net
-			(code "9")
+			(code "10")
 			(name "/p1_out")
 			(class "Default")
 			(node
@@ -5257,7 +5019,7 @@
 			)
 		)
 		(net
-			(code "10")
+			(code "11")
 			(name "/p2_out")
 			(class "Default")
 			(node
@@ -5277,7 +5039,7 @@
 			)
 		)
 		(net
-			(code "11")
+			(code "12")
 			(name "/sum_in")
 			(class "Default")
 			(node
@@ -5294,7 +5056,28 @@
 			)
 		)
 		(net
-			(code "12")
+			(code "13")
+			(name "/sum_out")
+			(class "Default")
+			(node
+				(ref "R3")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U1")
+				(pin "1")
+				(pintype "output")
+			)
+			(node
+				(ref "U1")
+				(pin "2")
+				(pinfunction "-_2")
+				(pintype "input")
+			)
+		)
+		(net
+			(code "14")
 			(name "/v+")
 			(class "Default")
 			(node
@@ -5315,6 +5098,18 @@
 			(node
 				(ref "C9")
 				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J1")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J2")
+				(pin "1")
+				(pinfunction "Pin_1_1")
 				(pintype "passive")
 			)
 			(node
@@ -5364,7 +5159,7 @@
 			)
 		)
 		(net
-			(code "13")
+			(code "15")
 			(name "/vref")
 			(class "Default")
 			(node
@@ -5390,7 +5185,7 @@
 			)
 		)
 		(net
-			(code "14")
+			(code "16")
 			(name "GND")
 			(class "Default")
 			(node
@@ -5436,6 +5231,18 @@
 			(node
 				(ref "C9")
 				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J1")
+				(pin "7")
+				(pinfunction "Pin_7_7")
+				(pintype "passive")
+			)
+			(node
+				(ref "J2")
+				(pin "7")
+				(pinfunction "Pin_7_7")
 				(pintype "passive")
 			)
 			(node
@@ -5550,28 +5357,23 @@
 				(pintype "power_in")
 			)
 			(node
-				(ref "V1")
-				(pin "2")
-				(pintype "passive")
-			)
-			(node
 				(ref "V2")
-				(pin "2")
-				(pintype "passive")
-			)
-			(node
-				(ref "V3")
 				(pin "2")
 				(pintype "passive")
 			)
 		)
 		(net
-			(code "15")
+			(code "17")
 			(name "Net-(C2-Pad1)")
 			(class "Default")
 			(node
 				(ref "C2")
 				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "R14")
+				(pin "2")
 				(pintype "passive")
 			)
 			(node
@@ -5586,7 +5388,7 @@
 			)
 		)
 		(net
-			(code "16")
+			(code "18")
 			(name "Net-(C7-Pad1)")
 			(class "Default")
 			(node
@@ -5601,73 +5403,13 @@
 			)
 		)
 		(net
-			(code "17")
-			(name "Net-(C8-Pad1)")
-			(class "Default")
-			(node
-				(ref "C8")
-				(pin "1")
-				(pintype "passive")
-			)
-			(node
-				(ref "R10")
-				(pin "2")
-				(pintype "passive")
-			)
-			(node
-				(ref "R11")
-				(pin "2")
-				(pintype "passive")
-			)
-			(node
-				(ref "R12")
-				(pin "2")
-				(pintype "passive")
-			)
-			(node
-				(ref "R13")
-				(pin "2")
-				(pintype "passive")
-			)
-		)
-		(net
-			(code "18")
-			(name "Net-(C10-Pad1)")
-			(class "Default")
-			(node
-				(ref "C10")
-				(pin "1")
-				(pintype "passive")
-			)
-			(node
-				(ref "R17")
-				(pin "2")
-				(pintype "passive")
-			)
-			(node
-				(ref "R18")
-				(pin "2")
-				(pintype "passive")
-			)
-			(node
-				(ref "R19")
-				(pin "2")
-				(pintype "passive")
-			)
-			(node
-				(ref "R20")
-				(pin "2")
-				(pintype "passive")
-			)
-		)
-		(net
 			(code "19")
-			(name "Net-(J1-Pin_1)")
+			(name "Net-(J1-Pin_2)")
 			(class "Default")
 			(node
 				(ref "J1")
-				(pin "1")
-				(pinfunction "Pin_1_1")
+				(pin "2")
+				(pinfunction "Pin_2_2")
 				(pintype "passive")
 			)
 			(node
@@ -5679,12 +5421,12 @@
 		)
 		(net
 			(code "20")
-			(name "Net-(J1-Pin_2)")
+			(name "Net-(J1-Pin_3)")
 			(class "Default")
 			(node
 				(ref "J1")
-				(pin "2")
-				(pinfunction "Pin_2_2")
+				(pin "3")
+				(pinfunction "Pin_3_3")
 				(pintype "passive")
 			)
 			(node
@@ -5696,12 +5438,12 @@
 		)
 		(net
 			(code "21")
-			(name "Net-(J1-Pin_3)")
+			(name "Net-(J1-Pin_4)")
 			(class "Default")
 			(node
 				(ref "J1")
-				(pin "3")
-				(pinfunction "Pin_3_3")
+				(pin "4")
+				(pinfunction "Pin_4_4")
 				(pintype "passive")
 			)
 			(node
@@ -5713,12 +5455,12 @@
 		)
 		(net
 			(code "22")
-			(name "Net-(J1-Pin_4)")
+			(name "Net-(J1-Pin_5)")
 			(class "Default")
 			(node
 				(ref "J1")
-				(pin "4")
-				(pinfunction "Pin_4_4")
+				(pin "5")
+				(pinfunction "Pin_5_5")
 				(pintype "passive")
 			)
 			(node
@@ -5730,12 +5472,12 @@
 		)
 		(net
 			(code "23")
-			(name "Net-(J2-Pin_1)")
+			(name "Net-(J2-Pin_2)")
 			(class "Default")
 			(node
 				(ref "J2")
-				(pin "1")
-				(pinfunction "Pin_1_1")
+				(pin "2")
+				(pinfunction "Pin_2_2")
 				(pintype "passive")
 			)
 			(node
@@ -5747,12 +5489,12 @@
 		)
 		(net
 			(code "24")
-			(name "Net-(J2-Pin_2)")
+			(name "Net-(J2-Pin_3)")
 			(class "Default")
 			(node
 				(ref "J2")
-				(pin "2")
-				(pinfunction "Pin_2_2")
+				(pin "3")
+				(pinfunction "Pin_3_3")
 				(pintype "passive")
 			)
 			(node
@@ -5764,12 +5506,12 @@
 		)
 		(net
 			(code "25")
-			(name "Net-(J2-Pin_3)")
+			(name "Net-(J2-Pin_4)")
 			(class "Default")
 			(node
 				(ref "J2")
-				(pin "3")
-				(pinfunction "Pin_3_3")
+				(pin "4")
+				(pinfunction "Pin_4_4")
 				(pintype "passive")
 			)
 			(node
@@ -5781,12 +5523,12 @@
 		)
 		(net
 			(code "26")
-			(name "Net-(J2-Pin_4)")
+			(name "Net-(J2-Pin_5)")
 			(class "Default")
 			(node
 				(ref "J2")
-				(pin "4")
-				(pinfunction "Pin_4_4")
+				(pin "5")
+				(pinfunction "Pin_5_5")
 				(pintype "passive")
 			)
 			(node
@@ -5852,27 +5594,102 @@
 		)
 		(net
 			(code "30")
-			(name "Net-(U1A--)")
+			(name "Net-(R11-Pad1)")
 			(class "Default")
 			(node
-				(ref "R3")
+				(ref "R11")
 				(pin "1")
 				(pintype "passive")
 			)
 			(node
-				(ref "U1")
-				(pin "1")
-				(pintype "output")
-			)
-			(node
-				(ref "U1")
+				(ref "RV5")
 				(pin "2")
-				(pinfunction "-_2")
-				(pintype "input")
+				(pinfunction "2_2")
+				(pintype "passive")
 			)
 		)
 		(net
 			(code "31")
+			(name "Net-(R12-Pad1)")
+			(class "Default")
+			(node
+				(ref "R12")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "RV6")
+				(pin "2")
+				(pinfunction "2_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "32")
+			(name "Net-(R13-Pad1)")
+			(class "Default")
+			(node
+				(ref "R13")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "RV7")
+				(pin "2")
+				(pinfunction "2_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "33")
+			(name "Net-(R18-Pad1)")
+			(class "Default")
+			(node
+				(ref "R18")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "RV9")
+				(pin "2")
+				(pinfunction "2_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "34")
+			(name "Net-(R19-Pad1)")
+			(class "Default")
+			(node
+				(ref "R19")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "RV10")
+				(pin "2")
+				(pinfunction "2_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "35")
+			(name "Net-(R20-Pad1)")
+			(class "Default")
+			(node
+				(ref "R20")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "RV11")
+				(pin "2")
+				(pinfunction "2_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "36")
 			(name "Net-(U1B--)")
 			(class "Default")
 			(node
@@ -5893,7 +5710,7 @@
 			)
 		)
 		(net
-			(code "32")
+			(code "37")
 			(name "Net-(U1C-+)")
 			(class "Default")
 			(node
@@ -5914,7 +5731,7 @@
 			)
 		)
 		(net
-			(code "33")
+			(code "38")
 			(name "Net-(U1C--)")
 			(class "Default")
 			(node
@@ -5935,32 +5752,26 @@
 			)
 		)
 		(net
-			(code "34")
-			(name "Net-(U2-+)")
+			(code "39")
+			(name "Net-(U2--)")
 			(class "Default")
 			(node
-				(ref "C8")
+				(ref "R10")
 				(pin "2")
 				(pintype "passive")
 			)
 			(node
-				(ref "R14")
-				(pin "1")
+				(ref "R11")
+				(pin "2")
 				(pintype "passive")
 			)
 			(node
-				(ref "U2")
-				(pin "1")
-				(pinfunction "+_1")
-				(pintype "input")
+				(ref "R12")
+				(pin "2")
+				(pintype "passive")
 			)
-		)
-		(net
-			(code "35")
-			(name "Net-(U2--)")
-			(class "Default")
 			(node
-				(ref "R15")
+				(ref "R13")
 				(pin "2")
 				(pintype "passive")
 			)
@@ -5977,32 +5788,26 @@
 			)
 		)
 		(net
-			(code "36")
-			(name "Net-(U3-+)")
+			(code "40")
+			(name "Net-(U3--)")
 			(class "Default")
 			(node
-				(ref "C10")
+				(ref "R17")
 				(pin "2")
 				(pintype "passive")
 			)
 			(node
-				(ref "R21")
-				(pin "1")
+				(ref "R18")
+				(pin "2")
 				(pintype "passive")
 			)
 			(node
-				(ref "U3")
-				(pin "1")
-				(pinfunction "+_1")
-				(pintype "input")
+				(ref "R19")
+				(pin "2")
+				(pintype "passive")
 			)
-		)
-		(net
-			(code "37")
-			(name "Net-(U3--)")
-			(class "Default")
 			(node
-				(ref "R22")
+				(ref "R20")
 				(pin "2")
 				(pintype "passive")
 			)
@@ -6019,7 +5824,7 @@
 			)
 		)
 		(net
-			(code "38")
+			(code "41")
 			(name "Net-(U5-PROG)")
 			(class "Default")
 			(node
@@ -6035,53 +5840,7 @@
 			)
 		)
 		(net
-			(code "39")
-			(name "VG")
-			(class "Default")
-			(node
-				(ref "C3")
-				(pin "2")
-				(pintype "passive")
-			)
-			(node
-				(ref "R14")
-				(pin "2")
-				(pintype "passive")
-			)
-			(node
-				(ref "R15")
-				(pin "1")
-				(pintype "passive")
-			)
-			(node
-				(ref "R21")
-				(pin "2")
-				(pintype "passive")
-			)
-			(node
-				(ref "R22")
-				(pin "1")
-				(pintype "passive")
-			)
-			(node
-				(ref "R5")
-				(pin "1")
-				(pintype "passive")
-			)
-			(node
-				(ref "U1")
-				(pin "13")
-				(pinfunction "-_13")
-				(pintype "input")
-			)
-			(node
-				(ref "U1")
-				(pin "14")
-				(pintype "output")
-			)
-		)
-		(net
-			(code "40")
+			(code "42")
 			(name "unconnected-(RV2-Pad1)")
 			(class "Default")
 			(node
@@ -6092,7 +5851,7 @@
 			)
 		)
 		(net
-			(code "41")
+			(code "43")
 			(name "unconnected-(U5-CHRG-Pad1)")
 			(class "Default")
 			(node

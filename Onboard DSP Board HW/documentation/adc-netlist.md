@@ -78,12 +78,23 @@ With **C_in = 4.7 µF** fixed, the impedance setting directly picks the corner. 
 
 ### 2.1 ⚠ PROPOSAL — DC-coupled differential input on one added conductor
 
-**Carry the pickup board's buffered reference to the converter on a single added
-cable conductor, present it to the cold input pins, and configure the inputs as
-DC-coupled differential.** Status: **proposal**, pending simulation and the
-datasheet confirmation in the *open checks* below. Board side is
-`preamp-board.md` §4; the reasoning that produced it is `analog-front-end.md`
-§6.3.
+**Generate the instrument's reference on this board, carry it to the pickup
+boards on a single added cable conductor, and configure the converter inputs as
+DC-coupled differential with the cold pins on that same node.** Each pickup board
+filters and re-buffers the reference it receives (`preamp-board.md` §3.1, §8) and
+returns nothing. Status: **proposal**, pending simulation and the datasheet
+confirmation in the *open checks* below. Board side is `preamp-board.md` §4; the
+reasoning that produced it is `analog-front-end.md` §6.3.
+
+⚠ **The direction was reversed on 2026-08-26, after this section was first
+written.** An earlier revision generated the reference on the pickup board and
+sent it here. The requirement that reversed it comes from the *analog*
+instrument, where one control-cavity board blends two pickups and therefore has
+exactly one reference node — two independently generated references differ by
+divider tolerance, and a blend control puts that difference across a wiper as a
+DC step. The pickup boards must be identical in both instruments, so that
+requirement sets the direction here too. Nothing in this section's arithmetic
+changes; two of its mechanisms do, and both are noted below.
 
 **It costs no converter channels.** Each device has four `INxP`/`INxM` **pairs**
 and records **four analog channels whether those pairs are configured
@@ -133,17 +144,27 @@ so the converter's common-mode rejection subtracts all three:
   form for a per-string estimator. **This is the open gate recorded against the
   preamp board** (`preamp-board.md` §12 item 7), and this proposal attacks it
   directly.
-- **Inter-string crosstalk through the buffer.** The summed gain-leg current of
-  four channels across the buffer's output impedance perturbs the reference, and
-  that perturbation appears in every output at unity. It cancels — **provided the
-  cable conductor is sensed at the reference star node**, not partway down the
-  distribution. Specify a Kelvin connection at the star point.
 - **The ground offset between the two boards.** The preamp draws roughly 3.9 mA
-  through a 28 AWG return, and both the static drop and its signal-correlated
-  content appear identically on the signal and reference conductors. **This is
-  the reason the conductor must originate at the pickup board.** A reference
-  reproduced locally at the converter from the same rail would cancel the bias
-  and leave this term untouched.
+  through a 28 AWG return, and its static drop and signal-correlated content
+  would otherwise appear in every channel. It does not, and **the direction of
+  the conductor is irrelevant to this**: the channel amplifier's output is
+  defined by feedback relative to its reference, not relative to its local
+  ground, so the output floats on the reference wherever that reference was
+  generated. Differencing against the same node removes the offset either way.
+
+⚠ **Inter-string crosstalk through the buffer is now bounded rather than
+cancelled, and the bound is lower than the cancellation was worth.** The earlier
+revision had the gain legs returning to a star node on the pickup board that the
+cable Kelvin-sensed, so the perturbation those legs produced was common to the
+outputs and to the cold pins and subtracted. With the reference generated here,
+the pickup board's **local re-buffer** is what keeps that current off the cable:
+the legs draw from a buffer output of a few tens of milliohms rather than from
+0.1 Ω of conductor, so 36 µA worst case develops 0.65 µV — about **−108 dB**,
+uncancelled and still far below the front end's own noise. Had the legs returned
+to the raw conductor instead, the same current would develop 3.6 µV, roughly
+−93 dB, which is about 4 dB below the noise floor and would also have been
+tolerable. **The local buffer is not optional**; the Kelvin-sense requirement it
+replaces is withdrawn.
 
 Common-mode rejection is **60 dB typical** at 0 dB channel gain (SBAS892A). That
 is modest by differential-receiver standards and ample here, because the terms
@@ -165,6 +186,107 @@ shared node, and small enough not to shunt the reference in the audio band, wher
 shunting it would discard the rejection this proposal exists to buy. Sizing is an
 open item.
 
+#### The generator on this board
+
+**A divider on `3V3_A`, filtered at its tap, followed by a unity-gain buffer.**
+Top leg 100 kΩ, bottom leg 71.5 kΩ (E96) for 1.3757 V; filter capacitor a
+tantalum, not Class II. The buffer drives the eight cold pins, both cable
+conductors, and nothing else.
+
+**Change the bottom leg only if the value is ever revisited.** Above the filter
+pole, rail-to-reference attenuation is 1/(2π·f·C·R_top) — it depends on the top
+leg and the capacitor and not on the ratio at all, so the ratio is free to set the
+voltage. At 100 kΩ and 47 µF that is −69 dB at 100 Hz.
+
+#### Decision: derive the reference from the analog rail, not from `VREF` (2026-08-26)
+
+Deriving it from the converter's own `VREF` was considered and **rejected**. The
+attraction was real — VREF/2 is exactly the node the reference is trying to
+match, and a bandgap is not a rail, so it looked like it would zero the
+common-mode error by construction and remove the rail-ripple path at source
+rather than rejecting it. Four things count against it, and the first removes the
+prize:
+
+1. **The differential connection has already won that argument.** Rail ripple
+   reaching the reference is common to every channel output and to the cold pins,
+   so it is rejected by the converter's 60 dB of common-mode rejection. Through
+   the divider filter (−69 dB at 100 Hz) and then that rejection, it lands about
+   43 dB below the preamp's *own* supply-rejection residual, which is not
+   common-mode and therefore sets the floor instead. **The open gate recorded
+   against `preamp-board.md` §12 item 7 is closed by the connection, not by the
+   reference source**, so VREF buys nothing there.
+2. **There are two converters and two bandgaps.** No single VREF matches both
+   devices' internal common mode, so the exact-match benefit would apply to one
+   device and the other would keep its own tolerance regardless. Half a benefit
+   that was already small.
+3. **It reintroduces a power-sequencing dependency the design deliberately
+   shed.** VREF exists only once the device is powered *and* out of shutdown,
+   which is after the processor drives `CODEC_SHDNZ`. The pickup boards would
+   have no reference until then — their buffers would sit on a floating input and
+   their outputs could rest anywhere, driving DC-coupled converter inputs through
+   the whole window. Taking the reference from `3V3_A` means it comes up with the
+   rail and everything is defined from the first millisecond. This is the same
+   objection that retired MICBIAS (§1) and it applies with more force here,
+   because there is no longer a coupling capacitor in the way.
+4. **The datasheet gives VREF no output-drive specification**, only a filter
+   capacitor. Loading a bandgap can shift it — and shifting VREF moves the
+   converter's full scale *and* its internal common mode *and* the derived
+   reference together, which is a self-referential error that is awkward to
+   separate on the bench.
+
+What is given up is roughly 40 µV of differential DC offset — the rail-versus-
+bandgap mismatch of about 40 mV acting on the ~0.1% input-impedance mismatch that
+60 dB of common-mode rejection implies — and the 0.5 Hz digital high-pass removes
+it. **Take the divider on `3V3_A`.**
+
+#### How the reference is presented at this end
+
+The buffer lives on the pickup board and there is **no second buffer here** — the
+conductor arrives and fans out to the four cold pins of its own device. Three
+rules govern that fan-out, and two of them are easy to get wrong.
+
+- **There is one reference node on the board, and all eight cold pins sit on
+  it.** ⚠ This supersedes an earlier instruction here to keep the two pickups'
+  references strictly separate and never cross-tie them; that instruction
+  belonged to the reversed direction, where they were two independently buffered
+  nodes. With a single generator there is nothing to cross-tie. Each pickup
+  board's local buffer adds its own offset — 25 µV — which appears as a static
+  differential DC offset on that board's four channels and is removed by the
+  digital high-pass.
+- **Anything placed in series with a cold pin must be matched on its hot pin.**
+  Each pin presents the same programmable input impedance, so a series element in
+  one leg alone is a common-mode imbalance: 100 Ω against 10 kΩ is 1%, which caps
+  common-mode rejection at 40 dB — below the device's own 60 dB, so the
+  imbalance, not the device, would set the result. **Preferred arrangement: no
+  series parts on either side, and mirror the optional radio-frequency shunt
+  footprint from each hot pin onto its cold pin**, so the two paths stay
+  identical whether or not those parts are populated.
+- **The conductor is an output from this board and carries no signal current.**
+  It terminates in the series resistor and CMOS buffer input of
+  `preamp-board.md` §8, so its resistance and length do not enter any error term.
+  ⚠ **Whether that network is flat across the audio band is a real choice, and it
+  is made on the pickup board.** The cold pins sit on the generated node while
+  every channel output rides on the pickup board's buffered copy, so anything
+  making the two differ appears differentially at unity in every channel. A flat
+  network cancels this board's reference noise exactly and passes conductor
+  pickup; a filtered one does the reverse. Both terms are small here — see the
+  trade in `preamp-board.md` §8, where the bulk capacitor is a DNP footprint and
+  the flat case is the default.
+  Check the generator buffer's stability into the cable capacitance — 50 to
+  100 pF per conductor — and note that a small series resistor at that buffer's
+  output is nearly free here, precisely because the conductor carries almost
+  nothing.
+
+**Power-up settling improves rather than degrading.** The reference network's time
+constant is about 2 s, so it takes several seconds to settle — but every channel
+output follows the reference exactly, because the stage's DC gain to it is one,
+and the cold pins sit on the same node. **The whole ramp is common-mode and is
+rejected.** The differential signal is valid as soon as the amplifiers reach their
+linear region, roughly a second in. Contrast the AC-coupled arrangement, where
+charging the blocking capacitors through the input impedance is a genuine
+differential transient and needs `INCAP_QCHG` set correctly to avoid a baseline
+that drifts for hundreds of milliseconds after channel enable.
+
 #### Values and settings that change with it
 
 | Item | Specified today | Under this proposal |
@@ -174,7 +296,7 @@ open item.
 | Input impedance | `CHx_IMP = 10` (20 kΩ) | **`CHx_IMP = 01` (10 kΩ)** |
 | Blocking / clamp / matching parts | 3 per channel | none |
 | Coupling-cap charge | `INCAP_QCHG` raised for 4.7 µF | not applicable |
-| Preamp reference | 1.0 V | **≈ 1.375 V** |
+| Reference | 1.0 V, generated on each pickup board | **1.375 V, generated on this board** (100 kΩ / 71.5 kΩ), re-buffered on each pickup board |
 | Cable / connector | 6 conductors, 1×6 | 7 conductors, 1×7 |
 
 **Input impedance drops to 10 kΩ because the reason for 20 kΩ disappears.** 20 kΩ
@@ -184,14 +306,27 @@ datasheet is explicit that higher input impedance is slightly noisier. Note also
 that **2.5 kΩ is not supported for DC-coupled inputs** (SBAS892A §8.3.3), so 10 kΩ
 is the floor as well as the choice.
 
-**The reference moves to the converter's own midpoint.** TI's application
-material for the sibling ADCX120 family gives the optimum DC bias for a
-DC-coupled input as VREF/2 — **1.375 V** at `ADC_FSCALE = 00` — and permits a
-differential input's DC bias anywhere between 0 and AVDD, with the analog input
-pins' recommended operating range given as 0 V to AVDD in the ADC5140 datasheet
-itself. 1.375 V is 625 mV clear of the preamp amplifier's common-mode boundary
-and improves its swing symmetry, so the two considerations agree
-(`preamp-board.md` §5).
+**The reference moves to the converter's own midpoint, 1.375 V.** TI's
+application material for the sibling ADCX120 family gives the optimum DC bias for
+a DC-coupled input as VREF/2, and permits a differential input's DC bias anywhere
+between 0 and AVDD; the ADC5140 datasheet gives the analog input pins'
+recommended operating range as 0 V to AVDD. The full derivation, including the
+two preamp-side constraints and why the answer is not mid-rail, is
+`preamp-board.md` §5. The short form: the amplifier's allowed window is
+0.71–1.98 V, its midpoint is 1.345 V, and the converter's preferred value lands
+30 mV away — there is no trade to make, and the divider change is the bottom leg
+alone (100 kΩ / 71.5 kΩ).
+
+**The mechanism, because it is what makes the value worth hitting rather than
+approximating.** At exactly VREF/2 the DC current in both input arms is zero.
+Nothing flows along the added conductor, so its resistance cannot produce an
+offset; and the mismatch between the two input impedances has no common-mode
+voltage to act on, so it produces no differential error. Away from VREF/2 by ΔV,
+an impedance mismatch of about 0.1% — what the 60 dB common-mode rejection
+figure implies — converts ΔV into a differential DC offset that the programmable
+gain then multiplies. ⚠ This argument assumes the programmable input impedance
+returns to an internal node at VREF/2; the datasheet specifies it as an **AC**
+input impedance and gives no DC figure. See open check 1.
 
 **Full-scale utilisation gives up 6 dB and it does not matter.** Differential full
 scale is 2 VRMS against 1 VRMS single-ended, and only the hot pin swings, so a
@@ -236,11 +371,17 @@ decision.
 
 #### Open checks
 
-1. ⚠ **The converter's DC-coupled common-mode window.** SBAS892A is thin here: it
-   shows the cold pin grounded in DC-coupled single-ended mode (Figure 36), rules
-   out the 2.5 kΩ impedance setting for DC-coupled inputs, and gives the analog
-   pins' recommended range as 0 V to AVDD — but it states no DC-coupled
-   common-mode specification. The VREF/2 figure above comes from the sibling
+1. ⚠ **The converter's DC-coupled common-mode window, and what the input
+   impedance returns to.** SBAS892A is thin here: it shows the cold pin grounded
+   in DC-coupled single-ended mode (Figure 36), rules out the 2.5 kΩ impedance
+   setting for DC-coupled inputs, and gives the analog pins' recommended range as
+   0 V to AVDD — but it states no DC-coupled common-mode specification, and it
+   specifies the programmable impedance as an **AC** input impedance with no DC
+   figure. Confirm both: the allowed common-mode window, and whether that
+   impedance returns to an internal node at VREF/2. The first decides whether the
+   proposal is viable; the second only decides whether the zero-DC-current
+   argument above is a mechanism or a bonus, and does not change the choice of
+   1.375 V. The VREF/2 figure above comes from the sibling
    family's application material, the same provenance as the 1.375 V self-bias
    number this document already relies on. **Confirm against ADCx140 material
    before committing.**
@@ -253,6 +394,8 @@ decision.
    specify keying.
 5. **Confirm the programmable gain plan** against a source 25 dB below
    differential full scale rather than 17 dB below single-ended full scale.
+6. **Confirm the generator buffer's stability** into two cable conductors of
+   50–100 pF each plus the eight cold pins.
 
 ---
 
@@ -471,7 +614,7 @@ See `test-points.md` (single source of truth; categorized by access type). Codec
 | Item | Value / Part | Package | LCSC | Notes |
 |---|---|---|---|---|
 | ADC codecs (×2) | TLV320ADC5140 | 24-WQFN 4×4 (RTW) | pick | ⚠ confirm LCSC stock at order (board plan risk register) |
-| ⚠ **§2.1 proposal** | deletes the next three rows — 24 parts | — | — | See §2.1. The area freed on the control-cavity board is the main practical argument for it |
+| ⚠ **§2.1 proposal** | deletes the next three rows — 24 parts — and adds a reference generator: divider, tantalum filter capacitor, one OPA376 buffer | — | — | See §2.1. Net is 24 parts out, 4 in. The area freed on the control-cavity board is the main practical argument for it |
 | INxP blocking caps (×8) | 4.7 µF **tantalum**, **16 V or 25 V**, blocking (INxP) | pick | pick | **+ toward the converter** (§2 — converter side is higher by 375 mV on every channel); 4.7 µF sets ~1.7 Hz corner for near-DC finger-pressure sensing; heavy voltage derating is tantalum practice, do not fit 6.3 V |
 | INxP clamp diodes (×8) | small-signal silicon switching diode | SOD-323 or smaller | pick | Parallel with each blocking cap, **cathode toward the converter**. Covers the power-sequencing window only (§2). Silicon not Schottky — leakage into a 20 kΩ low-level node matters, clamp voltage does not |
 | INxM matching caps (×8) | 1 µF **X7R** preferred (4.7 µF as drawn OK), matching (INxM→GND) | 0402/0603 | basic | not signal-carrying; reconcile value doc↔schematic |
