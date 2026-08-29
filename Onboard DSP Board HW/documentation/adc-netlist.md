@@ -354,6 +354,48 @@ item 9); this proposal constrains, without closing, that reconsideration.
   radio-frequency shunt footprints stay; whether an ESD clamp is now wanted at
   each entry is an open item rather than a deferred one.
 
+#### Decision: no radio-frequency shunt footprints on the input pins (2026-08-28)
+
+The optional 100–330 pF DNP shunts of §2 are **not fitted and not footprinted**,
+on either the hot or the cold pins. Connector area on this board is what makes the
+whole arrangement physically possible, and sixteen footprints — or eight — would
+take it.
+
+**Series and shunt elements are not alike here, and the distinction matters if
+this is ever revisited.** A *series* element in one leg divides against the
+converter's 10 kΩ input impedance at every frequency including DC, so 1 kΩ on a
+cold pin alone is a 9% common-mode imbalance and caps rejection at about 21 dB —
+it must be matched on the hot pin. A *shunt* capacitor does not: both pins are
+driven from amplifier outputs at ohms, so the capacitor loads the driver without
+changing the pin voltage, and 220 pF is 72 MΩ at 10 kHz. **Shunt parts need no
+matching; series parts do.** So had they been fitted, eight on the hot pins would
+have sufficed.
+
+**What they would have bought is modest.** The dominant rectification site is the
+preamp's amplifier input, where a coil meets a CMOS gate, and that is treated at
+the pin (`preamp-board.md` §7). The signal now arrives here at ~300 mV
+peak-to-peak from an ohms-level source rather than tens of millivolts from
+kilohms — about 20 dB better ingress ratio than when these footprints were first
+specified. And an 0402 at 2.4 GHz is above self-resonance, so its impedance is set
+by mounting inductance rather than capacitance: perhaps 10–25 Ω with a via at the
+pad, against a pin already self-shunting through a few picofarads of package
+capacitance. Six to ten decibels, well placed.
+
+⚠ **One honest debit.** The 4.7 µF blocking capacitors this proposal deletes were,
+at 2.4 GHz, series inductors of a few nanohenries — 30 to 75 Ω — so they were
+providing a few decibels of accidental radio-frequency isolation at these pins.
+That goes away with them. It is not nothing, and it is not much.
+
+**Spend the area on layout instead**, which costs nothing and is worth more at
+these frequencies: short traces from connector to pin, the connector's ground pin
+adjacent to its signal pins so the return loop is tight, solid plane under the
+entry, and the entry sited away from the antenna. Loop geometry beats the
+component at 2.4 GHz.
+
+**If it ever does come back, the retrofit is a ferrite bead in series, not a
+capacitor** — milliohms at audio so it needs no matching, and it restores
+deliberately what the tantalums were doing by accident.
+
 #### Retrofit path — keep the decision reversible on spin 1
 
 Because the common-mode question below is not closed on paper, lay the section

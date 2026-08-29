@@ -942,7 +942,15 @@ and bias network.
 
 1. **Bench-measure the noise floor per channel with the radio transmitting and
    idle.** This validates the RF treatment against a CMOS input and is the
-   identified risk to the design (§7). Do it before committing the second board.
+   identified risk to the design (§7). ⚠ **Deferred past the first converter-board
+   spin by decision (2026-08-28)**, which is built as a two-board order rather
+   than staged — so the instruction previously here, to do this before committing
+   the second board, no longer applies. The measurement needs the radio populated
+   and transmitting; if the module is in the assembly BOM it can be made on those
+   same boards whenever the radio work starts, and deferring costs nothing but
+   time. If the module is left unpopulated to save cost, this item cannot close on
+   that spin at all. **The item is respin-able by construction** — it changes
+   nothing that blocks audio — which is what makes deferring it the right call.
 2. **Confirm stability with a coil connected.** The input sees an inductive
    source rising to kilohms; check for oscillation at the input node and at the
    output with a wideband probe, not just an audio-band measurement.

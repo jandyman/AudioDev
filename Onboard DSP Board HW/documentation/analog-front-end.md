@@ -179,6 +179,40 @@ the boards no longer depend on their converter being brought up over I²C before
 they have power, a converter fault no longer takes its own pickup down, and the
 mic-bias current budget stops being a question that needs answering.
 
+⚠ **Re-examined 2026-08-28 against the DC-coupled chain, and the case is now
+stronger than the supply-rejection argument that originally made it.** That
+argument still holds, and has in fact gained: the pickup board no longer
+generates its own reference, so supply noise reaches its outputs only through the
+amplifier's 86 dB of rejection. The divider path that used to dominate now lives
+on the converter board (§6.3). A specially quiet preamp supply is *less*
+warranted than when it was rejected.
+
+**What is new is structural rather than about noise.** Under §6.3 each preamp
+output is DC-connected to a converter input pin, whose absolute maximum is
+AVDD + 0.3 V. Powering the boards from `3V3_A` — the same node as the converter's
+AVDD — means an output can never exceed it, at any point in the supply ramp, by
+construction rather than by margin. The reference generator sits on the same rail,
+so preamp supply, reference and converter AVDD all rise together and there is no
+relative sequencing anywhere in the analog chain.
+
+**MICBIAS would break exactly that.** It is an internal regulator output that
+appears only after the device is powered, brought out of shutdown, and configured
+over I²C — while the reference, generated from `3V3_A` on the converter board, is
+up long before. That leaves a window in which the pickup board is unpowered and
+its inputs are held at the reference: five amplifiers conducting through their
+input protection into a floating rail, of order a milliamp, the board
+part-powering itself into an undefined state, and presenting whatever that
+produces to a converter input with no capacitor in the way. The window was
+harmless when a coupling capacitor blocked DC. It is not harmless now.
+
+There is a second, smaller point. At `MBIAS_VAL = 001` MICBIAS is 3.014 V, which
+puts the amplifier's common-mode ceiling at 1.714 V. Against a 1.375 V reference
+that is 339 mV of clearance where `3V3_A` gives 625 mV — halving the margin on the
+constraint `preamp-board.md` §5 identifies as the binding one.
+
+Current is not a consideration either way: 7.6 mA for both boards onto a rail
+budgeted at 150 mA behind a 300 mA regulator.
+
 What is given up is real but small: MICBIAS provided current limiting that
 protected the system rail from a crushed pickup wire, and a firmware power switch
 for free. If either is wanted back, a load switch or a resettable fuse restores
