@@ -13280,7 +13280,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "AWV:TestPoint_Plated_Hole_ID4_OD7.0mm"
 			(at 257.81 133.35 0)
 			(hide yes)
 			(show_name no)
@@ -15562,7 +15562,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "AWV:TestPoint_Plated_Hole_ID4_OD7.0mm"
 			(at 270.51 133.35 0)
 			(hide yes)
 			(show_name no)
@@ -19282,7 +19282,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "AWV:TestPoint_Plated_Hole_ID4_OD7.0mm"
 			(at 264.16 133.35 0)
 			(hide yes)
 			(show_name no)

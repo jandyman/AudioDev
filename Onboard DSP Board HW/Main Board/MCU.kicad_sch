@@ -6502,7 +6502,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "AWV:TestPoint_Plated_Hole_ID4_OD7.0mm"
 			(at 241.3 123.19 0)
 			(hide yes)
 			(show_name no)
