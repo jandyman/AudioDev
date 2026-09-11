@@ -1641,16 +1641,16 @@
 		(uuid "b6d378fe-f10d-4de2-8cac-9ec68d5a26ec")
 	)
 	(junction
+		(at 199.39 101.6)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "bad21cfb-8651-4d95-a530-d3f5c2848c41")
+	)
+	(junction
 		(at 104.14 73.66)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "c220a705-dd1f-429f-a508-98c9cf338f29")
-	)
-	(junction
-		(at 196.85 101.6)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "e1805ec3-f00f-44ad-b03d-88daa9b63d17")
 	)
 	(wire
 		(pts
@@ -1684,6 +1684,16 @@
 	)
 	(wire
 		(pts
+			(xy 204.47 85.09) (xy 199.39 85.09)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "12909d8d-1733-4348-b290-f9dd84475bde")
+	)
+	(wire
+		(pts
 			(xy 121.92 49.53) (xy 118.11 49.53)
 		)
 		(stroke
@@ -1701,16 +1711,6 @@
 			(type default)
 		)
 		(uuid "1f090176-f494-4bbf-8625-27206b170fa0")
-	)
-	(wire
-		(pts
-			(xy 186.69 69.85) (xy 204.47 69.85)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1fdbbe1a-2a7b-4060-8017-aac780a7cb50")
 	)
 	(wire
 		(pts
@@ -1824,16 +1824,6 @@
 	)
 	(wire
 		(pts
-			(xy 196.85 82.55) (xy 196.85 101.6)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5dd69e57-1449-4113-b759-c18a41ee3a72")
-	)
-	(wire
-		(pts
 			(xy 170.18 74.93) (xy 204.47 74.93)
 		)
 		(stroke
@@ -1841,16 +1831,6 @@
 			(type default)
 		)
 		(uuid "5e5592b1-5400-494c-90a4-aa52a3653066")
-	)
-	(wire
-		(pts
-			(xy 222.25 55.88) (xy 186.69 55.88)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "60648c35-1953-407a-abf4-daab71ec2f66")
 	)
 	(wire
 		(pts
@@ -1874,7 +1854,7 @@
 	)
 	(wire
 		(pts
-			(xy 204.47 85.09) (xy 203.2 85.09)
+			(xy 204.47 87.63) (xy 203.2 87.63)
 		)
 		(stroke
 			(width 0)
@@ -1901,6 +1881,16 @@
 			(type default)
 		)
 		(uuid "6c80dc79-767a-426d-9f80-0503d4e248a5")
+	)
+	(wire
+		(pts
+			(xy 195.58 55.88) (xy 222.25 55.88)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6ca36b85-0965-4e33-9967-fae75d1480ad")
 	)
 	(wire
 		(pts
@@ -2004,16 +1994,6 @@
 	)
 	(wire
 		(pts
-			(xy 204.47 82.55) (xy 196.85 82.55)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9512c8f4-eac2-4b35-b550-b04786e196a8")
-	)
-	(wire
-		(pts
 			(xy 71.12 71.12) (xy 71.12 74.93)
 		)
 		(stroke
@@ -2114,16 +2094,6 @@
 	)
 	(wire
 		(pts
-			(xy 199.39 101.6) (xy 196.85 101.6)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ba278f04-da8c-4ff5-a512-df6cb77d6f17")
-	)
-	(wire
-		(pts
 			(xy 162.56 78.74) (xy 170.18 78.74)
 		)
 		(stroke
@@ -2164,7 +2134,17 @@
 	)
 	(wire
 		(pts
-			(xy 186.69 55.88) (xy 186.69 69.85)
+			(xy 199.39 85.09) (xy 199.39 101.6)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c0db8b47-902e-4f4b-b5ab-93cc918e6b34")
+	)
+	(wire
+		(pts
+			(xy 195.58 55.88) (xy 195.58 82.55)
 		)
 		(stroke
 			(width 0)
@@ -2184,7 +2164,7 @@
 	)
 	(wire
 		(pts
-			(xy 203.2 85.09) (xy 203.2 86.36)
+			(xy 203.2 87.63) (xy 203.2 88.9)
 		)
 		(stroke
 			(width 0)
@@ -2201,6 +2181,16 @@
 			(type default)
 		)
 		(uuid "d3f9a69e-9e2e-44b3-ba15-c785b1e107dc")
+	)
+	(wire
+		(pts
+			(xy 195.58 82.55) (xy 204.47 82.55)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "dda06333-45c2-41fd-92f8-957915137658")
 	)
 	(wire
 		(pts
@@ -2234,7 +2224,7 @@
 	)
 	(wire
 		(pts
-			(xy 185.42 101.6) (xy 196.85 101.6)
+			(xy 185.42 101.6) (xy 199.39 101.6)
 		)
 		(stroke
 			(width 0)
@@ -2273,7 +2263,7 @@
 		(uuid "1c9b8d03-f313-4487-8ba7-a7d4127963f3")
 	)
 	(label "3V3"
-		(at 200.66 55.88 0)
+		(at 207.01 55.88 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2600,7 +2590,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "OPA376AIDCKT"
+		(property "Value" "OPA376AIDCKR"
 			(at 93.98 68.834 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2796,7 +2786,7 @@
 	)
 	(symbol
 		(lib_id "Connector:Conn_01x07_Pin")
-		(at 209.55 77.47 180)
+		(at 209.55 80.01 180)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim yes)
@@ -2806,7 +2796,7 @@
 		(dnp no)
 		(uuid "67e7a362-9f67-4433-9b91-aa3d2c5bd5ee")
 		(property "Reference" "J18"
-			(at 210.82 78.7401 0)
+			(at 210.82 81.2801 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2817,7 +2807,7 @@
 			)
 		)
 		(property "Value" ""
-			(at 210.82 76.2001 0)
+			(at 210.82 78.7401 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2828,7 +2818,7 @@
 			)
 		)
 		(property "Footprint" "Connector_PinHeader_2.00mm:PinHeader_1x07_P2.00mm_Horizontal"
-			(at 209.55 77.47 0)
+			(at 209.55 80.01 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2839,7 +2829,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 209.55 77.47 0)
+			(at 209.55 80.01 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2850,7 +2840,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x07, script generated"
-			(at 209.55 77.47 0)
+			(at 209.55 80.01 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2892,7 +2882,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 203.2 86.36 0)
+		(at 203.2 88.9 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -2903,7 +2893,7 @@
 		(fields_autoplaced yes)
 		(uuid "716db78d-1bfe-4d6d-8c63-f41c88c98695")
 		(property "Reference" "#PWR02"
-			(at 203.2 92.71 0)
+			(at 203.2 95.25 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2914,7 +2904,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 203.2 91.44 0)
+			(at 203.2 93.98 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2924,7 +2914,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 203.2 86.36 0)
+			(at 203.2 88.9 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2935,7 +2925,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 203.2 86.36 0)
+			(at 203.2 88.9 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2946,7 +2936,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 203.2 86.36 0)
+			(at 203.2 88.9 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
