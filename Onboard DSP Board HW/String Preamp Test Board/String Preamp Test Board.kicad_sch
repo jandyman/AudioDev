@@ -3045,6 +3045,18 @@
 		(uuid "5265cd6d-f0d0-4cf3-8e15-9ef600e13c72")
 	)
 	(junction
+		(at 210.82 109.22)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "54ee4609-6c71-49a5-9bfb-6d05391332c8")
+	)
+	(junction
+		(at 193.04 115.57)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "58e6ff36-7879-4b5d-b7e3-1a364d6a1c50")
+	)
+	(junction
 		(at 50.8 102.87)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3097,12 +3109,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "918892c1-39da-4575-bca4-a5b0583df0c1")
-	)
-	(junction
-		(at 210.82 109.22)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "94c951c5-2302-4a75-a991-4ef7101c9cda")
 	)
 	(junction
 		(at 128.27 67.31)
@@ -3187,6 +3193,16 @@
 			(type default)
 		)
 		(uuid "0440c08a-3f4e-4e5a-b881-44dc462dbcbb")
+	)
+	(wire
+		(pts
+			(xy 198.12 109.22) (xy 193.04 109.22)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "05674ceb-479d-452c-87fb-0c0f7a8600f5")
 	)
 	(wire
 		(pts
@@ -3490,7 +3506,7 @@
 	)
 	(wire
 		(pts
-			(xy 204.47 109.22) (xy 210.82 109.22)
+			(xy 205.74 109.22) (xy 210.82 109.22)
 		)
 		(stroke
 			(width 0)
@@ -3820,7 +3836,17 @@
 	)
 	(wire
 		(pts
-			(xy 200.66 113.03) (xy 200.66 115.57)
+			(xy 193.04 115.57) (xy 201.93 115.57)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "74fbf934-6a9f-4dd7-a5d2-99bb53565fd8")
+	)
+	(wire
+		(pts
+			(xy 201.93 113.03) (xy 201.93 115.57)
 		)
 		(stroke
 			(width 0)
@@ -3830,7 +3856,7 @@
 	)
 	(wire
 		(pts
-			(xy 190.5 115.57) (xy 200.66 115.57)
+			(xy 190.5 115.57) (xy 193.04 115.57)
 		)
 		(stroke
 			(width 0)
@@ -3967,6 +3993,16 @@
 			(type default)
 		)
 		(uuid "941b0b53-2558-4767-ba17-eaa90aba4b4e")
+	)
+	(wire
+		(pts
+			(xy 193.04 109.22) (xy 193.04 115.57)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "94b98fc0-2b11-4096-81d6-639a228b0ac9")
 	)
 	(wire
 		(pts
@@ -4549,7 +4585,7 @@
 		(uuid "8c586ad8-6a29-4807-8c9d-48fd482bd60c")
 	)
 	(label "filt_out"
-		(at 191.77 115.57 0)
+		(at 194.31 115.57 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4690,7 +4726,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_SO:TSSOP-14_4.4x3.6mm_P0.4mm"
+		(property "Footprint" "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm"
 			(at 146.05 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -4880,7 +4916,7 @@
 				)
 			)
 		)
-		(property "Value" ""
+		(property "Value" "10K"
 			(at 109.22 46.99 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5029,7 +5065,7 @@
 		(lib_id "Amplifier_Operational:Opamp_Quad")
 		(at 223.52 106.68 0)
 		(mirror x)
-		(unit 2)
+		(unit 3)
 		(body_style 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5057,7 +5093,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_SO:TSSOP-14_4.4x3.6mm_P0.4mm"
+		(property "Footprint" "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm"
 			(at 223.52 106.68 0)
 			(hide yes)
 			(show_name no)
@@ -5220,7 +5256,7 @@
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
 					(reference "U1")
-					(unit 2)
+					(unit 3)
 				)
 			)
 		)
@@ -5325,7 +5361,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "0.1uF"
+		(property "Value" "100nF"
 			(at 193.421 66.4722 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5399,7 +5435,7 @@
 		(at 161.29 25.4 0)
 		(unit 1)
 		(body_style 1)
-		(exclude_from_sim no)
+		(exclude_from_sim yes)
 		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
@@ -5678,7 +5714,7 @@
 		(mirror x)
 		(unit 1)
 		(body_style 1)
-		(exclude_from_sim no)
+		(exclude_from_sim yes)
 		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
@@ -5695,7 +5731,7 @@
 			)
 		)
 		(property "Value" "Battery"
-			(at 62.23 43.18 0)
+			(at 76.2 48.26 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -5857,7 +5893,7 @@
 		(dnp no)
 		(uuid "50a27ed8-c137-4edc-8dc5-c23e0c4f4246")
 		(property "Reference" "RV3"
-			(at 259.08 114.3001 0)
+			(at 258.572 113.538 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -5867,8 +5903,8 @@
 				(justify right)
 			)
 		)
-		(property "Value" ""
-			(at 261.62 114.3 0)
+		(property "Value" "10K"
+			(at 256.286 116.078 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -5966,7 +6002,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_SO:TSSOP-14_4.4x3.6mm_P0.4mm"
+		(property "Footprint" "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm"
 			(at 106.68 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -6139,7 +6175,7 @@
 		(at 128.27 33.02 0)
 		(unit 1)
 		(body_style 1)
-		(exclude_from_sim no)
+		(exclude_from_sim yes)
 		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
@@ -6455,7 +6491,7 @@
 		(mirror y)
 		(unit 1)
 		(body_style 1)
-		(exclude_from_sim no)
+		(exclude_from_sim yes)
 		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
@@ -6563,7 +6599,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "4.7nF"
+		(property "Value" "5.6nF"
 			(at 214.63 115.5699 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6910,7 +6946,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "0.1uF"
+		(property "Value" "100nF"
 			(at 132.08 74.9299 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7120,7 +7156,7 @@
 				)
 			)
 		)
-		(property "Value" "5.9K"
+		(property "Value" "6.2K"
 			(at 149.86 113.03 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7280,7 +7316,7 @@
 				)
 			)
 		)
-		(property "Value" "14.7k"
+		(property "Value" "15K"
 			(at 129.54 113.03 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7360,7 +7396,7 @@
 				)
 			)
 		)
-		(property "Value" "15k"
+		(property "Value" "15K"
 			(at 168.91 96.52 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7440,12 +7476,13 @@
 				(justify right)
 			)
 		)
-		(property "Value" "9.6k"
-			(at 130.81 125.476 0)
+		(property "Value" "10K"
+			(at 129.794 125.476 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
+					(face "SF Compact")
 					(size 1.27 1.27)
 				)
 				(justify right)
@@ -7501,7 +7538,7 @@
 	)
 	(symbol
 		(lib_id "Device:R_Potentiometer")
-		(at 200.66 109.22 90)
+		(at 201.93 109.22 90)
 		(mirror x)
 		(unit 1)
 		(body_style 1)
@@ -7512,7 +7549,7 @@
 		(dnp no)
 		(uuid "9b735b0a-39fa-40ca-968c-91a78c401c1e")
 		(property "Reference" "RV2"
-			(at 200.66 102.87 90)
+			(at 201.93 102.87 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7522,7 +7559,7 @@
 			)
 		)
 		(property "Value" "A100K"
-			(at 200.66 105.41 90)
+			(at 201.93 105.41 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7532,7 +7569,7 @@
 			)
 		)
 		(property "Footprint" "Potentiometer_THT:Potentiometer_Alps_RK097_Single_Horizontal"
-			(at 200.66 109.22 0)
+			(at 201.93 109.22 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7543,7 +7580,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 200.66 109.22 0)
+			(at 201.93 109.22 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7554,7 +7591,7 @@
 			)
 		)
 		(property "Description" "Potentiometer"
-			(at 200.66 109.22 0)
+			(at 201.93 109.22 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7565,7 +7602,7 @@
 			)
 		)
 		(property "Sim.Device" "R"
-			(at 200.66 109.22 0)
+			(at 201.93 109.22 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7576,7 +7613,7 @@
 			)
 		)
 		(property "Sim.Type" "POT"
-			(at 200.66 109.22 0)
+			(at 201.93 109.22 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7587,7 +7624,7 @@
 			)
 		)
 		(property "Sim.Pins" "1=r0 2=wiper 3=r1"
-			(at 200.66 109.22 0)
+			(at 201.93 109.22 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7618,7 +7655,6 @@
 	(symbol
 		(lib_id "Amplifier_Operational:Opamp_Quad")
 		(at 176.53 64.77 0)
-		(mirror x)
 		(unit 5)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -7628,7 +7664,7 @@
 		(dnp no)
 		(uuid "9bbf7913-d84e-47f9-9f74-ecfa2a0d8871")
 		(property "Reference" "U1"
-			(at 178.054 59.944 0)
+			(at 178.054 69.596 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7638,7 +7674,7 @@
 			)
 		)
 		(property "Value" "TLV9004"
-			(at 179.832 70.104 0)
+			(at 179.832 59.436 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7647,7 +7683,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_SO:TSSOP-14_4.4x3.6mm_P0.4mm"
+		(property "Footprint" "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm"
 			(at 176.53 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -7670,7 +7706,7 @@
 			)
 		)
 		(property "Description" "Quad operational amplifier"
-			(at 176.53 55.88 0)
+			(at 176.53 73.66 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7681,7 +7717,7 @@
 			)
 		)
 		(property "Sim.Library" "tlv9004.lib"
-			(at 163.83 52.07 0)
+			(at 163.83 77.47 0)
 			(hide yes)
 			(show_name yes)
 			(do_not_autoplace no)
@@ -7693,7 +7729,7 @@
 			)
 		)
 		(property "Sim.Name" "TLV9004"
-			(at 163.83 44.45 0)
+			(at 163.83 85.09 0)
 			(hide yes)
 			(show_name yes)
 			(do_not_autoplace no)
@@ -7705,7 +7741,7 @@
 			)
 		)
 		(property "Sim.Device" "SUBCKT"
-			(at 163.83 46.99 0)
+			(at 163.83 82.55 0)
 			(hide yes)
 			(show_name yes)
 			(do_not_autoplace no)
@@ -7717,7 +7753,7 @@
 			)
 		)
 		(property "Sim.Pins" "1=OUT1 2=IN1- 3=IN1+ 4=VCC 5=IN2+ 6=IN2- 7=OUT2 8=OUT3 9=IN3- 10=IN3+ 11=VEE 12=IN4+ 13=IN4- 14=OUT4"
-			(at 163.83 49.53 0)
+			(at 163.83 80.01 0)
 			(hide yes)
 			(show_name yes)
 			(do_not_autoplace no)
@@ -7729,7 +7765,7 @@
 			)
 		)
 		(property private "KLC_S3.1" "Units A+B are centered, UnitC has a offset so it fits nicely on A or B."
-			(at 163.83 40.64 0)
+			(at 163.83 88.9 0)
 			(hide yes)
 			(show_name yes)
 			(do_not_autoplace no)
@@ -7741,7 +7777,7 @@
 			)
 		)
 		(property private "KLC_S4.1" "Pin1 and Pin7 are the output, adding a name would look ugly and does not add a benefit."
-			(at 163.83 38.1 0)
+			(at 163.83 91.44 0)
 			(hide yes)
 			(show_name yes)
 			(do_not_autoplace no)
@@ -7753,7 +7789,7 @@
 			)
 		)
 		(property private "KLC_S6.2" "This is a generic symbol and thus has no datasheet."
-			(at 163.83 35.56 0)
+			(at 163.83 93.98 0)
 			(hide yes)
 			(show_name yes)
 			(do_not_autoplace no)
@@ -7765,43 +7801,43 @@
 			)
 		)
 		(pin "6"
-			(uuid "c6504a48-1d28-41a4-bcc6-d39ffbb97a6a")
+			(uuid "c6504a48-1d28-41a4-bcc6-d39ffbb97a6d")
 		)
 		(pin "14"
 			(uuid "7c6a40ab-fd5c-48fd-bfa1-66a5df9a78fe")
 		)
 		(pin "8"
-			(uuid "ac98b8ac-7c89-416e-80a6-7f45b821e8b5")
+			(uuid "ac98b8ac-7c89-416e-80a6-7f45b821e8b8")
 		)
 		(pin "9"
-			(uuid "6e003e35-5f7b-464e-9485-5d4fc762c704")
+			(uuid "6e003e35-5f7b-464e-9485-5d4fc762c707")
 		)
 		(pin "5"
-			(uuid "c5448cee-f893-463d-9261-e3719303afd1")
+			(uuid "c5448cee-f893-463d-9261-e3719303afd4")
 		)
 		(pin "12"
 			(uuid "82a587b5-b203-4437-a848-312771f32e8c")
 		)
 		(pin "2"
-			(uuid "b0f14646-cef8-4541-9a66-38ba5953b6f9")
+			(uuid "b0f14646-cef8-4541-9a66-38ba5953b6fc")
 		)
 		(pin "1"
-			(uuid "ba90069d-b765-4629-ae83-1a7c1daf235d")
+			(uuid "ba90069d-b765-4629-ae83-1a7c1daf2360")
 		)
 		(pin "4"
-			(uuid "a1ea500b-c3c0-45d0-bfd1-280fde5e7ec8")
+			(uuid "a1ea500b-c3c0-45d0-bfd1-280fde5e7ecb")
 		)
 		(pin "11"
-			(uuid "56f03aa0-d39c-4632-83c9-2a7830ae1f36")
+			(uuid "56f03aa0-d39c-4632-83c9-2a7830ae1f39")
 		)
 		(pin "3"
-			(uuid "9db9efe4-2233-40f6-bcfd-8bc87b6946ad")
+			(uuid "9db9efe4-2233-40f6-bcfd-8bc87b6946b0")
 		)
 		(pin "7"
-			(uuid "490dd763-8625-459e-8be6-0cbe3a27dfda")
+			(uuid "490dd763-8625-459e-8be6-0cbe3a27dfdd")
 		)
 		(pin "10"
-			(uuid "f4e3073d-a820-490c-8a51-0f46ec8cb982")
+			(uuid "f4e3073d-a820-490c-8a51-0f46ec8cb985")
 		)
 		(pin "13"
 			(uuid "fefbb6d4-dbf5-46e0-a2f6-b9ad48453cac")
@@ -7897,7 +7933,7 @@
 		(at 156.21 34.29 270)
 		(unit 1)
 		(body_style 1)
-		(exclude_from_sim no)
+		(exclude_from_sim yes)
 		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
@@ -8056,7 +8092,7 @@
 		(mirror y)
 		(unit 1)
 		(body_style 1)
-		(exclude_from_sim no)
+		(exclude_from_sim yes)
 		(in_bom no)
 		(on_board yes)
 		(in_pos_files no)
@@ -8218,7 +8254,7 @@
 		(lib_id "Amplifier_Operational:Opamp_Quad")
 		(at 168.91 114.3 0)
 		(mirror x)
-		(unit 3)
+		(unit 2)
 		(body_style 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -8246,7 +8282,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_SO:TSSOP-14_4.4x3.6mm_P0.4mm"
+		(property "Footprint" "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm"
 			(at 168.91 114.3 0)
 			(hide yes)
 			(show_name no)
@@ -8364,43 +8400,43 @@
 			)
 		)
 		(pin "6"
-			(uuid "c6504a48-1d28-41a4-bcc6-d39ffbb97a6d")
+			(uuid "c6504a48-1d28-41a4-bcc6-d39ffbb97a6e")
 		)
 		(pin "14"
 			(uuid "6c9b9254-7bec-4c31-81d1-c0f40768b534")
 		)
 		(pin "8"
-			(uuid "ac98b8ac-7c89-416e-80a6-7f45b821e8b8")
+			(uuid "ac98b8ac-7c89-416e-80a6-7f45b821e8b9")
 		)
 		(pin "9"
-			(uuid "6e003e35-5f7b-464e-9485-5d4fc762c707")
+			(uuid "6e003e35-5f7b-464e-9485-5d4fc762c708")
 		)
 		(pin "5"
-			(uuid "c5448cee-f893-463d-9261-e3719303afd4")
+			(uuid "c5448cee-f893-463d-9261-e3719303afd5")
 		)
 		(pin "12"
 			(uuid "da58c05b-aeb5-4def-90fe-9e9d1817c492")
 		)
 		(pin "2"
-			(uuid "b0f14646-cef8-4541-9a66-38ba5953b6fc")
+			(uuid "b0f14646-cef8-4541-9a66-38ba5953b6fd")
 		)
 		(pin "1"
-			(uuid "ba90069d-b765-4629-ae83-1a7c1daf2360")
+			(uuid "ba90069d-b765-4629-ae83-1a7c1daf2361")
 		)
 		(pin "4"
-			(uuid "a1ea500b-c3c0-45d0-bfd1-280fde5e7ecb")
+			(uuid "a1ea500b-c3c0-45d0-bfd1-280fde5e7ecc")
 		)
 		(pin "11"
-			(uuid "56f03aa0-d39c-4632-83c9-2a7830ae1f39")
+			(uuid "56f03aa0-d39c-4632-83c9-2a7830ae1f3a")
 		)
 		(pin "3"
-			(uuid "9db9efe4-2233-40f6-bcfd-8bc87b6946b0")
+			(uuid "9db9efe4-2233-40f6-bcfd-8bc87b6946b1")
 		)
 		(pin "7"
-			(uuid "490dd763-8625-459e-8be6-0cbe3a27dfdd")
+			(uuid "490dd763-8625-459e-8be6-0cbe3a27dfde")
 		)
 		(pin "10"
-			(uuid "f4e3073d-a820-490c-8a51-0f46ec8cb985")
+			(uuid "f4e3073d-a820-490c-8a51-0f46ec8cb986")
 		)
 		(pin "13"
 			(uuid "a5c5cf8e-cb85-4114-a8d8-0f381c83c479")
@@ -8409,7 +8445,7 @@
 			(project "String Preamp Test Board"
 				(path "/17071b06-4887-4c2e-9588-4148705cb0ef"
 					(reference "U1")
-					(unit 3)
+					(unit 2)
 				)
 			)
 		)
@@ -8760,7 +8796,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
+		(property "Footprint" "Capacitor_Tantalum_SMD:CP_EIA-3216-10_Kemet-I"
 			(at 254 105.7148 0)
 			(hide yes)
 			(show_name no)
