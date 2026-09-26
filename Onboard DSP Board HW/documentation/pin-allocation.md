@@ -53,7 +53,7 @@ The same VCO is reachable from 8, 12 or 16 MHz with M = 5 and N = 384/256/192, s
 | | `I2S1_WS` | **PA4** | 23 | AF5 | out | PCM5102A — LRCK |
 | | `I2S1_SDO` | **PA7** | 26 | AF5 | out | PCM5102A — DIN |
 | | *(no MCLK reserve)* | — | — | — | — | I2S1_MCK = PC4 collides with `BATT_SENSE`; DAC needs none |
-| **I2C1 (control)** | `I2C1_SCL` | **PB8** | 64 | AF4 | OD | ADC5140 ×2 — pull-up to `3V45_D` ⚠ value unset (2.2–4.7 kΩ). DAC not on I2C (strap-configured, `dac-selection.md`) |
+| **I2C1 (control)** | `I2C1_SCL` | **PB8** | 64 | AF4 | OD | ADC5140 ×2 — pull-up to `3V3_D` ⚠ value unset (2.2–4.7 kΩ). DAC not on I2C (strap-configured, `dac-selection.md`) |
 | | `I2C1_SDA` | **PB9** | 65 | AF4 | OD | " (pull-up) |
 | **USB (reserve)** | `OTG_FS_DM` | **PA11** | 46 | — | bidir | USB data reserved; charge is via jack ring, no USB connector on spin 1 (this part's OTG_HS in FS-PHY mode) |
 | | `OTG_FS_DP` | **PA12** | 47 | — | bidir | " |
@@ -70,9 +70,9 @@ Pots are **PCB-mounted** (they mechanically support the board; knobs go right-an
 
 | Function | Pin(s) | Pad | As-built |
 |---|---|---|---|
-| SWD debug | **PA13** (`SWDIO`), **PA14** (`SWCLK`) | 48, 52 | debug header: 2×5 1.27 mm ARM Cortex Debug — 1 VTref=`3V45_D`, 2 SWDIO, 4 SWCLK, 6 SWO, 10 NRST, 3/5/9 GND, 7 KEY, 8 NC |
+| SWD debug | **PA13** (`SWDIO`), **PA14** (`SWCLK`) | 48, 52 | debug header: 2×5 1.27 mm ARM Cortex Debug — 1 VTref=`3V3_D`, 2 SWDIO, 4 SWCLK, 6 SWO, 10 NRST, 3/5/9 GND, 7 KEY, 8 NC. **Unshrouded header — decided, not an oversight:** there is no room in the corner for a shrouded part, and the prior Daisy-based work used a bare header throughout. **Position 7 carries no pin.** The pad exists but the pin is removed at assembly: that removed pin *is* the key. Reversal on a 2×5 maps position n to 11−n, so 7 lands on 4 (SWCLK, populated), and a socket plugged at 7 cannot seat backwards. Confirm the probe cable's socket is the plugged type rather than the shroud-bump type; if it is the latter, polarization falls to silkscreen. Mark pin 1 on silk and note the pin-7 removal on the assembly drawing — the header is hand-fitted, so it is a step that can be forgotten. | **Sourcing (2026-09-26): not an LCSC/JLCPCB part — buy separately and hand-fit.** Footprint is `PinHeader_2x05_P1.27mm_Vertical`, through-hole, 0.65 mm drill. Samtec **FTSH-105-01-L-D-K** (DigiKey 2649979 / SAM8798-ND) or Harwin **M50-3500542** (DigiKey 952-1383-ND), both 2×5 at 1.27 mm through-hole. ⚠ **Order a `-D`, not a `-DV`** — the `-DV` variants of the same Samtec family are surface-mount and will not fit this footprint. Pull position 7 with pliers before soldering (see above).
 | SWO | **PB3** (`SWO`) | 58 | wired to the debug header SWO pin; RTT is the logging baseline, SWO a bonus |
-| HSE crystal | **PH0/PH1** | 10, 11 | **24.000 MHz crystal, CL 8 pF, SMD1612-4P** — NDK NX1612SA family (4-pad; pads 2/4 = GND, tied to the can). Load caps ≈ **6.8 pF** (2×(CL−C_stray) = 7.0 pF at 4.5 pF stray; 6–10 pF covers 3–5 pF stray — ⚠ at CL 8 pF the answer is far more sensitive to C_stray than it was at CL 12 pF, so settle C_stray against the final routing before committing). The 1612 body is 1.92 mm² against the 2016's 3.2 mm² and the 3225's 8.0 mm², which is what makes the corner tractable — see `layout-notes.md` §5.1.1. |
+| HSE crystal | **PH0/PH1** | 10, 11 | **24.000 MHz, CL 8 pF, SMD1612-4P — NDK NX1612SA-24MHZ-STD-CIS-1, LCSC C280834** (1.6 × 1.2 × 0.3 mm, ESR 150 Ω max, drive 100 µW max, ~$0.30). Extended at JLC — there is no 24 MHz crystal in the Basic library, so one feeder fee is unavoidable and not worth distorting the design to dodge. 4-pad; pads 2/4 = GND, tied to the can. **Load capacitors: 6.8 pF C0G, 0402.** C = 2 × (CL − C_stray) = 2 × (8 − 4.5) = 7.0 pF. **Err small, not large.** Frequency accuracy is irrelevant on this board — the audio rate is derived internally, the DAC's rate detection tolerates ±4 %, the codecs slave off the bit clock and the output is analog, so tens of ppm is inaudible. What matters is that it *starts*, and the oscillator's negative-resistance margin falls roughly as 1/CL², so over-capping is the direction that costs startup margin. Under-capping costs accuracy that is not needed. C0G is required: Class II would drift the load with temperature and bias. Package size is the governing constraint in this corner — the 1612 body is 1.92 mm² against the 2016's 3.2 mm² and the 3225's 8.0 mm². *Rejected:* the JLC house 2016 part (also CL 8 pF, but a footprint change for no gain) and the YXC 3225 (CL 20 pF, needing ~31 pF load caps, in four times the area). |
 | Boot | **BOOT0** | 63 | 10 kΩ pull-down; SWD-only programming |
 | Reset | **NRST** | 12 | 100 nF to GND + the debug header NRST pin (⚠ MCU-sheet net needs its global `NRST` label restored to reach the header) |
 | Analog ref | VDDA | 16 | `MCU_VDDA` = `3V3_A` via the VDDA ferrite; **VREF+ is internal to VDDA on this package** — no pin, no strap |
@@ -95,7 +95,34 @@ ADC5140 I2C addresses are set by hardware ADDR straps: ADC-A = GND/GND, ADC-B = 
 
 ## 5. Utilization
 
-**23 of 46 GPIO used.** Free: PA1 (MCLK reserve/TP), PA3, PA6, PA9, PA10, PA15, PB0, PB1, PB2 (SAI4_SD_A option), PB4, PB5, PB6, PB7, PB10, PB12, PB13, PB14, PB15, PC10, PC11, PC12, PC14/PC15 (LSE pair — usable as GPIO, no 32 kHz crystal planned). PC10/PC11 plus PB13/PB14 remain a complete USART3 set (AF7, with hardware flow control) if a serial link is ever wanted. Headroom is real but thin vs the LQFP — check any spin-2 pin pick against this list and the package pinout (ports D/E/F/G largely don't exist).
+**20 pins unconnected, verified against the layout 2026-09-24** (the earlier list here was
+stale — PB0 carries a control pot, PB10 the status LED, and **PC10, PC11, PB13 and PB14 do
+not exist on the VFQFPN68 at all**, so the "complete USART3 set" this section used to
+promise is not available on this package).
+
+Free pins, grouped by which side of the package they leave from:
+
+| Side | Pads | Pins |
+|---|---|---|
+| **South** | 53, 56, 57, 59, 60, 61, 62 | PA15, PC12, PD2, PB4, PB5, PB6, PB7 |
+| North | 25, 30, 31 | PA6, PB1, PB2 |
+| East | 2, 3, 14, 18, 20 | PC14, PC15, PC1, PA1, PA3 |
+| West | 36, 39, 41, 44, 45 | PB12, PB15, PC7, PA9, PA10 |
+
+**One is allocated: pad 60 as a firmware timing probe** (`test-points.md`) — the only pin in
+this area a via can reach. Together with the status LED line that gives two timing markers.
+Further pins brought out as surface pads were considered and dropped: at 0.4 mm pitch they
+need to fan out before a probe tip lands. The other 19 stay unallocated.
+
+Alternate functions confirmed against the Zephyr `stm32h725rgvx` pin-control source:
+PC7 = TIM3_CH2 / TIM8_CH2, PA6 = TIM3_CH1 / TIM13_CH1, PB1 = TIM3_CH4, PB15 = TIM12_CH2,
+PA1 = TIM5_CH2 / TIM15_CH1N, PA3 = TIM5_CH4 / TIM15_CH2, PA10 = LPUART1_RX, PC1 = I2S2_SDO.
+
+Reserves that still stand: **PA1** (master-clock reserve and test pad), **PB2** (second SAI
+data-lane option), **PC14/PC15** (32 kHz crystal pair, no crystal planned). **PC7 is now
+free** — the spare codec-reset reserve was released when the shared reset was confirmed.
+PA15 and PB4 carry JTAG alternate functions (JTDI, NJTRST) that need disabling in firmware;
+harmless with SWD, but not free of a software step.
 
 ---
 
@@ -114,7 +141,7 @@ Pin assignment is settled; these are confirmations and value picks to close at t
 7. ~~**LED series-resistor value**~~ **Resolved** — 1 kΩ; see `power-supply-netlist.md` for the LED part and the current-setting rationale.
 8. ~~**NRST label**~~ **Resolved** — verified from the netlist 2026-07-24: `NRST` = MCU pin 12 + the 100 nF cap + the debug header NRST pin, one net.
 9. **USB routing** — PA11/PA12 reserved; decide whether to route to any pads on spin 1 (near-zero cost; no connector planned). If USB data is ever activated, ⚠ verify how the transceiver is supplied on VFQFPN68 (no VDD33USB/VDD50USB pins — DS13311).
-10. **SDOUT bus pull-down** — 100 kΩ DNP on `SAI4_SD_B` (populate only if bench shows float; `adc-netlist.md` §5).
+10. ~~SDOUT bus pull-down~~ — **fitted 2026-09-24: 10 kΩ to ground on `SAI4_SD_B`**, populated rather than DNP (populate only if bench shows float; `adc-netlist.md` §5).
 11. **Test points** — see `test-points.md` (single source of truth; categorized by access type). Reserve pad on PA1 (`SAI4_MCLK_B`) noted there as Cat 3 / DNP.
 
 ---
@@ -123,9 +150,9 @@ Pin assignment is settled; these are confirmations and value picks to close at t
 
 | Net | Pads | Count | As-built |
 |---|---|---|---|
-| `3V45_D` (VDD digital) | 9, 22, 35, 51, 68 | 5 | decoupling section: 100 nF one per pin (at layout) + 4.7 µF bulk |
-| VBAT (backup domain) | 1 | 1 | tied to `3V45_D` (no coin cell) — **not** the battery `VBAT` net; shares name only |
-| VDDSMPS | 6 | 1 | `3V45_D` — **coverage rule, not per-pin caps** (2026-07-24, see `layout-notes.md` §5.1): pin vias into the island; ≥1 100 nF island↔GND cap within ~2 mm of the pin-6 via (on the near side of the VDD cluster — this is the noisy consumer), 4.7 µF within ~5 mm |
+| `3V3_D` (VDD digital) | 9, 22, 35, 51, 68 | 5 | decoupling section: 100 nF one per pin (at layout) + 4.7 µF bulk |
+| VBAT (backup domain) | 1 | 1 | tied to `3V3_D` (no coin cell) — **not** the battery `VBAT` net; shares name only |
+| VDDSMPS | 6 | 1 | `3V3_D` — **coverage rule, not per-pin caps** (2026-07-24, see `layout-notes.md` §5.1): pin vias into the island; ≥1 100 nF island↔GND cap within ~2 mm of the pin-6 via (on the near side of the VDD cluster — this is the noisy consumer), 4.7 µF within ~5 mm |
 | VLXSMPS → VFBSMPS | 5 → 7 | | **2.2 µH inductor** between them; **4.7 µF** at VFBSMPS (AN5419 direct-SMPS) — keep this hot loop tight; VSSSMPS (pad 4) is two pads away |
 | VCAP | 33, 49, 66 | 3 | **100 nF each** — LDO permanently disabled on this package (ST-confirmed) |
 | VDDA / VSSA | 16 / 15 | 1/1 | `MCU_VDDA` (VDDA ferrite from `3V3_A`) + 100 nF / 1 µF |

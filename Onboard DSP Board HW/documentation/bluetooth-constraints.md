@@ -58,7 +58,7 @@ is the thing to re-read after any placement change.
 | Interface | AT / transparent UART (Ebyte fixed-profile firmware) |
 | TX / RX | 4 dBm / −96 dBm |
 | Antenna | ceramic chip at the pad-free end, 50 Ω, rated 60 m (see §3 conditions) |
-| Supply | **1.7–3.6 V; ≥3.3 V for full output power** — the 3.45 V rail is in range |
+| Supply | **1.7–3.6 V; ≥3.3 V for full output power** — the 3.3 V rail is in range. ⚠ Note the rail's *minimum* (≈3.23 V) sits marginally under the "full output power" threshold, so transmit power may be slightly reduced at the bottom of tolerance. Graceful, not a fault |
 | Logic | 3.3 V-class UART (5 V unsafe) — same-rail with the STM32 |
 | Assembly | JLC SMT, MSL 3 |
 | Certification | FCC modular grant (FCC ID 2ALPH-E104BT5032A); CE per vendor |
@@ -138,8 +138,8 @@ notice — but there is no reason to spend it.
 
 ## 5. Supply
 
-- **Module VCC on `3V45_D`**, the same digital rail as the STM32 and the codec
-  digital supplies. At 3.45 V the module is inside its 1.7–3.6 V range and above the
+- **Module VCC on `3V3_D`**, the same digital rail as the STM32 and the codec
+  digital supplies. At 3.3 V the module is inside its 1.7–3.6 V range and at the
   3.3 V needed for full output power.
 - **No local decoupling capacitor at the module.** The corner has no room for one —
   the module is boxed in by the board edge, the pot, and the inductor — and it does
@@ -166,8 +166,8 @@ notice — but there is no reason to spend it.
   facing the board edge and away from the converter. The column facing the inductor
   carries only ground and unused GPIO/status pins. Preserve this if the corner is
   ever re-laid.
-- **Test points on the UART lines** so the serial link can be debugged independently
-  of the BLE link (see `test-points.md`).
+- **Probe access on the UART lines** so the serial link can be debugged independently
+  of the BLE link. **Satisfied by the module's own castellated pads** — each leaves a 0.9 × 0.8 mm tab of exposed copper outside the module body, so no dedicated test points are needed (`test-points.md`).
 
 ## 6.5 Radiated coupling into the analog front end
 
@@ -230,7 +230,7 @@ The `-V/RM118` tail is temperature grade / firmware revision. The two are the sa
 firmware and command set but **not pin-compatible** — switching is a board spin.
 
 **Screening criteria, priority order:** (1) working UART/AT firmware; (2) JLC
-assembles it; (3) supply covers 3.45 V; (4) size and antenna interface;
+assembles it; (3) supply covers 3.3 V; (4) size and antenna interface;
 (5) certification documentation; (6) cost.
 
 ## 8. Open items

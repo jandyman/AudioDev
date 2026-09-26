@@ -389,10 +389,13 @@ def generate(pcb_path, output_path, zone_bounds, distance_pairs,
 # Zone boundaries are upper x limits along the board's long axis, in order.
 # The floor plan is [ANALOG FRONT END] - [MCU] - [POWER]; see layout-notes.md §1.
 
-pcb_path = ("/Users/andy/Dropbox/Developer/AudioDev/Onboard DSP Board HW/"
-            "Main Board/Main Board.kicad_pcb")
-output_path = ("/Users/andy/Dropbox/Developer/AudioDev/Onboard DSP Board HW/"
-               "placement-register.md")
+# Paths are resolved relative to this script so the tool survives the project
+# being moved (it previously carried an absolute Dropbox path that went stale
+# when the project moved to Documents, and the output path pointed one level
+# above the documentation folder the file actually lives in).
+_board_root = Path(__file__).resolve().parent.parent
+pcb_path = _board_root / "Main Board" / "Main Board.kicad_pcb"
+output_path = _board_root / "documentation" / "placement-register.md"
 
 zone_bounds = [
     ("Analog front end", 137.0),

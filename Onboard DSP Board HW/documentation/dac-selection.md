@@ -22,7 +22,7 @@
 
 These three derived requirements do the actual part selection — they were implicit in rev 1 and are made explicit here:
 
-**Buffer-free drive.** The chain is `DAC → fixed pad → pot → jack` with no op-amp anywhere. The 26 dB pad must be low-impedance so the pot sees a stiff source, which means the pad's total resistance loads the DAC at roughly **1–2 kΩ**. The DAC must therefore have an **integrated line driver rated for ~1 kΩ loads**. This single spec eliminates most cheap DACs (weak-swing outputs like PT8211/CS4344 would force the buffer back in) and eliminated the ES9023 (5 kΩ min load).
+**Buffer-free drive.** The chain is `DAC → fixed pad → pot → jack` with no op-amp anywhere. The 12.5 dB pad must be low-impedance so the pot sees a stiff source, which means the pad's total resistance loads the DAC at roughly **1–2 kΩ**. The DAC must therefore have an **integrated line driver rated for ~1 kΩ loads**. This single spec eliminates most cheap DACs (weak-swing outputs like PT8211/CS4344 would force the buffer back in) and eliminated the ES9023 (5 kΩ min load).
 
 **Ground-referenced (symmetric-to-ground) output.** A charge-pump DAC whose output swings symmetrically about ground needs **no DC-blocking caps** anywhere in the chain — the pad and pot are DC-coupled, and residual DC across the pot is µV-level (no scratchy-pot aging). A VDD/2-biased output would need two large coupling caps sized against the ~1 kΩ pad (≥10 µF each) plus it reintroduces turn-on thump.
 
@@ -49,7 +49,7 @@ So the target category is: **strap-configured stereo DAC with integrated charge 
 ## 4. Why PCM5102A
 
 - **Only category member with no MCLK at all**: SCK tied low → internal PLL runs from BCK. Three wires from I2S1, no MCLK trace near the analog section — and on this MCU an MCLK-requiring part would cost the battery-sense pin (I2S1_MCK = PC4).
-- **1 kΩ min load** → the L-pad can sit at Rs = 1.2 k / Rsh = 62 Ω → **~59 Ω source feeding the pot** (rev 1's ES9023 could not do better than ~250–330 Ω within its load spec).
+- **1 kΩ min load** → the L-pad sits at Rs = 1.2 k / Rsh = 470 Ω → **~327 Ω source feeding the pot** (rev 1's ES9023 could not do better than ~250–330 Ω within its load spec).
 - Ground-centered charge-pump output → fully DC-coupled chain, no caps, no thump mechanism; **XSMT** soft-mute pin for controlled ramp (GPIO PC9, net `DAC_XSMT`, or RC delay).
 - Strap-configured, deep TI documentation, RPi-ecosystem-proven no-MCLK operation.
 - Good LCSC stock at ~$1; **PCM5100A is pin-identical on the same footprint** — 100 dB SNR is still ~30 dB more than a bass rig can use at 0.1 V, so the footprint carries a built-in cost-down (and 5101A/5102A upgrade) option with zero layout risk.
@@ -62,18 +62,53 @@ So the target category is: **strap-configured stereo DAC with integrated charge 
 
 Chain: `PCM5102A (2.1 Vrms) → fixed L-pad → 10 kΩ audio pot (w/ switch) → jack`, fully DC-coupled.
 
-L-pad: **Rs = 1.2 kΩ, Rsh = 62 Ω** (per channel):
+L-pad: **Rs = 1.2 kΩ series, Rsh = 470 Ω shunt.** *(Raised from 62 Ω on 2026-09-24; 390 Ω was
+the first choice and became 470 Ω on 2026-09-25 when 390 Ω proved Extended-only at assembly —
+see "Why 470 Ω" below. Only the left channel is populated; the right output is unused.)*
 
-- Division with the 10 k pot in parallel with Rsh: 2.1 V × 61.6 / 1261.6 ≈ **0.103 Vrms max** at the pot — full pot rotation spans 0 → ~0.1 V.
-- Pad output Z ≈ Rs ∥ Rsh ≈ **58 Ω**.
-- DAC load = Rs + Rsh∥10k ≈ **1.26 kΩ** ✓ (≥1 kΩ spec), ~1.7 mA per channel at full scale — negligible battery cost.
-- Jack sees the pot wiper: variable, worst case ~2.5 kΩ at mid-rotation. Into a ≥1 MΩ instrument input that is a 0.25 % level error; with ~500 pF of cable the pole is ~127 kHz. A passive bass itself presents 5–20 kΩ+, so this is cleaner than the source it emulates. **Accepted** (a constant-Z output would need a buffer *after* the pot, which is offboard — topologically impractical, not just a space trade).
-- Noise: pad attenuates DAC noise with the signal; delivered SNR ≈ DAC's (~110 dB re 0.1 V incl. ~58 Ω Johnson noise). PCM5100A variant: ~98 dB — still far beyond the application.
-- DC: ±1 mV-class DAC offset ÷20 → ~50 µV across the pot — no wiper-noise concern.
-- **External loads:** ≥1 MΩ (instrument) is transparent; 10 kΩ (mixer line in) costs ~0.05 dB at full rotation, ~2 dB at mid-rotation — fine for a volume knob. Note 0.1 V is ~10 dB under −10 dBV consumer line nominal; mixer gain trim covers it.
-- **Short-circuit safe:** a shorted jack grounds the wiper; worst case (pot at max) the short lands across Rsh, so the DAC sees Rs alone = 1.2 kΩ — still ≥ the 1 kΩ min load (~1.75 mA). The series Rs guarantees the DAC can never see <1.2 kΩ regardless of what's downstream.
+- Division with the 10 kΩ pot in parallel with Rsh: 2.1 V × 448.9 / 1648.9 = **0.572 Vrms
+  max** at the pot, **−11.3 dB**. Worst case with the converter's +6 % gain error, 0.61 V.
+- Pad output Z = Rs ∥ Rsh∥pot = **327 Ω**.
+- DAC load = Rs + Rsh∥10k = **1.65 kΩ** ✓ — comfortably over the 1 kΩ minimum, and
+  **65 % of margin where the old 62 Ω left only 26 %**. About 1.3 mA per channel at full
+  scale.
+- Jack sees the pot wiper: variable, worst case ~2.5 kΩ at mid-rotation, unchanged by this
+  edit. Into a ≥1 MΩ instrument input that is a 0.25 % level error; with ~500 pF of cable
+  the pole is ~127 kHz. **Accepted** (a constant-Z output would need a buffer *after* the
+  pot, which is offboard — topologically impractical, not just a cost choice).
+- Noise: the pad attenuates DAC noise with the signal, so delivered SNR tracks the DAC's.
+  The pad's own Johnson noise at 327 Ω is 2.30 nV/√Hz → 0.33 µVrms over 20 kHz, which is
+  **125 dB below** the 0.572 V output. Irrelevant.
+- DC: ±1 mV-class DAC offset × 0.272 → ~270 µV across the pot — no wiper-noise concern.
+- **External loads:** ≥1 MΩ (instrument) is transparent; 10 kΩ (mixer line in) costs
+  ~0.05 dB at full rotation, ~2 dB at mid-rotation — fine for a volume knob.
+- **Short-circuit safe, unchanged:** a shorted jack grounds the wiper; worst case the short
+  lands across Rsh, so the DAC sees Rs alone = 1.2 kΩ — still ≥ the 1 kΩ minimum
+  (~1.75 mA). The series Rs guarantees the DAC never sees less than 1.2 kΩ whatever is
+  downstream. **This is why Rs stays at 1.2 kΩ and the level is set by Rsh alone.**
 
-Four 0402 resistors total (2/channel). TI's recommended RC output filter (470 Ω + 2.2 nF) is subsumed by the pad: add 2.2–3.3 nF across Rsh if wideband content downstream matters.
+**Why 470 Ω.** The original 62 Ω delivered 0.103 Vrms — about 10 dB *under* consumer line
+nominal and at the quiet end of passive-pickup territory, on an instrument whose whole
+point is an active front end. 0.572 Vrms sits squarely in active-instrument range (roughly
+0.3–1 V), about 5 dB above consumer line nominal, and leaves the amplifier's own input pad
+to deal with it if needed. The volume pot is *after* the L-pad, so raising the maximum
+costs nothing in controllability — the player can always turn it down, and now has the
+range to turn it up.
+
+The exact value is not critical, which is what made the sourcing substitution free: 390 Ω
+was the first pick and was Extended-only at assembly, so it became 470 Ω — slightly hotter,
+slightly more converter-load margin, and a stock Basic value.
+
+Raising the shunt resistor improves two things at once: the level goes up **and** the DAC's
+load resistance goes up. That second effect matters, because at 62 Ω the load was 1.26 kΩ
+against a 1 kΩ minimum, which was tighter than it needed to be.
+
+Alternatives if 0.572 V proves wrong on the bench — one resistor, same footprint: 330 Ω →
+0.44 V; 390 Ω → 0.50 V; 560 Ω → 0.64 V; 680 Ω → 0.73 V; 1 kΩ → 0.91 V. Going all the way to
+no pad at all (2.1 Vrms, +4.6 dBu) would clip most instrument inputs at full rotation and
+gives up the short-circuit protection, so the pad stays.
+
+Two 0402 resistors (mono output), plus the output filter capacitor. TI's recommended RC output network is 470 Ω + 2.2 nF; the pad's resistors subsume the resistor, and **2.2 nF across Rsh** is fitted — giving a **221 kHz** corner at the pad's 327 Ω node impedance, and −0.04 dB at 20 kHz. The corner sits above TI's 154 kHz, which is not a target so much as where their particular pair lands; anything from roughly 100 to 300 kHz clears the audio band while still rolling off modulator content. **10 nF was rejected** — it pulls the corner to 49 kHz and puts −0.68 dB at 20 kHz, an in-band deviation for no benefit. Note the higher shunt value makes this capacitor *smaller*: at the old 62 Ω the same corner would have needed ~30 nF.
 
 ---
 
@@ -96,8 +131,8 @@ No new MCU pins beyond what `pin-allocation.md` already allocates.
 | 3 | CPGND | GND (*noisy return — own via, don't share with quiet pads*) |
 | 4 | CAPM | other end of flying cap |
 | 5 | VNEG | 2.2 µF to GND at pin (−3.3 V rail decouple, *noisy return*) |
-| 6 | OUTL | → Rs 1.2 k → pad node L (Rsh 62 Ω to GND) → pot L |
-| 7 | OUTR | → Rs 1.2 k → pad node R (Rsh 62 Ω to GND) → pot R |
+| 6 | OUTL | → Rs 1.2 k → pad node (Rsh 470 Ω and the 2.2 nF filter to GND) → volume pot → jack tip |
+| 7 | OUTR | **unused, left open.** The instrument output is mono; no pad is populated on this channel |
 | 8 | AVDD | 3V3A — 0.1 µF to GND tight at pin (quiet-side termination); bulk shared with pin 1's 10 µF |
 | 9 | AGND | GND (*quiet return — Rsh grounds group here*) |
 | 10 | DEMP | GND (de-emphasis off) |
@@ -110,7 +145,7 @@ No new MCU pins beyond what `pin-allocation.md` already allocates.
 | 17 | XSMT | MCU PC9, net `DAC_XSMT` (low = soft-mute; would tie to AVDD if unused) |
 | 18 | LDOO | 0.1 µF to GND — internal 1.8 V LDO output, **no supply connection** (external 1.8 V only if bypassing the LDO; not done here) |
 | 19 | DGND | GND |
-| 20 | DVDD | `3V45_D` digital rail (**3.45 V**) — 0.1 µF to GND at pin; bulk folds into the digital rail's existing 10 µF nearby (internal LDO derives the 1.8 V core from DVDD; keeps digital current off the analog LDO). ⚠ confirm 3.45 V (+ rail tolerance) is inside the PCM5102A DVDD recommended-operating max; if not, move DVDD to `3V3_A` (accepts a few mA of DAC digital current on the analog LDO) |
+| 20 | DVDD | **`3V3_A` analog rail (3.30 V)** — moved off the digital rail 2026-09-24; 0.1 µF to GND at pin, bulk folds into the analog rail's bulk (the internal LDO derives the 1.8 V core from DVDD). The recommended maximum is **3.1 / 3.3 / 3.46 V**, the lowest ceiling on the board, and a switched rail carrying a 3–5 % power-save lift cannot stay under it. Draw is 8 mA typ / 13 mA max, and every digital pin on this part is an *input*, so nothing switching leaves it — the analog rail takes the current without taking any switching noise |
 
 Notes: **single GND net board-wide** — no AGND/DGND nets in the schematic (TI: one common ground plane, no split; same for the ADC5140s, whose AVSS and thermal pad both go "directly to the board ground plane"). Zoning is by placement and the 3V3A net, not by ground nets. Assumes the 4-layer stackup (solid GND on L2 — `layout-notes.md` §3): every cap and ground pin takes its own via(s) tight to its pads; the plane closes all loops underneath. Decoupling-cap ordering on CPVDD/AVDD: pin → cap tap → via to 3V3A, so the cap junctions the trace and the rail via hangs beyond it (trace inductance to the rail is free filtering). Cap set: 4× 0.1 µF at pins (CPVDD, AVDD, DVDD, LDOO), 2× 2.2 µF charge pump (flying + VNEG) on L1 at the chip, 1× shared 10 µF on the 3V3A pour near the DAC (CPVDD side); DVDD bulk shared with the digital rail. Charge-pump caps (2, 4, 5) closest to the device. Free bonus from the auto power modes: BCK+LRCK held low >1 s → full power-down (~0.2 mA), and restart is automatic when the I2S clocks resume — firmware gets DAC power management just by stopping/starting I2S1.
 
@@ -129,10 +164,10 @@ Notes: **single GND net board-wide** — no AGND/DGND nets in the schematic (TI:
 The part is chosen; these are datasheet confirmations and part-selection details to close before fab.
 
 1. **PCM5102A power-down behavior** — confirm no transient when 3.3 V collapses with XSMT high (mitigated by pot-at-min, but check the TI app notes / bench).
-2. **Final pad values & pot taper** — confirm Rs=1.2k/Rsh=62 against the real full-scale (2.1 Vrms typ, ±10 % over supply) and pick audio-taper pot part.
+2. ~~Final pad values~~ — **closed: Rs = 1.2 k, Rsh = 470 Ω for 0.572 Vrms, filter 2.2 nF** (§5), checked against the datasheet full-scale of 2.1 Vrms typ with −6/+6 % gain error. Still open: **pick the audio-taper pot part**.
 3. **JLCPCB assembly check** — confirm C107671 (PCM5102APWR) loadable as Extended part at order time; note C131154 (PCM5100APWR) as BOM alternate.
 4. **Optional RC across Rsh** — decide if the 2.2–3.3 nF ultrasonic filter cap is wanted.
-5. **DVDD rail/voltage** — DVDD is on `3V45_D` (3.45 V) to keep DAC digital current off the analog LDO; confirm 3.45 V + rail tolerance is inside the PCM5102A DVDD recommended-operating window (SLAS859C). If it exceeds it, fall back to DVDD on `3V3_A`. (Reconciles a prior conflict with `layout-notes.md` §6.2, which had wrongly assumed the DAC ran entirely off `3V3_A`.)
+5. ~~**DVDD rail/voltage**~~ — **Closed 2026-09-24, and it went to the fallback.** SLAS859C gives DVDD as 3.1 / 3.3 / **3.46 V**; no switched-rail setpoint clears that once the converter's power-save lift is counted, so DVDD moved to `3V3_A` as this item anticipated. The part now runs entirely off the analog rail — which is what `layout-notes.md` §6.2 had assumed all along.
 
 ---
 

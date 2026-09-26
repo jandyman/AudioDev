@@ -33,7 +33,7 @@ End-to-end placement along the long axis:
 
 - **Analog front end at one end, switcher/charger at the other.** The whole point is distance between the TPS63020's (and charger's) high-di/dt loops and the instrument-level front end.
 - **MCU in the middle.** Minimizes the runs to both the SAI4 codec bus (to the analog end) and the I2S1 DAC bus. At 8.192 MHz (SAI) / 2.048 MHz (I2S) these lengths are electrically short — placement is about noise, not signal integrity.
-- **\*`3V3_A` LDO placed mid-board (near its load), not at the power end.** Put the LDO close to the analog load so its PSRR isn't undone by a long *post*-LDO trace re-acquiring noise; let the noisier pre-LDO `3V45_D` do the long haul (the LDO rejects it). Local analog bulk stays at the ADC pair (the analog bulk cap + the VDDA ferrite for `MCU_VDDA`).
+- **\*`3V3_A` LDO placed mid-board (near its load), not at the power end.** Put the LDO close to the analog load so its PSRR isn't undone by a long *post*-LDO trace re-acquiring noise; let the noisier pre-LDO `3V3_D` do the long haul (the LDO rejects it). Local analog bulk stays at the ADC pair (the analog bulk cap + the VDDA ferrite for `MCU_VDDA`).
 - **MICBIAS never goes toward the power end.** It's generated *inside* each ADC and only leaves the board via the pickup connectors to the offboard pickup preamps.
 - **The radio and the user controls share the far corner, past the power end.** The BLE module wants an extreme corner with its antenna on a board edge, and the analog end is spoken for — so it goes at the opposite extreme, which puts it next to the switcher. That adjacency is managed rather than avoided; see §1.2.
 
@@ -86,14 +86,14 @@ This board is the poster child for it: the audio buses run from the mid-board MC
 |---|---|
 | **L1 (top)** | Components + primary/critical signal routing (audio analog + both clock buses live here, over solid L2) |
 | **L2** | **Solid, unbroken GND plane** — the unified ground of §2. Never gapped, with one sanctioned exception: the BLE antenna keep-out at the far corner (§2). MCU exposed-pad thermal vias land here. |
-| **L3** | **GND-dominant plane** — ground pour stitched hard to L2, *with a `3V45_D` island under the MCU* (§5) for power routing (+ fat feeds for the other low-current rails). Effectively a second ground plane. |
+| **L3** | **GND-dominant plane** — ground pour stitched hard to L2, *with a `3V3_D` island under the MCU* (§5) for power routing (+ fat feeds for the other low-current rails). Effectively a second ground plane. |
 | **L4 (bottom)** | Tolerant routing (control, LED, spare GPIO) over L3 ground fill, plus stitching |
 
 \*Not a dedicated power plane. The board doesn't need one (few rails, low currents); a GND-dominant L3 with a local power island buys more ground reference for the mid-board→analog signal returns and gives L4 a ground under it. The one spot where power routing is dense — the MCU's clustered supply pins — gets the island.
 
 Notes:
 - **Keep the sensitive fanout on L1 over L2.** Analog crossovers that must dip to L4 stay ground-referenced, because L3 under them is ground fill.
-- **Stitch L2↔L3 liberally** (every ~5–10 mm, and beside any signal-layer transition) so the two ground planes are truly one node, not a floating pour. Keep a clean keep-out around the `3V45_D` island, and don't let an L4 trace cross the island gap without a nearby stitch via.
+- **Stitch L2↔L3 liberally** (every ~5–10 mm, and beside any signal-layer transition) so the two ground planes are truly one node, not a floating pour. Keep a clean keep-out around the `3V3_D` island, and don't let an L4 trace cross the island gap without a nearby stitch via.
 
 ## 4. Test points
 
@@ -101,11 +101,11 @@ See `test-points.md` (single source of truth, categorized by access type). Summa
 
 **Debug connector — Tag-Connect TC2030, no header.** SWD/RTT via a Tag-Connect **TC2030** footprint (six pads + three locating holes, no connector body) rather than a 2×5 1.27 mm Cortex header — this reclaims the header footprint and its probe-clearance keep-out, part of what buys single-sided fit (§1.1). Signals: SWDIO, SWCLK, NRST, VCC (sense), GND (+ one spare); RTT rides over SWD, so no UART pin is needed. Program/debug with the J-Link via Segger's Tag-Connect adapter. Legged (TC2030-IDC) vs. no-leg (TC2030-IDC-NL + retaining clip) is a mechanical/assembly call — NL drops the through-holes but needs the clip held during bring-up.
 
-## 5. MCU power routing — `3V45_D` island on L3 (not L2)
+## 5. MCU power routing — `3V3_D` island on L3 (not L2)
 
-**Goal:** ease the *power routing* around the MCU — get `3V45_D` to all the MCU supply pins without a rat's nest of traces.
+**Goal:** ease the *power routing* around the MCU — get `3V3_D` to all the MCU supply pins without a rat's nest of traces.
 
-**Do:** place a `3V45_D` copper island on **L3, directly under the MCU footprint**, and feed it from the power end with a few vias + a fat trace. Supply pins tap the island locally. **Pour ground on all of L3 the island and rail feeds don't use, stitched to L2** (§3) — so the island costs no ground reference; L3 stays a de-facto second ground plane everywhere else.
+**Do:** place a `3V3_D` copper island on **L3, directly under the MCU footprint**, and feed it from the power end with a few vias + a fat trace. Supply pins tap the island locally. **Pour ground on all of L3 the island and rail feeds don't use, stitched to L2** (§3) — so the island costs no ground reference; L3 stays a de-facto second ground plane everywhere else.
 
 **Do NOT** carve this island into L2. L2 is the unified ground plane, and the MCU is the single worst place to gap it (SAI/I2S/USB/SWD/I2C all fan out there → every return current would detour around the hole). There's also a hard conflict: the MCU exposed pad's thermal/ground via array must land in L2 ground right where the island would go. Island on L3, exposed pad → L2 ground, and the two never fight.
 
@@ -119,7 +119,7 @@ No ST reference design exists for the QFN68 package; this section stands in for 
 - **100 nF input cap beside that corridor:** pad 6 → short trace → cap → **via(s) to L2 at the cap's ground end**; pad 4 gets its **own via(s) into L2 right at the pad**. The chopped input current closes: cap → 6 → switch → 4 → 0.1 mm down → plane → back up. Double vias at each ground landing where space allows.
 - **VFB 4.7 µF at the inductor's far terminal**, ground end via'd immediately to L2.
 - **VDDSMPS 4.7 µF bulk = island↔GND cap in the general corner area, *not* at the pin.** It's a switching-frequency reservoir refilling the 100 nF — several mm of island-over-plane path is negligible at low MHz, and keeping it off the pin row is what lets the inductor sit close. Placed between the island's feed and the SMPS corner it doubles as island bulk for the five VDD pins (whose cluster 4.7 µF follows the same island↔GND pattern).
-- **In2 under pads 4–7 stays ground pour** — the 3V45 island's extent must stop short of this corner so the L2/L3 return under the SMPS pins is solid ground.
+- **In2 under pads 4–7 stays ground pour** — the 3V3_D island's extent must stop short of this corner so the L2/L3 return under the SMPS pins is solid ground.
 
 **Plane-fed decoupling model (settled 2026-07-24, supersedes "cap at pin X" phrasing everywhere).** At 0.4 mm pitch over a ~0.1 mm-distant plane pair, caps don't belong to pins: supply pins via directly into the island (no top-side cap hop required), and every island↔GND cap serves every pin through the planes, weighted by lateral distance (~50–100 pH/mm spreading at this spacing — "local" ≈ within a few mm). Requirements become **coverage**, not assignment: a 100 nF-class cap within ~2 mm of every supply via, bulk (4.7 µF) within ~5 mm, and one 100 nF sited between the VDDSMPS via and the quiet VDD taps (the SMPS is the noisy consumer that bounces the island). Non-negotiable discipline: **vias immediately at every cap pad** and at pads 4/6 themselves — a trace-then-distant-via reinserts the inductance this scheme exists to remove. The island's plane capacitance (tens of pF) does not replace the caps; it only replaces the wiring. Freeing quiet VDD pins of dedicated caps is encouraged where it buys space near pin 6 / the VLX corridor.
 
@@ -149,17 +149,23 @@ Whatever drives HSE therefore sits ~2–4 mm from the buck switch node however i
 
 Package size is the single most effective lever in this corner, and it has paid off at every step down. Each reduction relaxes the over-constraint directly: a smaller can shortens the crystal↔cap↔ground triangle *and* buys separation from the inductor on the same axis, so the two opposing pulls of the previous paragraph both ease at once. 3225 → 2016 closed the HSE-pin distance from 5.33 mm to 4.28 mm; 2016 → 1612 should close it further. The 1612's own load caps are smaller in value too (6.8 pF against 15 pF), which keeps the flanking passives from becoming the new area floor. **If this corner is ever re-opened, look at package size before looking at placement.**
 
-**Related decision — the pin-6 decoupler is deliberately omitted** so the inductor can sit close, with the nearest `3V45_D` cap covering it through the plane per §5.1's coverage model. Note this is the weakest case for the distributed argument: the SMPS input current is chopped with fast edges, which is exactly what wants a local low-inductance cap, and ~3 mm of plane at 50–100 pH/mm is 150–300 pH in the path. Acceptable given the corridor conflict, but **put the island on the spin-1 bring-up list with a scope** rather than assuming it.
+**Related decision — the pin-6 decoupler is deliberately omitted** so the inductor can sit close, with the nearest `3V3_D` cap covering it through the plane per §5.1's coverage model. Note this is the weakest case for the distributed argument: the SMPS input current is chopped with fast edges, which is exactly what wants a local low-inductance cap, and ~3 mm of plane at 50–100 pH/mm is 150–300 pH in the path. Acceptable given the corridor conflict, but **put the island on the spin-1 bring-up list with a scope** rather than assuming it.
 
-## 5.2 `3V3_A` LDO — fed directly from `3V45_D`, no boundary filter (settled 2026-07-25)
+## 5.2 `3V3_A` LDO — fed from the switched battery node (revised 2026-09-24)
 
-`3V45_D` is already routed into the analog zone: the mixed-signal codecs put their **digital** supplies there — both ADCs' IOVDD and the DAC's DVDD sit on `3V45_D` (deliberately, to keep codec digital current off the analog LDO). So there is no "keep `3V45_D` out of analog" to win — the rail is in the zone regardless.
+**This reverses the 2026-07-25 decision** to tap the LDO off the digital rail. `power-supply.md` §2a carries the reasoning; the layout consequences are here.
 
-Given that, the `3V3_A` LDO is fed **directly from `3V45_D`**, tapping the same entry that serves the codec digital pins. Its PSRR plus a local 1 µF input cap reject the rail's switcher/island noise. An earlier plan added a series ferrite + shunt cap at the boundary to pre-clean the feed; it was **dropped** — with `3V45_D` present in the zone anyway, it cost parts and routing for negligible gain.
+The earlier argument was that the digital rail is routed into the analog zone anyway — both capture converters put their I/O supplies there — so there was no "keep the digital rail out of analog" left to win. That part still holds. What it missed is that tapping the LDO there puts a **2.4 MHz switcher permanently upstream of the analog supply**, at a frequency where this LDO's rejection is unspecified (45 dB at 1 MHz, nothing published above). Feeding it from the cell removes that path entirely.
 
-- **Place the LDO near its analog loads** (§1: short *post*-LDO `3V3_A` run so the regulated output doesn't re-acquire noise).
-- **Decouple the codec IOVDD/DVDD pins locally** (per the codec sections) so their digital switching current loops at the pin rather than wandering the zone.
-- **The real partition is at the signal level, not the rail's presence:** keep the instrument-level pickup inputs, MICBIAS, and the AVDD reference clear of the digital rails and their return currents. One unified ground plane throughout (§2); nothing here splits it.
+**What changes in the layout:**
+
+- **The LDO's input trace now runs from the switched battery node**, not from the digital rail's entry into the analog zone. Route it alongside the feed that serves the buck-boost rather than across the analog island — it is an unregulated, relatively high-impedance node and has no business crossing the quiet area.
+- **Still place the LDO near its analog loads.** The reason is unchanged: keep the *post*-LDO run short so the regulated output does not re-acquire noise (§1).
+- **The LDO is now the warmest small part in the analog section** — roughly 77 mW at full charge, a 15–19 °C rise in its package. **Keep it away from the bias reference divider and its buffer**, which is the one node on this board whose value a thermal gradient can move.
+- **The playback converter's digital supply is no longer on the digital rail** — all three of its supplies are now on `3V3_A`. Only the two capture converters' I/O supplies keep the digital rail in the analog zone.
+- **Decouple those I/O pins locally** so their switching current loops at the pin rather than wandering the zone.
+- **The real partition is at the signal level, not the rail's presence:** keep the instrument-level pickup inputs and the bias reference clear of the digital rail and its return currents. One unified ground plane throughout (§2); nothing here splits it.
+- The boundary ferrite considered in July stays **dropped** — with the LDO's input no longer coming from the digital rail, the thing it was meant to pre-clean is gone.
 
 ## 6. Analog interface decisions (settled this pass)
 
@@ -173,11 +179,11 @@ The 20 mA ceiling was previously recorded as foreclosing higher-current devices 
 
 **Layout:** if MICBIAS is ever used to feed multiple loads, the datasheet calls for avoiding common trace impedance — star-route from the pin rather than daisy-chaining. **Not applicable as drawn.** The equivalent live concern is the preamp boards' own shared bias node, handled on those boards (`preamp-board.md` §8).
 
-### 6.2 `3V45_D` as digital supply — all three chips OK
+### 6.2 `3V3_D` as digital supply — all three chips OK
 
-- **STM32H725** (VDD = `3V45_D`): op 1.62–3.6 V, abs-max ~4.0 V → fine.
-- **ADC5140** (IOVDD = `3V45_D`): IOVDD abs-max **3.9 V** (0.45 V headroom); inputs referenced to its own IOVDD → no mismatch. ⚠ 3.45 is ~4.5 % over the 3.3 V nominal — glance at recommended-operating IOVDD max (likely 3.6) at the datasheet gate.
-- **PCM5102A** (DVDD = `3V45_D`; CPVDD/AVDD = `3V3_A`): its digital-core supply DVDD sits on the 3.45 V rail (per `dac-selection.md` — keeps DAC digital current off the analog LDO), so its digital inputs are driven at a matching 3.45 V. Input abs-max ≈ DVDD + 0.5 = **3.95 V** → the 3.45 V inputs sit ~0.5 V inside it, well above VIH. ⚠ confirm 3.45 V (+ rail tolerance) is inside the PCM5102A DVDD recommended-operating max; if not, DVDD moves to `3V3_A` (`dac-selection.md` §8). **Watch power-up:** don't let the MCU drive I2S into the DAC before `3V3_A` (CPVDD/AVDD) is up — STM32 GPIOs are Hi-Z at reset, `3V3_A` trails `3V45_D` by the LDO turn-on delay, and XSMT is held low.
+- **STM32H725** (VDD = `3V3_D`): op 1.62–3.6 V, abs-max ~4.0 V → fine.
+- **ADC5140** (IOVDD = `3V3_D`): recommended IOVDD is 3.0 / 3.3 / **3.6 V**, abs-max 3.9 V. Against a 3.25 V rail whose power-save ceiling is 3.54 V there is 100 mV of recommended-window margin. **Closed** — the earlier ⚠ concerned a 3.45 V rail that no longer exists. Inputs are referenced to its own IOVDD, so no level mismatch.
+- **PCM5102A** (**all three supplies now on `3V3_A`**): its digital supply moved off the digital rail on 2026-09-24 because its recommended maximum is **3.46 V** — the lowest ceiling on the board, and unreachable under a switched rail carrying a power-save lift. Its digital inputs are therefore referenced to 3.3 V while the SAI drives them from a separately regulated 3.3 V; the two rails are nominally equal, and input abs-max is DVDD + 0.5 V, so the margin is ample. **The power-up concern this entry used to carry has inverted in the good direction:** the analog rail now rises *first*, since its LDO starts as soon as the power switch closes while the buck-boost soft-starts, so the converter is fully powered before the MCU can drive anything into it.
 
 ### 6.3 Pickup cabling — 6-conductor, unshielded
 
@@ -199,13 +205,13 @@ No fundamental issue — the buffering (low-Z source) is what makes single-ended
 Not open decisions — confirmations, placements, and cost calls to settle while laying the board out.
 
 1. ⚠ **DAC-bus probeability** — probing PCM5102A TSSOP leads acceptable? Decides Cat 2 vs Cat 3 (4 pads) in `test-points.md`.
-2. ⚠ **L3 plane discipline** — confirm `3V45_D` island extent under the MCU + ground-flood/stitch elsewhere (esp. analog end) so no L4 crossover references chopped power.
-3. ⚠ **ADC5140 recommended-operating IOVDD max** at 3.45 V (abs-max already cleared).
+2. ⚠ **L3 plane discipline** — confirm `3V3_D` island extent under the MCU + ground-flood/stitch elsewhere (esp. analog end) so no L4 crossover references chopped power.
+3. ~~ADC5140 recommended-operating IOVDD max.~~ **Closed** — 3.6 V recommended maximum against a 3.54 V rail ceiling, and a 3.0 V minimum against a 3.12 V rail floor.
 4. **GND wire-loop placement** — one per region (MCU / analog / DAC output).
 5. **DAC power-up ordering** — verify firmware keeps I2S Hi-Z until `3V3_A` is up (XSMT-low reinforces).
-6. **Pickup cable** — 6 conductors of loose 28 AWG (§6.3, `preamp-board.md` §9). The ground-interleaving option is withdrawn as inapplicable to round wire.
+6. **Pickup cable** — **7** conductors of loose 28 AWG (§6.3, `preamp-board.md` §10): ground, bias reference, analog rail and four signals. The ground-interleaving option is withdrawn as inapplicable to round wire.
 7. ~~**MICBIAS star-route** to the 4 buffer feeds.~~ **Withdrawn** — the preamp boards take the 3.3 V analog rail (§6.1). Route that rail to the pickup connectors as a normal analog supply.
-   - ⚠ **Main-board pickup connector is unresolved.** The preamp end is a 1.0 mm-pitch right-angle SMT header chosen partly because "there is very little space at the main board edge" (`preamp-board.md` §9), but the main board is currently placed with 2.54 mm vertical headers. Reconcile — either the edge-space constraint is not real on this board, or the main-board connector needs to change.
+   - **Main-board pickup connector: resolved.** Both ends are a 1×7 through-hole right-angle header at **2.00 mm pitch**, per `preamp-board.md` §10, which superseded the 1.0 mm SMT selection. The main board's earlier 2.54 mm vertical placement is gone. What remains is not the connector but the harness: both ends are male, so a double-ended female cable is needed, and `preamp-board.md` §10's termination evaluation now applies to the main-board end as well as the preamp end. Still worth confirming the edge clearance for the right-angle body and its cable exit — that was the original reason for the fine-pitch choice and it has not been checked against the placement as it now stands.
 8. ⚠ **BLE antenna keep-out extent** — check the as-drawn void against the module manual's PCB-design drawing, particularly how far past the first pad row copper must be cleared (`bluetooth-constraints.md` §8).
 9. **Radio-corner DRC** — the corner has sub-millimetre courtyard gaps and a through-hole part beside an SMT module; run the clearance rules that will actually be fabricated before committing.
 10. **UART flow control** — confirm the module supports RTS/CTS before leaving two MCU pins committed to it (`bluetooth-constraints.md` §8).

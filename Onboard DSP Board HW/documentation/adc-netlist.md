@@ -1,6 +1,6 @@
 # Codec (ADC) Section — Netlist + BOM
 
-**Status:** Draft for schematic entry (started 2026-07-14). Implements the codec section of Phase 2 in `multichannel-audio-board-plan.md`; consumes the SAI/I2C/GPIO allocation from `pin-allocation.md` §1–§4 and the `3V3_A` / `3V45_D` rails from `power-supply-netlist.md`. Connections are given **by pin name** — take pin *numbers* from the KiCad symbol / datasheet at entry, don't trust memory. Items marked ⚠ go on the netlist-review-gate checklist. Datasheet: TI **SBAS892A** (TLV320ADC5140), 24-pin WQFN.
+**Status:** Draft for schematic entry (started 2026-07-14). Implements the codec section of Phase 2 in `multichannel-audio-board-plan.md`; consumes the SAI/I2C/GPIO allocation from `pin-allocation.md` §1–§4 and the `3V3_A` / `3V3_D` rails from `power-supply-netlist.md`. Connections are given **by pin name** — take pin *numbers* from the KiCad symbol / datasheet at entry, don't trust memory. Items marked ⚠ go on the netlist-review-gate checklist. Datasheet: TI **SBAS892A** (TLV320ADC5140), 24-pin WQFN.
 
 ⚠ **Live proposal (2026-08-26): §2.1 — DC-coupled differential input on one added cable conductor**, which deletes the whole coupling network specified in §2 and 24 parts with it. Everything else here remains the specified design until that proposal is settled at the netlist gate (§11 item 15).
 
@@ -189,14 +189,28 @@ open item.
 #### The generator on this board
 
 **A divider on `3V3_A`, filtered at its tap, followed by a unity-gain buffer.**
-Top leg 100 kΩ, bottom leg 71.5 kΩ (E96) for 1.3757 V; filter capacitor a
-tantalum, not Class II. The buffer drives the eight cold pins, both cable
-conductors, and nothing else.
+Top leg 100 kΩ, bottom leg **68 kΩ as built** for **1.336 V** — 2.8 % under VREF/2,
+inside VREF's own tolerance (the 71.5 kΩ / 1.3757 V pair this section previously
+specified was never fitted). Filter capacitor **10 µF tantalum as built**, not
+Class II. The buffer drives the eight cold pins, both cable conductors, and
+nothing else.
 
 **Change the bottom leg only if the value is ever revisited.** Above the filter
 pole, rail-to-reference attenuation is 1/(2π·f·C·R_top) — it depends on the top
 leg and the capacitor and not on the ratio at all, so the ratio is free to set the
-voltage. At 100 kΩ and 47 µF that is −69 dB at 100 Hz.
+voltage. At 100 kΩ and the 10 µF as built that is **−56 dB at 100 Hz, −76 dB at
+1 kHz, and −116 dB at 100 kHz**.
+
+**Why this capacitor is still needed after the analog rail moved to the battery
+(2026-09-24).** Its original justification was rejecting the buck-boost's
+feedthrough, and that source is gone. But the rail still carries the playback
+converter's **charge pump** — 22 mA of pulsed current — and now its digital supply
+as well, and the divider itself attenuates rail noise by only 8 dB (68/168). The
+capacitor, not the divider, is the filter, and at charge-pump frequencies it is
+overwhelmingly effective. Separately, its 0.4 s time constant against the 40 kΩ
+source is load-bearing for the power-up argument in the risk register's BU-A6: it
+is what makes the bias ramp slow enough to be common-mode on every channel.
+Shrinking it would speed that ramp. **Keep 10 µF.**
 
 #### Decision: derive the reference from the analog rail, not from `VREF` (2026-08-26)
 
@@ -445,7 +459,7 @@ decision.
 
 | Net | Description |
 |---|---|
-| `IN1_SIG`…`IN8_SIG` | Per-channel signal lines (from the pickup connectors): each preamp channel's amplified output → blocking cap → INxP. ≈320 mVpp, ohms-level source. Preamp boards are powered separately from the 3.3 V analog rail |
+| `IN1_SIG`…`IN8_SIG` | Per-channel signal lines (from the pickup connectors): each preamp channel's amplified output → INxP directly (DC-coupled, §2.1). ≈320 mVpp, ohms-level source. Preamp boards are powered separately from the 3.3 V analog rail |
 | `MICBIAS_A` / `MICBIAS_B` | ⚠ **Unused.** Previously the preamp supply; the preamp boards now take the 3.3 V analog rail through their pickup connectors (§1). Leave unconfigured |
 | `BCLK_ADC` | `SAI4_SCK_B` bit clock (PA2), MCU → both codecs (shared) |
 | `FSYNC_ADC` | `SAI4_FS_B` frame sync (PC0), MCU → both codecs (shared) |
@@ -453,7 +467,7 @@ decision.
 | `I2C_SCL` / `I2C_SDA` | I2C1 control bus (shared with nothing else — DAC is strap-configured) |
 | `CODEC_SHDNZ` | Active-low shutdown/reset, MCU PC6 → both codecs (shared) |
 | `3V3_A` | Analog rail (AVDD) — from `power-supply-netlist.md` LDO |
-| `3V45_D` | Digital rail (IOVDD) — see §7 IOVDD note ⚠ |
+| `3V3_D` | Digital rail (IOVDD) — see §7 IOVDD note ⚠ |
 | `GND` | Single ground plane (AVSS + thermal pad direct to plane; no AGND/DGND split) |
 
 ---
@@ -468,21 +482,21 @@ The two devices are **ADC-A** and **ADC-B**. Pin numbers per the 24-WQFN pinout 
 | 2 | AREG | on-chip 1.8 V analog reg output (AVDD = 3.3 V mode) → **1 µF to AVSS at pin**, no external supply ⚠ |
 | 3 | VREF | **1 µF to AVSS at pin** (min per §8.3.4). Larger cap ⇒ raise `VREF_QCHG` |
 | 4 | AVSS | `GND` (direct to plane) |
-| 5 | MICBIAS | `MICBIAS_A`/`MICBIAS_B` — buffer supply rail. **1 µF to AVSS at pin** (sets the 1.6 µVRMS noise spec); routes to this device's 4 buffer rails via its pickup connector, **no series resistor**. `MBIAS_VAL = 001` → 3.014 V, powered on via `MICBIAS_PDZ` |
-| 6 | IN1P_GPI1 | from buffer-1 signal line via a **4.7 µF tantalum** blocking cap, **+ toward this pin**, with a parallel silicon clamp diode, **cathode toward this pin** (GPI1 disabled — analog SE input); §2 |
-| 7 | IN1M_GPO1 | **1 µF X7R to GND** (matching cap; single-ended AC-coupled per Fig. 37; 4.7 µF as drawn) |
-| 8 | IN2P_GPI2 | from buffer-2 signal line via 4.7 µF tantalum, + and diode cathode toward this pin |
-| 9 | IN2M_GPO2 | 1 µF X7R to GND (4.7 µF as drawn) |
-| 10 | IN3P_GPI3 | from buffer-3 signal line via 4.7 µF tantalum, + and diode cathode toward this pin |
-| 11 | IN3M_GPO3 | 1 µF X7R to GND (4.7 µF as drawn) |
-| 12 | IN4P_GPI4 | from buffer-4 signal line via 4.7 µF tantalum, + and diode cathode toward this pin |
-| 13 | IN4M_GPO4 | 1 µF X7R to GND (4.7 µF as drawn) — ⚠ **ADC-B IN4M cap missing in schematic** |
+| 5 | MICBIAS | **Unconnected, no capacitor.** The preamp boards take the analog rail (§1). `MICBIAS_PDZ` resets to powered-down and firmware must leave it there, so the pin is never driven |
+| 6 | IN1P_GPI1 | **direct** from the pickup connector's channel-1 signal position — no blocking cap, no clamp diode (DC-coupled differential, §2.1) |
+| 7 | IN1M_GPO1 | **direct** to the buffered bias reference net — no matching cap |
+| 8 | IN2P_GPI2 | **direct** from the connector's channel-2 signal position |
+| 9 | IN2M_GPO2 | **direct** to the bias reference net |
+| 10 | IN3P_GPI3 | **direct** from the connector's channel-3 signal position |
+| 11 | IN3M_GPO3 | **direct** to the bias reference net |
+| 12 | IN4P_GPI4 | **direct** from the connector's channel-4 signal position |
+| 13 | IN4M_GPO4 | **direct** to the bias reference net |
 | 14 | SHDNZ | `CODEC_SHDNZ` (MCU PC6, shared); 10 kΩ pull-down to GND (on the MCU sheet) holds the part in reset until the MCU drives it |
 | 15 | ADDR1_MISO | I²C address strap A1 — **device-distinct** (see §6) |
 | 16 | ADDR0_SCLK | I²C address strap A0 — **device-distinct** (see §6) |
 | 17 | SCL_MOSI | `I2C_SCL` (PB8); 2.2–4.7 kΩ pull-up to IOVDD (one pair for the bus) |
 | 18 | SDA_SSZ | `I2C_SDA` (PB9); 2.2–4.7 kΩ pull-up to IOVDD |
-| 19 | IOVDD | `3V45_D` (recommended, see §7 ⚠) + 0.1 µF to GND at pin |
+| 19 | IOVDD | `3V3_D` (recommended, see §7 ⚠) + 0.1 µF to GND at pin |
 | 20 | GPIO1 | **unused** — leave as configured Hi-Z / optional test point (interrupt option for spin 2) |
 | 21 | SDOUT | `SAI4_SD_B` (PA0, shared bus; tri-state unused slots — §5) |
 | 22 | BCLK | `SAI4_SCK_B` (PA2, shared, input/slave) |
@@ -499,7 +513,7 @@ Both codecs are ASI **slaves**: `BCLK`/`FSYNC` are inputs driven by the MCU SAI4
 - **Slot map:** ADC-A drives slots **0–3**, ADC-B drives slots **4–7** (`CHx_SLOT`, P0_R11–R18). 8 slots × 32-bit × 32 kHz → **8.192 MHz BCLK** (= 256 × fs, TI's characterisation ratio).
 - **Bus contention:** each device **tri-states the slots it does not own** — `ASI_OUT_CH_EN` per channel, plus `TX_FILL` (`ASI_CFG0` bit 0) = 1 for Hi-Z on unused cycles. Enable both on both devices so only the owning device drives each slot; the rest of the frame is high-Z.
 - **Bus keeper is internal.** `TX_KEEPER` (`ASI_CFG1` bits 6:5) enables an on-chip keeper on SDOUT that holds the last driven value — settings 2/3 restrict it to the LSB window so the host latches the final bit cleanly without two devices contending at a slot boundary. `TX_LSB` and `TX_OFFSET` in the same register fine-tune the handoff. **No external bus-hold part is needed** (SBAA383C §3.1).
-- **Optional:** a single **weak pull-down (~100 kΩ, DNP)** footprint on `SDOUT_ADC` as insurance for the power-up window before either device is configured. Given the internal keeper this is belt-and-suspenders — populate only if a logic-analyzer capture shows bus float. ⚠
+- **Fitted 2026-09-24: a 10 kΩ pull-down to ground** on the shared serial-data net, populated rather than DNP. It defines the level during the window before either device is configured. Given the internal keeper this is belt-and-suspenders — populate only if a logic-analyzer capture shows bus float. ⚠
 - Keep `BCLK_ADC` / `FSYNC_ADC` short and away from the analog inputs (board plan Phase 3).
 
 ---
@@ -522,12 +536,16 @@ The 7-bit address is set by the **ADDR0 (pin 16)** and **ADDR1 (pin 15)** strap 
 | AREG (2) | internal 1.8 V reg (3.3 V AVDD mode) | 1 µF to AVSS at pin (no external feed) ⚠ |
 | VREF (3) | internal reference | ≥ 1 µF to AVSS at pin |
 | DREG (24) | internal 1.5 V core reg | 1 µF to GND at pin (no external feed) |
-| IOVDD (19) | **`3V45_D`** (recommended ⚠) | 0.1 µF at pin |
-| MICBIAS (5) | internal reg (VREF×1.096 = 3.014 V) | 1 µF to AVSS at pin; feeds 4 buffer rails via the pickup connector, no series resistor. **Budget: 4 buffers < 20 mA total/device** (30 mA OCP) ⚠ |
+| IOVDD (19) | **`3V3_D`** (recommended ⚠) | 0.1 µF at pin |
+| MICBIAS (5) | internal reg — **left powered down** | Unconnected, no capacitor. Never driven, so no current budget applies |
 
-**IOVDD source — OPEN (§11).** IOVDD only powers the digital I/O (BCLK/FSYNC/SDOUT/I²C). Recommendation: feed it from **`3V45_D`** (the digital rail), not `3V3_A`, to keep SDOUT/BCLK switching current *out of* the low-noise analog LDO — the same reasoning that put the DAC's DVDD on the digital rail (`dac-selection.md` §6). 3.45 V is within IOVDD's 3.0–3.6 V window, and it matches the MCU's I/O rail exactly, so logic levels are clean in both directions. AVDD stays on `3V3_A`. ⚠ confirm at the gate. (Alternative: IOVDD on `3V3_A` — one rail into the island, simpler routing, at the cost of digital current on the analog LDO.)
+**IOVDD source — settled: `3V3_D`.** IOVDD only powers the digital I/O (BCLK/FSYNC/SDOUT/I²C), and these devices *drive* the shared TDM bus — so this supply's switching current belongs on the digital rail, not on the low-noise analog LDO. AVDD stays on `3V3_A`. IOVDD's recommended window is 3.0 / 3.3 / **3.6 V**; the digital rail's ceiling including the converter's power-save lift is 3.50 V, leaving 100 mV, and its floor is well above 3.0 V. It also matches the MCU's I/O rail exactly, so logic levels are clean in both directions.
 
-**Output caps vs. supply decoupling.** Only **AVDD** and **IOVDD** are supply inputs (0.1 µF decoupling + shared 10 µF bulk on AVDD). **AREG, DREG, VREF, MICBIAS are internal regulator/reference *outputs*** — their caps are **mandatory** output/stability capacitors, not droppable bulk: VREF ≥ 1 µF is datasheet-required (also sets reference settling), AREG and DREG are the on-chip analog/digital-core LDO outputs (loop stability — 1 µF per the TI EVM/typical app; ⚠ confirm exact min if minimizing), and MICBIAS 1 µF sets its 1.6 µVRMS noise spec and reservoirs the preamp current. None can be removed for part-count.
+**Note the contrast with the playback converter**, whose digital supply went the *other* way for a reason that looks similar but is not: its ceiling is 3.46 V rather than 3.6 V, and — unlike these devices — every one of its digital pins is an input, so it drives nothing and carries no switching current onto whichever rail it sits on (`dac-selection.md` §6). Ceiling and direction, not preference.
+
+(Rejected alternative: IOVDD on `3V3_A` — one rail into the island, simpler routing, at the cost of putting TDM-bus drive current on the analog LDO.)
+
+**Output caps vs. supply decoupling.** Only **AVDD** and **IOVDD** are supply inputs (0.1 µF decoupling + shared 10 µF bulk on AVDD). **AREG, DREG and VREF are internal regulator/reference *outputs*** — their caps are **mandatory** output/stability capacitors, not droppable bulk: VREF ≥ 1 µF is datasheet-required (also sets reference settling), AREG and DREG are the on-chip analog/digital-core LDO outputs (loop stability — 1 µF per the TI EVM/typical app; ⚠ confirm exact min if minimizing),. MICBIAS is unused and powered down, so it needs none. None of the other three can be removed for part-count.
 
 **Grounding:** single GND net board-wide (AVSS pin 4 + thermal pad both direct to the plane, per datasheet). Zoning is by placement + the 3V3_A pour, not split ground nets — matches the DAC section and the board plan's solid-plane rule.
 
@@ -671,7 +689,7 @@ See `test-points.md` (single source of truth; categorized by access type). Codec
 | SHDNZ pull-down | 10 kΩ | 0402 | basic | SHDNZ pull-down (entered, shared, on MCU sheet) |
 | ADDR straps (×?) | per address strap | 0402 | basic | ADDR0/ADDR1 straps — value/tie per §6 table ⚠ |
 | RF shunt caps (×8) | 100–330 pF | 0402 | — | **DNP** optional RF shunt at each buffer signal line (external cable entry) |
-| SDOUT bus pull-down | 100 kΩ | 0402 | — | **DNP** optional SDOUT bus pull-down |
+| SDOUT bus pull-down | **10 kΩ** | 0402 | basic | Fitted. 325 µA of DC load when the bus is high — nothing against CMOS drive — and it settles the net in ~150 ns against a 122 ns bit period, where 100 kΩ would have taken longer than a bit |
 
 Passives JLCPCB basic-class; LCSC codes at order time.
 
@@ -683,7 +701,7 @@ Part and topology are settled (`adc-selection.md`); these are datasheet confirma
 
 1. **Input impedance `CHx_IMP` — decided: 20 kΩ** ⚠ becomes 10 kΩ under §2.1, where the corner argument that chose 20 kΩ no longer exists and the setting reverts to a pure noise choice. (≈1.7 Hz corner at 4.7 µF), taken because it is free rather than because the corner has to be that low — see the note in §2 on what the corner is and is not for. (Source loading no longer enters this choice.) 10 kΩ (≈3.4 Hz) is the documented fallback if bench work ever shows the extra dynamic range is worth the higher corner. Firmware register setting must match (§8).
 2. **Signal-cap tantalum polarity — RESOLVED, no open action.** The converter self-biases its AC-coupled inputs to VREF/2 ≈ 1.375 V; the preamp presents a divider-set 1.0 V. The converter side is higher by 375 mV on every channel, so **+ toward the converter** and the sign cannot invert. Full argument, including the bias-point selection rule, is in §2. ⚠ **The sequencing exposure is now wider, not narrower.** The preamp boards take the 3.3 V analog rail rather than MICBIAS, so they no longer come up strictly after the converter — the firmware ordering that previously closed this window does not apply. The parallel silicon clamp diode is what covers it and is required. **Bench items:** measure the DC on one input pin and confirm it sits near 1.375 V (the number comes from TI application material rather than the datasheet), and confirm the preamp side sits at 1.0 V on every channel (`preamp-board.md` §12 item 4).
-3. **IOVDD source — decided: `3V45_D`** (keeps codec digital switching current off the analog LDO, and matches the MCU I/O rail so logic levels are clean both directions). Entered as such. ⚠ Remaining check is a datasheet one: confirm 3.45 V + rail tolerance sits inside IOVDD's recommended-operating window (3.0–3.6 V nominal) — see `layout-notes.md` §7 item 3.
+3. **IOVDD source — decided: `3V3_D`** (keeps codec digital switching current off the analog LDO, and matches the MCU I/O rail so logic levels are clean both directions). ~~⚠ confirm the rail sits inside IOVDD's recommended window.~~ **Closed 2026-09-24:** 3.0–3.6 V recommended against a rail ceiling of 3.50 V.
 4. **I²C addresses** — take the ADDR0/ADDR1 strap→address table from SBAS892A; confirm the drawn straps (ADC-A: GND/GND, ADC-B: IOVDD/GND) give distinct, non-conflicting addresses; check no bus clash. ⚠
 5. **SDOUT bus discipline** — confirm both devices' unused-slot tri-state (`ASI_OUT_CH_EN`) and `TX_FILL` = Hi-Z are set, and pick a `TX_KEEPER` setting (2 or 3 = keeper during the LSB window only, per SBAA383C). The internal keeper covers steady-state contention, so the optional 100 kΩ SDOUT pull-down is a DNP footprint for the pre-configuration window only — decide whether to populate.
 6. **AREG treatment** — confirm AREG decoupling / that it is *not* externally supplied in 3.3 V AVDD mode (AREG abs-max 2.0 V — never tie to 3V3_A). ⚠
@@ -702,4 +720,4 @@ Part and topology are settled (`adc-selection.md`); these are datasheet confirma
 
 *⚠ The entered schematic implements §2's AC-coupled single-ended arrangement.* Nothing below is changed by the §2.1 proposal until it is adopted; if it is, the three input-network rows of §10 come out, the cold pins move to the reference conductor, and the retrofit footprints of §2.1 go in.
 
-*Schematic-entry status.* Entered and verified: all 8 input channels (4.7 µF polarized blocking caps → INxP, incl. the ADC-B IN4M matching cap), AREG/VREF/DREG/MICBIAS 1 µF caps, distinct ADDR straps (ADC-A: ADDR0+ADDR1→GND; ADC-B: ADDR0→IOVDD, ADDR1→GND — resistor values unset), IOVDD on `3V45_D`, shared TDM bus, SHDNZ to PC6 with a 10 k pull-down. ⚠ **The entered schematic feeds the preamp boards from MICBIAS and must be rewired to the 3.3 V analog rail** (§1) — a one-net change per board, plus the connector's power pin. Each INxP blocking cap carries a **parallel silicon clamp diode** — a stated design element with its rationale in §2, not an entry-time addition. Single-polarity clamp is correct and intended. ⚠ Confirm orientation at review: **cathode toward the converter input**, which is the normally-higher-DC side (~1.375 V against the preamp's 1.0 V), so the diode sits reverse-biased by ~0.375 V in normal operation. The orientation is unchanged from entry; only the margin is smaller. **Not yet entered:** per-pin 0.1 µF AVDD/IOVDD decoupling + 10 µF bulk, I2C pull-up values (pull-ups present, values unset), ADDR strap resistor values. **To reconcile:** INxM matching caps drawn at 4.7 µF vs. 1 µF preferred in §2 (either fine — make doc and schematic agree); **part value entered as "XLV320ADC5140IRTWR" (both ADCs) — typo for TLV, will corrupt BOM lookup.**
+*Schematic-entry status.* Entered and verified: all 8 input channels (4.7 µF polarized blocking caps → INxP, incl. the ADC-B IN4M matching cap), AREG/VREF/DREG/MICBIAS 1 µF caps, distinct ADDR straps (ADC-A: ADDR0+ADDR1→GND; ADC-B: ADDR0→IOVDD, ADDR1→GND — resistor values unset), IOVDD on `3V3_D`, shared TDM bus, SHDNZ to PC6 with a 10 k pull-down. ⚠ **The entered schematic feeds the preamp boards from MICBIAS and must be rewired to the 3.3 V analog rail** (§1) — a one-net change per board, plus the connector's power pin. Each INxP blocking cap carries a **parallel silicon clamp diode** — a stated design element with its rationale in §2, not an entry-time addition. Single-polarity clamp is correct and intended. ⚠ Confirm orientation at review: **cathode toward the converter input**, which is the normally-higher-DC side (~1.375 V against the preamp's 1.0 V), so the diode sits reverse-biased by ~0.375 V in normal operation. The orientation is unchanged from entry; only the margin is smaller. **Not yet entered:** per-pin 0.1 µF AVDD/IOVDD decoupling + 10 µF bulk, I2C pull-up values (pull-ups present, values unset), ADDR strap resistor values. **To reconcile:** INxM matching caps drawn at 4.7 µF vs. 1 µF preferred in §2 (either fine — make doc and schematic agree); **part value entered as "XLV320ADC5140IRTWR" (both ADCs) — typo for TLV, will corrupt BOM lookup.**

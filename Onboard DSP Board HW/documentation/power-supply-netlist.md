@@ -1,7 +1,9 @@
 # Power Section — Netlist + BOM
 
 **Status:** Draft for schematic entry. Implements `power-supply.md` (topology §3, MCU SMPS §4). Connections are given **by pin name** — take pin *numbers* from each KiCad symbol/datasheet, don't trust memory (mine or yours). Items marked ⚠ go on the netlist-review-gate checklist. **No reference designators in this doc — parts are named by function; KiCad owns annotation.**
-**Scope:** charge input (1/4″ jack ring) → TP4054 → BATT → TPS63020 → 3V45_D → TPS7A20 → 3V3_A, plus battery sense, on/off, VDDA feed, and the H725 core-SMPS externals. No USB on the board; no power path — the regulators always draw from the cell.
+**Scope:** charge input (1/4″ jack ring) → charger → cell node → power switch → `VBAT`, from which **two sibling regulators** run: the buck-boost to `3V3_D` and the low-noise LDO to `3V3_A`. Plus battery sense, on/off, VDDA feed, and the H725 core-SMPS externals. No USB on the board; no power path — the regulators always draw from the cell.
+
+**Revised 2026-09-24.** The LDO used to be fed from the buck-boost output and the digital rail used to be 3.45 V. Both changed together; `power-supply.md` §2a carries the reasoning.
 
 ---
 
@@ -12,13 +14,13 @@
 | `CHG_IN` | ~5 V charge input — the **ring** of the offboard 1/4″ TRS output jack |
 | `AUDIO_OUT` | Jack **tip** — DAC output stage via volume pot (owned by `dac-selection.md`, listed here for the connector only) |
 | `bat+` | Battery + (onboard cell connector) — charger output node, 3.0–4.2 V (TP4054 has no power path). *As-built name; was `BATT` in this doc's earlier revisions* |
-| `VBAT` | **Post-switch** system node: `bat+` → volume-pot integrated switch → `VBAT` → regulator inputs + battery-sense divider. Note: shares its *name* with the MCU's backup-domain VBAT pin but not copper — MCU pin 8 ties to VDD/`3V45_D` (§7 of `pin-allocation.md`) |
-| `3V45_D` | Digital rail, 3.45 V (buck-boost output) |
-| `3V3_A` | Analog rail, 3.30 V (LDO output) |
+| `VBAT` | **Post-switch** system node: `bat+` → volume-pot integrated switch → `VBAT` → regulator inputs + battery-sense divider. Note: shares its *name* with the MCU's backup-domain VBAT pin but not copper — the MCU's backup-domain pin ties to VDD/`3V3_D` (§7 of `pin-allocation.md`) |
+| `3V3_D` | Digital rail, buck-boost output, **set to 3.25 V** (§2 divider; window and reasoning in `power-supply.md` §6a). **Renamed from `3V45_D`** with the voltage change. The name denotes the 3.3 V logic class; the setpoint is carried in the tables, not the net name |
+| `3V3_A` | Analog rail, 3.30 V (LDO output, fed from `VBAT`). Carries the capture converters' analog supplies, **all three** of the playback converter's supplies (analog, charge-pump and digital), the MCU's analog supply via ferrite, and the preamp boards via the pickup connectors |
 | `MCU_VDDA` | 3V3_A after ferrite, MCU VDDA only (no VREF+ pin on the VFQFPN68 — internally tied to VDDA, so this net *is* the ADC reference) |
 | `BATT_SENSE` | Divider midpoint → MCU ADC pin |
 | *(no EN net)* | The on/off switch is in the battery line (see `VBAT`), so the buck-boost EN ties directly to `VBAT` (always enabled when powered); a 1 MΩ bleed to GND defines the off state |
-| `FB_3V45` | TPS63020 feedback divider midpoint |
+| `FB_3V3` | Buck-boost feedback divider midpoint. **Renamed from `FB_3V45`** with the retarget to 3.25 V |
 | `SW_L1`, `SW_L2` | Buck-boost inductor nodes (keep tight, no other loads) |
 | `nCHG` | Charger CHRḠ open-drain → charge-indicator LED |
 | `VLX_CORE`, `VFB_CORE` | H725 SMPS inductor nodes ⚠ |
@@ -48,39 +50,50 @@ Dual-role ring: a normal TS/TRS audio cable grounds (or passively loads) the rin
 
 No power path, no TS input, no safety timer — that's the simplification being bought (see `power-supply.md` §8 for the run-while-charging caveat this creates). Internal reverse-blocking means no isolation diode and µA-class battery drain when `CHG_IN` is dead. Thermal check ⚠: worst-case dissipation ≈ (5 V − 3.0 V) × 0.5 A = 1 W into a SOT-23-5 — it will thermally fold back on a deeply discharged cell (by design, but slows charging; drop RPROG current if enclosure is hot).
 
-### TPS63020DSJR — buck-boost → 3V45_D
+### Buck-boost → 3V3_D (TPS63020DSJR, VSON-14 DSJ)
+
+**Adjustable part retained; rail retargeted to 3.25 V, 2026-09-24.** The fixed 3.3 V sibling was evaluated and rejected on cost and sourcing (`power-supply.md` §6a).
 
 | Pin | Net / connection |
 |---|---|
-| VIN (both) | `BATT` + 10 µF to GND (at pin) |
-| VINA | `BATT` + 0.1 µF to GND |
-| EN | `VBAT` (tied to VIN — regulator runs whenever the power switch closes; as-built 2026-07-15) |
-| PS/SYNC | `GND` — power-save/PFM enabled. **Polarity confirmed** against SLVS916I (pin table: "1 disabled, 0 enabled"; §8: power save is entered with PS/SYNC low) |
+| VIN (both) | `VBAT` + 10 µF to GND (at pin) |
+| VINA | `VBAT` + 0.1 µF to GND (datasheet caps this at 0.22 µF) |
+| EN | `VBAT` — regulator runs whenever the power switch closes |
+| PS/SYNC | `GND` — power-save enabled. **Polarity confirmed** against SLVS916I (pin table: "1 disabled, 0 enabled"; §8: power save is entered with PS/SYNC low) |
 | L1 | `SW_L1` → 1.5 µH inductor → `SW_L2` |
 | L2 | `SW_L2` |
-| VOUT (all) | `3V45_D` + 2× 22 µF to GND |
-| FB | `FB_3V45` |
+| VOUT (all) | `3V3_D` + 2× 22 µF to GND |
+| FB | `FB_3V3` — divider midpoint (below) |
+| PG | `GND` (unused; open-drain). ⚠ Open decision — routing it to a spare GPIO with a pull-up is the natural interlock for the playback soft-mute, and it is free now |
 | GND / PGND / PAD | `GND` |
 
-FB divider: `3V45_D` → **1.18 MΩ** → `FB_3V45` → **200 kΩ** → GND. Vout = 0.5 V × (1 + 1180/200) = **3.450 V**. Both 1 %, both standard E96 values.
+**Divider:** `3V3_D` → **1.10 MΩ** → `FB_3V3` → **200 kΩ** → GND. 0.5 V × (1 + 1100/200) = **3.250 V**. Both ordinary E24 1 % values, low side at the datasheet's specified *"range of 200 kΩ"*.
 
-**Revised 2026-07-28 from 590 kΩ / 100 kΩ.** The 500 mV feedback reference is confirmed (SLVS916I §8.2.3), so the old pair had the correct *ratio* — but the datasheet specifies the low-side resistor *"must be kept in the range of 200 kΩ"* and its own selection table uses 180 kΩ throughout. The old pair sat at half that impedance level. The new pair also halves the divider's standing drain (~5.0 µA → ~2.5 µA), which matters on a node that is live whenever the unit is switched on. ⚠ Update the entered values.
+⚠ **The high-side resistor is the large one, and it runs from the output to the feedback pin.** The board is currently entered with the two transposed, which sets the rail to 0.585 V and stops every device on the board from starting. No automated check catches it, because both arrangements are electrically legal — **put the arithmetic in the schematic as a text note beside the divider.**
 
-Power switch **(superseded as-built 2026-07-15)**: the switch is the integrated switch on the **volume pot** (the earlier volume-pot candidate won after all; the MCU control pots dropped from three to two — `pin-allocation.md` §6 item 6), and it is a **hard switch in the battery line**: `bat+` → pot switch → `VBAT`. The buck-boost EN ties to `VBAT`, and a 1 MΩ `VBAT` → GND bleed gives a defined off state. The switch now carries the full regulator input current (hundreds of mA peaks at low battery), not µA — **⚠ check the pot-switch current rating**, which the old EN-only scheme made irrelevant.
+**Worst case is setpoint × 1.089** (±1 % reference, ±2 % divider, ±1 % line and load, +5 % power-save lift) = **3.54 V**, against the 3.6 V ceiling on the MCU and capture-converter I/O supplies. Minimum is setpoint × 0.96 = **3.12 V**, against a 3.0 V floor on those same I/O supplies. `power-supply.md` §6a carries why the setpoint sits at the top of its window.
 
-### TPS7A2033PDBVR — 3V3_A LDO (SOT-23-5)
+Power switch: the integrated switch on the **volume pot**, a **hard switch in the battery line**: cell node → pot switch → `VBAT`. Both regulators and the sense divider hang off `VBAT`, so off-state draw through the board is zero. The switch carries the full system input current (hundreds of mA peaks at low battery) — **⚠ check the pot-switch current rating.**
+
+### Low-noise LDO → 3V3_A (SOT-23-5)
 
 | Pin | Net / connection |
 |---|---|
-| IN (1) | `3V45_D` + local 1 µF to GND (at the pin) |
+| IN (1) | **`VBAT`** + local 1 µF to GND (at the pin) |
 | GND (2) | `GND` |
-| EN (3) | `3V45_D` (always on with its input) |
-| NC (4) | — |
+| EN (3) | `VBAT` (always on with its input) |
+| NC (4) | — genuinely a no-connect on this part; it has no noise-bypass or soft-start pin |
 | OUT (5) | `3V3_A` + local 1 µF to GND |
 
-**Fed directly from `3V45_D` — no boundary filter.** `3V45_D` is already routed into the analog zone to power the codec digital supplies (ADC IOVDD, DAC DVDD), so the LDO simply taps it there. Its PSRR plus the local 1 µF input cap reject the rail's switcher/island noise. A series ferrite + shunt cap was considered and **dropped** — with `3V45_D` present in the zone regardless, it added parts and routing difficulty for negligible gain.
+**Fed from the switched battery node, not from the digital rail.** This is the 2026-09-24 change. It must be `VBAT` and never the cell node — the cell node is ahead of the power switch, so an LDO there would drain the battery with the instrument off.
 
-**Place the LDO near its analog loads** (board plan §1: keep the *post*-LDO `3V3_A` run short so the regulated output doesn't re-acquire noise). Feed it from the same `3V45_D` entry that serves the codec IOVDD/DVDD pins; decouple those digital pins locally (per the codec sections) so their switching current loops at the pin. The partition that protects analog performance is at the *signal* level — pickup inputs, MICBIAS, and the AVDD reference kept clear of the digital rails and their returns — not the physical presence of `3V45_D`. 3V3_A distribution caps at each load are in the codec/DAC sections, not here.
+**Why the battery rather than a regulated rail.** No switching converter then appears anywhere upstream of the analog supply. This part's rejection is specified only to 1 MHz (45 dB light load, 40 dB full load) and the buck-boost switches at 2.4 MHz, so feeding the LDO from the switcher asked it to reject a frequency it has no published figure for. `power-supply.md` §2a carries the full trade, including what it costs.
+
+**Headroom.** Worst-case output is 3.350 V (±1.5 % over line, load and temperature) and dropout is 145 mV max at 300 mA, scaling to roughly 50 mV at this board's ~85 mA. Regulation therefore holds down to a cell voltage near **3.39 V**, below which the rail follows the cell at about 40 mV under it. Every device on the rail stays inside its recommended window to a cell voltage of about **3.24 V** — the binding minimum is the playback converter's analog supply at 3.2 V in ground-centred mode; the capture converters are in spec to 3.0 V.
+
+**Thermal.** (4.2 − 3.3) V × 85 mA = 77 mW at full charge, falling to nothing as the cell drains. SOT-23-5 at ~200–250 °C/W gives a 15–19 °C rise. Acceptable, but it makes this the warmest small part in the analog section — **place it away from the bias reference divider and its buffer.**
+
+**Place the LDO near its analog loads**, but route its *input* from `VBAT` along the same path that feeds the buck-boost rather than across the analog island. The partition that protects analog performance is at the signal level — pickup inputs and the bias reference kept clear of digital rails and their returns. 3V3_A distribution caps at each load are in the converter sections, not here.
 
 ### VDDA feed (MCU analog supply + ADC reference)
 
@@ -97,13 +110,13 @@ Power switch **(superseded as-built 2026-07-15)**: the switch is the integrated 
 | VLXSMPS → 2.2 µH inductor → VFBSMPS | `VLX_CORE` / `VFB_CORE` |
 | VFBSMPS | 4.7 µF to GND (at pin) |
 | VCAP pins | per AN5419 for **SMPS-direct** mode (in this mode VCAP ties to the SMPS output path — confirm exact strap + cap values) ⚠ |
-| VDDSMPS / VSSSMPS | `3V45_D` / `GND` with local decoupling per AN5419 |
+| VDDSMPS / VSSSMPS | `3V3_D` / `GND` with local decoupling per AN5419 |
 
 This block is deliberately under-specified — it is the one part I could not fully verify from memory, and mode-strapping (LDO vs SMPS-direct vs cascade) changes the VCAP wiring. Take it verbatim from the Nucleo-H725 schematic during Phase 2. Belongs physically in the MCU island, not the power corner.
 
 ### Test points
 
-See `test-points.md` (single source of truth; categorized by access type). Power-section signals — `CHG_IN`, `bat+`/`VBAT`, `3V45_D`, `3V3_A`, `MCU_VDDA`, `BATT_SENSE`, VCORE (at any VCAP) — are all Cat 3 (touch at a decoupling cap / divider / connector), except GND loops (Cat 1).
+See `test-points.md` (single source of truth; categorized by access type). Power-section signals — `CHG_IN`, `bat+`/`VBAT`, `3V3_D`, `3V3_A`, `MCU_VDDA`, `BATT_SENSE`, VCORE (at any VCAP) — are all Cat 3 (touch at a decoupling cap / divider / connector), except GND loops (Cat 1).
 
 ## 3. BOM
 
@@ -113,7 +126,7 @@ See `test-points.md` (single source of truth; categorized by access type). Power
 | ring TVS | TVS, ~5 V working (SMAJ5.0A class) | SMA/0603 | pick | on `CHG_IN` (jack ring) |
 | charger | TP4054 (TPower) | SOT-23-5 | [C382138](https://www.lcsc.com/product-detail/C382138.html) | linear CC/CV charger, proven on prior board |
 | charge LED | charge indicator | 0603 | basic | driven by CHRḠ |
-| buck-boost | TPS63020DSJR | VSON-14 3×4 | [C15483](https://www.lcsc.com/product-detail/C15483.html) | buck-boost |
+| buck-boost | TPS63020DSJR | VSON-14 3×4 (DSJ) | [C15483](https://www.lcsc.com/product-detail/C15483.html) | Adjustable, set to 3.25 V by the divider above |
 | 3V3_A LDO | TPS7A2033PDBVR | SOT-23-5 | [C2862740](https://www.lcsc.com/product-detail/voltage-regulators-linear-low-drop-out-ldo-regulators_texas-instruments-tps7a2033pdbvr_C2862740.html) | 3.3 V low-noise LDO |
 | buck-boost inductor | 1.5 µH, ≥3 A sat, shielded | 4×4 mm (XFL4020/SWPA4030 class) | pick at order | buck-boost inductor |
 | MCU SMPS inductor | 2.2 µH, ≥0.5 A sat, low DCR | 2520/3030 | pick per AN5419 | H725 core SMPS |
@@ -122,21 +135,21 @@ See `test-points.md` (single source of truth; categorized by access type). Power
 | charger IN/BAT caps | 1 µF X7R 25 V | 0603 | basic | charger VCC + BAT |
 | cell bulk / buck-boost VIN | 10 µF X7R ≥10 V | 0805 | basic | BATT bulk / buck-boost VIN |
 | misc 0.1 µF | 0.1 µF X7R | 0402 | basic | VINA, battery-sense filter, spare |
-| 3V45_D output bulk | 22 µF X5R/X7R ≥10 V (2×) | 0805 | basic | 3V45_D output — entered as 2× 4.7 µF, ⚠ raise to 2× 22 µF (TI's reference circuit for this converter uses 3× 22 µF) |
+| 3V3_D output bulk | 22 µF X5R/X7R ≥10 V (2×) | 0805 | basic | Digital-rail output, entered |
 | LDO in/out + VDDA caps | 1 µF X7R ≥10 V | 0402/0603 | basic | LDO in/out, VDDA |
 | MCU SMPS VFB cap | 4.7 µF X7R | 0603 | basic | SMPS VFB ⚠ verify value |
 | charger PROG | 2.0 kΩ 1 % | 0402 | basic | PROG (≈500 mA) ⚠ recompute w/ cell |
 | status / charge LED | red, KT-0603R | 0603 | [C2286](https://jlcpcb.com/partdetail/C2286) | Vf 1.8–2.4 V, 300 mcd @ 20 mA, basic-class, 7.6 M stock, $0.007 |
 | LED series | 1 kΩ | 0402 | basic | charge-LED series — ≈1.5 mA (≈22 mcd, plainly visible); 2.2 kΩ ≈ 0.7 mA if battery life is preferred |
-| FB divider top | 1.18 MΩ 1 % | 0402 | basic | buck-boost FB top (revised 2026-07-28 from 590 kΩ) |
-| FB divider bottom | 200 kΩ 1 % | 0402 | basic | buck-boost FB bottom (revised 2026-07-28 from 100 kΩ — datasheet specifies ~200 kΩ low-side) |
+| FB divider high side | **1.10 MΩ 1 %** | 0402 | basic | Output → feedback pin. Sets 3.25 V with the 200 kΩ low side. ⚠ currently entered transposed with it |
+| FB divider low side | **200 kΩ 1 %** | 0402 | basic | Feedback pin → ground. Datasheet specifies the low side in the "range of 200 kΩ" |
 | EN/VBAT bleed | 1 MΩ | 0402 | basic | VBAT → GND bleed / off state |
 | battery-sense divider | 1 MΩ 1 % (2×) | 0402 | basic | battery sense |
 | GND test loops | test point | — | — | Cat 1 only; see `test-points.md` |
 
 Passives are JLCPCB basic-class; exact LCSC codes at order time. The three ICs were stock-checked 2026-07-13 (`power-supply.md` §6).
 
-**Red, not green, and the reason is the rail voltage.** A green LED's ~3.0 V Vf against the 3.45 V rail leaves only ~0.35 V across the series resistor, so the part-to-part Vf spread swings the current several-fold and the brightness with it. Red's ~1.9 V leaves ~1.45 V and a well-defined current. Any future indicator on this rail should follow the same reasoning rather than the colour preference.
+**Red, not green, and the reason is the rail voltage** — a reason that strengthens now the rail is 3.3 V. A green LED's ~3.0 V Vf leaves only ~0.3 V across the series resistor, so part-to-part Vf spread swings the current several-fold and the brightness with it. Red's ~1.9 V leaves ~1.4 V and a well-defined current. Any future indicator on this rail should follow the same reasoning rather than the colour preference.
 
 ## 3a. Charger section as built (2026-07-15)
 
@@ -155,13 +168,15 @@ These are facts to confirm and values to correct before fab — not open decisio
 2. ~~TP4054 abs-max input vs. TVS clamp voltage~~ **Resolved 2026-07-15: no TVS — circuit field-proven on prior board.**
 3. Charger thermal: worst-case ~1 W in SOT-23-5 at 500 mA into a flat cell; confirm foldback behavior is acceptable or reduce ICHG.
 4. No TS/thermistor and no safety timer on TP4054 — confirm the chosen cell is acceptable without pack-level protection assumptions (most protected cells are).
-5. ~~TPS63020 PS/SYNC polarity; FB reference voltage and divider guidance~~ **Resolved 2026-07-28 against SLVS916I:** PS/SYNC low = power-save enabled (as drawn, correct); FB reference = 500 mV (as assumed, correct); low-side divider resistor specified at ~200 kΩ → **divider revised to 1.18 MΩ / 200 kΩ, update the entered values.**
+5. ~~PS/SYNC polarity; feedback reference voltage and divider guidance~~ **Resolved 2026-07-28 against SLVS916I:** PS/SYNC low = power-save enabled (as drawn, correct); FB reference = 500 mV (as assumed, correct); low-side divider resistor specified at ~200 kΩ → **divider revised to 1.18 MΩ / 200 kΩ, update the entered values.**
 5a. **Buck-boost input capacitance is missing** — fit 10 µF + 0.1 µF at the VIN/VINA pins. `VBAT` has no local capacitance and sits after the mechanical power switch, so the switcher's input loop currently closes through switch contacts and wiring. TI's reference circuit uses 2× 10 µF input.
-5b. **3V45_D output capacitance** — entered 2× 4.7 µF vs. 2× 22 µF specified (TI reference: 3× 22 µF). Raise, or justify against the measured MCU load step.
+5b. ~~Digital-rail output capacitance.~~ Entered at 2× 22 µF.
 6. **H725 SMPS block wired verbatim from AN5419/Nucleo-H725** — mode strap, VCAP treatment, L/C values.
-7. PCM5102A VIH / input abs-max vs 3.45 V logic; ADC5140 sequencing (carried over from `power-supply.md` open items).
+7. ~~Playback-converter input levels; capture-converter sequencing.~~ Both closed — all digital signalling is now 3.3 V on both ends, and SBAS892A allows the I/O and analog supplies to come up in any order.
 8. **Pot-switch current rating** — the volume pot's integrated switch now hard-switches the battery line (§2 as-built note), carrying full regulator input current.
 
 ---
 
-*Schematic-entry status: rails, switch-in-battery-line (volume pot), charger (§3a as-built deltas: 30 kΩ PROG ⚠, no TVS, no charge LED, charger drawn with an MCP73811 symbol standing in for the TP4054), battery-sense divider, VDDA ferrite + caps, and the MCU core-SMPS externals (2.2 µH + 4.7 µF, MCU sheet) are entered. Still missing vs. this doc (re-verified against the netlist 2026-07-24): **buck-boost VIN caps** (10 µF + 0.1 µF at the pins — `VBAT` net currently has zero capacitance, and it sits *after* the switch, so the switcher's input loop has no local reservoir), **3V45_D output capacitance** (as-built 2×4.7 µF vs the 2×22 µF the TPS63020 datasheet assumes — upgrade or justify), the **LDO input cap** (1 µF at the IN pin, fed directly from `3V45_D` — no boundary filter), sense-filter cap value, per-pin AVDD/IOVDD 0.1 µF + analog 10 µF bulk, remaining test points. Battery-sense divider values fixed.*
+*Schematic-entry status (2026-09-24): rails, switch-in-battery-line (volume pot), charger (§3a as-built deltas: 30 kΩ PROG ⚠, no TVS, no charge LED, charger drawn with an MCP73811 symbol standing in for the TP4054), battery-sense divider, VDDA ferrite + caps, buck-boost input and output capacitance, and the MCU core-SMPS externals are entered.*
+
+*Still to enter, all from the 2026-09-24 rail change:* **LDO input and enable moved to `VBAT`**; **digital rail retargeted to 3.25 V** with the divider corrected to 1.10 MΩ high-side / 200 kΩ low-side (currently transposed); **playback converter's digital supply moved to `3V3_A`**; **net renamed `3V45_D` → `3V3_D`**; **pull-down on the playback soft-mute line**. Carried from before: the LDO input cap (1 µF at its IN pin, now on `VBAT`), sense-filter cap value, per-pin analog/IO 0.1 µF plus analog bulk, remaining test points.
