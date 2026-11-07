@@ -16,7 +16,7 @@ This is a one-builder prototype, not a released product. No silkscreen polarity 
 pin-1 marks — the layout has no room; polarity is checked in the JLCPCB preview.
 
 **BOM and position-file exclusions are managed in the JLCPCB tool, not the
-schematic** (decided 2026-11-07). The tool's toggles set footprint attributes, which a
+schematic** (decided 2026-11-07). `AudioDev/kicad-tools` copies them into the schematic before each Update PCB from Schematic (Sync) and checks the output (Check project); LCSC numbers live only in the JLCPCB tool. The tool's toggles set footprint attributes, which a
 schematic update or footprint refresh can reset, so the audit checks the tool's
 **generated BOM and CPL** rather than schematic flags: every BOM row carries an LCSC
 number, nothing hand-fitted is in either file, and the two files list the same parts.
@@ -78,7 +78,7 @@ series parts, cold-pin capacitors and straps (about 20 × 0402 around the conver
 cost more layout than the risk justifies. Instead, evaluate open check 1 more closely
 before ordering (below).
 
-*Add:* a series resistor between the reference buffer and each pickup header's
+*Fitted 2026-11-07* (100 Ω 0402, LCSC C25076, checked in the JLCPCB output): a series resistor between the reference buffer and each pickup header's
 reference pin — **in the cable branch only**, not in the path to the converter cold
 pins. It isolates the buffer from 100–200 pF of cable, and it is free because the
 conductor carries no signal current. In series with the cold pins it would unbalance
