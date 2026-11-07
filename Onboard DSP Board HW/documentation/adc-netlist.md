@@ -2,7 +2,7 @@
 
 **Status:** Draft for schematic entry (started 2026-07-14). Implements the codec section of Phase 2 in `multichannel-audio-board-plan.md`; consumes the SAI/I2C/GPIO allocation from `pin-allocation.md` §1–§4 and the `3V3_A` / `3V3_D` rails from `power-supply-netlist.md`. Connections are given **by pin name** — take pin *numbers* from the KiCad symbol / datasheet at entry, don't trust memory. Items marked ⚠ go on the netlist-review-gate checklist. Datasheet: TI **SBAS892A** (TLV320ADC5140), 24-pin WQFN.
 
-⚠ **Live proposal (2026-08-26): §2.1 — DC-coupled differential input on one added cable conductor**, which deletes the whole coupling network specified in §2 and 24 parts with it. Everything else here remains the specified design until that proposal is settled at the netlist gate (§11 item 15).
+⚠ **§2.1 — DC-coupled differential input on one added cable conductor — is the spin-1 design (committed 2026-11-06 as an accepted risk).** It replaces the coupling network of §2, which is kept for the record and as background. Open check 1 in §2.1 is still to close; the fallback, if it fails, is the grounded-cold-pin rework described there.
 
 **Scope:** two TLV320ADC5140 codecs, each configured as **4× single-ended, AC-coupled** analog inputs → 8 channels on one shared TDM bus into `SAI4_B` (RX). Analog input conditioning, coupling/blocking caps, shared clock/data bus, distinct I²C addresses, per-device power + decoupling. The stereo DAC (`I2S1` TX) is a separate section — see `dac-selection.md`.
 
@@ -76,7 +76,7 @@ With **C_in = 4.7 µF** fixed, the impedance setting directly picks the corner. 
 
 **EMI / anti-alias.** The ADC5140 is a sigma-delta with internal anti-alias; no external AA filter is needed. Provide an **optional shunt cap footprint (~100–330 pF, DNP)** from each INxP to AVSS for RF immunity, populated only if bench testing shows a need. No series resistor — it would shift the corner and add noise into a low-level path.
 
-### 2.1 ⚠ PROPOSAL — DC-coupled differential input on one added conductor
+### 2.1 DC-coupled differential input on one added conductor — spin-1 design
 
 **Generate the instrument's reference on this board, carry it to the pickup
 boards on a single added cable conductor, and configure the converter inputs as
@@ -255,9 +255,10 @@ it. **Take the divider on `3V3_A`.**
 
 #### How the reference is presented at this end
 
-The buffer lives on the pickup board and there is **no second buffer here** — the
-conductor arrives and fans out to the four cold pins of its own device. Three
-rules govern that fan-out, and two of them are easy to get wrong.
+The generator's buffer (above) drives this board's eight cold pins directly, and
+each cable's reference conductor through its own series resistor. Each pickup
+board re-buffers what it receives (`preamp-board.md` §8). Three rules govern the
+fan-out, and two of them are easy to get wrong.
 
 - **There is one reference node on the board, and all eight cold pins sit on
   it.** ⚠ This supersedes an earlier instruction here to keep the two pickups'
@@ -286,10 +287,16 @@ rules govern that fan-out, and two of them are easy to get wrong.
   pickup; a filtered one does the reverse. Both terms are small here — see the
   trade in `preamp-board.md` §8, where the bulk capacitor is a DNP footprint and
   the flat case is the default.
-  Check the generator buffer's stability into the cable capacitance — 50 to
-  100 pF per conductor — and note that a small series resistor at that buffer's
-  output is nearly free here, precisely because the conductor carries almost
-  nothing.
+  **Isolate the buffer from the cables with a series resistor per conductor —
+  decided 2026-11-06.** Each cable presents 50–100 pF, enough to erode a small
+  amplifier's phase margin. **100 Ω per conductor**, 0402, tolerance unimportant;
+  a pole near 8 MHz with the cable. It is free: the conductor carries only the
+  pickup buffer's input current, so there is no DC drop, and its 1.3 nV/√Hz is
+  negligible against the preamp's ≈80 nV/√Hz. Place it at the buffer output, at
+  the split, so the buffer sees the resistor before the trace capacitance.
+  **Place it in the cable branch only, never between the buffer and the cold
+  pins:** there it would be in series with every cold pin and not with any hot
+  pin, the imbalance the rule above forbids.
 
 **Power-up settling improves rather than degrading.** The reference network's time
 constant is about 2 s, so it takes several seconds to settle — but every channel
@@ -300,6 +307,58 @@ linear region, roughly a second in. Contrast the AC-coupled arrangement, where
 charging the blocking capacitors through the input impedance is a genuine
 differential transient and needs `INCAP_QCHG` set correctly to avoid a baseline
 that drifts for hundreds of milliseconds after channel enable.
+
+#### What the converter does with a DC-coupled input (2026-11-07)
+
+Collected from SBAS892A and the sibling parts' material. Where TI does not draw
+the circuit, the statement is marked as inference.
+
+- **The core is fully differential.** Gain stage and modulator work on a pair of
+  signals centred on an internal common-mode and swinging in antiphase.
+  Differential full scale (2 VRMS at the default 2.75 V VREF) is the native
+  figure; single-ended is exactly half, a common-mode rejection figure (60 dB) is
+  specified, and DC difference between the pins limits the Dynamic Range Enhancer
+  — all signatures of a differential stage. Single-ended mode is that same stage
+  with one pin held still.
+- **The pins feed a continuous-time gain stage through the programmable input
+  resistor** (2.5/10/20 kΩ). The modulator's sampling sits behind that stage, so
+  the pins present a resistive load, not switched-capacitor kickback (inference:
+  resistive input impedance, no external anti-alias filter needed). The resistors
+  most likely return to the internal common-mode, ≈VREF/2 = 1.375 V (inference:
+  sibling material, and a ±1.41 V single-ended full-scale swing about 1.375 V spans
+  exactly 0 V to VREF).
+- **`VREF` is the modulator's reference, not an input.** Generated internally
+  from a bandgap; the pin exists only for its ≥1 µF filter capacitor. It sets full
+  scale (2.75 / 2.5 / 1.375 V selectable) and has no output-drive specification.
+- **AC-coupled mode is the convenience mode; DC-coupled is the one TI pitches as
+  saving parts.** In AC mode the converter sets its own pin DC level, quick-charges
+  the coupling capacitors and tolerates little common-mode movement (sibling parts:
+  100 mVpp). In DC mode it accepts the source's DC level within a window (sibling
+  parts, default mode: 2.82 Vpp, i.e. ≈0–2.8 V). The 2.5 kΩ setting is barred in
+  DC mode, consistent with DC current through the input resistor.
+- **Pins must stay between 0 V and the analog supply** (absolute: −0.3 V to
+  supply + 0.3 V).
+
+**At this design's operating point.** Both pins rest at 1.336 V, 39 mV below the
+presumed centre: ≈4 µA per pin at 10 kΩ, equal on hot and cold, so no differential
+offset; the only DC difference is the preamp offset, ≈50 µV. The hot pin swings
+±0.16 V at nominal level and stays within ≈0.85–1.8 V on attacks 10 dB hotter —
+deep inside every limit. The eight cold pins together are ≈1.25 kΩ resistive to the
+internal common-mode, ≈30 µA, plus a few picofarads each: an easy load for the
+buffer, and no signal current on the shared node to couple channels through.
+
+**One-sided drive moves the pair's common-mode by half the signal** — ≈157 mVpp at
+nominal level, more on attacks. That is inherent to any one-sided connection,
+whichever input mode is set. It is far inside the DC-mode window, but on the
+sibling parts' default mode large common-mode swings produced measurable
+distortion (THD+N ≈ −73 dBFS at 1 Vpp). This part has no high-rejection mode, so
+distortion at realistic attack levels belongs in the bench test (open check 1).
+
+**Full scale and gain.** At 0 dB channel gain a single pin can reach only half the
+differential full scale (−6 dBFS) — the pin's ±1.41 V swing is the limit. Above
+6 dB the gain stage builds the full internal swing itself, the input needed for
+digital full scale is 2 VRMS ÷ gain, and one-sided drive reaches full scale.
+Headroom figures are in the gain paragraph above.
 
 #### Values and settings that change with it
 
@@ -342,12 +401,27 @@ gain then multiplies. ⚠ This argument assumes the programmable input impedance
 returns to an internal node at VREF/2; the datasheet specifies it as an **AC**
 input impedance and gives no DC figure. See open check 1.
 
-**Full-scale utilisation gives up 6 dB and it does not matter.** Differential full
-scale is 2 VRMS against 1 VRMS single-ended, and only the hot pin swings, so a
-320 mV peak-to-peak source sits about 25 dB below full scale rather than 17. The
-converter's dynamic-range specifications are quoted against the differential full
-scale in either configuration, so this is headroom given up rather than
-signal-to-noise, and there is 42 dB of programmable gain against it.
+**Plan headroom against the single-ended full scale, not the differential one.**
+Only the hot pin swings, and it swings about a 1.34 V rest point inside a 0 V to
+AVDD pin range, so it cannot reach the 2 VRMS differential full scale — the usable
+ceiling is the 1 VRMS single-ended figure (≈1.41 V peak). The ≈313 mV peak-to-peak
+source (≈111 mVRMS) therefore sits **≈19 dB below clipping at 0 dB channel gain**,
+not 25. This is the same conclusion as the gain entry in
+`bring-up-risk-register.md`, which this section previously contradicted.
+
+**Channel gain is a noise-for-headroom trade, and a small one.** The level does not
+need gain. The noise does, slightly: at 0 dB channel gain the converter's
+input-referred noise is ≈8.9 µVRMS A-weighted (107 dB SNR against 2 VRMS,
+SBAS892A), about equal to the preamp's own output noise
+(`preamp-noise-analysis-by-hand.md`: 11.3 µVRMS over 20 kHz, ≈9 µV A-weighted), so
+the converter costs ≈3 dB. At 12 dB channel gain it falls to ≈4 µV (102 dB against
+the 0.5 VRMS input-referred full scale) and the penalty drops below 1 dB.
+**Gain costs no headroom until it passes 6 dB:** below that the hot pin's own
+swing is the limit (≈1 VRMS); above it the differential full scale divided by the
+gain takes over — 0.71 VRMS at 9 dB (≈16 dB of headroom), 0.5 VRMS at 12 dB
+(≈13 dB). **Starting point: ≈9–12 dB of channel gain;** set the final value from
+the measured attack transient. Both full-scale figures are specified for AC-coupled
+inputs only (open check 1).
 
 **The Dynamic Range Enhancer narrows.** The datasheet supports it on AC-coupled
 inputs "for best dynamic range performance"; for a DC-coupled input it can be used
@@ -358,15 +432,12 @@ item 9); this proposal constrains, without closing, that reconsideration.
 #### New failure paths to design against
 
 - **A DC path now exists from the cable to the converter input pins.** A preamp
-  output stuck at a rail, or a reversed connector that lands the supply conductor
-  on a signal position, applies that potential directly to an input pin with no
-  series capacitor. Both boards sit on the same analog rail and the analog pins
-  are rated to AVDD + 0.3 V, so it is survivable while the converter is powered
-  and not while it is not. **Take connector keying from optional to specified**
-  (`preamp-board.md` §10).
-- **Cable-entry protection matters more** than it did (§11 item 11). The optional
-  radio-frequency shunt footprints stay; whether an ESD clamp is now wanted at
-  each entry is an open item rather than a deferred one.
+  output stuck at a rail applies that potential directly to an input pin with no
+  series capacitor. Both boards sit on the same analog rail, so it stays within the
+  pins' AVDD + 0.3 V rating while the converter is powered. Connector polarity
+  stays as decided in `preamp-board.md` §10, and cables are connected with the
+  instrument powered down. Neither is re-opened here.
+- **No cable-entry protection is fitted** — decided, §11 item 11.
 
 #### Decision: no radio-frequency shunt footprints on the input pins (2026-08-28)
 
@@ -410,20 +481,26 @@ component at 2.4 GHz.
 capacitor** — milliohms at audio so it needs no matching, and it restores
 deliberately what the tantalums were doing by accident.
 
-#### Retrofit path — keep the decision reversible on spin 1
+#### Retrofit path — decided 2026-11-06: no retrofit footprints
 
-Because the common-mode question below is not closed on paper, lay the section
-out so that either configuration can be fitted:
+The footprints previously specified here — a series part per channel, a capacitor
+at each cold pin and a strap per device — come to about twenty 0402 parts around
+two 4 × 4 mm converters, and are **not fitted**. Spin 1 proceeds on the assumption
+that the converter accepts both pins of a DC-coupled channel near mid-rail. That
+is an **accepted risk**, to be reduced before ordering by closing open check 1.
 
-- a **series footprint per channel**, populated with 0 Ω for the DC-coupled case
-  and with the blocking capacitor if the arrangement has to be reverted;
-- a **capacitor-to-ground footprint at each cold pin**, DNP for the DC-coupled
-  case;
-- a **strap per device** selecting the cold pins between the reference conductor
-  and the local AC ground.
+**Fallback if the bench rejects it: DC-coupled, cold pins grounded** — the
+arrangement SBAS892A itself draws (Figure 36), not a revert to AC coupling. Tie
+each device's cold-pin node to ground instead of the reference, and lower the
+reference to ≈0.7 V (bottom divider leg only) so the hot pin swings in the
+converter's positive half-range. It costs ≈6 dB of converter range, the
+common-mode rejection this section exists to buy, and channel gain (which would
+multiply the 0.7 V offset); the digital high-pass removes the offset. On spin 1
+that is a rework — cutting the cold-pin node free of the reference — not a respin.
 
-That is a handful of extra footprints and it converts a respin into a bench
-decision.
+AC coupling is **not** the fallback: its polarity argument assumed a 1.0 V preamp
+rest point, and the pickups now rest on this board's 1.34 V reference, ≈40 mV below
+the converter's self-bias.
 
 #### Open checks
 
@@ -439,19 +516,41 @@ decision.
    argument above is a mechanism or a bonus, and does not change the choice of
    1.375 V. The VREF/2 figure above comes from the sibling
    family's application material, the same provenance as the 1.375 V self-bias
-   number this document already relies on. **Confirm against ADCx140 material
-   before committing.**
+   number this document already relies on. Nearest evidence so far: TI SBAA499A
+   covers the newer two-channel x120 parts, not this one; their default mode lists
+   a DC-coupled tolerance of 2.82 Vpp, and full 0-to-AVDD common mode only in a
+   high-rejection mode at 10/20 kΩ that this part has no register for. Plausible,
+   not proven. **Close it by bench test** on an evaluation module — both pins of
+   one channel at 1.34 V, DC-coupled, 10 kΩ input impedance; measure offset and
+   clip level, then **THD with a realistic signal on the hot pin alone** at nominal
+   and attack levels, since one-sided drive swings the common-mode (above). Repeat
+   once in single-ended input mode with the cold pin still on the reference: TI
+   designed that mode for one-sided signals and it may handle the common-mode
+   movement better — but confirm it still uses the cold pin rather than an internal
+   level, or the reference rejection is lost. **Or by a TI E2E answer** for this
+   specific part. Spin 1 is
+   committed without retrofit footprints (above), so this is now the check that
+   decides whether spin 1 needs the fallback rework.
 2. **Simulate the reference-to-output and signal-to-output transfer functions**
    and confirm the first is exactly unity across the band. The rejection this
    proposal buys is only as good as that unity.
-3. **Size the cold-pin high-frequency bypass** against charge-injection crosstalk
-   at one end and audio-band rejection at the other.
-4. **Re-derive the connector position assignment** for seven conductors, and
-   specify keying.
-5. **Confirm the programmable gain plan** against a source 25 dB below
-   differential full scale rather than 17 dB below single-ended full scale.
-6. **Confirm the generator buffer's stability** into two cable conductors of
-   50–100 pF each plus the eight cold pins.
+3. **Cold-pin high-frequency bypass — not needed, no footprint (2026-11-07).** The
+   pins feed a continuous-time gain stage through the programmable input resistor
+   (resistive "input impedance", no external anti-alias filter required); the
+   modulator's sampling sits behind that stage. Each cold pin is therefore ≈10 kΩ to
+   the internal common-mode, carrying a near-constant ≈4 µA, not switched-capacitor
+   kickback, so the shared node carries no signal current to couple channels through.
+   Inference from the datasheet's description, not a drawn circuit; crosstalk is
+   worth a glance at bring-up.
+4. ~~Re-derive the connector position assignment.~~ **Closed:** ground, reference,
+   analog rail, then four signals, straight-through, verified on both boards
+   (`bring-up-risk-register.md`). Polarity as decided in `preamp-board.md` §10.
+5. ~~Confirm the programmable gain plan.~~ **Closed 2026-11-06:** plan against the
+   single-ended full scale, ≈19 dB of headroom at 0 dB gain; start at ≈9 dB of
+   channel gain and set it from the measured attack (above).
+6. **Buffer load — closed.** The cables are isolated by the series resistors; the
+   eight cold pins are ≈1.25 kΩ resistive in parallel to the internal common-mode
+   (≈30 µA at a 39 mV offset) plus a few picofarads of pin capacitance each.
 
 ---
 
@@ -524,7 +623,7 @@ Control bus = **I2C1** (PB8 SCL / PB9 SDA), the two codecs only (the PCM5102A DA
 
 The 7-bit address is set by the **ADDR0 (pin 16)** and **ADDR1 (pin 15)** strap pins. The two devices must strap to **distinct addresses** — e.g. ADC-A and ADC-B differ in the ADDR0/ADDR1 tie (GND vs. IOVDD, and the further SDA/SCL-referenced options the part allows).
 
-⚠ **Take the exact strap→address table from SBAS892A at entry** and confirm the two devices' straps (ADC-A: ADDR0+ADDR1→GND; ADC-B: ADDR0→IOVDD, ADDR1→GND) land on two non-conflicting addresses; verify no clash with any other I²C device. (Not transcribing specific hex here — memory is not trustworthy for the address map; this is a review-gate item.)
+**Resolved 2026-11-06 against SBAS892A Table 50.** One device straps ADDR1 → IOVDD, ADDR0 → GND: **0x4E**. The other straps ADDR0 → IOVDD, ADDR1 → GND: **0x4D**. Both straps pulled, never floating, as the datasheet requires. 0x4C (both low) is unused, which keeps it clear of the broadcast address the part adopts if `I2C_BRDCAST_EN` is ever set. The codecs are the only devices on the bus. Firmware probes 0x4D and 0x4E.
 
 ---
 
@@ -687,7 +786,7 @@ See `test-points.md` (single source of truth; categorized by access type). Codec
 | MICBIAS caps (×2) | 1 µF X7R | 0402/0603 | basic | MICBIAS decoupling to AVSS (preamp supply — **populated**) |
 | I²C pull-ups (SCL/SDA) | 2.2–4.7 kΩ | 0402 | basic | I²C pull-ups to IOVDD (one pair for the bus) |
 | SHDNZ pull-down | 10 kΩ | 0402 | basic | SHDNZ pull-down (entered, shared, on MCU sheet) |
-| ADDR straps (×?) | per address strap | 0402 | basic | ADDR0/ADDR1 straps — value/tie per §6 table ⚠ |
+| ADDR straps (×4) | 10 kΩ | 0402 | basic | ADDR0/ADDR1 straps, one to IOVDD and one to GND per device (§6) |
 | RF shunt caps (×8) | 100–330 pF | 0402 | — | **DNP** optional RF shunt at each buffer signal line (external cable entry) |
 | SDOUT bus pull-down | **10 kΩ** | 0402 | basic | Fitted. 325 µA of DC load when the bus is high — nothing against CMOS drive — and it settles the net in ~150 ns against a 122 ns bit period, where 100 kΩ would have taken longer than a bit |
 
@@ -702,19 +801,19 @@ Part and topology are settled (`adc-selection.md`); these are datasheet confirma
 1. **Input impedance `CHx_IMP` — decided: 20 kΩ** ⚠ becomes 10 kΩ under §2.1, where the corner argument that chose 20 kΩ no longer exists and the setting reverts to a pure noise choice. (≈1.7 Hz corner at 4.7 µF), taken because it is free rather than because the corner has to be that low — see the note in §2 on what the corner is and is not for. (Source loading no longer enters this choice.) 10 kΩ (≈3.4 Hz) is the documented fallback if bench work ever shows the extra dynamic range is worth the higher corner. Firmware register setting must match (§8).
 2. **Signal-cap tantalum polarity — RESOLVED, no open action.** The converter self-biases its AC-coupled inputs to VREF/2 ≈ 1.375 V; the preamp presents a divider-set 1.0 V. The converter side is higher by 375 mV on every channel, so **+ toward the converter** and the sign cannot invert. Full argument, including the bias-point selection rule, is in §2. ⚠ **The sequencing exposure is now wider, not narrower.** The preamp boards take the 3.3 V analog rail rather than MICBIAS, so they no longer come up strictly after the converter — the firmware ordering that previously closed this window does not apply. The parallel silicon clamp diode is what covers it and is required. **Bench items:** measure the DC on one input pin and confirm it sits near 1.375 V (the number comes from TI application material rather than the datasheet), and confirm the preamp side sits at 1.0 V on every channel (`preamp-board.md` §12 item 4).
 3. **IOVDD source — decided: `3V3_D`** (keeps codec digital switching current off the analog LDO, and matches the MCU I/O rail so logic levels are clean both directions). ~~⚠ confirm the rail sits inside IOVDD's recommended window.~~ **Closed 2026-09-24:** 3.0–3.6 V recommended against a rail ceiling of 3.50 V.
-4. **I²C addresses** — take the ADDR0/ADDR1 strap→address table from SBAS892A; confirm the drawn straps (ADC-A: GND/GND, ADC-B: IOVDD/GND) give distinct, non-conflicting addresses; check no bus clash. ⚠
+4. ~~**I²C addresses**~~ — **closed 2026-11-06:** 0x4D and 0x4E (§6).
 5. **SDOUT bus discipline** — confirm both devices' unused-slot tri-state (`ASI_OUT_CH_EN`) and `TX_FILL` = Hi-Z are set, and pick a `TX_KEEPER` setting (2 or 3 = keeper during the LSB window only, per SBAA383C). The internal keeper covers steady-state contention, so the optional 100 kΩ SDOUT pull-down is a DNP footprint for the pre-configuration window only — decide whether to populate.
 6. **AREG treatment** — confirm AREG decoupling / that it is *not* externally supplied in 3.3 V AVDD mode (AREG abs-max 2.0 V — never tie to 3V3_A). ⚠
 7. **SHDNZ strap** — shared pull-down value and whether a per-codec reset split is wanted for bring-up (`pin-allocation.md` §4 PC7 spare). ⚠
 8. **Coupling-cap charge (`INCAP_QCHG`)** — firmware must set it for 4.7 µF; note in the driver bring-up. ⚠ Not applicable under §2.1.
 9. **Gain characterization — the level dispute is settled by measurement, no longer open.** The coil measures 40 mV peak-to-peak, which the preamp's gain of ~8 delivers as ≈320 mV peak-to-peak, roughly 17 dB below full scale (`analog-front-end.md` §1). Both earlier figures in the project record — the ≈12 mVrms sizing here and the hotter assumption from the preamp thread — were estimates against a unity front end that no longer exists. ⚠ **Remaining action:** set PGA and digital gain against the measured level and verify no clip at full scale. The requirement is far smaller than originally specified, and whether the Dynamic Range Enhancer still has a role should be reconsidered at the same time (`adc-firmware-init.md`).
 10. **MICBIAS — no longer used, no budget to verify.** The preamp boards take the 3.3 V analog rail (§1, `analog-front-end.md` §4). MICBIAS may be left unconfigured. If it is ever brought back, note the load is now ~3.8 mA per board against the 20 mA per-device limit rather than the sub-milliamp figure that applied to followers.
-11. **Cable protection** — ⚠ **and the exposure grows under §2.1**, which removes the series capacitor between each cable entry and its converter input pin. The supply rail and the per-channel signal lines are external-cable entries; decide whether they need series ferrite / ESD clamp / the optional RF shunt cap. ⚠ Note the signal lines now carry ~320 mV peak-to-peak from an ohms-level source rather than tens of millivolts from kilohms, which materially reduces the ingress exposure this item was written against.
+11. **Cable protection — decided 2026-11-06: none fitted.** The pickup cables are internal to the instrument, built and serviced by one person and connected with the power off. Not re-opened.
 12. **Digital high-pass filter — decided: programmed corner at 0.5 Hz** via `HPF_SEL = 00` and the coefficients in §8. This is the only low-frequency loss in the chain that no downstream correction can undo, so it is the one firmware setting the analog low-frequency argument actually depends on. ⚠ **Remaining checks, all datasheet or bring-up rather than board:** confirm the denominator sign convention of SBAS892A Equation 1 before writing coefficients; confirm the driver writes them **before** powering up any record channel; confirm both devices are programmed. **Bench item:** verify the corner landed by sweeping a low-frequency tone into one channel and reading the captured level — a filter left at its 8 Hz default will pass a working board that is silently missing the content the design exists to capture.
 13. **Biquad allocation — no action, recorded to prevent a wrong correction.** `BIQUAD_CFG[1:0]`'s default allocation supports six output channels *per device*, and each device drives four. The default stands. The biquads are left flat by design (§8).
 14. **Auto-clock derivation at 32 kHz — RESOLVED (2026-07-28).** The scheme *is* table-based (SBAS892A §8.3.2, Table 6: supported FSYNC frequencies × BCLK-to-FSYNC ratios) and **32 kHz FSYNC at ratio 256 → 8.192 MHz BCLK is an explicitly listed, supported combination**. The auto-configuration block detects FSYNC frequency and BCLK ratio and sets every internal divider plus the PLL with no host programming; an unsupported combination raises an ASI clock-error interrupt and mutes the record channels (status in `ASI_STS`, P0_R21 — worth reading during bring-up as a clock-health check).
 
-15. **⚠ DC-coupled differential input (§2.1) — open proposal, not a decision.** Carrying the pickup board's buffered reference over one added conductor and taking the inputs DC-coupled differential deletes 24 parts from this section, removes the last analog high-pass in the chain, and converts the reference-borne rail spur from an unrejected common term into a common-mode one. **Blocking check:** confirm the converter's DC-coupled common-mode window against ADCx140 application material — the datasheet states none, and the VREF/2 optimum quoted in §2.1 comes from the sibling family. **Then:** simulate reference-to-output for unity, size the cold-pin high-frequency bypass, re-derive the connector position assignment for seven conductors and specify keying, and re-plan the programmable gain against a source 25 dB below differential full scale. Lay the section out with the retrofit footprints of §2.1 either way, so the choice stays a bench decision.
+15. **⚠ DC-coupled differential input (§2.1) — committed on spin 1 as an accepted risk (2026-11-06); open check 1 still to close.** Carrying the pickup board's buffered reference over one added conductor and taking the inputs DC-coupled differential deletes 24 parts from this section, removes the last analog high-pass in the chain, and converts the reference-borne rail spur from an unrejected common term into a common-mode one. **Blocking check:** confirm the converter's DC-coupled common-mode window against ADCx140 application material — the datasheet states none, and the VREF/2 optimum quoted in §2.1 comes from the sibling family. **Then:** simulate reference-to-output for unity, size the cold-pin high-frequency bypass, and plan the programmable gain against the single-ended full scale (§2.1). The retrofit footprints were dropped on 2026-11-06; the fallback is the grounded-cold-pin rework of §2.1.
 
 ---
 

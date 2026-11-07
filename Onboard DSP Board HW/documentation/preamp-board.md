@@ -819,16 +819,10 @@ voltage. Production hardware wants a keyed housing rather than either.
 cable cannot be inserted backwards. Apply the mirror-position rule anyway. It
 costs nothing at schematic entry and it keeps the socket option open.
 
-⚠ **The §4 proposal changes this analysis and makes it worse.** Seven positions
-reverse as 1↔7, 2↔6, 3↔5 with 4 fixed, so the mirror set to avoid changes.
-More importantly, with the converter's coupling capacitors deleted there is no
-longer a series capacitor between a signal conductor and a converter input pin,
-so a reversal that lands the supply conductor on a signal position applies the
-analog rail directly to that pin. Both boards sit on the same analog rail and the
-converter's analog pins are rated to its own supply plus 0.3 V, so it is
-survivable while powered and not while it is not. **Redo the position assignment
-when the proposal is adopted, and take keying from optional to specified at the
-same time.**
+**The seven-way pinout as built lands on the recoverable side.** Seven positions
+reverse as 1↔7, 2↔6, 3↔5 with 4 fixed; ground (1) and the analog rail (3) are not
+at mirror positions. The decision above stands for the seven-way connector —
+unkeyed, colour-coded cable, single builder, connected with the power off.
 
 **Neither differential option in §4 constrains this choice.** The
 pseudo-differential fallback would raise the conductor count to nine and the

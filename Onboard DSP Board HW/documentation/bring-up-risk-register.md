@@ -715,10 +715,8 @@ default setting, so the driver must select 10 kΩ or 20 kΩ before the inputs ar
 
 **Pending**
 
-- [ ] **Decide whether hot-plugging a preamp board is permitted**, and if so confirm the
-      housing enforces the mating order. Ground sits on the end pin of the 7-way connector,
-      so a straight insertion mates it first — but that is a property of how the shell is
-      keyed, not of the pinout, and it is the only remaining path to an out-of-range input.
+- [x] **Hot-plugging is not supported** — preamp cables are connected and disconnected
+      with the instrument powered down. Decided 2026-11-06; not re-opened.
 - [ ] At first power-up, scope one hot pin against its own cold pin through the first
       second and confirm they rise together. This is a two-minute confirmation of the
       argument below, not an open question.

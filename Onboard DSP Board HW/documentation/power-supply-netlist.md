@@ -138,7 +138,7 @@ See `test-points.md` (single source of truth; categorized by access type). Power
 | 3V3_D output bulk | 22 µF X5R/X7R ≥10 V (2×) | 0805 | basic | Digital-rail output, entered |
 | LDO in/out + VDDA caps | 1 µF X7R ≥10 V | 0402/0603 | basic | LDO in/out, VDDA |
 | MCU SMPS VFB cap | 4.7 µF X7R | 0603 | basic | SMPS VFB ⚠ verify value |
-| charger PROG | 2.0 kΩ 1 % | 0402 | basic | PROG (≈500 mA) ⚠ recompute w/ cell |
+| charger PROG | 3.3 kΩ 1 % | 0402 | basic | PROG (≈300 mA, 0.25 C) |
 | status / charge LED | red, KT-0603R | 0603 | [C2286](https://jlcpcb.com/partdetail/C2286) | Vf 1.8–2.4 V, 300 mcd @ 20 mA, basic-class, 7.6 M stock, $0.007 |
 | LED series | 1 kΩ | 0402 | basic | charge-LED series — ≈1.5 mA (≈22 mcd, plainly visible); 2.2 kΩ ≈ 0.7 mA if battery life is preferred |
 | FB divider high side | **1.10 MΩ 1 %** | 0402 | basic | Output → feedback pin. Sets 3.25 V with the 200 kΩ low side. ⚠ currently entered transposed with it |
@@ -155,8 +155,8 @@ Passives are JLCPCB basic-class; exact LCSC codes at order time. The three ICs w
 
 Entered in the schematic with these deltas from §2 above (validated topology — same circuit proven on the prior active-electronics board):
 
-- **As-built symbols/parts:** the charger is drawn with an MCP73811 symbol — pin functions align with the TP4054 SOT-23-5 (1 = CHRḠ/CE open, 2 = GND, 3 = BAT → `bat+`, 4 = VCC → `CHG_IN`, 5 = PROG; ⚠ confirm footprint/pin mapping against the real TP4054 at BOM time). Battery connector = 2-pin; TRS interface = 3-pin (tip → volume-pot wiper `out`, ring → charger VCC, sleeve → GND). The volume pot carries the power switch.
-- **PROG:** 30 kΩ → ICHG ≈ 1000 V / 30 k ≈ **33 mA** (⚠ confirm intended — doc's earlier 2.0 kΩ ≈ 500 mA; recompute for the chosen cell, ≤1C).
+- **As-built symbols/parts:** the charger is drawn with an MCP73811 symbol — pin functions align with the TP4054 SOT-23-5 (1 = CHRḠ/CE open, 2 = GND, 3 = BAT → `bat+`, 4 = VCC → `CHG_IN`, 5 = PROG; ⚠ confirm footprint/pin mapping against the real TP4054 at BOM time). Battery connector = 2-pin, **pin 1 = cell positive (`bat+`), pin 2 = ground** — set to match the cell harness after the test board came back reversed; mark polarity on the silkscreen; TRS interface = 3-pin (tip → volume-pot wiper `out`, ring → charger VCC, sleeve → GND). The volume pot carries the power switch.
+- **PROG:** 3.3 kΩ → ICHG ≈ 1000 V / 3.3 k ≈ **300 mA**, 0.25 C on the planned 1200 mAh cell. Dissipation ≈ 0.6 W from a deeply discharged cell; the part thermally folds back, which is accepted.
 - **No TVS on the ring** (dropped — field-proven without it) and **no charge LED** (CHRḠ left open).
 - **Caps:** 4.7 µF on `CHG_IN`, 4.7 µF on `bat+` (doc had 1 µF + 10 µF bulk; revisit at layout if desired).
 
@@ -164,7 +164,7 @@ Entered in the schematic with these deltas from §2 above (validated topology �
 
 These are facts to confirm and values to correct before fab — not open decisions. Topology and parts are settled (`power-supply.md`).
 
-1. TP4054 RPROG once the cell is chosen (ICHG ≈ 1000 V / RPROG, keep ≤1C); confirm the constant on the exact vendor's datasheet — the part is multi-sourced. **As built: 30 kΩ ≈ 33 mA — confirm.**
+1. TP4054 RPROG once the cell is chosen (ICHG ≈ 1000 V / RPROG, keep ≤1C); confirm the constant on the exact vendor's datasheet — the part is multi-sourced. **As built: 3.3 kΩ ≈ 300 mA (0.25 C) — settled 2026-11-06.**
 2. ~~TP4054 abs-max input vs. TVS clamp voltage~~ **Resolved 2026-07-15: no TVS — circuit field-proven on prior board.**
 3. Charger thermal: worst-case ~1 W in SOT-23-5 at 500 mA into a flat cell; confirm foldback behavior is acceptable or reduce ICHG.
 4. No TS/thermistor and no safety timer on TP4054 — confirm the chosen cell is acceptable without pack-level protection assumptions (most protected cells are).
@@ -177,6 +177,6 @@ These are facts to confirm and values to correct before fab — not open decisio
 
 ---
 
-*Schematic-entry status (2026-09-24): rails, switch-in-battery-line (volume pot), charger (§3a as-built deltas: 30 kΩ PROG ⚠, no TVS, no charge LED, charger drawn with an MCP73811 symbol standing in for the TP4054), battery-sense divider, VDDA ferrite + caps, buck-boost input and output capacitance, and the MCU core-SMPS externals are entered.*
+*Schematic-entry status (2026-09-24): rails, switch-in-battery-line (volume pot), charger (§3a as-built deltas: 3.3 kΩ PROG, no TVS, no charge LED, charger drawn with an MCP73811 symbol standing in for the TP4054), battery-sense divider, VDDA ferrite + caps, buck-boost input and output capacitance, and the MCU core-SMPS externals are entered.*
 
 *Still to enter, all from the 2026-09-24 rail change:* **LDO input and enable moved to `VBAT`**; **digital rail retargeted to 3.25 V** with the divider corrected to 1.10 MΩ high-side / 200 kΩ low-side (currently transposed); **playback converter's digital supply moved to `3V3_A`**; **net renamed `3V45_D` → `3V3_D`**; **pull-down on the playback soft-mute line**. Carried from before: the LDO input cap (1 µF at its IN pin, now on `VBAT`), sense-filter cap value, per-pin analog/IO 0.1 µF plus analog bulk, remaining test points.
