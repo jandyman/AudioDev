@@ -72,7 +72,7 @@ requirement.**
 | What | Note |
 |---|---|
 | ~~Rework the string preamp schematic and simulate~~ | Done — pickup preamps built and working |
-| **Converter DC-coupled common-mode window** | No longer blocking — decision 4 is committed. Bench test on an evaluation module: both pins at 1.34 V, offset and clip level, then THD with signal on the hot pin alone at nominal and attack levels (one-sided drive swings the common-mode by half the signal). Also try single-ended input mode with the cold pin on the reference. What the converter does with DC input is collected in `adc-netlist.md` §2.1 |
+| **Converter DC-coupled common-mode window** | No longer blocking — decision 4 is committed. **Measured on spin 1 at bring-up** (no evaluation-module test planned, 2026-11-10; bring-up register PG-A5): both pins at 1.34 V, offset and clip level, then THD with signal on the hot pin alone at nominal and attack levels (one-sided drive swings the common-mode by half the signal). Also try single-ended input mode with the cold pin on the reference. What the converter does with DC input is collected in `adc-netlist.md` §2.1 |
 | **Cavity board reference ratio** | Mid-rail gives the best swing but the common-mode ceiling binds at end of discharge on the three follower stages — buffer, Sallen-Key, output buffer. Either a ratio of ≈0.45, or convert those to inverting. The filter is a Sallen-Key that simulates; `Filter Doc.md` draws a multiple-feedback circuit and is **stale** |
 | **Bulk capacitor on the reference network** | Populate only if bench work shows conductor pickup beating generated-node noise, or if the charger measurement on the analog instrument calls for it |
 

@@ -108,8 +108,8 @@ Power switch: the integrated switch on the **volume pot**, a **hard switch in th
 | Connection | Net / part |
 |---|---|
 | VLXSMPS → 2.2 µH inductor → VFBSMPS | `VLX_CORE` / `VFB_CORE` |
-| VFBSMPS | 4.7 µF to GND (at pin) |
-| VCAP pins | per AN5419 for **SMPS-direct** mode (in this mode VCAP ties to the SMPS output path — confirm exact strap + cap values) ⚠ |
+| VFBSMPS | 2 × 10 µF to GND at the inductor output |
+| VCAP pins | all three on the SMPS output net (the VFBSMPS node), 100 nF at each pin — AN5419 direct-SMPS |
 | VDDSMPS / VSSSMPS | `3V3_D` / `GND` with local decoupling per AN5419 |
 
 This block is deliberately under-specified — it is the one part I could not fully verify from memory, and mode-strapping (LDO vs SMPS-direct vs cascade) changes the VCAP wiring. Take it verbatim from the Nucleo-H725 schematic during Phase 2. Belongs physically in the MCU island, not the power corner.
@@ -137,7 +137,7 @@ See `test-points.md` (single source of truth; categorized by access type). Power
 | misc 0.1 µF | 0.1 µF X7R | 0402 | basic | VINA, battery-sense filter, spare |
 | 3V3_D output bulk | 22 µF X5R/X7R ≥10 V (2×) | 0805 | basic | Digital-rail output, entered |
 | LDO in/out + VDDA caps | 1 µF X7R ≥10 V | 0402/0603 | basic | LDO in/out, VDDA |
-| MCU SMPS VFB cap | 4.7 µF X7R | 0603 | basic | SMPS VFB ⚠ verify value |
+| MCU SMPS output caps (×2) | 10 µF | 0603 | basic | SMPS output / VFB — value per the direct-SMPS reference designs |
 | charger PROG | 3.3 kΩ 1 % | 0402 | basic | PROG (≈300 mA, 0.25 C) |
 | status / charge LED | red, KT-0603R | 0603 | [C2286](https://jlcpcb.com/partdetail/C2286) | Vf 1.8–2.4 V, 300 mcd @ 20 mA, basic-class, 7.6 M stock, $0.007 |
 | LED series | 1 kΩ | 0402 | basic | charge-LED series — ≈1.5 mA (≈22 mcd, plainly visible); 2.2 kΩ ≈ 0.7 mA if battery life is preferred |

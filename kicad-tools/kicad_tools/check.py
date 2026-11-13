@@ -2,9 +2,10 @@
 Read-only checks on a KiCad project and its JLCPCB output.
 
 Three groups:
-  schematic vs board   values, footprints, LCSC numbers and the BOM / position
-                       flags agree — anything that differs is what the next
-                       "Update PCB from Schematic" would overwrite
+  schematic vs board   values, footprints and the BOM / position flags agree —
+                       anything that differs is what the next "Update PCB from
+                       Schematic" would overwrite; LCSC numbers must be absent
+                       from the schematic (or, with SYNC_LCSC, match the board)
   JLCPCB output        fresh, every BOM row has a part number, BOM and CPL list the
                        same parts, and both match the board's exclusion flags
   housekeeping         orphan sheets in the folder, sheets placed more than once
@@ -13,6 +14,7 @@ Three groups:
 from __future__ import annotations
 from .jlc import JlcOutput
 from .project import Project
+from . import sync
 from .sync import SyncPlan
 
 
@@ -51,12 +53,30 @@ def _sch_vs_board(prj: Project, r: Report):
       r.errors.append(f"{fp.ref}: value differs — schematic {p.value!r}, board {fp.value!r}")
     if p.footprint and p.footprint != fp.lib_id:
       r.errors.append(f"{fp.ref}: footprint differs — schematic {p.footprint}, board {fp.lib_id}")
+  _sch_lcsc(prj, r)
   plan = SyncPlan(prj)
   if plan.changes:
     r.warnings.append("schematic is behind the board on fields the JLCPCB tool manages — "
                       "run sync before the next Update PCB from Schematic:\n" + plan.describe())
   r.warnings += plan.conflicts
   r.info += plan.notes
+
+
+def _sch_lcsc(prj: Project, r: Report):
+  """LCSC numbers in the schematic: none at all unless sync is set to carry them,
+  and never one that disagrees with the board — Update PCB from Schematic copies
+  symbol fields onto footprints, so a stale number here replaces a good one there."""
+  have = [(fp, p) for fp, p in prj.pairs() if p is not None and p.lcsc]
+  stale = sorted(f"{p.ref} (schematic {p.lcsc}, board {fp.lcsc or 'none'})"
+                 for fp, p in have if fp is not None and p.lcsc != fp.lcsc)
+  if stale:
+    r.errors.append("LCSC number in the schematic differs from the board — the next Update PCB "
+                    "from Schematic would overwrite the board's: " + ", ".join(stale))
+  if have and not sync.SYNC_LCSC:
+    refs = sorted(p.ref for _, p in have)
+    r.errors.append(f"schematic carries LCSC numbers on {len(refs)} symbols; they belong only in "
+                    "the JLCPCB tool (strip them, or set SYNC_LCSC): "
+                    + ", ".join(refs[:12]) + (" …" if len(refs) > 12 else ""))
 
 
 def _jlc(prj: Project, r: Report):

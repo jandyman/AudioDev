@@ -95,7 +95,7 @@ Rough numbers, ~200 mA core-domain current at 550 MHz as baseline:
 
 **DSP headroom at 400 MHz** (why this is safe): YIN measured ~1–2 % of a 500 MHz M7 per voice. Pickup summing happens **before** any serious DSP, so the serious path is 4 channels, not 8; voice allocation can reduce further. Known work item: **YIN is bursty** — its compute lands in spikes, and the 27 % clock cut shrinks the burst budget, so it needs reworking (spread the difference-function accumulation across chunks, or similar — several ways to go). Tracked as an open item.
 
-**Board cost:** one 2.2 µH inductor VLXSMPS→VFBSMPS + 4.7 µF at VFBSMPS (entered on the MCU sheet, per AN5419). With the LDO permanently disabled on this package, **VCAP treatment is 100 nF per pin ×3** (ST-confirmed) — also entered.
+**Board cost:** one 2.2 µH inductor VLXSMPS→VFBSMPS + 2 × 10 µF at its output (VFBSMPS) (entered on the MCU sheet, per AN5419). With the LDO permanently disabled on this package, **VCAP treatment is 100 nF per pin ×3** (ST-confirmed), **with all three VCAP pins joined to the SMPS output net** — the regulated core supply enters the die through them (AN5419 §2.1.7).
 
 **Availability:** JLCPCB stocks STM32H725RGV6 as [C5271073](https://jlcpcb.com/partdetail/STMicroelectronics-STM32H725RGV6/C5271073) (~$10–12, low stock — 10 pcs secured 2026-07-15); DigiKey/ST eStore carry it as fallback. H735RGV6 is the +crypto sibling.
 

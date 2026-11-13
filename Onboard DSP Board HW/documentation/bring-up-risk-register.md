@@ -134,40 +134,40 @@ done once.** The battery-sense divider and the bias divider have both since been
 and are correct.
 
 ### BU-P2 — MCU core SMPS doesn't come up
-*Gate: G1.* The most opaque failure on the board — the core has no rail until the
-internal converter runs, so the symptom is a part that draws current and offers no debug
-access to explain itself.
+
+> **Corrected 2026-11-11 — risk list AUD-12.** The inductor output (the VFBSMPS node) is now
+> joined to all three VCAP pins on one core-supply net. The earlier reading here — that
+> VCAP is fed inside the die and needs no external link — was dropped: AN5419 §2.1.7 says
+> "The SMPS is directly connected to the VCAP pin and provides the regulated supply to the
+> Vcore", and the link is correct whether or not this package also bonds it internally.
 
 **Pending**
 
-- [ ] **Swap the SMPS inductor for a lower-DCR part.** Fitted part is 216 mΩ against
+- [x] **Swap the SMPS inductor for a lower-DCR part** (done — the Murata part below is on the board). The earlier part was 216 mΩ against
       AN5419's 110 mΩ (saturation and thermal ratings are fine, nothing is stressed).
       **Murata DFE252012F-2R2M=P2, LCSC C576403** — 82 mΩ, Isat 3.6 A, and the *same*
       2.5 × 2.0 × 1.2 mm body, so no layout change. Worth ~2% of core power.
+- [x] **Core net: join VFBSMPS and all three VCAP pins (risk list AUD-12).** Routed 2026-11-11.
 - [ ] Platform PWR init selects SMPS-direct. The configuration bits latch until the next
       power-on reset, so a mismatch is recoverable by power-cycling and reflashing, not a
       brick — but it must match the wiring.
 
 **Analysis**
 
-**VCAP is not externally connected to VFBSMPS.** AN5419 Rev 3 Figure 2, configuration
-*2. Direct SMPS Supply*, shows the SMPS on, the internal regulator off, and VCAP as the
-core node fed inside the die. The entered topology is correct and this is not a
-dead-board scenario. (The 220 pF on VLXSMPS that appears in Table 2 is scoped to
-*"LQFP/BGA packages"* and does not apply to the VFQFPN68.)
+**VCAP is fed from the SMPS output on the board.** The inductor is off-die, so its
+current returns to the core through the VCAP pins; VFBSMPS is the regulator's sense pin.
+One net joins the inductor output, VFBSMPS, the output capacitors and all three VCAP pins,
+each VCAP pin keeping its 100 nF. Trace length from the inductor to the VCAP pins is about
+12 mm for the nearest and 27–30 mm for the other two, at 0.2 mm — roughly 70 mΩ on the long
+runs, a few millivolts at this core's current. (The 220 pF on VLXSMPS that appears in AN5419
+Table 2 is scoped to *"LQFP/BGA packages"* and does not apply to the VFQFPN68.)
 
 Everything else checks out: 2.2 µH between VLXSMPS and VFBSMPS, VDDSMPS on the digital
 rail, VSSSMPS to ground, 100 nF at each VCAP pin, backup-domain pin tied to the digital
 rail, analog supply through its ferrite, exposed pad to ground.
 
-**The three VCAP pins are deliberately not tied together on the board** — 100 nF at each
-pin, no external link. AN5419 Table 2 states "All VCAP connected together" for the
-LDO-disabled case, but the pins land on three different sides of the package with a busy
-bottom layer, and the same table row also covers bypass mode, where the VCAP pins carry
-supply current and the tie is functional rather than advisory. In direct-SMPS mode the
-pins are taps on an internally-fed core rail, so the external tie only shortens the path
-between decoupling capacitors. Recorded as a deviation; a community question is open to
-confirm. Bench-observable if it ever matters.
+*Bring-up check:* at full clock speed, compare the voltage at the three VCAP capacitors
+with the voltage at the output capacitors; they should agree within a few millivolts.
 
 On firmware: the part cannot boot without a core supply, so firmware is not what starts
 the SMPS — it comes out of reset with the regulators enabled. The risk is firmware
@@ -281,6 +281,12 @@ before it is ready.
 - [ ] Cell choice, its connector and polarity.
 - [ ] Sense divider accuracy against an analog reference that is internally tied to the
       analog supply on this package.
+- [ ] **Measure the internal reference with every battery reading** (risk list AUD-27). The
+      ADC reference is the analog rail, and below a cell voltage of about 3.39 V that
+      rail follows the cell (≈40 mV under it). Sense ÷ reference then sits at ≈0.506
+      from 3.39 V all the way down to 3.0 V, so the raw reading cannot see the last part
+      of the discharge. Reading the MCU's internal reference gives the true rail voltage;
+      cell = ratio × rail × 2. Any low-battery warning or cutoff depends on this.
 
 ---
 
@@ -675,9 +681,12 @@ BU-A2 and BU-A3, it cannot cost a spin.
 
 **Pending**
 
-- [ ] **Close the blocking check: the converter's DC-coupled common-mode window.**
-      SBAS892A states none — confirmed by search. Needs TI application material or a
-      bench measurement on the real board.
+- [ ] **Measure the converter's DC-coupled common-mode behaviour on spin 1.** SBAS892A
+      states no window, and no evaluation-module test is planned — the board is the test
+      fixture (decided 2026-11-10; risk list AUD-4, closed there as a pre-order item). Per
+      channel, at 10 kΩ input impedance: offset and clip level with no signal, then THD
+      with signal on the hot pin at nominal and attack levels. If it fails, the fallback
+      rework in `adc-netlist.md` §2.1 (cold pins to ground, reference ≈0.7 V).
 - [ ] **Rewrite `adc-netlist.md` §2.1 as adopted rather than proposed.** The topology is
       committed: the main board generates the bias, buffers it, and routes it to both
       converters and — through the pickup connectors — to the preamp boards, which
@@ -1101,13 +1110,14 @@ Buck-boost and both codecs are now verified against their TI drawings and correc
 
 **Pending**
 
-- [ ] **Move the reference filter capacitor off the 1.0 mm EIA-3216 case onto the 1.8 mm
-      case** — the mainstream part, pads the same within 40 µm, no routing change. The
+- [x] **Move the reference filter capacitor off the 1.0 mm EIA-3216 case onto the 1.8 mm
+      case** (done 2026-11-07) — the mainstream part, pads the same within 40 µm, no routing change. The
       low-profile case is a specialty part with a thin catalogue; this is the same item
       the preamp test board hit.
-- [ ] Check tantalum rotation in the plugin's rotation manager before ordering. The fab's
-      position-file convention frequently sits 180° from the design tool's, and this is
-      the one part where backwards destroys something.
+- [ ] Check tantalum rotation in the fab's 3D preview before paying — with every other
+      polarised part, per the risk list AUD-15 checklist. The correction depends on how LCSC
+      stored the part, so only the preview settles it; this is the one part where
+      backwards destroys something.
 
 ### FA-F3 — Fine-pitch assembly and exposed pads
 *Gate: pre-fab*

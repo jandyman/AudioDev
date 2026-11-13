@@ -53,14 +53,18 @@ The same VCO is reachable from 8, 12 or 16 MHz with M = 5 and N = 384/256/192, s
 | | `I2S1_WS` | **PA4** | 23 | AF5 | out | PCM5102A — LRCK |
 | | `I2S1_SDO` | **PA7** | 26 | AF5 | out | PCM5102A — DIN |
 | | *(no MCLK reserve)* | — | — | — | — | I2S1_MCK = PC4 collides with `BATT_SENSE`; DAC needs none |
-| **I2C1 (control)** | `I2C1_SCL` | **PB8** | 64 | AF4 | OD | ADC5140 ×2 — pull-up to `3V3_D` ⚠ value unset (2.2–4.7 kΩ). DAC not on I2C (strap-configured, `dac-selection.md`) |
+| **I2C1 (control)** | `I2C1_SCL` | **PB8** | 64 | AF4 | OD | ADC5140 ×2 — pull-up to `3V3_D`, **4.7 kΩ**. DAC not on I2C (strap-configured, `dac-selection.md`) |
 | | `I2C1_SDA` | **PB9** | 65 | AF4 | OD | " (pull-up) |
 | **USB (reserve)** | `OTG_FS_DM` | **PA11** | 46 | — | bidir | USB data reserved; charge is via jack ring, no USB connector on spin 1 (this part's OTG_HS in FS-PHY mode) |
 | | `OTG_FS_DP` | **PA12** | 47 | — | bidir | " |
 | **Battery sense** | `BATT_SENSE` = ADC1_INP4 | **PC4** | 27 | analog | in | battery voltage divider |
-| **Control pot 1** | `Pot2` = ADC1_INP11 | **PC1** | 14 | analog | in | wiper (pot: `3V3_A` ↔ GND, ratiometric vs VDDA) |
+| **Control pot 1** | `Pot2` = ADC1_INP9 | **PB0** | 29 | analog | in | wiper (pot: `3V3_A` ↔ GND, ratiometric vs VDDA) |
 | **Control pot 2** | `Pot3` = ADC1_INP8 | **PC5** | 28 | analog | in | wiper |
 | **Clock verify** | MCO1 | **PA8** | 43 | AF0 | out | test point (HSE/PLL health) |
+| **USART3 (radio module)** | `UART3_TX` | **PC10** | 54 | AF7 | out | module receive-data pin |
+| | `UART3_RX` | **PC11** | 55 | AF7 | in | module transmit-data pin |
+| | `UART3_CTS` | **PB13** | 37 | AF7 | in | module RTS |
+| | `UART3_RTS` | **PB14** | 38 | AF7 | out | module CTS |
 
 Pots are **PCB-mounted** (they mechanically support the board; knobs go right-angle through the panel), so wiper runs are short traces. Wiper RC filters judged unnecessary — firmware uses a long ADC sampling time (10 k pot ≈ 2.5 kΩ worst-case source) plus normal control-value smoothing; an optional 100 nF at each wiper is the only candidate if bench noise ever suggests it. The third panel pot is **the volume pot** (chassis-style but PCB-mounted, integrated switch = hard battery-line switch `bat+`→`VBAT`) — not an MCU input.
 
@@ -74,7 +78,7 @@ Pots are **PCB-mounted** (they mechanically support the board; knobs go right-an
 | SWO | **PB3** (`SWO`) | 58 | wired to the debug header SWO pin; RTT is the logging baseline, SWO a bonus |
 | HSE crystal | **PH0/PH1** | 10, 11 | **24.000 MHz, CL 8 pF, SMD1612-4P — NDK NX1612SA-24MHZ-STD-CIS-1, LCSC C280834** (1.6 × 1.2 × 0.3 mm, ESR 150 Ω max, drive 100 µW max, ~$0.30). Extended at JLC — there is no 24 MHz crystal in the Basic library, so one feeder fee is unavoidable and not worth distorting the design to dodge. 4-pad; pads 2/4 = GND, tied to the can. **Load capacitors: 6.8 pF C0G, 0402.** C = 2 × (CL − C_stray) = 2 × (8 − 4.5) = 7.0 pF. **Err small, not large.** Frequency accuracy is irrelevant on this board — the audio rate is derived internally, the DAC's rate detection tolerates ±4 %, the codecs slave off the bit clock and the output is analog, so tens of ppm is inaudible. What matters is that it *starts*, and the oscillator's negative-resistance margin falls roughly as 1/CL², so over-capping is the direction that costs startup margin. Under-capping costs accuracy that is not needed. C0G is required: Class II would drift the load with temperature and bias. Package size is the governing constraint in this corner — the 1612 body is 1.92 mm² against the 2016's 3.2 mm² and the 3225's 8.0 mm². *Rejected:* the JLC house 2016 part (also CL 8 pF, but a footprint change for no gain) and the YXC 3225 (CL 20 pF, needing ~31 pF load caps, in four times the area). |
 | Boot | **BOOT0** | 63 | 10 kΩ pull-down; SWD-only programming |
-| Reset | **NRST** | 12 | 100 nF to GND + the debug header NRST pin (⚠ MCU-sheet net needs its global `NRST` label restored to reach the header) |
+| Reset | **NRST** | 12 | 100 nF to GND + the debug header NRST pin (one net, verified from the netlist) |
 | Analog ref | VDDA | 16 | `MCU_VDDA` = `3V3_A` via the VDDA ferrite; **VREF+ is internal to VDDA on this package** — no pin, no strap |
 | Power | see §7 | | |
 
@@ -87,18 +91,18 @@ Pots are **PCB-mounted** (they mechanically support the board; knobs go right-an
 | Codec SHDNZ (shared) — `CODEC_SHDNZ` | **PC6** | 40 | drives both ADC5140 SHDNZ; 10 kΩ pull-down holds reset until MCU drives |
 | Codec spare reset / 2nd line | **PC7** | 41 | reserved (unwired) — split only if bring-up needs it |
 | DAC soft-mute — `DAC_XSMT` | **PC9** | 42 | PCM5102A XSMT: hold **low** through power-up until rails + BCK stable (`dac-selection.md` §6) |
-| Status LED — `LED` | **PD2** | 57 | PD2 → status-LED anode, cathode → series resistor → GND (active-high, off during reset by Hi-Z default). **Red 0603**, Vf 1.8–2.4 V, 300 mcd at 20 mA. Series resistor **1 kΩ ≈ 1.5 mA** (≈22 mcd, plainly visible); 2.2 kΩ ≈ 0.7 mA if battery life is favoured over brightness. **Red, not green** — a green Vf of ~3.0 V would leave only ~0.35 V across the resistor on this rail, so part-to-part Vf spread would swing the current several-fold; red's ~1.9 V leaves ~1.45 V and a well-defined current. |
+| Status LED — `LED` | **PB10** | 32 | PB10 → status-LED anode, cathode → series resistor → GND (active-high, off during reset by Hi-Z default). **Red 0603**, Vf 1.8–2.4 V, 300 mcd at 20 mA. Series resistor **1 kΩ ≈ 1.5 mA** (≈22 mcd, plainly visible); 2.2 kΩ ≈ 0.7 mA if battery life is favoured over brightness. **Red, not green** — a green Vf of ~3.0 V would leave only ~0.35 V across the resistor on this rail, so part-to-part Vf spread would swing the current several-fold; red's ~1.9 V leaves ~1.45 V and a well-defined current. |
 
-ADC5140 I2C addresses are set by hardware ADDR straps: ADC-A = GND/GND, ADC-B = IOVDD/GND. ⚠ confirm against the SBAS892A strap→address table at the gate (`adc-netlist.md` §6).
+ADC5140 I2C addresses are set by hardware ADDR straps through 10 kΩ: the converter on the "Pickup 1" header has ADDR1 high, ADDR0 low = **0x4E**; the converter on "Pickup 2" has ADDR1 low, ADDR0 high = **0x4D** (`adc-netlist.md` §6).
 
 ---
 
 ## 5. Utilization
 
 **20 pins unconnected, verified against the layout 2026-09-24** (the earlier list here was
-stale — PB0 carries a control pot, PB10 the status LED, and **PC10, PC11, PB13 and PB14 do
-not exist on the VFQFPN68 at all**, so the "complete USART3 set" this section used to
-promise is not available on this package).
+stale — PB0 carries a control pot, PB10 the status LED, and **PC10, PC11, PB13 and PB14
+carry the radio module's USART3**, so none of those is free; corrected 2026-11-11, an
+earlier note here said those four pins do not exist on this package, which was wrong).
 
 Free pins, grouped by which side of the package they leave from:
 
@@ -132,16 +136,14 @@ Pin assignment is settled; these are confirmations and value picks to close at t
 
 1. ⚠ **Crystal load caps** — 6.8 pF suits the chosen 24 MHz / CL 8 pF part at ~4.5 pF stray; confirm C_stray against the final routing (6–10 pF covers 3–5 pF). At CL 8 pF, C_stray is a first-order term rather than a correction, so settle it against the routed layout, not before.
 2. ⚠ **Crystal drive level** — the 1612's max drive is 100 µW, well under a 3225's. Check it against the H725 HSE drive setting, and leave a series damping-resistor position (0 Ω default) at the oscillator.
-3. ⚠ **Load the 1612 footprint into the project** — `Main Board/AudioDev.pretty` holds `Crystal_SMD_NDK_NX1612SA-4Pin_1.6x1.2mm` (drawn to NDK's recommended land: pads 0.75 × 0.65 mm on 1.05 × 0.75 mm centres) but is **not yet in `fp-lib-table`**. Add it from Preferences → Manage Footprint Libraries (project tab), or with the project closed append to `Main Board/fp-lib-table`:
-   `(lib (name "AudioDev")(type "KiCad")(uri "${KIPRJMOD}/AudioDev.pretty")(options "")(descr "Project-local footprints"))`
-   Then swap the HSE crystal from `Crystal:Crystal_SMD_2016-4Pin_2.0x1.6mm` and re-run `tools/placement_register.py`. Note the inner gap between the two pad rows is 0.10 mm — right at JLC's minimum solder-mask dam, so expect a hairline dam or none; worth an eye on the fab drawing. KiCad's stock `Crystal:Crystal_SMD_WE_IQXC-26-4Pin_1.6x1.2mm` is a drop-in alternative if the local library is ever unavailable.
+3. ~~Load the 1612 footprint into the project~~ **Superseded** — the crystal sits on KiCad's stock `Crystal:Crystal_SMD_WE_IQXC-26-4Pin_1.6x1.2mm` land pattern (pads 0.75 × 0.60 mm on 1.05 × 0.80 mm centres against NDK's 0.75 × 0.65 on 1.05 × 0.75), the drop-in alternative this item named. The project-local NDK footprint is unused.
 4. ⚠ **`DIVP3` odd value 25** — PLL1's DIVP is restricted to even values; PLL2/PLL3 are documented 1–128. The 24 MHz → 24.576 MHz chain in §1 depends on 25 being accepted. Verify in RM0468.
 5. ⚠ **DS13311 AF spot-check** for the six audio pins (machine-derived AFs above; two sources agree).
-6. ⚠ **I2C pull-up values** and **ADDR strap values** — parts placed, values unset.
+6. ~~I2C pull-up values and ADDR strap values~~ **Resolved** — 4.7 kΩ pull-ups, 10 kΩ straps.
 7. ~~**LED series-resistor value**~~ **Resolved** — 1 kΩ; see `power-supply-netlist.md` for the LED part and the current-setting rationale.
 8. ~~**NRST label**~~ **Resolved** — verified from the netlist 2026-07-24: `NRST` = MCU pin 12 + the 100 nF cap + the debug header NRST pin, one net.
 9. **USB routing** — PA11/PA12 reserved; decide whether to route to any pads on spin 1 (near-zero cost; no connector planned). If USB data is ever activated, ⚠ verify how the transceiver is supplied on VFQFPN68 (no VDD33USB/VDD50USB pins — DS13311).
-10. ~~SDOUT bus pull-down~~ — **fitted 2026-09-24: 10 kΩ to ground on `SAI4_SD_B`**, populated rather than DNP (populate only if bench shows float; `adc-netlist.md` §5).
+10. ~~SDOUT bus pull-down~~ — **fitted 2026-09-24: 10 kΩ to ground on `SAI4_SD_B`**, populated rather than DNP (`adc-netlist.md` §5). ⚠ The board currently carries it marked do-not-populate and it is absent from the assembly files — risk list AUD-32.
 11. **Test points** — see `test-points.md` (single source of truth; categorized by access type). Reserve pad on PA1 (`SAI4_MCLK_B`) noted there as Cat 3 / DNP.
 
 ---
@@ -153,8 +155,8 @@ Pin assignment is settled; these are confirmations and value picks to close at t
 | `3V3_D` (VDD digital) | 9, 22, 35, 51, 68 | 5 | decoupling section: 100 nF one per pin (at layout) + 4.7 µF bulk |
 | VBAT (backup domain) | 1 | 1 | tied to `3V3_D` (no coin cell) — **not** the battery `VBAT` net; shares name only |
 | VDDSMPS | 6 | 1 | `3V3_D` — **coverage rule, not per-pin caps** (2026-07-24, see `layout-notes.md` §5.1): pin vias into the island; ≥1 100 nF island↔GND cap within ~2 mm of the pin-6 via (on the near side of the VDD cluster — this is the noisy consumer), 4.7 µF within ~5 mm |
-| VLXSMPS → VFBSMPS | 5 → 7 | | **2.2 µH inductor** between them; **4.7 µF** at VFBSMPS (AN5419 direct-SMPS) — keep this hot loop tight; VSSSMPS (pad 4) is two pads away |
-| VCAP | 33, 49, 66 | 3 | **100 nF each** — LDO permanently disabled on this package (ST-confirmed) |
+| VLXSMPS → VFBSMPS | 5 → 7 | | **2.2 µH inductor** between them; **2 × 10 µF** at the inductor output / VFBSMPS (matches the direct-SMPS reference designs) — keep this hot loop tight; VSSSMPS (pad 4) is two pads away |
+| VCAP | 33, 49, 66 | 3 | **All three joined to the core-SMPS output net (the VFBSMPS node), 100 nF at each pin** — the core is supplied through these pins in direct-SMPS mode; no LDO on this package (ST-confirmed) |
 | VDDA / VSSA | 16 / 15 | 1/1 | `MCU_VDDA` (VDDA ferrite from `3V3_A`) + 100 nF / 1 µF |
 | VSS | 8, 21, 34, 50, 67 + **exposed pad (69)** | 6 | single ground plane; pad soldered, thermal-via stitch at layout |
 | NRST / BOOT0 | 12 / 63 | | 100 nF / 10 kΩ pull-down |
@@ -163,4 +165,4 @@ Pins that exist on other H725 packages but **not here** (nothing to wire): VDDLD
 
 ---
 
-*Pinout verified pad-by-pad: KiCad `STM32H725RGVx` symbol ↔ CubeMX `STM32H725RGVx.xml` (identical). AF numbers from stm32duino `H725R(E-G)V_H735RGV` `PeripheralPins.c` + Zephyr `stm32h725rgvx-pinctrl.dtsi`. SMPS/VCAP/VDDLDO treatment per AN5419 + ST community confirmation (VFQFPN68 = SMPS-only, VCAP 100 nF). Kernel-clock muxes (`SAI4BSEL`, `SPI123SEL` → pll3_p) confirmed against RM0468-derived ChibiOS/Zephyr clock definitions. ADC channel numbers (PC0=INP10 spare, PC1=INP11, PC5=INP8, PC4=INP4) from the same pin data.*
+*Pinout verified pad-by-pad: KiCad `STM32H725RGVx` symbol ↔ CubeMX `STM32H725RGVx.xml` (identical). AF numbers from stm32duino `H725R(E-G)V_H735RGV` `PeripheralPins.c` + Zephyr `stm32h725rgvx-pinctrl.dtsi`. SMPS/VCAP/VDDLDO treatment per AN5419 + ST community confirmation (VFQFPN68 = SMPS-only, VCAP 100 nF). Kernel-clock muxes (`SAI4BSEL`, `SPI123SEL` → pll3_p) confirmed against RM0468-derived ChibiOS/Zephyr clock definitions. ADC channel numbers (PB0=INP9, PC5=INP8, PC4=INP4; PC1=INP11 spare) from the same pin data.*

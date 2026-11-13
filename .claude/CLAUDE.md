@@ -46,6 +46,13 @@ Live work sits at the top level; older material is swept into two archive folder
   DSP onboard the bass/guitar, running the AudioDev ecosystem. KiCad project +
   netlist/pin/power docs; `multichannel-audio-board-plan.md` is the master plan with
   **"Review gate (Claude)"** checkpoints. Read the plan before schematic/layout work.
+  For an audit, start from `documentation/dsp-board-audit-risk-list.md` (method,
+  decided-not-risks, open items) and run **Check project** first.
+- **kicad-tools/** - KiCad → JLCPCB workflow tools for any KiCad project: **Check
+  project** (read-only: schematic vs board, JLCPCB BOM/CPL) and **Sync schematic**
+  (copies the JLCPCB tool's BOM/position exclusions into the schematic before
+  Update PCB from Schematic). Toolbar buttons in the PCB editor, symlinked from
+  `~/Documents/KiCad/10.0/scripting/plugins`. See its `README.md`.
 - **Embedded DSP Subsystem Concept/** - platform-neutral concept/design docs for the
   DSP ecosystem (ancestor of Python_STM32, curated to reflect what was actually
   built). Read its `README.md` for the concept-vs-current reconciliation; holds the

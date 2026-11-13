@@ -3064,10 +3064,28 @@
 		(uuid "05fa244b-9132-45dd-b71a-26764ee9cf5e")
 	)
 	(junction
+		(at 161.29 166.37)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "08814e5c-d91f-4c7e-b032-aad0d3060642")
+	)
+	(junction
 		(at 190.5 82.55)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "0f2b0c48-f4d3-42df-9442-57a62232580d")
+	)
+	(junction
+		(at 149.86 163.83)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "208a681b-d3e5-4f6b-a0c1-0075efe21236")
+	)
+	(junction
+		(at 161.29 163.83)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "21830782-6c0e-44ad-9183-a5bfec9651c9")
 	)
 	(junction
 		(at 180.34 204.47)
@@ -3086,6 +3104,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "3adc5c1b-ba45-4ff0-88d5-d801711e1a70")
+	)
+	(junction
+		(at 144.78 161.29)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "4ff4ecc1-cdcb-47fb-94ce-f6704c3a2693")
 	)
 	(junction
 		(at 123.19 204.47)
@@ -3118,7 +3142,13 @@
 		(uuid "7cd90742-6f2b-40a7-99e2-400fdfc4bb8f")
 	)
 	(junction
-		(at 138.43 138.43)
+		(at 149.86 161.29)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "91a0b409-a41a-486a-a164-f74a5d16d324")
+	)
+	(junction
+		(at 133.35 138.43)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "996eee6c-0b04-4aa2-87cc-224f30d90674")
@@ -3213,7 +3243,7 @@
 	)
 	(wire
 		(pts
-			(xy 138.43 138.43) (xy 134.62 138.43)
+			(xy 133.35 138.43) (xy 129.54 138.43)
 		)
 		(stroke
 			(width 0)
@@ -3243,7 +3273,7 @@
 	)
 	(wire
 		(pts
-			(xy 165.1 138.43) (xy 138.43 138.43)
+			(xy 165.1 138.43) (xy 133.35 138.43)
 		)
 		(stroke
 			(width 0)
@@ -3343,13 +3373,23 @@
 	)
 	(wire
 		(pts
-			(xy 138.43 161.29) (xy 165.1 161.29)
+			(xy 138.43 161.29) (xy 144.78 161.29)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "4f267efd-c0e8-44df-979d-022bddfca40d")
+	)
+	(wire
+		(pts
+			(xy 144.78 161.29) (xy 149.86 161.29)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "55171e13-a860-494d-9743-9e02bcf1d09a")
 	)
 	(wire
 		(pts
@@ -3463,6 +3503,16 @@
 	)
 	(wire
 		(pts
+			(xy 161.29 163.83) (xy 161.29 166.37)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6981ab7c-00d6-4b77-bac9-ede4908151f8")
+	)
+	(wire
+		(pts
 			(xy 120.65 109.22) (xy 120.65 115.57)
 		)
 		(stroke
@@ -3533,6 +3583,16 @@
 	)
 	(wire
 		(pts
+			(xy 144.78 110.49) (xy 144.78 161.29)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7887758f-5ab1-4942-918a-6f4667bae9d8")
+	)
+	(wire
+		(pts
 			(xy 160.02 148.59) (xy 165.1 148.59)
 		)
 		(stroke
@@ -3560,6 +3620,16 @@
 			(type default)
 		)
 		(uuid "850f81fb-c343-4463-bab6-5710370b316c")
+	)
+	(wire
+		(pts
+			(xy 149.86 161.29) (xy 149.86 163.83)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "86559565-1da8-4ac5-810f-c2c10061e394")
 	)
 	(wire
 		(pts
@@ -3620,6 +3690,16 @@
 			(type default)
 		)
 		(uuid "93556908-6001-4db5-a813-d50dcad574ff")
+	)
+	(wire
+		(pts
+			(xy 149.86 161.29) (xy 165.1 161.29)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "94330b39-167a-47e4-81d8-b645ad0c6de5")
 	)
 	(wire
 		(pts
@@ -3753,7 +3833,7 @@
 	)
 	(wire
 		(pts
-			(xy 149.86 163.83) (xy 165.1 163.83)
+			(xy 149.86 163.83) (xy 161.29 163.83)
 		)
 		(stroke
 			(width 0)
@@ -3913,6 +3993,16 @@
 	)
 	(wire
 		(pts
+			(xy 161.29 163.83) (xy 165.1 163.83)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d514ffad-b8db-43e2-af05-f51844806355")
+	)
+	(wire
+		(pts
 			(xy 162.56 95.25) (xy 162.56 88.9)
 		)
 		(stroke
@@ -3973,7 +4063,7 @@
 	)
 	(wire
 		(pts
-			(xy 138.43 138.43) (xy 138.43 139.7)
+			(xy 133.35 138.43) (xy 133.35 139.7)
 		)
 		(stroke
 			(width 0)
@@ -4571,7 +4661,7 @@
 	)
 	(global_label "CODEC_SHDNZ"
 		(shape input)
-		(at 134.62 138.43 180)
+		(at 129.54 138.43 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4581,7 +4671,7 @@
 		)
 		(uuid "d4187b24-4826-41b5-bbf0-de3b76e7d536")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 120.12 138.43 180)
+			(at 115.04 138.43 180)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4747,17 +4837,6 @@
 			(at 91.44 115.57 0)
 			(hide yes)
 			(show_name yes)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C280834"
-			(at 106.68 115.57 90)
-			(hide yes)
-			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
@@ -4931,17 +5010,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C307331"
-			(at 137.16 207.01 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "8da87dd6-417d-4313-af9b-45969cebc82f")
 		)
@@ -5099,17 +5167,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C307331"
-			(at 167.005 86.741 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "b79731d2-b819-489d-9ba3-9dde0cb1052f")
 		)
@@ -5127,7 +5184,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 138.43 147.32 0)
+		(at 133.35 147.32 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -5138,7 +5195,7 @@
 		(fields_autoplaced yes)
 		(uuid "43fff4d2-da69-4303-9d1d-92fce544b6bc")
 		(property "Reference" "#PWR056"
-			(at 138.43 153.67 0)
+			(at 133.35 153.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5149,7 +5206,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 138.43 152.4 0)
+			(at 133.35 152.4 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -5159,7 +5216,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 138.43 147.32 0)
+			(at 133.35 147.32 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5170,7 +5227,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 138.43 147.32 0)
+			(at 133.35 147.32 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5181,7 +5238,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 138.43 147.32 0)
+			(at 133.35 147.32 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5260,17 +5317,6 @@
 		)
 		(property "Description" "crystal load cap - set to 2*(CL-Cstray)"
 			(at 111.76 105.41 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C1576"
-			(at 105.156 103.632 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5677,17 +5723,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C1576"
-			(at 103.124 123.952 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "204ee8c0-e6bc-460d-9c00-aef86451f501")
 		)
@@ -6004,17 +6039,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C307331"
-			(at 140.97 181.61 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "bff4e2ab-6df5-4786-999f-df5280fd49b7")
 		)
@@ -6088,17 +6112,6 @@
 			)
 		)
 		(property "Description" "STMicroelectronics Arm Cortex-M7 MCU, 1024KB flash, 564KB RAM, 550 MHz, 1.62-3.6V, 46 GPIO, VFQFPN68"
-			(at 193.04 135.89 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C5271073"
 			(at 193.04 135.89 0)
 			(hide yes)
 			(show_name no)
@@ -6409,17 +6422,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C307331"
-			(at 148.59 207.01 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "2c876fa7-3b2c-4bf0-9277-efc06f6a89d4")
 		)
@@ -6490,17 +6492,6 @@
 		)
 		(property "Description" "Resistor"
 			(at 156.21 87.63 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C25744"
-			(at 159.512 90.932 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6661,17 +6652,6 @@
 		)
 		(property "Description" "VDD decoupling"
 			(at 157.48 208.28 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C307331"
-			(at 160.02 207.01 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6842,17 +6822,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C96446"
-			(at 123.19 106.68 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "c795b83b-329b-418f-b6e7-17779f09c905")
 		)
@@ -7012,17 +6981,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C307331"
-			(at 183.134 207.0101 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "026db780-0a11-4da7-b4f6-9cbb0cad0449")
 		)
@@ -7105,17 +7063,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C307331"
-			(at 125.73 207.01 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "644b55c1-e309-4030-96fa-eb27608b477a")
 		)
@@ -7188,17 +7135,6 @@
 		)
 		(property "Description" "VDD bulk"
 			(at 168.91 208.28 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C307331"
-			(at 171.704 207.01 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7437,17 +7373,6 @@
 		)
 		(property "Description" "Ceramic capacitor — one per VCAP pin (LDO disabled on VFQFPN68, AN5419)"
 			(at 161.29 182.88 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C307331"
-			(at 163.83 181.61 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7851,17 +7776,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C307331"
-			(at 152.4 181.61 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "e3940233-8519-4571-bf89-b18e77f5da93")
 		)
@@ -7957,7 +7871,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 138.43 143.51 0)
+		(at 133.35 143.51 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -7968,7 +7882,7 @@
 		(fields_autoplaced yes)
 		(uuid "d6bf1d88-1d40-4205-863e-5a511cfa65ab")
 		(property "Reference" "R18"
-			(at 140.97 142.2399 0)
+			(at 135.89 142.2399 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7979,7 +7893,7 @@
 			)
 		)
 		(property "Value" "10K"
-			(at 140.97 144.7799 0)
+			(at 135.89 144.7799 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7990,7 +7904,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 136.652 143.51 90)
+			(at 131.572 143.51 90)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8001,7 +7915,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 138.43 143.51 0)
+			(at 133.35 143.51 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8012,18 +7926,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 138.43 143.51 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C25744"
-			(at 140.97 142.2399 0)
+			(at 133.35 143.51 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8115,17 +8018,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C307331"
-			(at 114.3 207.01 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "7470a1b9-0cb4-4928-8a3f-cb377f31167a")
 		)
@@ -8198,17 +8090,6 @@
 		)
 		(property "Description" "VDD bulk"
 			(at 196.85 208.28 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C1779"
-			(at 199.644 207.0101 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8291,17 +8172,6 @@
 		)
 		(property "Description" "SMPS output cap at VFBSMPS"
 			(at 137.16 105.41 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C96446"
-			(at 134.62 106.68 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8460,17 +8330,6 @@
 			)
 		)
 		(property "Description" "SMPS inductor - keep loop tight at U7"
-			(at 144.78 105.41 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C576403"
 			(at 144.78 105.41 0)
 			(hide yes)
 			(show_name no)

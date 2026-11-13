@@ -520,7 +520,8 @@ the converter's self-bias.
    covers the newer two-channel x120 parts, not this one; their default mode lists
    a DC-coupled tolerance of 2.82 Vpp, and full 0-to-AVDD common mode only in a
    high-rejection mode at 10/20 kΩ that this part has no register for. Plausible,
-   not proven. **Close it by bench test** on an evaluation module — both pins of
+   not proven. **Close it by measurement on spin 1 at bring-up** (no
+   evaluation-module test is planned; the board is the fixture) — both pins of
    one channel at 1.34 V, DC-coupled, 10 kΩ input impedance; measure offset and
    clip level, then **THD with a realistic signal on the hot pin alone** at nominal
    and attack levels, since one-sided drive swings the common-mode (above). Repeat
@@ -578,7 +579,7 @@ The two devices are **ADC-A** and **ADC-B**. Pin numbers per the 24-WQFN pinout 
 | Pin | Name | Net / connection |
 |---|---|---|
 | 1 | AVDD | `3V3_A` + 0.1 µF to GND at pin; 10 µF bulk shared on the 3V3_A pour near the device |
-| 2 | AREG | on-chip 1.8 V analog reg output (AVDD = 3.3 V mode) → **1 µF to AVSS at pin**, no external supply ⚠ |
+| 2 | AREG | on-chip 1.8 V analog reg output (AVDD = 3.3 V mode) → **10 µF to AVSS at pin**, no external supply (TI application guidance is 10 µF + 0.1 µF; a single 10 µF 0402 ceramic covers both) |
 | 3 | VREF | **1 µF to AVSS at pin** (min per §8.3.4). Larger cap ⇒ raise `VREF_QCHG` |
 | 4 | AVSS | `GND` (direct to plane) |
 | 5 | MICBIAS | **Unconnected, no capacitor.** The preamp boards take the analog rail (§1). `MICBIAS_PDZ` resets to powered-down and firmware must leave it there, so the pin is never driven |
@@ -600,7 +601,7 @@ The two devices are **ADC-A** and **ADC-B**. Pin numbers per the 24-WQFN pinout 
 | 21 | SDOUT | `SAI4_SD_B` (PA0, shared bus; tri-state unused slots — §5) |
 | 22 | BCLK | `SAI4_SCK_B` (PA2, shared, input/slave) |
 | 23 | FSYNC | `SAI4_FS_B` (PC0, shared, input/slave) |
-| 24 | DREG | 1.5 V digital core reg output → **1 µF to GND at pin**, no external supply |
+| 24 | DREG | 1.5 V digital core reg output → **10 µF to GND at pin**, no external supply |
 | EPAD | Thermal Pad / exposed pad (VSS) | `GND` — direct to plane (device ground; labeled "EPAD"/EP on the KiCad symbol) |
 
 ---
@@ -632,9 +633,9 @@ The 7-bit address is set by the **ADDR0 (pin 16)** and **ADDR1 (pin 15)** strap 
 | Rail / pin | Source | Decoupling |
 |---|---|---|
 | AVDD (1) | `3V3_A` (clean analog LDO — critical for ADC performance) | 0.1 µF at pin + shared 10 µF bulk on 3V3_A near the pair |
-| AREG (2) | internal 1.8 V reg (3.3 V AVDD mode) | 1 µF to AVSS at pin (no external feed) ⚠ |
+| AREG (2) | internal 1.8 V reg (3.3 V AVDD mode) | 10 µF to AVSS at pin (no external feed) |
 | VREF (3) | internal reference | ≥ 1 µF to AVSS at pin |
-| DREG (24) | internal 1.5 V core reg | 1 µF to GND at pin (no external feed) |
+| DREG (24) | internal 1.5 V core reg | 10 µF to GND at pin (no external feed) |
 | IOVDD (19) | **`3V3_D`** (recommended ⚠) | 0.1 µF at pin |
 | MICBIAS (5) | internal reg — **left powered down** | Unconnected, no capacitor. Never driven, so no current budget applies |
 
@@ -779,9 +780,9 @@ See `test-points.md` (single source of truth; categorized by access type). Codec
 | INxM matching caps (×8) | 1 µF **X7R** preferred (4.7 µF as drawn OK), matching (INxM→GND) | 0402/0603 | basic | not signal-carrying; reconcile value doc↔schematic |
 | AVDD decouplers (×2) | 0.1 µF X7R | 0402 | basic | AVDD at pin |
 | IOVDD decouplers (×2) | 0.1 µF X7R | 0402 | basic | IOVDD at pin |
-| AREG caps (×2) | 1 µF X7R | 0402/0603 | basic | AREG to AVSS |
+| AREG caps (×2) | 10 µF X5R 6.3 V | 0402 | basic | AREG to AVSS |
 | VREF caps (×2) | 1 µF X7R | 0402/0603 | basic | VREF to AVSS |
-| DREG caps (×2) | 1 µF X7R | 0402/0603 | basic | DREG to GND |
+| DREG caps (×2) | 10 µF X5R 6.3 V | 0402 | basic | DREG to GND |
 | AVDD/3V3_A bulk (×1–2) | 10 µF X7R ≥10 V | 0805 | basic | shared AVDD/3V3_A bulk near the pair |
 | MICBIAS caps (×2) | 1 µF X7R | 0402/0603 | basic | MICBIAS decoupling to AVSS (preamp supply — **populated**) |
 | I²C pull-ups (SCL/SDA) | 2.2–4.7 kΩ | 0402 | basic | I²C pull-ups to IOVDD (one pair for the bus) |
@@ -803,7 +804,7 @@ Part and topology are settled (`adc-selection.md`); these are datasheet confirma
 3. **IOVDD source — decided: `3V3_D`** (keeps codec digital switching current off the analog LDO, and matches the MCU I/O rail so logic levels are clean both directions). ~~⚠ confirm the rail sits inside IOVDD's recommended window.~~ **Closed 2026-09-24:** 3.0–3.6 V recommended against a rail ceiling of 3.50 V.
 4. ~~**I²C addresses**~~ — **closed 2026-11-06:** 0x4D and 0x4E (§6).
 5. **SDOUT bus discipline** — confirm both devices' unused-slot tri-state (`ASI_OUT_CH_EN`) and `TX_FILL` = Hi-Z are set, and pick a `TX_KEEPER` setting (2 or 3 = keeper during the LSB window only, per SBAA383C). The internal keeper covers steady-state contention, so the optional 100 kΩ SDOUT pull-down is a DNP footprint for the pre-configuration window only — decide whether to populate.
-6. **AREG treatment** — confirm AREG decoupling / that it is *not* externally supplied in 3.3 V AVDD mode (AREG abs-max 2.0 V — never tie to 3V3_A). ⚠
+6. ~~AREG treatment~~ **Resolved 2026-11-13** — 10 µF on the regulator output, not externally supplied in 3.3 V AVDD mode (AREG abs-max 2.0 V — never tie to 3V3_A).
 7. **SHDNZ strap** — shared pull-down value and whether a per-codec reset split is wanted for bring-up (`pin-allocation.md` §4 PC7 spare). ⚠
 8. **Coupling-cap charge (`INCAP_QCHG`)** — firmware must set it for 4.7 µF; note in the driver bring-up. ⚠ Not applicable under §2.1.
 9. **Gain characterization — the level dispute is settled by measurement, no longer open.** The coil measures 40 mV peak-to-peak, which the preamp's gain of ~8 delivers as ≈320 mV peak-to-peak, roughly 17 dB below full scale (`analog-front-end.md` §1). Both earlier figures in the project record — the ≈12 mVrms sizing here and the hotter assumption from the preamp thread — were estimates against a unity front end that no longer exists. ⚠ **Remaining action:** set PGA and digital gain against the measured level and verify no clip at full scale. The requirement is far smaller than originally specified, and whether the Dynamic Range Enhancer still has a role should be reconsidered at the same time (`adc-firmware-init.md`).
@@ -819,4 +820,4 @@ Part and topology are settled (`adc-selection.md`); these are datasheet confirma
 
 *⚠ The entered schematic implements §2's AC-coupled single-ended arrangement.* Nothing below is changed by the §2.1 proposal until it is adopted; if it is, the three input-network rows of §10 come out, the cold pins move to the reference conductor, and the retrofit footprints of §2.1 go in.
 
-*Schematic-entry status.* Entered and verified: all 8 input channels (4.7 µF polarized blocking caps → INxP, incl. the ADC-B IN4M matching cap), AREG/VREF/DREG/MICBIAS 1 µF caps, distinct ADDR straps (ADC-A: ADDR0+ADDR1→GND; ADC-B: ADDR0→IOVDD, ADDR1→GND — resistor values unset), IOVDD on `3V3_D`, shared TDM bus, SHDNZ to PC6 with a 10 k pull-down. ⚠ **The entered schematic feeds the preamp boards from MICBIAS and must be rewired to the 3.3 V analog rail** (§1) — a one-net change per board, plus the connector's power pin. Each INxP blocking cap carries a **parallel silicon clamp diode** — a stated design element with its rationale in §2, not an entry-time addition. Single-polarity clamp is correct and intended. ⚠ Confirm orientation at review: **cathode toward the converter input**, which is the normally-higher-DC side (~1.375 V against the preamp's 1.0 V), so the diode sits reverse-biased by ~0.375 V in normal operation. The orientation is unchanged from entry; only the margin is smaller. **Not yet entered:** per-pin 0.1 µF AVDD/IOVDD decoupling + 10 µF bulk, I2C pull-up values (pull-ups present, values unset), ADDR strap resistor values. **To reconcile:** INxM matching caps drawn at 4.7 µF vs. 1 µF preferred in §2 (either fine — make doc and schematic agree); **part value entered as "XLV320ADC5140IRTWR" (both ADCs) — typo for TLV, will corrupt BOM lookup.**
+*Schematic-entry status.* Entered and verified: all 8 input channels (4.7 µF polarized blocking caps → INxP, incl. the ADC-B IN4M matching cap), AREG/DREG 10 µF and VREF 1 µF caps (regulator outputs raised from 1 µF on 2026-11-13), distinct ADDR straps (ADC-A: ADDR0+ADDR1→GND; ADC-B: ADDR0→IOVDD, ADDR1→GND — resistor values unset), IOVDD on `3V3_D`, shared TDM bus, SHDNZ to PC6 with a 10 k pull-down. ⚠ **The entered schematic feeds the preamp boards from MICBIAS and must be rewired to the 3.3 V analog rail** (§1) — a one-net change per board, plus the connector's power pin. Each INxP blocking cap carries a **parallel silicon clamp diode** — a stated design element with its rationale in §2, not an entry-time addition. Single-polarity clamp is correct and intended. ⚠ Confirm orientation at review: **cathode toward the converter input**, which is the normally-higher-DC side (~1.375 V against the preamp's 1.0 V), so the diode sits reverse-biased by ~0.375 V in normal operation. The orientation is unchanged from entry; only the margin is smaller. **Not yet entered:** per-pin 0.1 µF AVDD/IOVDD decoupling + 10 µF bulk, I2C pull-up values (pull-ups present, values unset), ADDR strap resistor values. **To reconcile:** INxM matching caps drawn at 4.7 µF vs. 1 µF preferred in §2 (either fine — make doc and schematic agree); **part value entered as "XLV320ADC5140IRTWR" (both ADCs) — typo for TLV, will corrupt BOM lookup.**

@@ -2,8 +2,9 @@
 
 Two tools for the KiCad → JLCPCB workflow, usable on any KiCad project.
 
-- **Check project** — read-only. Schematic vs board (values, footprints, LCSC
-  numbers, BOM and position flags), the JLCPCB plugin's BOM and placement files
+- **Check project** — read-only. Schematic vs board (values, footprints, BOM and
+  position flags; any LCSC number left in the schematic is an error, and one that
+  disagrees with the board is called out by part), the JLCPCB plugin's BOM and placement files
   (fresh, every row has a part number, BOM and CPL agree, both match the board's
   exclusion flags, through-hole parts listed), orphan sheets, reused sheets.
 - **Sync schematic from board** — writes the JLCPCB tool's exclude-from-BOM and
@@ -61,3 +62,26 @@ restarting KiCad. The package uses only the Python standard library.
 
 `run_check.py` and `run_sync.py` — set `PROJECT_DIR` (and `WRITE` for sync) at the
 bottom and run from PyCharm.
+
+## JLCPCB tool behaviours worth knowing (bouni/kicad-jlcpcb-tools, 2026.04.x)
+
+- Its **part search never filters by footprint**. It pre-fills only an existing LCSC
+  number; type the number (or put a package string like `CASE-A` in the Package box).
+- **Changing a footprint clears that part's assignment** in its database.
+- Its database is synced from the board each time it opens; with "LCSC priority"
+  off, the database's number wins over the footprint's (the DEBUG "value supplied
+  from the board will be ignored" lines).
+- "Export to schematic" writes only LCSC numbers, by regex edits on the file text.
+- It doesn't check package height: an A-case part on an I-case land pattern is
+  accepted silently.
+
+## KiCad 10 facts this relies on (verified on 10.0.5, macOS)
+
+- Symbols carry `in_bom` and `in_pos_files`; Update PCB from Schematic copies both
+  onto the footprint.
+- KiCad writes `~<file>.lck` beside each document it has open, modified or not, and
+  removes it on close. The lock holds the user and host name.
+- Hand-installed plugins load from `~/Documents/KiCad/10.0/scripting/plugins` and do
+  not appear in the Plugin and Content Manager. On this install there is no Tools →
+  External Plugins menu; the buttons appear at the end of the top toolbar.
+  `kicad_plugin/load.log` records each load (or the error).
