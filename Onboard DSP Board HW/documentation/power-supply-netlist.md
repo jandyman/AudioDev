@@ -56,8 +56,8 @@ No power path, no TS input, no safety timer — that's the simplification being 
 
 | Pin | Net / connection |
 |---|---|
-| VIN (both) | `VBAT` + 10 µF to GND (at pin) |
-| VINA | `VBAT` + 0.1 µF to GND (datasheet caps this at 0.22 µF) |
+| VIN (both) | `VBAT` + **its own 10 µF to GND, placed at the VIN pin pair**, ground end returning to the exposed pad. Draw this capacitor at the VIN pins on the schematic — VIN and VINA share a net, so nothing else tells layout which pins it belongs to |
+| VINA | `VBAT` + 0.1 µF to GND at the pin (datasheet caps this at 0.22 µF); a second 10 µF on the node nearby as bulk |
 | EN | `VBAT` — regulator runs whenever the power switch closes |
 | PS/SYNC | `GND` — power-save enabled. **Polarity confirmed** against SLVS916I (pin table: "1 disabled, 0 enabled"; §8: power save is entered with PS/SYNC low) |
 | L1 | `SW_L1` → 1.5 µH inductor → `SW_L2` |

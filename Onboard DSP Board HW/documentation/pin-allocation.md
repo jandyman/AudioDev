@@ -143,7 +143,7 @@ Pin assignment is settled; these are confirmations and value picks to close at t
 7. ~~**LED series-resistor value**~~ **Resolved** — 1 kΩ; see `power-supply-netlist.md` for the LED part and the current-setting rationale.
 8. ~~**NRST label**~~ **Resolved** — verified from the netlist 2026-07-24: `NRST` = MCU pin 12 + the 100 nF cap + the debug header NRST pin, one net.
 9. **USB routing** — PA11/PA12 reserved; decide whether to route to any pads on spin 1 (near-zero cost; no connector planned). If USB data is ever activated, ⚠ verify how the transceiver is supplied on VFQFPN68 (no VDD33USB/VDD50USB pins — DS13311).
-10. ~~SDOUT bus pull-down~~ — **fitted 2026-09-24: 10 kΩ to ground on `SAI4_SD_B`**, populated rather than DNP (`adc-netlist.md` §5). ⚠ The board currently carries it marked do-not-populate and it is absent from the assembly files — risk list AUD-32.
+10. ~~SDOUT bus pull-down~~ — **footprint only: 10 kΩ to ground on `SAI4_SD_B`, not populated on spin 1** (decided 2026-11-17; the converters' internal bus keeper holds the line). Populate only if a logic-analyzer capture shows the bus floating (`adc-netlist.md` §5).
 11. **Test points** — see `test-points.md` (single source of truth; categorized by access type). Reserve pad on PA1 (`SAI4_MCLK_B`) noted there as Cat 3 / DNP.
 
 ---

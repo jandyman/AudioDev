@@ -58,9 +58,10 @@ Charge-pump caps (flying + VNEG) closest to the device. Single ground plane — 
 
 | Node | Cap | Status |
 |---|---|---|
-| charger supply input | 1 µF | ☑ as-built 4.7 µF at 1.5 mm (voltage rating to confirm — risk list AUD-30) |
+| charger supply input | 1 µF | ☑ as-built 4.7 µF X5R 10 V at 1.5 mm |
 | charger battery pin / cell node | 1 µF + 10 µF cell bulk | ☑ as-built 4.7 µF at 1.7 mm; no separate 10 µF on the cell side of the switch |
-| buck-boost power input (`VBAT`) | 10 µF + 0.1 µF at the pins | ⚠ both fitted, neither at the power-input pins (10 µF through ≈12 mm of trace) — risk list AUD-26. The control-supply pin has the 0.1 µF at 1.9 mm |
+| buck-boost power input (`VBAT`) | 10 µF at the VIN pin pair | ☑ 10 µF, 3.5–5 mm of trace, no vias (added 2026-11-13) |
+| buck-boost control supply (VINA, `VBAT`) | 0.1 µF at the pin, bulk 10 µF nearby | ☑ 0.1 µF through ≈3.5 mm of trace; 10 µF ≈3.5 mm away |
 | buck-boost output (`3V3_D`) | 2 × 22 µF | ☑ at 2.3 and 4.4 mm, plus 4.7 µF |
 | analog LDO input (`VBAT`) | 1 µF at pin | ☑ 1 µF + 100 nF at 2.1–2.8 mm |
 | analog LDO output (`3V3_A`) | 1 µF at pin | ☑ 1 µF at 1.9 mm, 10 µF at 2.5 mm |
@@ -72,7 +73,6 @@ Charge-pump caps (flying + VNEG) closest to the device. Single ground plane — 
 
 ## Open (all tracked in `dsp-board-audit-risk-list.md`)
 
-2. **Buck-boost input capacitor placement** (AUD-26).
 3. **Core-SMPS input coverage** (AUD-31).
 4. **Playback-converter internal-regulator capacitor** — 2.2 µF against 0.1 µF (AUD-11).
 5. **Reference buffer bypass** (AUD-29).

@@ -1115,7 +1115,7 @@ Buck-boost and both codecs are now verified against their TI drawings and correc
       low-profile case is a specialty part with a thin catalogue; this is the same item
       the preamp test board hit.
 - [ ] Check tantalum rotation in the fab's 3D preview before paying — with every other
-      polarised part, per the risk list AUD-15 checklist. The correction depends on how LCSC
+      polarised part, per `kicad-tools/jlcpcb-order-checklist.md` §5. The correction depends on how LCSC
       stored the part, so only the preview settles it; this is the one part where
       backwards destroys something.
 

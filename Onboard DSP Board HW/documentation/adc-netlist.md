@@ -613,7 +613,7 @@ Both codecs are ASI **slaves**: `BCLK`/`FSYNC` are inputs driven by the MCU SAI4
 - **Slot map:** ADC-A drives slots **0–3**, ADC-B drives slots **4–7** (`CHx_SLOT`, P0_R11–R18). 8 slots × 32-bit × 32 kHz → **8.192 MHz BCLK** (= 256 × fs, TI's characterisation ratio).
 - **Bus contention:** each device **tri-states the slots it does not own** — `ASI_OUT_CH_EN` per channel, plus `TX_FILL` (`ASI_CFG0` bit 0) = 1 for Hi-Z on unused cycles. Enable both on both devices so only the owning device drives each slot; the rest of the frame is high-Z.
 - **Bus keeper is internal.** `TX_KEEPER` (`ASI_CFG1` bits 6:5) enables an on-chip keeper on SDOUT that holds the last driven value — settings 2/3 restrict it to the LSB window so the host latches the final bit cleanly without two devices contending at a slot boundary. `TX_LSB` and `TX_OFFSET` in the same register fine-tune the handoff. **No external bus-hold part is needed** (SBAA383C §3.1).
-- **Fitted 2026-09-24: a 10 kΩ pull-down to ground** on the shared serial-data net, populated rather than DNP. It defines the level during the window before either device is configured. Given the internal keeper this is belt-and-suspenders — populate only if a logic-analyzer capture shows bus float. ⚠
+- **Footprint only: a 10 kΩ pull-down to ground** on the shared serial-data net, **not populated on spin 1** (decided 2026-11-17). It defines the level during the window before either device is configured. Given the internal keeper this is belt-and-suspenders — populate only if a logic-analyzer capture shows bus float. ⚠
 - Keep `BCLK_ADC` / `FSYNC_ADC` short and away from the analog inputs (board plan Phase 3).
 
 ---

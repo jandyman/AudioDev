@@ -8,6 +8,10 @@ sections. Supporting analysis goes under the item it supports. When a finding
 contradicts another document (bring-up register, pin allocation, power supply), that
 document is updated in the same session or a row here says it is out of date.
 
+**JLCPCB submission steps are generic and live in `kicad-tools/jlcpcb-order-checklist.md`**
+(design-rule check, file generation, parts-list check, placement preview). This list
+holds only what is specific to this board.
+
 Canonical copy: `Onboard DSP Board HW/documentation/dsp-board-audit-risk-list.md` in the
 repo. The project copy is a mirror, overwritten from the repo file after each edit.
 
@@ -25,20 +29,16 @@ written R-n, which looked like resistor designators.
 
 | ID | Item | Blocking | Status | To close |
 |---|---|---|---|---|
-| AUD-15 | Order-time placement check: every polarised or asymmetric part verified in JLCPCB's 3D preview (the layout has no polarity or pin-1 silkscreen, and rotation depends on how LCSC stores each part) | **Yes** | Open — at order time | Walk the [preview checklist](#jlcpcb-preview-checklist), fixing rotations and regenerating as many times as needed |
-| AUD-26 | Buck-boost input capacitor is not at the power-input pins: the 10 µF reaches them through ≈12 mm of 0.25–0.35 mm trace and two vias, the 0.1 µF through ≈7 mm. `power-supply-netlist.md` specifies "10 µF to GND (at pin)" | No (strongly recommended; cheap while AUD-12 is being rerouted) | Open — found 2026-11-11 | Put a 10 µF directly at the power-input pins with its ground end at the converter's exposed pad; keep the existing one as bulk. [Detail](#aud-26--buck-boost-input-capacitor) |
 | AUD-27 | Battery reading flat-lines below a cell voltage of ≈3.39 V: the ADC reference is the analog rail, which follows the cell once its LDO is in dropout, so sense ÷ reference stays ≈0.506 from 3.39 V down to 3.0 V | No (firmware; no board change) | Open — found 2026-11-11; added to the bring-up register (cell and battery-sense entry) | Firmware reads the MCU's internal reference alongside the sense channel to compute the actual analog-rail voltage. Needed for any low-battery warning or cutoff (`power-supply.md` §2a: devices leave their recommended window near 3.24 V) |
 | AUD-29 | Reference buffer amplifier has no supply bypass at its pin — nearest capacitor on the analog rail is ≈8 mm away | No | Open — found 2026-11-11 | 0.1 µF at the supply pin if there is room |
-| AUD-30 | Part numbers against values only spot-checked (the LCSC catalogue was unreachable from the audit; two of 38 lines confirmed). Voltage ratings unverified — notably the 4.7 µF 0402 on the 5 V charge input, where a ceramic input capacitor can ring toward twice the supply when a live charger is plugged in | No — done at order (AUD-15) | Open | In JLCPCB's parts-matching screen read every line's description against value, package, dielectric and voltage. Prefer ≥10 V on the charge-input capacitor |
 | AUD-31 | MCU core-SMPS input decoupling is slightly outside the coverage rule in `layout-notes.md` §5.1: 100 nF at 3.0 mm (rule ≈2 mm), 4.7 µF at 6.0 mm (rule ≈5 mm) | No | Open — found 2026-11-11 | Move the pair closer if the AUD-12 rerouting frees space; otherwise accept |
-| AUD-32 | Serial-data pull-down (10 kΩ on the shared converter data line): `adc-netlist.md` §5 and `pin-allocation.md` §6 say populated; the board has it marked do-not-populate and it is absent from the assembly files | No | Open — found 2026-11-11; needs a decision | Either clear the do-not-populate flag and assign the part, or change both documents to "footprint only". The converters have an internal bus keeper, so either is workable |
 | AUD-16 | Bluetooth module land pattern not yet overlaid on the datasheet's mechanical drawing | No (recommended) | Pin table and outline verified | Overlay pad by pad |
 | AUD-17 | MCU exposed-pad size not verified against the package drawing | No (recommended) | Open | Compare land pattern to the VFQFPN68 drawing |
 | AUD-8 | Control pots: analog rail on terminal 1, ground on terminal 3 — wiper voltage falls as the knob turns clockwise | No | Open, unchanged | Swap the end terminals, or record the inversion in firmware; confirm against the physical part first |
 | AUD-11 | DAC internal-regulator decoupler is 2.2 µF; datasheet and design say 0.1 µF | No | Open, unchanged | Make the board match one of them on purpose |
 | AUD-18 | Charger drawn with a stand-in symbol (different manufacturer); "update symbol from library" would silently revert pin names | No | Copper correct | Copy the symbol into a project library under the TP4054 name |
 | AUD-19 | Library tables: footprint table uses absolute personal paths; all five symbol-table entries unused or broken (one in `~/Downloads`); the three custom symbol libraries in use resolve only through the global table; buck-boost and radio 3D models use absolute paths | No | Open | Project-local libraries with `${KIPRJMOD}` paths |
-| AUD-20 | Housekeeping: two orphan sheets (designators collide with live parts) and two `.kicad_sch_old` copies in the project folder; stale `Gerbers/` folder; test-point footprint names encode the wrong drill/pad sizes; core-SMPS inductor footprint still named for the Sunlord part (Murata part fitted) | No | Open | Move orphans to `superseded/`; delete stale outputs; rename footprints |
+| AUD-20 | Housekeeping: two orphan sheets (designators collide with live parts) and two `.kicad_sch_old` copies in the project folder; test-point footprint names encode the wrong drill/pad sizes; core-SMPS inductor footprint still named for the Sunlord part (Murata part fitted) | No | Open | Move orphans to `superseded/`; rename footprints |
 | AUD-21 | Test points not yet classified by geometry; category-2 exposed vias not checked against `test-points.md` | No | Open | One pass against `test-points.md` |
 | AUD-22 | No operating-point or AC simulation of the reference generator and output network (either would have caught AUD-1 in one run) | No | Open | Run both |
 | AUD-23 | Crystal load: stray capacitance assumed ≈4.5 pF | No | Open | Settle against the routed layout |
@@ -156,28 +156,12 @@ input from that same node, with little rejection at the switching frequency. The
 beside the power-input pins is free of parts and of other nets, and the exposed pad has
 six ground vias for the return.
 
-### JLCPCB preview checklist
-
-**The 3D preview is the only authority on rotation.** The correction the fab needs
-depends on how LCSC stored each part's orientation, so it varies part by part, not just
-package by package; a correction that was right on one board is a starting guess on the
-next (`jlcpcb-submission-notes.md`). Expect several regenerate-and-check passes. Judge
-by the pin-1 / polarity marker, not the outline. Fix rotations in the plugin's rotation
-manager (not the CPL by hand), regenerate gerbers, BOM and CPL, run Check project with
-no warnings, re-upload, and re-check the preview, until every part below is right.
-**Run the design-rule check in KiCad after any layout change and before the first
-upload** — the 2026-11-11 core-supply routing left several traces at exactly the
-0.15 mm clearance, the tightest beside the core-SMPS inductor's switch-node pad.
-
-- **Reference filter tantalum** — positive end toward the reference buffer's input.
-- **Reference buffer, SC-70-5** — pin 1 (non-inverting input) toward the divider.
-- **LDO and charger, SOT-23-5** — pin 1 against the footprint.
-- **Battery connector, JST PH horizontal** — pin 1 is cell positive.
-- **MCU, QFN-68; both converters, WQFN-24; buck-boost, VSON-14; DAC, TSSOP-20;
-  Bluetooth module; crystal** — pin-1 mark against the footprint.
-- **LED** — cathode mark.
-- **Parts list** — in the parts-matching screen, every line's description against value,
-  package, dielectric and voltage rating (AUD-30).
+*Re-check 2026-11-13:* the converter has two kinds of input pin. The control-supply pin
+(VINA) is on one side; the power-stage input pins (the adjacent pair marked VIN, next to
+the enable pin) are on the opposite side, and that pair carries the switching current.
+The 10 µF was moved toward the control-supply pin; it needs to sit beside the VIN pair
+instead, with a short ground return to the exposed pad. A second 10 µF there, keeping
+the present one where it is, does the job equally well.
 
 ---
 
@@ -217,7 +201,7 @@ Nothing validates that pin 2 and pad 2 mean the same thing.
 | Buck-boost, VSON-14 | ✓ Vendor land pattern; pins against SLVS916I: control and power inputs and enable on the switched battery, power-save pin low (power-save enabled), power-good to ground (open-drain, allowed unused), exposed pad to ground. Feedback 3.25 V |
 | Audio ADC ×2, WQFN-24 | ✓ Vendor land pattern; pin table re-checked 2026-11-08; address straps decode to 0x4E and 0x4D |
 | LDO, SOT-23-5 | ✓ Stock symbol for this package code; input and enable on the switched battery, output on the analog rail |
-| Reference buffer, SC-70-5 | ✓ DCK numbering: 1 non-inverting input on the divider tap, 2 ground, 3 and 4 tied (follower) on the reference, 5 analog rail. Rotation: preview (AUD-15) |
+| Reference buffer, SC-70-5 | ✓ DCK numbering: 1 non-inverting input on the divider tap, 2 ground, 3 and 4 tied (follower) on the reference, 5 analog rail. Rotation: JLCPCB placement preview |
 | Audio DAC, TSSOP-20 | ✓ Mode straps (de-emphasis off, normal filter, internal PLL, I2S) all low |
 | Bluetooth module | ✓ Pin table, all 24 pins; 1.27 mm pitch and 11.5 × 16 mm outline. MOD to the digital rail, WKP to ground; UART crossed (module receive to MCU transmit, module RTS to MCU CTS). Overlay: AUD-16 |
 | Charger, SOT-23-5 | ✓ Copper against the TP4054 table. Symbol: AUD-18. PROG 3.3 kΩ ≈ 300 mA (0.25 C on the planned 1200 mAh cell); ≈0.6 W worst case, thermal foldback acceptable |
@@ -291,6 +275,13 @@ them at a stock model of the same body.
 | AUD-12 | MCU core supply: the SMPS output was not connected to the VCAP pins | 2026-11-12 | One net now joins the inductor output, VFBSMPS, the output capacitors and all three VCAP pins (routed 2026-11-11, checked from the saved files: continuous, no other netlist change, schematic and board agree). Output capacitance settled at 2 × 10 µF, matching the reference designs found on the ST forum; design documents updated. Electrical-rule check not run, by decision — the only expected complaint is the VCAP pins' power-output pin type. Design-rule check moved to the order checklist. ST community question still open, informational only. [Detail](#aud-12--mcu-core-supply-closed) |
 | AUD-25 | Capture converters' on-chip regulator outputs had 1 µF; TI guidance is 10 µF + 0.1 µF | 2026-11-13 | All four capacitors changed to 10 µF 6.3 V X5R 0402 (LCSC C15525), verified on the saved board and in the JLCPCB tool's database. Parallel 0.1 µF judged unnecessary beside a same-size 10 µF ceramic. `adc-netlist.md` and `decoupling-checklist.md` updated. [Detail](#aud-25--capture-converter-regulator-capacitors) |
 | AUD-33 | Schematic still carried LCSC numbers on 84 symbols (written in 2026-11-07, never stripped), four of them stale after the regulator-capacitor change | 2026-11-13 | All 86 LCSC fields removed from the two schematic sheets (backups beside them, `.bak-20261113-lcsc`); nothing else in the files changed, verified token by token. Check project now reports any LCSC number left in the schematic as an error, and names any that disagrees with the board. The four BOM-versus-board errors Check project still shows are the stale assembly files — cleared by regenerating (AUD-15) |
+| AUD-26 | Buck-boost input capacitor was not at the power-input pins (≈12 mm of trace, two vias) | 2026-11-13 | A second 10 µF (0805, same part as the first) added on the battery node beside the converter, where the supply trace arrives: 3.5–5 mm of 0.25 mm trace to the power-input pair and the enable pin, no vias, ground via 1.4 mm from its ground pad. The original 10 µF stays as bulk near the control-supply side. `power-supply-netlist.md` and `decoupling-checklist.md` updated. Moving the 0.1 µF in the same edit broke the control-supply pin's connection — AUD-34. [Detail](#aud-26--buck-boost-input-capacitor) |
+| AUD-34 | Buck-boost control-supply pin (VINA) left disconnected from the battery node when the 0.1 µF was moved | 2026-11-13 | Reconnected: the pin's trace now joins the battery-node trace beside it, ≈3.5 mm from the 0.1 µF. Whole board re-traced afterwards — every net continuous, no part or netlist change. The design-rule check had reported it under Unconnected Items; that tab is now part of the order checklist. Assembly files from before the fix must be regenerated (AUD-15) |
+| AUD-15 | Order-time placement and parts-list checks | 2026-11-13 | Moved to `kicad-tools/jlcpcb-order-checklist.md` — generic submission steps, not a design defect |
+| AUD-30 | Part numbers against values only spot-checked; voltage ratings unverified | 2026-11-13 | The parts-list check is a generic step in `kicad-tools/jlcpcb-order-checklist.md` §3; the one board-specific concern became AUD-35 |
+| AUD-35 | Charge-input 4.7 µF (0402) voltage rating unverified | 2026-11-17 | Part is Samsung CL05A475MP5NRNC: X5R, 10 V — meets the ≥10 V wanted on a hot-plugged 5 V input. The same part serves the charger's battery pin |
+| AUD-36 | Buck-boost feedback high-side resistor (1.1 MΩ) was a ±5 % part, pushing the digital rail's worst case to ≈3.66 V against a 3.6 V limit | 2026-11-17 | Changed to UNI-ROYAL 0402WGF1104TCE, ±1 % (LCSC C133039), no added cost; verified on the board, in the plugin's database and in the regenerated BOM. The bring-up register's 3.54 V worst case holds again |
+| AUD-32 | Serial-data pull-down: two documents said populated, the board has it do-not-populate | 2026-11-17 | Decided: footprint only on spin 1 — the converters' internal bus keeper holds the line. `adc-netlist.md` §5 and `pin-allocation.md` §6 changed to match the board |
 | AUD-28 | `pin-allocation.md` and `decoupling-checklist.md` out of date against the board | 2026-11-11 | `pin-allocation.md`: control pot 1 moved to PB0, status LED to PB10, radio UART rows added (PB13/PB14/PC10/PC11) and the "pins do not exist" note corrected, address straps as built, pull-up and strap values, reset-net and crystal-footprint items closed. `decoupling-checklist.md`: every status re-checked against the board with measured distances. The one disagreement that was not purely documentation became AUD-32 |
 
 ### Pass history
@@ -305,6 +296,18 @@ them at a stock model of the same body.
   routed net traced for continuity (74 signal nets, both plane nets); supply-pin to
   capacitor distances; track and via sizes (0.2–0.5 mm, 0.6/0.3 mm vias); low-battery
   behaviour. Found AUD-25–AUD-30. AUD-12 single-pin/two-pin analysis added.
+- 2026-11-17 AUD-32 closed (pull-down stays unpopulated; documents corrected).
+- 2026-11-17 Every BOM line's LCSC number checked against its manufacturer part
+  number: all values, packages and dielectrics match the design (C0G where required:
+  crystal load and output filter). AUD-35 closed (10 V part); AUD-36 opened and closed
+  (feedback resistor changed to ±1 %). MCU (drawn from private stock) and crystal (NDK
+  NX1612SA-24MHZ-STD-CIS-1) confirmed in JLCPCB's parts-matching screen.
+- 2026-11-13 JLCPCB submission steps split out into a generic checklist,
+  `kicad-tools/jlcpcb-order-checklist.md`; AUD-15 and AUD-30 closed into it, AUD-35
+  opened for the board-specific part.
+- 2026-11-13 AUD-26 closed (second 10 µF at the buck-boost power input); AUD-34
+  opened and closed (control-supply pin left unconnected by the same edit, then
+  reconnected).
 - 2026-11-13 AUD-25 closed (regulator capacitors to 10 µF); AUD-33 opened and closed
   (LCSC numbers stripped from the schematic; Check project extended).
 - 2026-11-12 AUD-12 closed (output capacitance 2 × 10 µF; electrical-rule check waived).

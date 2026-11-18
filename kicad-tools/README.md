@@ -13,6 +13,11 @@ Two tools for the KiCad → JLCPCB workflow, usable on any KiCad project.
   schematic: the JLCPCB tool keeps them in its own database and its output is the
   record (set `SYNC_LCSC = True` in `sync.py` to include them).
 
+## Order checklist
+
+`jlcpcb-order-checklist.md` — the generic to-do list for submitting a board: design-rule
+check, file generation, parts-list check at upload, DFM report, placement preview.
+
 ## Why sync exists
 
 The JLCPCB tool sets the exclusion flags on **footprints**. In KiCad 10 the symbol
